@@ -1,0 +1,31 @@
+Command: perf sched timehist -i /tmp/executor-diagnostic-t2.data --summary --tid 1857276,1857277,1857278,1857279
+Samples of sched_switch event do not have callchains.
+Warning:
+4 out of order events recorded.
+
+Runtime summary
+                          comm  parent   sched-in     run-time    min-run     avg-run     max-run  stddev  migrations
+                                          (count)       (msec)     (msec)      (msec)      (msec)       %
+---------------------------------------------------------------------------------------------------------------------
+<no still running tasks>
+
+Derived worker totals from complete perf-timehist-t2.txt rows (display precision 0.001 ms):
+tid group intervals wait_ms sched_delay_ms runtime_ms max_sched_delay_ms
+1857276 0 68 1932.394 3.581 1054.354 1.354
+1857277 0 41 1805.337 9.963 1055.095 3.581
+1857278 1 88 1884.576 6.279 1101.469 1.460
+1857279 1 68 1794.761 8.254 1191.063 2.094
+
+{
+  "sched_intervals": 265,
+  "wait_ms": 7417.067999999999,
+  "sched_delay_ms": 28.076999999999988,
+  "runtime_ms": 4401.981000000001,
+  "requests": 30,
+  "latency_mean_ms": 77.07156666666667,
+  "latency_p99_ms": 115.492,
+  "sched_delay_ms_per_request": 0.9358999999999996,
+  "runtime_ms_per_request": 146.73270000000002,
+  "logged_kernel_cpu_ms": 4396.012618,
+  "max_sched_delay_ms": 3.581
+}

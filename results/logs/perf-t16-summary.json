@@ -1,0 +1,308 @@
+{
+  "run": "results/runs/diagnostic-t16",
+  "timehist": "results/logs/perf-timehist-t16.txt",
+  "workers": [
+    {
+      "tid": 1858030,
+      "group": 0,
+      "sched_intervals": 74,
+      "wait_ms": 2729.925,
+      "sched_delay_ms": 591.44,
+      "runtime_ms": 124.88,
+      "max_sched_delay_ms": 21.007
+    },
+    {
+      "tid": 1858031,
+      "group": 0,
+      "sched_intervals": 79,
+      "wait_ms": 2720.408,
+      "sched_delay_ms": 545.013,
+      "runtime_ms": 132.136,
+      "max_sched_delay_ms": 21.007
+    },
+    {
+      "tid": 1858032,
+      "group": 0,
+      "sched_intervals": 75,
+      "wait_ms": 2527.811,
+      "sched_delay_ms": 491.156,
+      "runtime_ms": 122.204,
+      "max_sched_delay_ms": 21.058
+    },
+    {
+      "tid": 1858033,
+      "group": 0,
+      "sched_intervals": 118,
+      "wait_ms": 2605.308,
+      "sched_delay_ms": 626.638,
+      "runtime_ms": 257.126,
+      "max_sched_delay_ms": 21.009
+    },
+    {
+      "tid": 1858034,
+      "group": 0,
+      "sched_intervals": 50,
+      "wait_ms": 2915.947,
+      "sched_delay_ms": 385.79,
+      "runtime_ms": 76.067,
+      "max_sched_delay_ms": 18.909
+    },
+    {
+      "tid": 1858035,
+      "group": 0,
+      "sched_intervals": 56,
+      "wait_ms": 2771.444,
+      "sched_delay_ms": 483.245,
+      "runtime_ms": 88.967,
+      "max_sched_delay_ms": 21.007
+    },
+    {
+      "tid": 1858036,
+      "group": 0,
+      "sched_intervals": 62,
+      "wait_ms": 2886.292,
+      "sched_delay_ms": 424.186,
+      "runtime_ms": 105.771,
+      "max_sched_delay_ms": 18.921
+    },
+    {
+      "tid": 1858037,
+      "group": 0,
+      "sched_intervals": 73,
+      "wait_ms": 2708.582,
+      "sched_delay_ms": 570.255,
+      "runtime_ms": 139.538,
+      "max_sched_delay_ms": 21.059
+    },
+    {
+      "tid": 1858038,
+      "group": 0,
+      "sched_intervals": 59,
+      "wait_ms": 2754.151,
+      "sched_delay_ms": 428.148,
+      "runtime_ms": 108.371,
+      "max_sched_delay_ms": 22.689
+    },
+    {
+      "tid": 1858039,
+      "group": 0,
+      "sched_intervals": 73,
+      "wait_ms": 2703.011,
+      "sched_delay_ms": 527.566,
+      "runtime_ms": 144.927,
+      "max_sched_delay_ms": 18.909
+    },
+    {
+      "tid": 1858040,
+      "group": 0,
+      "sched_intervals": 83,
+      "wait_ms": 2715.517,
+      "sched_delay_ms": 690.917,
+      "runtime_ms": 139.955,
+      "max_sched_delay_ms": 21.062
+    },
+    {
+      "tid": 1858041,
+      "group": 0,
+      "sched_intervals": 74,
+      "wait_ms": 2686.739,
+      "sched_delay_ms": 565.708,
+      "runtime_ms": 174.015,
+      "max_sched_delay_ms": 21.061
+    },
+    {
+      "tid": 1858042,
+      "group": 0,
+      "sched_intervals": 84,
+      "wait_ms": 2852.624,
+      "sched_delay_ms": 537.949,
+      "runtime_ms": 138.7,
+      "max_sched_delay_ms": 18.556
+    },
+    {
+      "tid": 1858043,
+      "group": 0,
+      "sched_intervals": 56,
+      "wait_ms": 2347.904,
+      "sched_delay_ms": 380.801,
+      "runtime_ms": 99.265,
+      "max_sched_delay_ms": 16.806
+    },
+    {
+      "tid": 1858044,
+      "group": 0,
+      "sched_intervals": 82,
+      "wait_ms": 2873.076,
+      "sched_delay_ms": 534.154,
+      "runtime_ms": 118.536,
+      "max_sched_delay_ms": 21.007
+    },
+    {
+      "tid": 1858045,
+      "group": 0,
+      "sched_intervals": 74,
+      "wait_ms": 2862.215,
+      "sched_delay_ms": 578.46,
+      "runtime_ms": 129.408,
+      "max_sched_delay_ms": 20.47
+    },
+    {
+      "tid": 1858046,
+      "group": 1,
+      "sched_intervals": 64,
+      "wait_ms": 2846.661,
+      "sched_delay_ms": 438.12,
+      "runtime_ms": 124.417,
+      "max_sched_delay_ms": 21.08
+    },
+    {
+      "tid": 1858047,
+      "group": 1,
+      "sched_intervals": 71,
+      "wait_ms": 2838.59,
+      "sched_delay_ms": 510.923,
+      "runtime_ms": 153.41,
+      "max_sched_delay_ms": 21.006
+    },
+    {
+      "tid": 1858048,
+      "group": 1,
+      "sched_intervals": 61,
+      "wait_ms": 2848.39,
+      "sched_delay_ms": 470.309,
+      "runtime_ms": 106.88,
+      "max_sched_delay_ms": 15.918
+    },
+    {
+      "tid": 1858049,
+      "group": 1,
+      "sched_intervals": 78,
+      "wait_ms": 2817.477,
+      "sched_delay_ms": 559.991,
+      "runtime_ms": 156.174,
+      "max_sched_delay_ms": 19.106
+    },
+    {
+      "tid": 1858050,
+      "group": 1,
+      "sched_intervals": 82,
+      "wait_ms": 2810.777,
+      "sched_delay_ms": 601.814,
+      "runtime_ms": 148.808,
+      "max_sched_delay_ms": 21.014
+    },
+    {
+      "tid": 1858051,
+      "group": 1,
+      "sched_intervals": 79,
+      "wait_ms": 2829.871,
+      "sched_delay_ms": 566.197,
+      "runtime_ms": 126.119,
+      "max_sched_delay_ms": 21.712
+    },
+    {
+      "tid": 1858052,
+      "group": 1,
+      "sched_intervals": 57,
+      "wait_ms": 2870.993,
+      "sched_delay_ms": 437.734,
+      "runtime_ms": 84.892,
+      "max_sched_delay_ms": 16.919
+    },
+    {
+      "tid": 1858053,
+      "group": 1,
+      "sched_intervals": 87,
+      "wait_ms": 2782.384,
+      "sched_delay_ms": 478.815,
+      "runtime_ms": 190.381,
+      "max_sched_delay_ms": 16.806
+    },
+    {
+      "tid": 1858054,
+      "group": 1,
+      "sched_intervals": 81,
+      "wait_ms": 2829.356,
+      "sched_delay_ms": 624.815,
+      "runtime_ms": 161.987,
+      "max_sched_delay_ms": 21.016
+    },
+    {
+      "tid": 1858055,
+      "group": 1,
+      "sched_intervals": 60,
+      "wait_ms": 2841.723,
+      "sched_delay_ms": 451.475,
+      "runtime_ms": 148.037,
+      "max_sched_delay_ms": 23.101
+    },
+    {
+      "tid": 1858056,
+      "group": 1,
+      "sched_intervals": 94,
+      "wait_ms": 2811.98,
+      "sched_delay_ms": 654.513,
+      "runtime_ms": 177.561,
+      "max_sched_delay_ms": 21.015
+    },
+    {
+      "tid": 1858057,
+      "group": 1,
+      "sched_intervals": 88,
+      "wait_ms": 2785.585,
+      "sched_delay_ms": 667.687,
+      "runtime_ms": 173.143,
+      "max_sched_delay_ms": 21.013
+    },
+    {
+      "tid": 1858058,
+      "group": 1,
+      "sched_intervals": 67,
+      "wait_ms": 2858.464,
+      "sched_delay_ms": 525.823,
+      "runtime_ms": 114.048,
+      "max_sched_delay_ms": 21.711
+    },
+    {
+      "tid": 1858059,
+      "group": 1,
+      "sched_intervals": 69,
+      "wait_ms": 2820.912,
+      "sched_delay_ms": 548.321,
+      "runtime_ms": 151.123,
+      "max_sched_delay_ms": 22.495
+    },
+    {
+      "tid": 1858060,
+      "group": 1,
+      "sched_intervals": 72,
+      "wait_ms": 2854.498,
+      "sched_delay_ms": 594.386,
+      "runtime_ms": 115.658,
+      "max_sched_delay_ms": 21.715
+    },
+    {
+      "tid": 1858061,
+      "group": 1,
+      "sched_intervals": 77,
+      "wait_ms": 2817.205,
+      "sched_delay_ms": 599.131,
+      "runtime_ms": 149.655,
+      "max_sched_delay_ms": 23.101
+    }
+  ],
+  "totals": {
+    "sched_intervals": 2359,
+    "wait_ms": 88925.82,
+    "sched_delay_ms": 17091.48,
+    "runtime_ms": 4382.159,
+    "requests": 30,
+    "latency_mean_ms": 77.30779666666666,
+    "latency_p99_ms": 104.919,
+    "sched_delay_ms_per_request": 569.716,
+    "runtime_ms_per_request": 146.07196666666667,
+    "logged_kernel_cpu_ms": 4368.582438,
+    "max_sched_delay_ms": 23.101
+  },
+  "scope": "Worker scheduler intervals including startup/shutdown. Parallel thread delays overlap; sums per completed request are not critical-path latency. Input display resolution is 0.001 ms."
+}

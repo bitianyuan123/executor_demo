@@ -1,0 +1,92 @@
+-- The CXX compiler identification is GNU 14.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.5.7")
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+CMake Warning (dev) at /root/rank_demo/folly/_install/lib/cmake/folly/folly-config.cmake:86 (find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  CMakeLists.txt:6 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found suitable version "1.83.0", minimum required is "1.69.0") found components: context filesystem program_options regex thread
+-- Found folly: /root/rank_demo/folly/_install
+-- Found Python3: /usr/bin/python3 (found version "3.13.5") found components: Interpreter
+-- Found GTest: /usr/lib/x86_64-linux-gnu/cmake/GTest/GTestConfig.cmake (found version "1.15.0")
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /root/rank_demo/executor_demo/build-sanitize
+[1/4] Building CXX object CMakeFiles/executor_demo.dir/src/main.cpp.o
+In file included from /root/rank_demo/folly/folly/Hash.h:20,
+                 from /root/rank_demo/folly/folly/synchronization/ParkingLot.h:24,
+                 from /root/rank_demo/folly/folly/detail/Futex-inl.h:19,
+                 from /root/rank_demo/folly/folly/detail/Futex.h:107,
+                 from /root/rank_demo/folly/folly/SharedMutex.h:36,
+                 from /root/rank_demo/folly/folly/Synchronized.h:35,
+                 from /root/rank_demo/folly/folly/executors/QueueObserver.h:29,
+                 from /root/rank_demo/folly/folly/executors/CPUThreadPoolExecutor.h:23,
+                 from /root/rank_demo/folly/folly/executors/experimental/AffinityExecutor.h:46,
+                 from /root/rank_demo/executor_demo/src/main.cpp:2:
+/root/rank_demo/folly/folly/hash/Hash.h:68:49: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+   68 |     const uint64_t upper, const uint64_t lower) noexcept {
+      |                                                 ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:119:49: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  119 |     const uint64_t upper, const uint64_t lower) noexcept {
+      |                                                 ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:136:48: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  136 | constexpr uint64_t moremur_mix64(uint64_t key) noexcept {
+      |                                                ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:151:50: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  151 | constexpr uint64_t moremur_unmix64(uint64_t key) noexcept {
+      |                                                  ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:176:48: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  176 | constexpr uint32_t lowbias_mix32(uint32_t key) noexcept {
+      |                                                ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:191:50: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  191 | constexpr uint32_t lowbias_unmix32(uint32_t key) noexcept {
+      |                                                  ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:209:46: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  209 | constexpr uint64_t twang_mix64(uint64_t key) noexcept {
+      |                                              ^~~~~~~~
+[2/4] Building CXX object CMakeFiles/affinity_executor_test.dir/root/rank_demo/folly/folly/executors/experimental/test/AffinityExecutorTest.cpp.o
+In file included from /root/rank_demo/folly/folly/Hash.h:20,
+                 from /root/rank_demo/folly/folly/synchronization/ParkingLot.h:24,
+                 from /root/rank_demo/folly/folly/detail/Futex-inl.h:19,
+                 from /root/rank_demo/folly/folly/detail/Futex.h:107,
+                 from /root/rank_demo/folly/folly/SharedMutex.h:36,
+                 from /root/rank_demo/folly/folly/Synchronized.h:35,
+                 from /root/rank_demo/folly/folly/executors/QueueObserver.h:29,
+                 from /root/rank_demo/folly/folly/executors/CPUThreadPoolExecutor.h:23,
+                 from /root/rank_demo/folly/folly/executors/experimental/AffinityExecutor.h:46,
+                 from /root/rank_demo/folly/folly/executors/experimental/test/AffinityExecutorTest.cpp:17:
+/root/rank_demo/folly/folly/hash/Hash.h:68:49: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+   68 |     const uint64_t upper, const uint64_t lower) noexcept {
+      |                                                 ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:119:49: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  119 |     const uint64_t upper, const uint64_t lower) noexcept {
+      |                                                 ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:136:48: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  136 | constexpr uint64_t moremur_mix64(uint64_t key) noexcept {
+      |                                                ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:151:50: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  151 | constexpr uint64_t moremur_unmix64(uint64_t key) noexcept {
+      |                                                  ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:176:48: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  176 | constexpr uint32_t lowbias_mix32(uint32_t key) noexcept {
+      |                                                ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:191:50: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  191 | constexpr uint32_t lowbias_unmix32(uint32_t key) noexcept {
+      |                                                  ^~~~~~~~
+/root/rank_demo/folly/folly/hash/Hash.h:209:46: warning: ‘unsigned-integer-overflow’ attribute directive ignored [-Wattributes]
+  209 | constexpr uint64_t twang_mix64(uint64_t key) noexcept {
+      |                                              ^~~~~~~~
+[3/4] Linking CXX executable executor_demo
+[4/4] Linking CXX executable affinity_executor_test

@@ -1,0 +1,10 @@
+{
+  "folly_repository": "git@github.com:bitianyuan123/folly.git",
+  "folly_base_tag": "v2026.10.26.00",
+  "folly_base_commit": "c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c",
+  "folly_experiment_branch": "experiment/grouped-executor-20261114",
+  "folly_experiment_commit": "150b684e0679de6962755be2d1411e41d4bd6b4c",
+  "cxx_standard": 20,
+  "validated_compiler": "GCC 14.2.0",
+  "validated_platform": "Debian 13 x86_64 Linux"
+}

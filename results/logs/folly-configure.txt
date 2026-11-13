@@ -1,0 +1,131 @@
+-- The CXX compiler identification is GNU 14.2.0
+-- The C compiler identification is GNU 14.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /usr/bin/cc
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- setting C++ standard to C++20
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of __int128_t
+-- Check size of __int128_t - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Found FastFloat: /usr/include
+-- Found gflags from package config /usr/lib/x86_64-linux-gnu/cmake/gflags/gflags-config.cmake
+-- Found Glog: /usr/lib/x86_64-linux-gnu/libglog.so
+-- Found gflags as a dependency of glog::glog, include=/usr/include, libs=gflags_shared
+-- Found LibUnwind: /usr/lib/x86_64-linux-gnu/libunwind.so;/usr/lib/x86_64-linux-gnu/liblzma.so
+-- Found LibUnwind as a dependency of glog::glog, include=/usr/include/x86_64-linux-gnu, libs=/usr/lib/x86_64-linux-gnu/libunwind.so;/usr/lib/x86_64-linux-gnu/liblzma.so
+-- Found libevent: /usr/lib/x86_64-linux-gnu/libevent.so
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.3.1")
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found suitable version "3.5.7", minimum required is "1.1.1")
+-- Could NOT find BZip2 (missing: BZIP2_LIBRARIES BZIP2_INCLUDE_DIR) 
+-- Looking for lzma_auto_decoder in /usr/lib/x86_64-linux-gnu/liblzma.so
+-- Looking for lzma_auto_decoder in /usr/lib/x86_64-linux-gnu/liblzma.so - found
+-- Looking for lzma_easy_encoder in /usr/lib/x86_64-linux-gnu/liblzma.so
+-- Looking for lzma_easy_encoder in /usr/lib/x86_64-linux-gnu/liblzma.so - found
+-- Looking for lzma_lzma_preset in /usr/lib/x86_64-linux-gnu/liblzma.so
+-- Looking for lzma_lzma_preset in /usr/lib/x86_64-linux-gnu/liblzma.so - found
+-- Found LibLZMA: /usr/lib/x86_64-linux-gnu/liblzma.so (found version "5.8.1")
+-- Found LZ4: /usr/lib/x86_64-linux-gnu/liblz4.so
+-- Found LZ4: /usr/lib/x86_64-linux-gnu/liblz4.so
+-- Found Zstd: /usr/lib/x86_64-linux-gnu/libzstd.so
+-- Found Zstd: /usr/lib/x86_64-linux-gnu/libzstd.so
+-- Found Snappy: /usr/lib/x86_64-linux-gnu/libsnappy.so
+-- Could NOT find LibDwarf (missing: LIBDWARF_LIBRARY LIBDWARF_INCLUDE_DIR) 
+-- Found Libiberty: /usr/lib/x86_64-linux-gnu/libiberty.a
+-- Could NOT find LibAIO (missing: LIBAIO_LIBRARY LIBAIO_INCLUDE_DIR) 
+-- Could NOT find LibUring (missing: LIBURING_LIBRARY LIBURING_INCLUDE_DIR) 
+-- Found Libsodium: /usr/lib/x86_64-linux-gnu/libsodium.so
+-- Found Libsodium: /usr/lib/x86_64-linux-gnu/libsodium.so
+-- Looking for swapcontext
+-- Looking for swapcontext - found
+-- Looking for C++ include elf.h
+-- Looking for C++ include elf.h - found
+-- Looking for backtrace
+-- Looking for backtrace - found
+-- backtrace facility detected in default set of libraries
+-- Found Backtrace: /usr/include
+-- Setting FOLLY_USE_SYMBOLIZER: ON
+-- Setting FOLLY_HAVE_ELF: 1
+-- Setting FOLLY_HAVE_DWARF: FALSE
+-- Performing Test FOLLY_CPP_ATOMIC_BUILTIN
+-- Performing Test FOLLY_CPP_ATOMIC_BUILTIN - Success
+-- Performing Test FOLLY_STDLIB_LIBSTDCXX
+-- Performing Test FOLLY_STDLIB_LIBSTDCXX - Success
+-- Performing Test FOLLY_STDLIB_LIBSTDCXX_GE_9
+-- Performing Test FOLLY_STDLIB_LIBSTDCXX_GE_9 - Success
+-- Performing Test FOLLY_STDLIB_LIBCXX
+-- Performing Test FOLLY_STDLIB_LIBCXX - Failed
+-- Performing Test FOLLY_STDLIB_LIBCXX_GE_9
+-- Performing Test FOLLY_STDLIB_LIBCXX_GE_9 - Failed
+-- Performing Test FOLLY_STDLIB_LIBCPP
+-- Performing Test FOLLY_STDLIB_LIBCPP - Failed
+-- Looking for C++ include jemalloc/jemalloc.h
+-- Looking for C++ include jemalloc/jemalloc.h - not found
+-- Performing Test COMPILER_HAS_UNKNOWN_WARNING_OPTION
+-- Performing Test COMPILER_HAS_UNKNOWN_WARNING_OPTION - Failed
+-- Performing Test COMPILER_HAS_W_SHADOW_LOCAL
+-- Performing Test COMPILER_HAS_W_SHADOW_LOCAL - Success
+-- Performing Test COMPILER_HAS_W_SHADOW_COMPATIBLE_LOCAL
+-- Performing Test COMPILER_HAS_W_SHADOW_COMPATIBLE_LOCAL - Success
+-- Performing Test COMPILER_HAS_W_NULLABILITY_COMPLETENESS
+-- Performing Test COMPILER_HAS_W_NULLABILITY_COMPLETENESS - Failed
+-- Performing Test COMPILER_HAS_W_INCONSISTENT_MISSING_OVERRIDE
+-- Performing Test COMPILER_HAS_W_INCONSISTENT_MISSING_OVERRIDE - Failed
+-- Performing Test COMPILER_HAS_F_OPENMP
+-- Performing Test COMPILER_HAS_F_OPENMP - Success
+-- Looking for pthread_atfork
+-- Looking for pthread_atfork - found
+-- Looking for accept4
+-- Looking for accept4 - found
+-- Looking for getrandom
+-- Looking for getrandom - found
+-- Looking for preadv
+-- Looking for preadv - found
+-- Looking for pwritev
+-- Looking for pwritev - found
+-- Looking for clock_gettime
+-- Looking for clock_gettime - found
+-- Looking for pipe2
+-- Looking for pipe2 - found
+-- Looking for malloc_usable_size
+-- Looking for malloc_usable_size - found
+-- Performing Test FOLLY_HAVE_IFUNC
+-- Performing Test FOLLY_HAVE_IFUNC - Success
+-- Performing Test FOLLY_HAVE_UNALIGNED_ACCESS
+-- Performing Test FOLLY_HAVE_UNALIGNED_ACCESS - Success
+-- Performing Test FOLLY_HAVE_VLA
+-- Performing Test FOLLY_HAVE_VLA - Success
+-- Performing Test FOLLY_HAVE_WEAK_SYMBOLS
+-- Performing Test FOLLY_HAVE_WEAK_SYMBOLS - Success
+-- Performing Test FOLLY_HAVE_LINUX_VDSO
+-- Performing Test FOLLY_HAVE_LINUX_VDSO - Success
+-- Performing Test FOLLY_HAVE_WCHAR_SUPPORT
+-- Performing Test FOLLY_HAVE_WCHAR_SUPPORT - Success
+-- Performing Test FOLLY_HAVE_EXTRANDOM_SFMT19937
+-- Performing Test FOLLY_HAVE_EXTRANDOM_SFMT19937 - Success
+-- Performing Test HAVE_VSNPRINTF_ERRORS
+-- Performing Test HAVE_VSNPRINTF_ERRORS - Success
+-- Performing Test COMPILER_HAS_M_PCLMUL
+-- Performing Test COMPILER_HAS_M_PCLMUL - Success
+-- Performing Test COMPILER_HAS_F_COROUTINES
+-- Performing Test COMPILER_HAS_F_COROUTINES - Success
+-- GCC has C++ coroutines support, enabling for Folly.
+-- Configuring done (3.6s)
+-- Generating done (1.4s)
+-- Build files have been written to: /root/rank_demo/folly/_build

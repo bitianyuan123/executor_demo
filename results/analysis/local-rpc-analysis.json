@@ -1,0 +1,1656 @@
+[
+  {
+    "run": "results/runs/local-rpc/r0-split-t16-fanout",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2170,
+    "latency_mean_ms": 64.5691175,
+    "latency_p50_ms": 63.8159,
+    "latency_p99_ms": 93.3395,
+    "request_resample_mean_ci95_ms": [
+      60.649955,
+      68.2697325
+    ],
+    "enqueue_mean_ms": 1.8380798294930876,
+    "enqueue_p99_ms": 11.670399999999999,
+    "cpu_total_s": 5.782969511,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.782969511,
+    "sampled_executor_cpu_s": 5.197755285,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 484,
+      "fraction_of_completed_tasks": 0.22304147465437787,
+      "enqueue_mean_ms": 0.12728186983471074,
+      "enqueue_p99_ms": 2.56021
+    },
+    "execution_offcpu_or_overhead_s": 6.554269248,
+    "migrations": 400.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2170,
+        "pearson": 0.9064937408798172,
+        "spearman": 0.8880568607236555
+      },
+      "pending_before": {
+        "n": 2170,
+        "pearson": 0.9121780647930808,
+        "spearman": 0.8965629711642953
+      },
+      "inflight_before": {
+        "n": 2170,
+        "pearson": -0.25845657703055536,
+        "spearman": -0.48058596623680705
+      },
+      "outstanding_before": {
+        "n": 2170,
+        "pearson": 0.6147363107736837,
+        "spearman": 0.41870316677817804
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2170,
+        "pearson": 0.6147363107736837,
+        "spearman": 0.41870316677817804
+      },
+      "chosen_load_us": {
+        "n": 2170,
+        "pearson": 0.6147363107736837,
+        "spearman": 0.41870316677817804
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.710285063005531,
+      "spearman": 0.7105065666041276
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 11,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 14,
+        "n": 6,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 16,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1166,
+        "wait_mean_ms": 0.0829626012006861,
+        "wait_p99_ms": 1.95303
+      },
+      "4-15": {
+        "n": 555,
+        "wait_mean_ms": 5.749395753153153,
+        "wait_p99_ms": 15.232899999999999
+      },
+      "1-3": {
+        "n": 449,
+        "wait_mean_ms": 1.561212013363029,
+        "wait_p99_ms": 7.4828
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r0-split-t16-queue",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2170,
+    "latency_mean_ms": 66.6036475,
+    "latency_p50_ms": 62.0252,
+    "latency_p99_ms": 123.224,
+    "request_resample_mean_ci95_ms": [
+      62.1652075,
+      71.6404825
+    ],
+    "enqueue_mean_ms": 1.9061029520737327,
+    "enqueue_p99_ms": 12.2886,
+    "cpu_total_s": 5.859644039,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.859644039,
+    "sampled_executor_cpu_s": 5.280630858,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 720,
+      "fraction_of_completed_tasks": 0.3317972350230415,
+      "enqueue_mean_ms": 0.37314790833333333,
+      "enqueue_p99_ms": 2.8591100000000003
+    },
+    "execution_offcpu_or_overhead_s": 7.3119292410000005,
+    "migrations": 958.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2170,
+        "pearson": 0.8677536314358012,
+        "spearman": 0.8310353636808255
+      },
+      "pending_before": {
+        "n": 2170,
+        "pearson": 0.8727317537069567,
+        "spearman": 0.8358947903103887
+      },
+      "inflight_before": {
+        "n": 2170,
+        "pearson": -0.30127420596313387,
+        "spearman": -0.4111784283071697
+      },
+      "outstanding_before": {
+        "n": 2170,
+        "pearson": 0.5596503542529275,
+        "spearman": 0.44717864217695996
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2170,
+        "pearson": 0.5596503542529274,
+        "spearman": 0.44717864217695996
+      },
+      "chosen_load_us": {
+        "n": 2170,
+        "pearson": 0.8677536314358012,
+        "spearman": 0.8310353636808255
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.7343301263254325,
+      "spearman": 0.6574108818011257
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 11,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 14,
+        "n": 6,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 16,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1285,
+        "wait_mean_ms": 0.24552981712062258,
+        "wait_p99_ms": 2.41599
+      },
+      "4-15": {
+        "n": 535,
+        "wait_mean_ms": 5.903115420560748,
+        "wait_p99_ms": 16.918599999999998
+      },
+      "1-3": {
+        "n": 350,
+        "wait_mean_ms": 1.8930595457142858,
+        "wait_p99_ms": 9.06865
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r0-split-t16-borrow",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2170,
+    "latency_mean_ms": 63.0377525,
+    "latency_p50_ms": 59.658,
+    "latency_p99_ms": 91.5439,
+    "request_resample_mean_ci95_ms": [
+      59.487995,
+      66.7748625
+    ],
+    "enqueue_mean_ms": 1.908419968202765,
+    "enqueue_p99_ms": 12.3276,
+    "cpu_total_s": 5.780802336,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.780802336,
+    "sampled_executor_cpu_s": 5.12523165,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 394,
+      "fraction_of_completed_tasks": 0.1815668202764977,
+      "enqueue_mean_ms": 0.4456658934010152,
+      "enqueue_p99_ms": 3.66459
+    },
+    "execution_offcpu_or_overhead_s": 5.629167033,
+    "migrations": 1155.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2170,
+        "pearson": 0.8494649497227286,
+        "spearman": 0.852656349641756
+      },
+      "pending_before": {
+        "n": 2170,
+        "pearson": 0.8467073930906253,
+        "spearman": 0.8571561597520606
+      },
+      "inflight_before": {
+        "n": 2170,
+        "pearson": -0.17998272187683304,
+        "spearman": -0.2893294688063974
+      },
+      "outstanding_before": {
+        "n": 2170,
+        "pearson": 0.6578535321820767,
+        "spearman": 0.6101719055456322
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2170,
+        "pearson": 0.6578535321820768,
+        "spearman": 0.6101719055456322
+      },
+      "chosen_load_us": {
+        "n": 2170,
+        "pearson": 0.6578535321820768,
+        "spearman": 0.6101719055456322
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.6791892941516486,
+      "spearman": 0.6363977485928706
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 11,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 14,
+        "n": 6,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 16,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1240,
+        "wait_mean_ms": 0.18379542983870967,
+        "wait_p99_ms": 2.1393
+      },
+      "4-15": {
+        "n": 535,
+        "wait_mean_ms": 5.934424990654206,
+        "wait_p99_ms": 20.7159
+      },
+      "1-3": {
+        "n": 395,
+        "wait_mean_ms": 1.8694876658227848,
+        "wait_p99_ms": 9.38594
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r0-split-t16-least-load",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2170,
+    "latency_mean_ms": 63.7781475,
+    "latency_p50_ms": 58.2843,
+    "latency_p99_ms": 119.704,
+    "request_resample_mean_ci95_ms": [
+      59.28228,
+      68.3564375
+    ],
+    "enqueue_mean_ms": 1.9917125525345623,
+    "enqueue_p99_ms": 11.9442,
+    "cpu_total_s": 5.900551269999999,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.900551269999999,
+    "sampled_executor_cpu_s": 5.193339096,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 352,
+      "fraction_of_completed_tasks": 0.1622119815668203,
+      "enqueue_mean_ms": 0.4234111392045455,
+      "enqueue_p99_ms": 5.67647
+    },
+    "execution_offcpu_or_overhead_s": 5.504811483,
+    "migrations": 1159.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2170,
+        "pearson": 0.8724261262504521,
+        "spearman": 0.8577248145754238
+      },
+      "pending_before": {
+        "n": 2170,
+        "pearson": 0.8775048453108315,
+        "spearman": 0.8623410053249039
+      },
+      "inflight_before": {
+        "n": 2170,
+        "pearson": -0.1528261014654436,
+        "spearman": -0.31990659601226895
+      },
+      "outstanding_before": {
+        "n": 2170,
+        "pearson": 0.7021230254467905,
+        "spearman": 0.5892971082584016
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2170,
+        "pearson": 0.7021230254467906,
+        "spearman": 0.5892971082584016
+      },
+      "chosen_load_us": {
+        "n": 2170,
+        "pearson": 0.7021230254467906,
+        "spearman": 0.5892971082584016
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.7026357645436906,
+      "spearman": 0.6654784240150093
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 11,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 14,
+        "n": 6,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 16,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1211,
+        "wait_mean_ms": 0.17550180594549958,
+        "wait_p99_ms": 2.19921
+      },
+      "4-15": {
+        "n": 556,
+        "wait_mean_ms": 5.96172076618705,
+        "wait_p99_ms": 15.3757
+      },
+      "1-3": {
+        "n": 403,
+        "wait_mean_ms": 1.9721260694789082,
+        "wait_p99_ms": 10.461200000000002
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r0-split-t16-sticky",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2170,
+    "latency_mean_ms": 62.75055,
+    "latency_p50_ms": 59.6352,
+    "latency_p99_ms": 115.255,
+    "request_resample_mean_ci95_ms": [
+      58.5359475,
+      67.3909325
+    ],
+    "enqueue_mean_ms": 1.7668216566820276,
+    "enqueue_p99_ms": 10.1347,
+    "cpu_total_s": 5.735487301,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.735487301,
+    "sampled_executor_cpu_s": 5.146224873,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 350,
+      "fraction_of_completed_tasks": 0.16129032258064516,
+      "enqueue_mean_ms": 0.24363976857142858,
+      "enqueue_p99_ms": 2.13727
+    },
+    "execution_offcpu_or_overhead_s": 5.619449286999999,
+    "migrations": 883.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2170,
+        "pearson": 0.9106668319415336,
+        "spearman": 0.8680459030994718
+      },
+      "pending_before": {
+        "n": 2170,
+        "pearson": 0.9150532830769249,
+        "spearman": 0.8715274669873437
+      },
+      "inflight_before": {
+        "n": 2170,
+        "pearson": -0.1909161766551361,
+        "spearman": -0.3653341212327964
+      },
+      "outstanding_before": {
+        "n": 2170,
+        "pearson": 0.6923223795082466,
+        "spearman": 0.5399318126760533
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2170,
+        "pearson": 0.6923223795082467,
+        "spearman": 0.5399318126760533
+      },
+      "chosen_load_us": {
+        "n": 2170,
+        "pearson": 0.6923223795082467,
+        "spearman": 0.5399318126760533
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.6559926565270471,
+      "spearman": 0.5305816135084428
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 11,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 14,
+        "n": 6,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 16,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1228,
+        "wait_mean_ms": 0.10992407491856677,
+        "wait_p99_ms": 1.49918
+      },
+      "4-15": {
+        "n": 545,
+        "wait_mean_ms": 5.587604366972477,
+        "wait_p99_ms": 12.718399999999999
+      },
+      "1-3": {
+        "n": 397,
+        "wait_mean_ms": 1.6467804811083124,
+        "wait_p99_ms": 7.45214
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r0-split-t16-home",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2170,
+    "latency_mean_ms": 88.0926125,
+    "latency_p50_ms": 82.694,
+    "latency_p99_ms": 129.19,
+    "request_resample_mean_ci95_ms": [
+      83.020145,
+      93.10456
+    ],
+    "enqueue_mean_ms": 5.214876707373271,
+    "enqueue_p99_ms": 19.9662,
+    "cpu_total_s": 5.674547928,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.674547928,
+    "sampled_executor_cpu_s": 5.081393125,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 425,
+      "fraction_of_completed_tasks": 0.195852534562212,
+      "enqueue_mean_ms": 0.33651721647058824,
+      "enqueue_p99_ms": 2.88919
+    },
+    "execution_offcpu_or_overhead_s": 17.107358352000002,
+    "migrations": 0.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2170,
+        "pearson": 0.9490368824238332,
+        "spearman": 0.9531930543070285
+      },
+      "pending_before": {
+        "n": 2170,
+        "pearson": 0.9488932385861731,
+        "spearman": 0.9533229526960815
+      },
+      "inflight_before": {
+        "n": 2170,
+        "pearson": -0.36141025427781476,
+        "spearman": -0.34674500998587054
+      },
+      "outstanding_before": {
+        "n": 2170,
+        "pearson": 0.6287343937191967,
+        "spearman": 0.6547611627256288
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2170,
+        "pearson": 0.6287343937191967,
+        "spearman": 0.6547611627256288
+      },
+      "chosen_load_us": {
+        "n": 2170,
+        "pearson": 0.6287343937191967,
+        "spearman": 0.6547611627256288
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.8285367996200413,
+      "spearman": 0.823827392120075
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 11,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 14,
+        "n": 6,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 16,
+        "n": 5,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 678,
+        "wait_mean_ms": 0.22776824483775812,
+        "wait_p99_ms": 2.2527
+      },
+      "4-15": {
+        "n": 844,
+        "wait_mean_ms": 8.797549241706161,
+        "wait_p99_ms": 19.839599999999997
+      },
+      "1-3": {
+        "n": 477,
+        "wait_mean_ms": 1.779250786163522,
+        "wait_p99_ms": 5.65212
+      },
+      "16-63": {
+        "n": 171,
+        "wait_mean_ms": 16.88901403508772,
+        "wait_p99_ms": 33.1327
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r1-split-t16-home",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2233,
+    "latency_mean_ms": 89.0372575,
+    "latency_p50_ms": 85.4496,
+    "latency_p99_ms": 120.974,
+    "request_resample_mean_ci95_ms": [
+      84.734245,
+      93.36067
+    ],
+    "enqueue_mean_ms": 4.674345618002687,
+    "enqueue_p99_ms": 18.9595,
+    "cpu_total_s": 5.621029169,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.621029169,
+    "sampled_executor_cpu_s": 5.039213371,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 509,
+      "fraction_of_completed_tasks": 0.22794446932377968,
+      "enqueue_mean_ms": 0.3045954263261297,
+      "enqueue_p99_ms": 2.2190100000000004
+    },
+    "execution_offcpu_or_overhead_s": 16.223042921,
+    "migrations": 0.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2233,
+        "pearson": 0.9672449174847595,
+        "spearman": 0.9500378190405078
+      },
+      "pending_before": {
+        "n": 2233,
+        "pearson": 0.9680631724707801,
+        "spearman": 0.9503266080962128
+      },
+      "inflight_before": {
+        "n": 2233,
+        "pearson": -0.405721232512253,
+        "spearman": -0.3949037274988903
+      },
+      "outstanding_before": {
+        "n": 2233,
+        "pearson": 0.6230758160386809,
+        "spearman": 0.6136740839595812
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2233,
+        "pearson": 0.6230758160386809,
+        "spearman": 0.6136740839595812
+      },
+      "chosen_load_us": {
+        "n": 2233,
+        "pearson": 0.6230758160386809,
+        "spearman": 0.6136740839595812
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.7399344009121085,
+      "spearman": 0.8078799249530957
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 7,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 15,
+        "n": 8,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 761,
+        "wait_mean_ms": 0.21711971747700395,
+        "wait_p99_ms": 2.11892
+      },
+      "4-15": {
+        "n": 822,
+        "wait_mean_ms": 8.159115766423358,
+        "wait_p99_ms": 17.366
+      },
+      "1-3": {
+        "n": 479,
+        "wait_mean_ms": 1.65331503131524,
+        "wait_p99_ms": 4.7622
+      },
+      "16-63": {
+        "n": 171,
+        "wait_mean_ms": 16.22137192982456,
+        "wait_p99_ms": 23.642799999999998
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r1-split-t16-fanout",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2233,
+    "latency_mean_ms": 63.504395,
+    "latency_p50_ms": 61.0426,
+    "latency_p99_ms": 86.81230000000001,
+    "request_resample_mean_ci95_ms": [
+      60.1489575,
+      66.501475
+    ],
+    "enqueue_mean_ms": 1.781477433049709,
+    "enqueue_p99_ms": 10.2447,
+    "cpu_total_s": 5.670683618,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.670683618,
+    "sampled_executor_cpu_s": 5.075110158,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 482,
+      "fraction_of_completed_tasks": 0.21585311240483654,
+      "enqueue_mean_ms": 0.1289550746887967,
+      "enqueue_p99_ms": 2.88979
+    },
+    "execution_offcpu_or_overhead_s": 5.905766699,
+    "migrations": 399.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2233,
+        "pearson": 0.9062766748834341,
+        "spearman": 0.8778129086597031
+      },
+      "pending_before": {
+        "n": 2233,
+        "pearson": 0.908244422642736,
+        "spearman": 0.8813590463566081
+      },
+      "inflight_before": {
+        "n": 2233,
+        "pearson": -0.2508538075867346,
+        "spearman": -0.4927508122005468
+      },
+      "outstanding_before": {
+        "n": 2233,
+        "pearson": 0.6442379239186369,
+        "spearman": 0.41965910408649476
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2233,
+        "pearson": 0.644237923918637,
+        "spearman": 0.41965910408649476
+      },
+      "chosen_load_us": {
+        "n": 2233,
+        "pearson": 0.644237923918637,
+        "spearman": 0.41965910408649476
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.5485718403616571,
+      "spearman": 0.5938086303939962
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 7,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 15,
+        "n": 8,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1245,
+        "wait_mean_ms": 0.08066531646586346,
+        "wait_p99_ms": 1.84377
+      },
+      "4-15": {
+        "n": 547,
+        "wait_mean_ms": 5.762377915904936,
+        "wait_p99_ms": 13.2975
+      },
+      "1-3": {
+        "n": 441,
+        "wait_mean_ms": 1.6453289546485261,
+        "wait_p99_ms": 6.17046
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r1-split-t16-borrow",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2233,
+    "latency_mean_ms": 61.3576775,
+    "latency_p50_ms": 59.5758,
+    "latency_p99_ms": 84.8912,
+    "request_resample_mean_ci95_ms": [
+      58.40146,
+      64.325905
+    ],
+    "enqueue_mean_ms": 1.7440661003134796,
+    "enqueue_p99_ms": 10.169799999999999,
+    "cpu_total_s": 5.733007233,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.733007233,
+    "sampled_executor_cpu_s": 5.193185635,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 389,
+      "fraction_of_completed_tasks": 0.174205105239588,
+      "enqueue_mean_ms": 0.43503735218509,
+      "enqueue_p99_ms": 4.47865
+    },
+    "execution_offcpu_or_overhead_s": 5.071701166,
+    "migrations": 1175.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2233,
+        "pearson": 0.8950840156828054,
+        "spearman": 0.842349876511062
+      },
+      "pending_before": {
+        "n": 2233,
+        "pearson": 0.8984159741784127,
+        "spearman": 0.850664179314817
+      },
+      "inflight_before": {
+        "n": 2233,
+        "pearson": -0.16616067102665438,
+        "spearman": -0.30858429558112327
+      },
+      "outstanding_before": {
+        "n": 2233,
+        "pearson": 0.727256876567811,
+        "spearman": 0.5906985495075114
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2233,
+        "pearson": 0.727256876567811,
+        "spearman": 0.5906985495075114
+      },
+      "chosen_load_us": {
+        "n": 2233,
+        "pearson": 0.727256876567811,
+        "spearman": 0.5906985495075114
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.4231883546207017,
+      "spearman": 0.5433395872420262
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 7,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 15,
+        "n": 8,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1330,
+        "wait_mean_ms": 0.16658327669172932,
+        "wait_p99_ms": 2.2803299999999997
+      },
+      "1-3": {
+        "n": 382,
+        "wait_mean_ms": 1.8092504031413612,
+        "wait_p99_ms": 8.82471
+      },
+      "4-15": {
+        "n": 521,
+        "wait_mean_ms": 5.723244126679463,
+        "wait_p99_ms": 13.8813
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r1-split-t16-sticky",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2233,
+    "latency_mean_ms": 61.6194325,
+    "latency_p50_ms": 57.6142,
+    "latency_p99_ms": 94.5457,
+    "request_resample_mean_ci95_ms": [
+      58.2621725,
+      65.09889
+    ],
+    "enqueue_mean_ms": 1.7414326139722347,
+    "enqueue_p99_ms": 11.8001,
+    "cpu_total_s": 5.726193305,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.726193305,
+    "sampled_executor_cpu_s": 5.188329545,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 355,
+      "fraction_of_completed_tasks": 0.15897895208240037,
+      "enqueue_mean_ms": 0.2482516985915493,
+      "enqueue_p99_ms": 2.59186
+    },
+    "execution_offcpu_or_overhead_s": 5.218854494,
+    "migrations": 916.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2233,
+        "pearson": 0.8744621550510243,
+        "spearman": 0.8573908919748173
+      },
+      "pending_before": {
+        "n": 2233,
+        "pearson": 0.8770111380870032,
+        "spearman": 0.8625491537067923
+      },
+      "inflight_before": {
+        "n": 2233,
+        "pearson": -0.1805649883249321,
+        "spearman": -0.3881934894352968
+      },
+      "outstanding_before": {
+        "n": 2233,
+        "pearson": 0.6901972468571032,
+        "spearman": 0.5233988056620197
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2233,
+        "pearson": 0.6901972468571032,
+        "spearman": 0.5233988056620197
+      },
+      "chosen_load_us": {
+        "n": 2233,
+        "pearson": 0.6901972468571032,
+        "spearman": 0.5233988056620197
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.4548961874761365,
+      "spearman": 0.449906191369606
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 7,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 15,
+        "n": 8,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1304,
+        "wait_mean_ms": 0.10457020398773006,
+        "wait_p99_ms": 1.67176
+      },
+      "1-3": {
+        "n": 396,
+        "wait_mean_ms": 1.682416946969697,
+        "wait_p99_ms": 10.294799999999999
+      },
+      "4-15": {
+        "n": 533,
+        "wait_mean_ms": 5.789910637898687,
+        "wait_p99_ms": 16.6372
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r1-split-t16-least-load",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2233,
+    "latency_mean_ms": 62.263135,
+    "latency_p50_ms": 59.680099999999996,
+    "latency_p99_ms": 83.15889999999999,
+    "request_resample_mean_ci95_ms": [
+      59.4269675,
+      64.94968
+    ],
+    "enqueue_mean_ms": 1.7589215060456784,
+    "enqueue_p99_ms": 10.5145,
+    "cpu_total_s": 5.83116439,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.83116439,
+    "sampled_executor_cpu_s": 5.25524163,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 377,
+      "fraction_of_completed_tasks": 0.16883116883116883,
+      "enqueue_mean_ms": 0.37396732625994694,
+      "enqueue_p99_ms": 3.3424899999999997
+    },
+    "execution_offcpu_or_overhead_s": 5.362007531000001,
+    "migrations": 1208.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2233,
+        "pearson": 0.873190541967353,
+        "spearman": 0.8424384347870717
+      },
+      "pending_before": {
+        "n": 2233,
+        "pearson": 0.8770762292705333,
+        "spearman": 0.8437494745352159
+      },
+      "inflight_before": {
+        "n": 2233,
+        "pearson": -0.15927436235077544,
+        "spearman": -0.3006577885950401
+      },
+      "outstanding_before": {
+        "n": 2233,
+        "pearson": 0.7080240029199731,
+        "spearman": 0.5870233973336771
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2233,
+        "pearson": 0.7080240029199731,
+        "spearman": 0.5870233973336771
+      },
+      "chosen_load_us": {
+        "n": 2233,
+        "pearson": 0.7080240029199731,
+        "spearman": 0.5870233973336771
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.4423843456211325,
+      "spearman": 0.46622889305816134
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 7,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 15,
+        "n": 8,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1290,
+        "wait_mean_ms": 0.16020079069767443,
+        "wait_p99_ms": 2.09815
+      },
+      "4-15": {
+        "n": 517,
+        "wait_mean_ms": 5.690286943907156,
+        "wait_p99_ms": 14.393600000000001
+      },
+      "1-3": {
+        "n": 426,
+        "wait_mean_ms": 1.8289538802816903,
+        "wait_p99_ms": 9.1479
+      }
+    }
+  },
+  {
+    "run": "results/runs/local-rpc/r1-split-t16-queue",
+    "requests": {
+      "completed": 40
+    },
+    "completed_tasks": 2233,
+    "latency_mean_ms": 65.745455,
+    "latency_p50_ms": 64.0245,
+    "latency_p99_ms": 90.5823,
+    "request_resample_mean_ci95_ms": [
+      61.997525,
+      68.79334250000001
+    ],
+    "enqueue_mean_ms": 1.766989397223466,
+    "enqueue_p99_ms": 11.4732,
+    "cpu_total_s": 5.727287531,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 5.727287531,
+    "sampled_executor_cpu_s": 5.136615267,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 751,
+      "fraction_of_completed_tasks": 0.3363188535602329,
+      "enqueue_mean_ms": 0.3186093595206392,
+      "enqueue_p99_ms": 2.2844
+    },
+    "execution_offcpu_or_overhead_s": 6.93824644,
+    "migrations": 1007.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 2233,
+        "pearson": 0.8879507576128608,
+        "spearman": 0.8251359706507557
+      },
+      "pending_before": {
+        "n": 2233,
+        "pearson": 0.8903030532236478,
+        "spearman": 0.8251980363005289
+      },
+      "inflight_before": {
+        "n": 2233,
+        "pearson": -0.3275716929002553,
+        "spearman": -0.41925151231372215
+      },
+      "outstanding_before": {
+        "n": 2233,
+        "pearson": 0.5485676601499071,
+        "spearman": 0.4261629499515357
+      },
+      "outstanding_cpu_us_before": {
+        "n": 2233,
+        "pearson": 0.5485676601499071,
+        "spearman": 0.4261629499515357
+      },
+      "chosen_load_us": {
+        "n": 2233,
+        "pearson": 0.8879507576128607,
+        "spearman": 0.8251359706507557
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 40,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 40,
+      "pearson": 0.47863795215487315,
+      "spearman": 0.4026266416510319
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 12,
+        "n": 9,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 13,
+        "n": 7,
+        "pearson": null,
+        "spearman": null
+      },
+      {
+        "fanout": 20,
+        "planned_work_10ms_bucket": 15,
+        "n": 8,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 1347,
+        "wait_mean_ms": 0.22718306904231625,
+        "wait_p99_ms": 2.04422
+      },
+      "1-3": {
+        "n": 364,
+        "wait_mean_ms": 1.7632389587912087,
+        "wait_p99_ms": 6.3216
+      },
+      "4-15": {
+        "n": 522,
+        "wait_mean_ms": 5.743012929118774,
+        "wait_p99_ms": 14.7186
+      }
+    }
+  }
+]

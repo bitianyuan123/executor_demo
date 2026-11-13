@@ -1,0 +1,154 @@
+[
+  {
+    "name": "load-t2-q4",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "2",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "4"
+    ]
+  },
+  {
+    "name": "load-t2-q12",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "2",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "12"
+    ]
+  },
+  {
+    "name": "load-t2-q28",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "2",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "28"
+    ]
+  },
+  {
+    "name": "load-t2-q36",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "2",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "36"
+    ]
+  },
+  {
+    "name": "load-t16-q4",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "16",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "4"
+    ]
+  },
+  {
+    "name": "load-t16-q12",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "16",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "12"
+    ]
+  },
+  {
+    "name": "load-t16-q28",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "16",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "28"
+    ]
+  },
+  {
+    "name": "load-t16-q36",
+    "args": [
+      "--pools",
+      "2",
+      "--threads",
+      "16",
+      "--cpus",
+      "0,1;2,3",
+      "--numa",
+      "0,0",
+      "--affinity",
+      "cluster",
+      "--policy",
+      "home",
+      "--qps",
+      "36"
+    ]
+  }
+]

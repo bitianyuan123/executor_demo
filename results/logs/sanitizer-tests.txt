@@ -1,0 +1,12 @@
+Internal ctest changing into directory: /root/rank_demo/executor_demo/build-sanitize
+Test project /root/rank_demo/executor_demo/build-sanitize
+    Start 1: demo_functional
+1/3 Test #1: demo_functional ..................   Passed    1.24 sec
+    Start 2: analysis_statistics
+2/3 Test #2: analysis_statistics ..............   Passed    0.05 sec
+    Start 3: affinity_executor_test
+3/3 Test #3: affinity_executor_test ...........   Passed    0.14 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   1.43 sec

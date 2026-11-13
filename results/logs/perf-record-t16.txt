@@ -1,0 +1,5 @@
+offered=30 accepted=30 completed=30 rejected=0 censored=0 failed=0 tasks=1230 output=results/runs/diagnostic-t16
+[ perf record: Woken up 189 times to write data ]
+Warning:
+1 out of order events recorded.
+[ perf record: Captured and wrote 384.331 MB /tmp/executor-diagnostic-t16.data (3868341 samples) ]

@@ -1,0 +1,8 @@
+[666/673] Linking CXX static library folly/portability/libfolly_portability_stdio.a
+[667/673] Linking CXX static library folly/result/libfolly_result_errc_rich_error.a
+[668/673] Linking CXX static library folly/settings/libfolly_settings_command_line_parser.a
+[669/673] Linking CXX static library folly/ssl/libfolly_ssl_openssl_cert_utils.a
+[670/673] Linking CXX static library folly/ssl/libfolly_ssl_openssl_key_utils.a
+[671/673] Linking CXX static library folly/stats/libfolly_stats_quantile_estimator.a
+[672/673] Linking CXX static library folly/system/libfolly_system_env_util.a
+[673/673] Linking CXX static library folly/system/os/libfolly_system_os_linux.a

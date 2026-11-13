@@ -1,0 +1,56 @@
+{
+  "run": "results/runs/diagnostic-t2",
+  "timehist": "results/logs/perf-timehist-t2.txt",
+  "workers": [
+    {
+      "tid": 1857276,
+      "group": 0,
+      "sched_intervals": 68,
+      "wait_ms": 1932.394,
+      "sched_delay_ms": 3.581,
+      "runtime_ms": 1054.354,
+      "max_sched_delay_ms": 1.354
+    },
+    {
+      "tid": 1857277,
+      "group": 0,
+      "sched_intervals": 41,
+      "wait_ms": 1805.337,
+      "sched_delay_ms": 9.963,
+      "runtime_ms": 1055.095,
+      "max_sched_delay_ms": 3.581
+    },
+    {
+      "tid": 1857278,
+      "group": 1,
+      "sched_intervals": 88,
+      "wait_ms": 1884.576,
+      "sched_delay_ms": 6.279,
+      "runtime_ms": 1101.469,
+      "max_sched_delay_ms": 1.46
+    },
+    {
+      "tid": 1857279,
+      "group": 1,
+      "sched_intervals": 68,
+      "wait_ms": 1794.761,
+      "sched_delay_ms": 8.254,
+      "runtime_ms": 1191.063,
+      "max_sched_delay_ms": 2.094
+    }
+  ],
+  "totals": {
+    "sched_intervals": 265,
+    "wait_ms": 7417.068,
+    "sched_delay_ms": 28.077,
+    "runtime_ms": 4401.981,
+    "requests": 30,
+    "latency_mean_ms": 77.07156666666667,
+    "latency_p99_ms": 115.492,
+    "sched_delay_ms_per_request": 0.9359,
+    "runtime_ms_per_request": 146.7327,
+    "logged_kernel_cpu_ms": 4396.012618,
+    "max_sched_delay_ms": 3.581
+  },
+  "scope": "Worker scheduler intervals including startup/shutdown. Parallel thread delays overlap; sums per completed request are not critical-path latency. Input display resolution is 0.001 ms."
+}

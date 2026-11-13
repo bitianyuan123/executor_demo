@@ -1,0 +1,123 @@
+Internal ctest changing into directory: /root/rank_demo/executor_demo/build-sanitize
+Test project /root/rank_demo/executor_demo/build-sanitize
+    Start 1: demo_functional
+1/3 Test #1: demo_functional ..................***Failed    0.14 sec
+FFFFFFFF
+======================================================================
+FAIL: test_bounded_overload (__main__.DemoTests.test_bounded_overload)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 144, in test_bounded_overload
+    out = self.run_demo("--pools", "1", "--threads", "1", "--qps", "2000", "--requests", "30",
+                        "--max-inflight", "1", "--cpu-us", "4000", "--jitter", "0", "--long-prob", "0")
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850900==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+======================================================================
+FAIL: test_cancellation_and_rpc_flush (__main__.DemoTests.test_cancellation_and_rpc_flush)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 153, in test_cancellation_and_rpc_flush
+    out = self.run_demo("--pools", "1", "--threads", "1", "--requests", "1", "--cpu-us", "200000",
+                        "--rpc-prob", rpc, "--rpc-delay-us", "2000000", "--drain-seconds", "0")
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850901==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+======================================================================
+FAIL: test_fixed_iteration_work (__main__.DemoTests.test_fixed_iteration_work)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 133, in test_fixed_iteration_work
+    out = self.run_demo("--work-mode", "iterations", "--iterations-per-us", "20", "--memory-kb", "8")
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850902==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+======================================================================
+FAIL: test_invalid_and_overwrite_refused (__main__.DemoTests.test_invalid_and_overwrite_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 181, in test_invalid_and_overwrite_refused
+    out = self.run_demo()
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850909==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+======================================================================
+FAIL: test_policies_same_seed_and_home_invariant (__main__.DemoTests.test_policies_same_seed_and_home_invariant)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 113, in test_policies_same_seed_and_home_invariant
+    out = self.run_demo("--policy", policy)
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850910==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+======================================================================
+FAIL: test_queue_kinds_and_metrics (__main__.DemoTests.test_queue_kinds_and_metrics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 140, in test_queue_kinds_and_metrics
+    out = self.run_demo("--queue", queue, "--metric", metric, "--policy", "borrow", "--wake-us", "25" if queue == "throttled" else "0")
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850911==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+======================================================================
+FAIL: test_rpc_and_fixed_estimator (__main__.DemoTests.test_rpc_and_fixed_estimator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 127, in test_rpc_and_fixed_estimator
+    out = self.run_demo("--rpc-prob", "1", "--rpc-delay-us", "600", "--estimate-us", "77", "--policy", "sticky")
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850912==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+======================================================================
+FAIL: test_topology_and_disabled_task_log (__main__.DemoTests.test_topology_and_disabled_task_log)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 168, in test_topology_and_disabled_task_log
+    out = self.run_demo("--affinity", "cluster", "--cpus", lists, "--task-log", "0")
+  File "/root/rank_demo/executor_demo/tests/demo_functional.py", line 37, in run_demo
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ==1850913==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.090s
+
+FAILED (failures=8)
+
+    Start 2: analysis_statistics
+2/3 Test #2: analysis_statistics ..............   Passed    0.05 sec
+    Start 3: affinity_executor_test
+3/3 Test #3: affinity_executor_test ...........***Failed    0.01 sec
+==1850915==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+
+33% tests passed, 2 tests failed out of 3
+
+Total Test time (real) =   0.20 sec
+
+The following tests FAILED:
+	  1 - demo_functional (Failed)
+	  3 - affinity_executor_test (Failed)
+Errors while running CTest

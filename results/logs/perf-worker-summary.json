@@ -1,0 +1,360 @@
+{
+  "2": {
+    "workers": [
+      {
+        "tid": 1857276,
+        "group": 0,
+        "sched_intervals": 68,
+        "wait_ms": 1932.394,
+        "sched_delay_ms": 3.5809999999999986,
+        "runtime_ms": 1054.3539999999998,
+        "max_sched_delay_ms": 1.354
+      },
+      {
+        "tid": 1857277,
+        "group": 0,
+        "sched_intervals": 41,
+        "wait_ms": 1805.3369999999998,
+        "sched_delay_ms": 9.962999999999994,
+        "runtime_ms": 1055.095,
+        "max_sched_delay_ms": 3.581
+      },
+      {
+        "tid": 1857278,
+        "group": 1,
+        "sched_intervals": 88,
+        "wait_ms": 1884.5759999999996,
+        "sched_delay_ms": 6.278999999999999,
+        "runtime_ms": 1101.4690000000012,
+        "max_sched_delay_ms": 1.46
+      },
+      {
+        "tid": 1857279,
+        "group": 1,
+        "sched_intervals": 68,
+        "wait_ms": 1794.761,
+        "sched_delay_ms": 8.253999999999996,
+        "runtime_ms": 1191.0629999999999,
+        "max_sched_delay_ms": 2.094
+      }
+    ],
+    "totals": {
+      "sched_intervals": 265,
+      "wait_ms": 7417.067999999999,
+      "sched_delay_ms": 28.076999999999988,
+      "runtime_ms": 4401.981000000001,
+      "requests": 30,
+      "latency_mean_ms": 77.07156666666667,
+      "latency_p99_ms": 115.492,
+      "sched_delay_ms_per_request": 0.9358999999999996,
+      "runtime_ms_per_request": 146.73270000000002,
+      "logged_kernel_cpu_ms": 4396.012618,
+      "max_sched_delay_ms": 3.581
+    }
+  },
+  "16": {
+    "workers": [
+      {
+        "tid": 1858030,
+        "group": 0,
+        "sched_intervals": 74,
+        "wait_ms": 2729.9250000000006,
+        "sched_delay_ms": 591.4399999999997,
+        "runtime_ms": 124.87999999999994,
+        "max_sched_delay_ms": 21.007
+      },
+      {
+        "tid": 1858031,
+        "group": 0,
+        "sched_intervals": 79,
+        "wait_ms": 2720.4080000000004,
+        "sched_delay_ms": 545.0129999999997,
+        "runtime_ms": 132.13599999999997,
+        "max_sched_delay_ms": 21.007
+      },
+      {
+        "tid": 1858032,
+        "group": 0,
+        "sched_intervals": 75,
+        "wait_ms": 2527.811,
+        "sched_delay_ms": 491.15600000000023,
+        "runtime_ms": 122.20399999999992,
+        "max_sched_delay_ms": 21.058
+      },
+      {
+        "tid": 1858033,
+        "group": 0,
+        "sched_intervals": 118,
+        "wait_ms": 2605.308000000001,
+        "sched_delay_ms": 626.6379999999998,
+        "runtime_ms": 257.1259999999998,
+        "max_sched_delay_ms": 21.009
+      },
+      {
+        "tid": 1858034,
+        "group": 0,
+        "sched_intervals": 50,
+        "wait_ms": 2915.9470000000006,
+        "sched_delay_ms": 385.78999999999996,
+        "runtime_ms": 76.06699999999996,
+        "max_sched_delay_ms": 18.909
+      },
+      {
+        "tid": 1858035,
+        "group": 0,
+        "sched_intervals": 56,
+        "wait_ms": 2771.4440000000013,
+        "sched_delay_ms": 483.24499999999983,
+        "runtime_ms": 88.96700000000001,
+        "max_sched_delay_ms": 21.007
+      },
+      {
+        "tid": 1858036,
+        "group": 0,
+        "sched_intervals": 62,
+        "wait_ms": 2886.2919999999995,
+        "sched_delay_ms": 424.1860000000001,
+        "runtime_ms": 105.77099999999996,
+        "max_sched_delay_ms": 18.921
+      },
+      {
+        "tid": 1858037,
+        "group": 0,
+        "sched_intervals": 73,
+        "wait_ms": 2708.582,
+        "sched_delay_ms": 570.2550000000002,
+        "runtime_ms": 139.53799999999993,
+        "max_sched_delay_ms": 21.059
+      },
+      {
+        "tid": 1858038,
+        "group": 0,
+        "sched_intervals": 59,
+        "wait_ms": 2754.1510000000003,
+        "sched_delay_ms": 428.1479999999999,
+        "runtime_ms": 108.37099999999997,
+        "max_sched_delay_ms": 22.689
+      },
+      {
+        "tid": 1858039,
+        "group": 0,
+        "sched_intervals": 73,
+        "wait_ms": 2703.0110000000013,
+        "sched_delay_ms": 527.5659999999999,
+        "runtime_ms": 144.92699999999994,
+        "max_sched_delay_ms": 18.909
+      },
+      {
+        "tid": 1858040,
+        "group": 0,
+        "sched_intervals": 83,
+        "wait_ms": 2715.5170000000007,
+        "sched_delay_ms": 690.9170000000003,
+        "runtime_ms": 139.95499999999993,
+        "max_sched_delay_ms": 21.062
+      },
+      {
+        "tid": 1858041,
+        "group": 0,
+        "sched_intervals": 74,
+        "wait_ms": 2686.7390000000005,
+        "sched_delay_ms": 565.708,
+        "runtime_ms": 174.0149999999999,
+        "max_sched_delay_ms": 21.061
+      },
+      {
+        "tid": 1858042,
+        "group": 0,
+        "sched_intervals": 84,
+        "wait_ms": 2852.624,
+        "sched_delay_ms": 537.9490000000001,
+        "runtime_ms": 138.69999999999996,
+        "max_sched_delay_ms": 18.556
+      },
+      {
+        "tid": 1858043,
+        "group": 0,
+        "sched_intervals": 56,
+        "wait_ms": 2347.9040000000005,
+        "sched_delay_ms": 380.80100000000004,
+        "runtime_ms": 99.26499999999997,
+        "max_sched_delay_ms": 16.806
+      },
+      {
+        "tid": 1858044,
+        "group": 0,
+        "sched_intervals": 82,
+        "wait_ms": 2873.076,
+        "sched_delay_ms": 534.1539999999998,
+        "runtime_ms": 118.5359999999999,
+        "max_sched_delay_ms": 21.007
+      },
+      {
+        "tid": 1858045,
+        "group": 0,
+        "sched_intervals": 74,
+        "wait_ms": 2862.2149999999997,
+        "sched_delay_ms": 578.4600000000002,
+        "runtime_ms": 129.40799999999993,
+        "max_sched_delay_ms": 20.47
+      },
+      {
+        "tid": 1858046,
+        "group": 1,
+        "sched_intervals": 64,
+        "wait_ms": 2846.661,
+        "sched_delay_ms": 438.12000000000006,
+        "runtime_ms": 124.41699999999996,
+        "max_sched_delay_ms": 21.08
+      },
+      {
+        "tid": 1858047,
+        "group": 1,
+        "sched_intervals": 71,
+        "wait_ms": 2838.589999999998,
+        "sched_delay_ms": 510.9229999999999,
+        "runtime_ms": 153.40999999999994,
+        "max_sched_delay_ms": 21.006
+      },
+      {
+        "tid": 1858048,
+        "group": 1,
+        "sched_intervals": 61,
+        "wait_ms": 2848.390000000001,
+        "sched_delay_ms": 470.30899999999997,
+        "runtime_ms": 106.87999999999998,
+        "max_sched_delay_ms": 15.918
+      },
+      {
+        "tid": 1858049,
+        "group": 1,
+        "sched_intervals": 78,
+        "wait_ms": 2817.4770000000008,
+        "sched_delay_ms": 559.991,
+        "runtime_ms": 156.1739999999999,
+        "max_sched_delay_ms": 19.106
+      },
+      {
+        "tid": 1858050,
+        "group": 1,
+        "sched_intervals": 82,
+        "wait_ms": 2810.7769999999996,
+        "sched_delay_ms": 601.8140000000001,
+        "runtime_ms": 148.80799999999994,
+        "max_sched_delay_ms": 21.014
+      },
+      {
+        "tid": 1858051,
+        "group": 1,
+        "sched_intervals": 79,
+        "wait_ms": 2829.870999999999,
+        "sched_delay_ms": 566.197,
+        "runtime_ms": 126.11899999999997,
+        "max_sched_delay_ms": 21.712
+      },
+      {
+        "tid": 1858052,
+        "group": 1,
+        "sched_intervals": 57,
+        "wait_ms": 2870.992999999999,
+        "sched_delay_ms": 437.73400000000004,
+        "runtime_ms": 84.892,
+        "max_sched_delay_ms": 16.919
+      },
+      {
+        "tid": 1858053,
+        "group": 1,
+        "sched_intervals": 87,
+        "wait_ms": 2782.3840000000005,
+        "sched_delay_ms": 478.81500000000017,
+        "runtime_ms": 190.3809999999999,
+        "max_sched_delay_ms": 16.806
+      },
+      {
+        "tid": 1858054,
+        "group": 1,
+        "sched_intervals": 81,
+        "wait_ms": 2829.3559999999998,
+        "sched_delay_ms": 624.8150000000002,
+        "runtime_ms": 161.98699999999994,
+        "max_sched_delay_ms": 21.016
+      },
+      {
+        "tid": 1858055,
+        "group": 1,
+        "sched_intervals": 60,
+        "wait_ms": 2841.723000000001,
+        "sched_delay_ms": 451.47500000000014,
+        "runtime_ms": 148.037,
+        "max_sched_delay_ms": 23.101
+      },
+      {
+        "tid": 1858056,
+        "group": 1,
+        "sched_intervals": 94,
+        "wait_ms": 2811.980000000001,
+        "sched_delay_ms": 654.5130000000001,
+        "runtime_ms": 177.5609999999999,
+        "max_sched_delay_ms": 21.015
+      },
+      {
+        "tid": 1858057,
+        "group": 1,
+        "sched_intervals": 88,
+        "wait_ms": 2785.5849999999996,
+        "sched_delay_ms": 667.6870000000004,
+        "runtime_ms": 173.1429999999999,
+        "max_sched_delay_ms": 21.013
+      },
+      {
+        "tid": 1858058,
+        "group": 1,
+        "sched_intervals": 67,
+        "wait_ms": 2858.464,
+        "sched_delay_ms": 525.8230000000001,
+        "runtime_ms": 114.04799999999997,
+        "max_sched_delay_ms": 21.711
+      },
+      {
+        "tid": 1858059,
+        "group": 1,
+        "sched_intervals": 69,
+        "wait_ms": 2820.9119999999994,
+        "sched_delay_ms": 548.3210000000004,
+        "runtime_ms": 151.12299999999996,
+        "max_sched_delay_ms": 22.495
+      },
+      {
+        "tid": 1858060,
+        "group": 1,
+        "sched_intervals": 72,
+        "wait_ms": 2854.498,
+        "sched_delay_ms": 594.3860000000002,
+        "runtime_ms": 115.658,
+        "max_sched_delay_ms": 21.715
+      },
+      {
+        "tid": 1858061,
+        "group": 1,
+        "sched_intervals": 77,
+        "wait_ms": 2817.2049999999986,
+        "sched_delay_ms": 599.1310000000001,
+        "runtime_ms": 149.65499999999994,
+        "max_sched_delay_ms": 23.101
+      }
+    ],
+    "totals": {
+      "sched_intervals": 2359,
+      "wait_ms": 88925.82,
+      "sched_delay_ms": 17091.480000000003,
+      "runtime_ms": 4382.158999999998,
+      "requests": 30,
+      "latency_mean_ms": 77.30779666666666,
+      "latency_p99_ms": 104.919,
+      "sched_delay_ms_per_request": 569.7160000000001,
+      "runtime_ms_per_request": 146.07196666666658,
+      "logged_kernel_cpu_ms": 4368.582438,
+      "max_sched_delay_ms": 23.101
+    }
+  }
+}

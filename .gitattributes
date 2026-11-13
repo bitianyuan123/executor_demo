@@ -1,0 +1,2 @@
+# Preserve literal diagnostic output, including perf's aligned trailing spaces.
+results/logs/** -whitespace

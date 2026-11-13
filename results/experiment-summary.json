@@ -1,0 +1,738 @@
+{
+  "main": {
+    "six-unbound-home": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        44.9887725,
+        44.787605,
+        43.0327075
+      ],
+      "mean_of_run_means_ms": 44.269695,
+      "run_p99_ms": [
+        70.6802,
+        61.9609,
+        85.9948
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 15,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.7777119370002187,
+        0.797831745783614
+      ]
+    },
+    "split-t16-borrow": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        43.3405075,
+        43.5882375,
+        43.3005225
+      ],
+      "mean_of_run_means_ms": 43.409755833333335,
+      "run_p99_ms": [
+        62.3414,
+        65.70139999999999,
+        70.1615
+      ],
+      "migrations_per_completed_request": 21.35,
+      "queue_zero_inflight_gt_capacity_tasks": 958,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.9190199987104755,
+        0.922472920825978
+      ]
+    },
+    "split-t16-fanout": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        47.58397,
+        48.5163225,
+        44.382555
+      ],
+      "mean_of_run_means_ms": 46.82761583333333,
+      "run_p99_ms": [
+        74.743,
+        83.7711,
+        75.8094
+      ],
+      "migrations_per_completed_request": 9.6,
+      "queue_zero_inflight_gt_capacity_tasks": 848,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.9304986320328578,
+        0.9464072578625485
+      ]
+    },
+    "split-t16-home": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        76.4992125,
+        76.1079275,
+        74.3515175
+      ],
+      "mean_of_run_means_ms": 75.65288583333333,
+      "run_p99_ms": [
+        105.504,
+        100.855,
+        110.838
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 193,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.9412664618612305,
+        0.9495197860203868
+      ]
+    },
+    "split-t16-least-load": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        43.7935875,
+        45.7577175,
+        42.48046
+      ],
+      "mean_of_run_means_ms": 44.01058833333333,
+      "run_p99_ms": [
+        70.1814,
+        73.6328,
+        76.00880000000001
+      ],
+      "migrations_per_completed_request": 21.483333333333334,
+      "queue_zero_inflight_gt_capacity_tasks": 909,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.9126252576422856,
+        0.9222957742771228
+      ]
+    },
+    "split-t16-queue": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        49.6580475,
+        47.6021875,
+        48.00973
+      ],
+      "mean_of_run_means_ms": 48.423321666666666,
+      "run_p99_ms": [
+        77.19030000000001,
+        68.34360000000001,
+        78.1863
+      ],
+      "migrations_per_completed_request": 20.783333333333335,
+      "queue_zero_inflight_gt_capacity_tasks": 1051,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.8785416271432797,
+        0.902624280237679
+      ]
+    },
+    "split-t16-sticky": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        45.8417325,
+        46.606905,
+        43.3009625
+      ],
+      "mean_of_run_means_ms": 45.24986666666666,
+      "run_p99_ms": [
+        66.14789999999999,
+        81.92869999999999,
+        72.43780000000001
+      ],
+      "migrations_per_completed_request": 21.266666666666666,
+      "queue_zero_inflight_gt_capacity_tasks": 916,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.9033855539672845,
+        0.9086887264284338
+      ]
+    },
+    "split-t2-borrow": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        44.4891575,
+        44.363645,
+        42.04753
+      ],
+      "mean_of_run_means_ms": 43.63344416666666,
+      "run_p99_ms": [
+        72.1365,
+        83.9944,
+        70.70410000000001
+      ],
+      "migrations_per_completed_request": 21.983333333333334,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.8154134308146076,
+        0.8314291649607287
+      ]
+    },
+    "split-t2-fanout": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        44.42936,
+        44.2132075,
+        42.5903175
+      ],
+      "mean_of_run_means_ms": 43.744295,
+      "run_p99_ms": [
+        65.1405,
+        71.0066,
+        69.946
+      ],
+      "migrations_per_completed_request": 9.591666666666667,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.8464839588932799,
+        0.8843972106896797
+      ]
+    },
+    "split-t2-home": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        74.5314425,
+        72.8834125,
+        71.136645
+      ],
+      "mean_of_run_means_ms": 72.8505,
+      "run_p99_ms": [
+        113.134,
+        102.932,
+        104.665
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.8235506042806032,
+        0.856490628092809
+      ]
+    },
+    "split-t2-least-load": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        45.58627,
+        44.6730875,
+        41.1529625
+      ],
+      "mean_of_run_means_ms": 43.80410666666667,
+      "run_p99_ms": [
+        84.44139999999999,
+        69.6083,
+        59.7228
+      ],
+      "migrations_per_completed_request": 22.225,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.7858681390078313,
+        0.852347659659557
+      ]
+    },
+    "split-t2-sticky": {
+      "repetitions": 3,
+      "requests": {
+        "completed": 120
+      },
+      "run_means_ms": [
+        45.3429625,
+        44.87434,
+        40.601675
+      ],
+      "mean_of_run_means_ms": 43.60632583333333,
+      "run_p99_ms": [
+        71.4418,
+        70.17,
+        61.059400000000004
+      ],
+      "migrations_per_completed_request": 22.25,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 4920,
+      "queue_spearman_range": [
+        0.7856677398178471,
+        0.8446840734036963
+      ]
+    }
+  },
+  "rpc": {
+    "split-t16-borrow": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        63.0377525,
+        61.3576775
+      ],
+      "mean_of_run_means_ms": 62.197715,
+      "run_p99_ms": [
+        91.5439,
+        84.8912
+      ],
+      "migrations_per_completed_request": 29.125,
+      "queue_zero_inflight_gt_capacity_tasks": 783,
+      "task_count": 4403,
+      "queue_spearman_range": [
+        0.842349876511062,
+        0.852656349641756
+      ]
+    },
+    "split-t16-fanout": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        64.5691175,
+        63.504395
+      ],
+      "mean_of_run_means_ms": 64.03675625,
+      "run_p99_ms": [
+        93.3395,
+        86.81230000000001
+      ],
+      "migrations_per_completed_request": 9.9875,
+      "queue_zero_inflight_gt_capacity_tasks": 966,
+      "task_count": 4403,
+      "queue_spearman_range": [
+        0.8778129086597031,
+        0.8880568607236555
+      ]
+    },
+    "split-t16-home": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        88.0926125,
+        89.0372575
+      ],
+      "mean_of_run_means_ms": 88.56493499999999,
+      "run_p99_ms": [
+        129.19,
+        120.974
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 934,
+      "task_count": 4403,
+      "queue_spearman_range": [
+        0.9500378190405078,
+        0.9531930543070285
+      ]
+    },
+    "split-t16-least-load": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        63.7781475,
+        62.263135
+      ],
+      "mean_of_run_means_ms": 63.02064125,
+      "run_p99_ms": [
+        119.704,
+        83.15889999999999
+      ],
+      "migrations_per_completed_request": 29.5875,
+      "queue_zero_inflight_gt_capacity_tasks": 729,
+      "task_count": 4403,
+      "queue_spearman_range": [
+        0.8424384347870717,
+        0.8577248145754238
+      ]
+    },
+    "split-t16-queue": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        66.6036475,
+        65.745455
+      ],
+      "mean_of_run_means_ms": 66.17455125000001,
+      "run_p99_ms": [
+        123.224,
+        90.5823
+      ],
+      "migrations_per_completed_request": 24.5625,
+      "queue_zero_inflight_gt_capacity_tasks": 1471,
+      "task_count": 4403,
+      "queue_spearman_range": [
+        0.8251359706507557,
+        0.8310353636808255
+      ]
+    },
+    "split-t16-sticky": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        62.75055,
+        61.6194325
+      ],
+      "mean_of_run_means_ms": 62.184991249999996,
+      "run_p99_ms": [
+        115.255,
+        94.5457
+      ],
+      "migrations_per_completed_request": 22.4875,
+      "queue_zero_inflight_gt_capacity_tasks": 705,
+      "task_count": 4403,
+      "queue_spearman_range": [
+        0.8573908919748173,
+        0.8680459030994718
+      ]
+    }
+  },
+  "load": {
+    "load-t16-q12": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 72
+      },
+      "run_means_ms": [
+        76.79368055555555,
+        76.7513388888889
+      ],
+      "mean_of_run_means_ms": 76.77250972222222,
+      "run_p99_ms": [
+        108.103,
+        100.866
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 111,
+      "task_count": 2952,
+      "queue_spearman_range": [
+        0.9420923756881578,
+        0.9507853623798946
+      ]
+    },
+    "load-t16-q28": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 168
+      },
+      "run_means_ms": [
+        243.93496071428572,
+        229.1049130952381
+      ],
+      "mean_of_run_means_ms": 236.5199369047619,
+      "run_p99_ms": [
+        607.721,
+        439.799
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 179,
+      "task_count": 6888,
+      "queue_spearman_range": [
+        0.9151141742695037,
+        0.9682892115227649
+      ]
+    },
+    "load-t16-q36": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 216
+      },
+      "run_means_ms": [
+        1162.465351851852,
+        1073.844648148148
+      ],
+      "mean_of_run_means_ms": 1118.155,
+      "run_p99_ms": [
+        1961.78,
+        1659.49
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 16,
+      "task_count": 8856,
+      "queue_spearman_range": [
+        0.992930385062926,
+        0.994399180620663
+      ]
+    },
+    "load-t16-q4": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 24
+      },
+      "run_means_ms": [
+        80.00260833333333,
+        75.58425
+      ],
+      "mean_of_run_means_ms": 77.79342916666667,
+      "run_p99_ms": [
+        105.082,
+        99.2523
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 46,
+      "task_count": 984,
+      "queue_spearman_range": [
+        0.9350280052663158,
+        0.9590407088386075
+      ]
+    },
+    "load-t2-q12": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 72
+      },
+      "run_means_ms": [
+        75.38923888888888,
+        75.06188888888889
+      ],
+      "mean_of_run_means_ms": 75.22556388888889,
+      "run_p99_ms": [
+        114.393,
+        119.283
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 2952,
+      "queue_spearman_range": [
+        0.8163626793535806,
+        0.83276402402665
+      ]
+    },
+    "load-t2-q28": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 168
+      },
+      "run_means_ms": [
+        215.25657857142858,
+        160.10724166666665
+      ],
+      "mean_of_run_means_ms": 187.68191011904761,
+      "run_p99_ms": [
+        473.743,
+        256.784
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 6888,
+      "queue_spearman_range": [
+        0.8744074136463181,
+        0.9495912803783529
+      ]
+    },
+    "load-t2-q36": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 216
+      },
+      "run_means_ms": [
+        1076.5093055555556,
+        997.1402388888889
+      ],
+      "mean_of_run_means_ms": 1036.8247722222222,
+      "run_p99_ms": [
+        1785.05,
+        1502.31
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 8856,
+      "queue_spearman_range": [
+        0.992767606763818,
+        0.9930903385007503
+      ]
+    },
+    "load-t2-q4": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 24
+      },
+      "run_means_ms": [
+        79.65861666666667,
+        74.35165
+      ],
+      "mean_of_run_means_ms": 77.00513333333333,
+      "run_p99_ms": [
+        112.98,
+        102.924
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 984,
+      "queue_spearman_range": [
+        0.8152616610487329,
+        0.837090859570345
+      ]
+    }
+  },
+  "iterations": {
+    "split-t16-borrow": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        48.369045,
+        46.326075
+      ],
+      "mean_of_run_means_ms": 47.34756,
+      "run_p99_ms": [
+        99.1587,
+        85.97510000000001
+      ],
+      "migrations_per_completed_request": 21.1,
+      "queue_zero_inflight_gt_capacity_tasks": 554,
+      "task_count": 3280,
+      "queue_spearman_range": [
+        0.9145050279416701,
+        0.9151106485680557
+      ]
+    },
+    "split-t16-fanout": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        45.198515,
+        47.18536
+      ],
+      "mean_of_run_means_ms": 46.1919375,
+      "run_p99_ms": [
+        74.8313,
+        86.8653
+      ],
+      "migrations_per_completed_request": 9.65,
+      "queue_zero_inflight_gt_capacity_tasks": 570,
+      "task_count": 3280,
+      "queue_spearman_range": [
+        0.9373088129917212,
+        0.9403132898183157
+      ]
+    },
+    "split-t16-home": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        76.36705,
+        77.0498575
+      ],
+      "mean_of_run_means_ms": 76.70845375,
+      "run_p99_ms": [
+        105.224,
+        97.612
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 158,
+      "task_count": 3280,
+      "queue_spearman_range": [
+        0.9626936777214885,
+        0.966867447358678
+      ]
+    },
+    "split-t2-borrow": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        42.86239,
+        47.21274
+      ],
+      "mean_of_run_means_ms": 45.037565,
+      "run_p99_ms": [
+        68.701,
+        126.252
+      ],
+      "migrations_per_completed_request": 22.75,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 3280,
+      "queue_spearman_range": [
+        0.8031114773397663,
+        0.8236798043031323
+      ]
+    },
+    "split-t2-fanout": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        44.7765675,
+        46.655045
+      ],
+      "mean_of_run_means_ms": 45.71580625,
+      "run_p99_ms": [
+        89.86789999999999,
+        108.79
+      ],
+      "migrations_per_completed_request": 9.7125,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 3280,
+      "queue_spearman_range": [
+        0.8466038246021268,
+        0.8588996783000333
+      ]
+    },
+    "split-t2-home": {
+      "repetitions": 2,
+      "requests": {
+        "completed": 80
+      },
+      "run_means_ms": [
+        74.3345525,
+        72.58515249999999
+      ],
+      "mean_of_run_means_ms": 73.4598525,
+      "run_p99_ms": [
+        112.441,
+        103.74
+      ],
+      "migrations_per_completed_request": 0.0,
+      "queue_zero_inflight_gt_capacity_tasks": 0,
+      "task_count": 3280,
+      "queue_spearman_range": [
+        0.8220956089695751,
+        0.8351345795913614
+      ]
+    }
+  }
+}
