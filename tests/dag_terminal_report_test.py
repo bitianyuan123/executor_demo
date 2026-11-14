@@ -48,7 +48,8 @@ class DagTerminalReportTest(unittest.TestCase):
                               'predecessors': '', 'kind': 'operator', 'rpc_delay_target_us': 0,
                               'submit_ns': n(planned+.01), 'start_ns': n(planned+.02),
                               'finish_ns': n(finish-.01), 'status': 'completed', 'cpu_us': 1000,
-                              'migrated': 0, 'cross_numa': 0, 'queue_before': 0, 'wave': 0, 'is_fanout': 1})
+                              'migrated': 0, 'cross_numa': 0, 'queue_before': 0, 'wave': 0, 'is_fanout': 1,
+                              'depth': 0, 'chosen_group': 0, 'move_reason': 'home'})
             write_csv(path/'requests.csv', requests)
             write_csv(path/'tasks.csv', tasks)
             write_csv(path/'pools.csv', [
@@ -84,6 +85,78 @@ class DagTerminalReportTest(unittest.TestCase):
             self.assertIn('pending_sum_mean/p99=7.000/9.000', output)
             self.assertIn('inflight_sum_mean/p99=9.000/11.000', output)
             self.assertIn('QUEUE_ZERO task_n=2 wait_gt1ms=2', output)
+            self.assertIn('ROUTING_TRANSITION initial_fork tasks=2 migrated_source=0 cross_numa=0', output)
+            self.assertIn('ROUTING_CONFIG balance_forks=unknown candidate_scope=unknown estimate_us=unknown', output)
+
+    def test_transition_counts_share_cohort_and_keep_unknown_descriptors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rows = self.fixture(root)
+            path = Path(rows[0]['directory'])
+            original = report.read_csv(path/'tasks.csv')
+            templates = [
+                {'kind': 'operator', 'stage': '0', 'wave': '0', 'depth': '0'},
+                {'kind': 'operator', 'stage': '0', 'wave': '1', 'depth': '0'},
+                {'kind': 'operator', 'stage': '0', 'wave': '1', 'depth': '1'},
+                {'kind': 'join', 'stage': '0', 'wave': '1', 'depth': '0'},
+                {'kind': 'operator', 'stage': '1', 'wave': '0', 'depth': '0'},
+                {'kind': '', 'stage': '0', 'wave': '0', 'depth': '0'},
+            ]
+            selected = []
+            for index, descriptors in enumerate(templates):
+                task = dict(original[1], **descriptors, node_id=str(index),
+                            chosen_group=str(index % 2), migrated=str(index % 2),
+                            cross_numa='0', move_reason='return_home' if index == 3 else 'preferred')
+                task['start_ns'] = str(int(task['start_ns'])+index*1_000_000)
+                selected.append(task)
+            # Exclude both an early request and a later request, and keep selected
+            # stages finishing beyond end=2. A noncompleted selected stage is not
+            # a routing outcome, even though it remains visible in status totals.
+            incomplete = dict(original[1], node_id='6', status='censored')
+            write_csv(path/'tasks.csv', [original[0], *selected, incomplete, original[2]])
+            meta, summary = report.read_json(path/'metadata.json'), report.read_json(path/'summary.json')
+            details = report.details(path, meta, summary, 1, 2)
+            routing = details['routing']
+            self.assertEqual(details['completed'], 6)
+            self.assertEqual(details['statuses'], {'completed': 6, 'censored': 1})
+            self.assertEqual(set(routing), set(report.TRANSITIONS) | {'unknown'})
+            self.assertEqual(sum(row['tasks'] for row in routing.values()), details['completed'])
+            self.assertTrue(all(row['tasks'] == 1 for row in routing.values()))
+            self.assertTrue(all(sum(row['chosen_groups'].values()) == row['tasks'] for row in routing.values()))
+            self.assertTrue(all(sum(row['move_reasons'].values()) == row['tasks'] for row in routing.values()))
+            self.assertEqual(routing['join']['return_home_reason']['count'], 1)
+            self.assertEqual(routing['join']['migrated_source']['count'], 1)
+            self.assertEqual(routing['rpc_resume']['waits'], [14])
+            self.assertEqual(details['first_waits'], [10])
+            self.assertEqual(sum(row['migrated_source']['count'] for row in routing.values()), 3)
+
+    def test_absent_flags_and_transition_fields_are_unknown_not_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rows = self.fixture(root)
+            path = Path(rows[0]['directory'])
+            tasks = report.read_csv(path/'tasks.csv')
+            for key in ('migrated', 'cross_numa', 'move_reason', 'chosen_group', 'depth'):
+                tasks[1][key] = ''
+            write_csv(path/'tasks.csv', tasks)
+            metadata = report.read_json(path/'metadata.json')
+            metadata['config'].update(balance_forks='initial', candidate_scope='all', estimate_us=0,
+                                      min_gain_us=250, relative_gain=.2, cross_numa_penalty_us=100)
+            (path/'metadata.json').write_text(json.dumps(metadata))
+            lines = []
+            self.assertTrue(report.phase_report(root, 's4-baseline', emit=lines.append))
+            output = '\n'.join(lines)
+            self.assertIn('ROUTING_CONFIG balance_forks=initial candidate_scope=all estimate_us=0 '
+                          'min_gain_us=250 relative_gain=0.2 cross_numa_penalty_us=100', output)
+            self.assertIn('ROUTING_TRANSITION unknown tasks=1 migrated_source=unknown[known=0,true=0,missing=1]', output)
+            self.assertIn('cross_numa=unknown[known=0,true=0,missing=1]', output)
+            self.assertIn('return_home_reason=unknown[known=0,true=0,missing=1]', output)
+            self.assertIn('chosen_groups={"unknown": 1} move_reasons={"unknown": 1}', output)
+            self.assertIn('migrated_source=unknown[known=1,true=0,missing=1]', output)
+            tasks[2]['migrated'] = '2'
+            write_csv(path/'tasks.csv', tasks)
+            self.assertFalse(report.phase_report(root, 's4-baseline', emit=lines.append))
+            self.assertIn('invalid migrated flag', '\n'.join(lines))
 
     def test_explicit_window_uses_arrival_origin_not_first_poisson_arrival(self):
         with tempfile.TemporaryDirectory() as tmp:

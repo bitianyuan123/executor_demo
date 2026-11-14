@@ -39,6 +39,79 @@ def numeric(row, key):
     return value
 
 
+TRANSITIONS = ('initial_fork', 'later_fork', 'ordinary_successor', 'join', 'rpc_resume')
+
+
+def transition(task):
+    """Classify recorded CPU stages only; absent descriptors are not defaults."""
+    kind, stage = task.get('kind'), task.get('stage')
+    if kind == 'join' and stage == '0':
+        return 'join'
+    if kind != 'operator':
+        return 'unknown'
+    if stage == '1':
+        return 'rpc_resume'
+    if stage != '0':
+        return 'unknown'
+    depth = task.get('depth')
+    if depth in (None, ''):
+        return 'unknown'
+    if int(depth) > 0:
+        return 'ordinary_successor'
+    if int(depth) != 0 or task.get('wave') in (None, ''):
+        return 'unknown'
+    wave = int(task['wave'])
+    return 'initial_fork' if wave == 0 else 'later_fork' if wave > 0 else 'unknown'
+
+
+def known_flag_count(tasks, key, reason=None):
+    """Preserve unknown telemetry separately from known false flags."""
+    known, count = 0, 0
+    for task in tasks:
+        value = task.get(key)
+        if value in (None, ''):
+            continue
+        known += 1
+        if reason is not None:
+            count += value == reason
+        else:
+            if value not in ('0', '1'):
+                raise ValueError(f'invalid {key} flag')
+            count += int(value)
+    return {'count': count, 'known': known, 'unknown': len(tasks)-known}
+
+
+def flag_text(count):
+    if not count['unknown']:
+        return str(count['count'])
+    return f'unknown[known={count["known"]},true={count["count"]},missing={count["unknown"]}]'
+
+
+def routing_transitions(tasks):
+    grouped = {kind: [] for kind in TRANSITIONS}
+    for task in tasks:
+        grouped.setdefault(transition(task), []).append(task)
+    result = {}
+    for kind, group in grouped.items():
+        result[kind] = {
+            'tasks': len(group),
+            # The CSV stores Decision::migrated (chosen != source), not rerouted
+            # (chosen != preferred). Borrow returning home may therefore migrate.
+            'migrated_source': known_flag_count(group, 'migrated'),
+            'cross_numa': known_flag_count(group, 'cross_numa'),
+            'return_home_reason': known_flag_count(group, 'move_reason', 'return_home'),
+            'chosen_groups': dict(Counter(t.get('chosen_group') or 'unknown' for t in group)),
+            'move_reasons': dict(Counter(t.get('move_reason') or 'unknown' for t in group)),
+            'waits': [(int(t['start_ns'])-int(t['submit_ns']))/1e6 for t in group],
+        }
+    return result
+
+
+def config_value(config, key):
+    value = config.get(key)
+    return 'unknown' if value is None or value == '' else value
+
+
 def window(root, phase, spec=None, start=None, end=None):
     if (start is None) != (end is None):
         raise ValueError('provide both --warmup-seconds and --steady-end-seconds')
@@ -95,7 +168,7 @@ def details(path, metadata, summary, start, end):
             unknown_queue += 1
         elif q == 0:
             zero_waits.append(wait)
-        if task.get('kind') == 'operator' and task.get('wave') == '0' and task.get('is_fanout') == '1':
+        if transition(task) == 'initial_fork':
             first_waits.append(wait)
     groups = {int(g['group']) for g in metadata.get('groups', [])}
     snapshots = defaultdict(dict)
@@ -121,8 +194,8 @@ def details(path, metadata, summary, start, end):
     return {'statuses': dict(Counter(t['status'] for t in selected)), 'completed': len(done),
             'kinds': dict(Counter(t.get('kind', 'unknown') for t in done)), 'waits': waits,
             'walls': walls, 'cpus': cpus, 'zero_waits': zero_waits, 'unknown_queue': unknown_queue,
-            'first_waits': first_waits, 'migrations': sum(int(t['migrated']) for t in done),
-            'cross_numa': sum(int(t['cross_numa']) for t in done), 'load': load,
+            'first_waits': first_waits, 'migrations': known_flag_count(done, 'migrated'),
+            'cross_numa': known_flag_count(done, 'cross_numa'), 'routing': routing_transitions(done), 'load': load,
             'snapshot_times': len(snapshots), 'incomplete_snapshots': incomplete,
             'workers': workers, 'origin': origin}
 
@@ -186,6 +259,10 @@ def phase_report(root, phase, spec=None, start=None, end=None, offset=0, limit=1
                  f'affinity={config.get("affinity")} threads/pool={config.get("threads_per_pool")} '
                  f'metric={config.get("metric")} queue={config.get("queue")} wake_us={config.get("wake_us")} '
                  f'same_union={same_union} masks={masks} numa_verified={meta.get("numa_labels_verified", "?")}')
+            emit('  ROUTING_CONFIG ' + ' '.join(f'{key}={config_value(config, key)}' for key in
+                 ('balance_forks', 'candidate_scope', 'estimate_us', 'min_gain_us', 'relative_gain', 'cross_numa_penalty_us'))
+                 + ' capacities=' + json.dumps({str(g['group']): config_value(g, 'capacity')
+                                               for g in meta.get('groups', [])}, sort_keys=True))
             emit(f'  WORK graph={config.get("graph")} widths={config.get("wave_widths")} depths={config.get("wave_depths")} '
                  f'qps={config.get("qps")} arrival={config.get("arrival")} cpu_us={config.get("cpu_us")} '
                  f'join_us={config.get("join_us")} rpc_prob={config.get("rpc_prob")} mode={config.get("work_mode")} '
@@ -199,10 +276,19 @@ def phase_report(root, phase, spec=None, start=None, end=None, offset=0, limit=1
                  + ' admission_lag_mean/p99=' + '/'.join(fmt(metrics[k]) for k in ('admission_lag_ms_mean', 'admission_lag_ms_p99')))
             emit(f'  TASK_COHORT statuses={json.dumps(extra["statuses"], sort_keys=True)} kinds={json.dumps(extra["kinds"], sort_keys=True)} '
                  f'wait_mean/p99_ms={pair(extra["waits"])} work_wall_mean/p99_ms={pair(extra["walls"])} '
-                 f'work_cpu_mean_ms={fmt(mean(extra["cpus"]))} migrated={extra["migrations"]} cross_numa={extra["cross_numa"]}')
+                 f'work_cpu_mean_ms={fmt(mean(extra["cpus"]))} migrated_source={flag_text(extra["migrations"])} '
+                 f'cross_numa={flag_text(extra["cross_numa"])}')
             emit(f'  INITIAL_FORK task_n={len(extra["first_waits"])} wait_mean/p99_ms={pair(extra["first_waits"])} '
                  f'QUEUE_ZERO task_n={len(extra["zero_waits"])} wait_gt1ms={sum(v > 1 for v in extra["zero_waits"])} '
                  f'wait_mean/p99_ms={pair(extra["zero_waits"])} queue_unknown_task_n={extra["unknown_queue"]}')
+            for kind, routing in extra['routing'].items():
+                emit(f'  ROUTING_TRANSITION {kind} tasks={routing["tasks"]} '
+                     f'migrated_source={flag_text(routing["migrated_source"])} '
+                     f'cross_numa={flag_text(routing["cross_numa"])} '
+                     f'return_home_reason={flag_text(routing["return_home_reason"])} '
+                     f'chosen_groups={json.dumps(routing["chosen_groups"], sort_keys=True)} '
+                     f'move_reasons={json.dumps(routing["move_reasons"], sort_keys=True)} '
+                     f'wait_mean/p99_ms={pair(routing["waits"])}')
             early, late = diagnostic['halves']
             emit('  TREND early->late planned_req/s=' + f'{fmt(early["planned_rate"])}->{fmt(late["planned_rate"])}'
                  + ' completed_req/s=' + f'{fmt(early["completed_rate"])}->{fmt(late["completed_rate"])}'
@@ -242,9 +328,11 @@ def main():
         parser.error('offset must be nonnegative and limit positive')
     if args.spec and (args.warmup_seconds is not None or args.steady_end_seconds is not None):
         parser.error('choose --spec or explicit bounds, not both')
-    print('DAG_TERMINAL_REPORT v1; existing files only; no workload, no settings changed')
+    print('DAG_TERMINAL_REPORT v2; existing files only; no workload, no settings changed')
     print('Request and task latency units are ms. Task work wall/CPU exclude successor routing and logging.')
     print('Task waits are not request path sums. Sampled queue != kernel runq; inflight != executing on CPU.')
+    print('migrated_source is logged chosen != source (parent when present, otherwise home); '
+          'it is not chosen != preferred. Routing transition totals cover completed cohort tasks only.')
     valid = phase_report(args.root, args.phase, args.spec, args.warmup_seconds, args.steady_end_seconds,
                          args.offset, args.limit)
     print('END: descriptive cohort evidence; no confidence intervals, stationarity proof or paired gains here')
