@@ -1,0 +1,32 @@
+RUN results/review/pilot-dag/r0-home
+# 实测汇总
+
+所有时延来自实际输出；CPU 工作以线程 CPU 时钟计量。
+
+| run | 完成请求 | 状态计数 | 均值 ms | p99 ms | 入队等待均值 ms | 算子 kernel CPU s | 迁移次数 |
+|---|---:|---|---:|---:|---:|---:|---:|
+| r0-home | 84 | {'completed': 84} | 220.760 | 424.952 | 0.966 | 20.585 | 0.000 |
+
+## 负载与任务入队等待的相关性
+
+| run | 指标 | 样本数 | Pearson | Spearman |
+|---|---|---:|---:|---:|
+| r0-home | queue_before | 5292 | 0.873 | 0.779 |
+| r0-home | pending_before | 5292 | 0.872 | 0.779 |
+| r0-home | inflight_before | 5292 | 0.074 | -0.181 |
+| r0-home | outstanding_before | 5292 | 0.360 | 0.016 |
+| r0-home | outstanding_cpu_us_before | 5292 | 0.331 | -0.008 |
+| r0-home | chosen_load_us | 5292 | 0.867 | 0.778 |
+
+## 解释边界
+
+- 每秒 p99 在低 QPS 下通常接近当秒最大值；跨运行比较请使用多轮独立重复，保留每轮结果。
+- 任务样本共享 request、池和时间段，不能当作独立重复；本报告没有对任务相关系数提供虚假的独立样本显著性。
+- 不再输出将request当独立样本的均值区间。用compare_runs.py按完整seed配对重采样，并检查预声明工作量契约与尾部样本门槛。
+- 任务工作量、扇出、策略选池和过载拒绝均会混杂相关性；JSON 提供请求初始负载、计划工作量相关性及少量同工作量分层。
+- wall-cpu 包含抢占、阻塞及计时开销，不能直接命名为 runqueue 时间；请配合 proc.csv 或 perf sched。
+- 算子 kernel CPU 秒不包含后继路由、Folly 队列/唤醒、日志和 AIO；JSON 另有外部采样的 executor CPU，采样首尾可能漏计。关闭 task log 时无样本标为 n/a。
+- 零队列深度不表示 CPU 空闲。queue depth 的语义取决于 Folly 队列和信号量；本实验还记录 submitted-not-started。
+- 拒绝或删失请求必须一起报告；仅比较完成请求 p99 可能奖励主动丢弃慢请求的策略。
+- 本地 VM 的结果不证明 ARM 的 NUMA/缓存迁移成本或生产收益。
+

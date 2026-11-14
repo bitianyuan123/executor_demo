@@ -1,0 +1,39 @@
+{
+  "stage": "independent",
+  "window": {
+    "start_s": 1,
+    "end_s": 7
+  },
+  "minimum_pairs": 5,
+  "minimum_tail_observations": 20,
+  "bootstrap_draws": 5000,
+  "comparisons": [
+    {
+      "name": "time-and-pool-burst",
+      "baseline": "smooth-uniform",
+      "candidate": "burst-local-uniform",
+      "allowed_changes": [
+        "arrival-rate",
+        "burst-min",
+        "burst-max"
+      ],
+      "workload": {
+        "arrival": "count",
+        "same_cohort_ids": true,
+        "cohort_total_relative_tolerance": 0
+      }
+    },
+    {
+      "name": "pool-concentration-at-same-arrivals",
+      "baseline": "burst-local-uniform",
+      "candidate": "burst-spread-uniform",
+      "allowed_changes": [
+        "burst-placement"
+      ],
+      "workload": {
+        "same_cohort_ids": true,
+        "cohort_total_relative_tolerance": 0
+      }
+    }
+  ]
+}

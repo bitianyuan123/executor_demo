@@ -12,6 +12,8 @@
 
 先看[本次工程复核与阶段验收](stages/README.md)，每一步都定义了输入、产物、可支持的结论和不能跨越的推断。旧版DAG实验数据仍保留在[历史结果](results/validation.md)，不会将它冒充新阶段3的独立任务证据。
 
+再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
+
 ## 获取与依赖
 
 - Demo分支：`experiment/affinity-load-20261114`。

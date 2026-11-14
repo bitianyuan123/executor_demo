@@ -1,0 +1,1586 @@
+[
+  {
+    "batch": "dag",
+    "case": "all-forks",
+    "seed": 20264000,
+    "cohort_requests": 65,
+    "path_means_ms": {
+      "latency_ms": 237.8784406923077,
+      "path_dispatch_rpc_ms": 1.1413566615384614,
+      "path_submit_to_start_ms": 9.618732615384616,
+      "path_execution_wall_ms": 227.1182461846154,
+      "request_tail_ms": 0.00010523076923076924
+    },
+    "target_cpu_by_pool_us": {
+      "0": 8158500,
+      "1": 7461000
+    },
+    "largest_pool_work_fraction": 0.522327859406511,
+    "zero_queue_task_fraction": 0.7687423687423688,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 325,
+        "migrated": 128,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2925,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 650,
+        "migrated": 271,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 195,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 2.6426159765,
+    "audited_edges_whole_run": 5880
+  },
+  {
+    "batch": "dag",
+    "case": "home",
+    "seed": 20264000,
+    "cohort_requests": 65,
+    "path_means_ms": {
+      "latency_ms": 232.5721197076923,
+      "path_dispatch_rpc_ms": 0.8025851076923076,
+      "path_submit_to_start_ms": 15.350750107692308,
+      "path_execution_wall_ms": 216.41869206153845,
+      "request_tail_ms": 9.243076923076923e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 7689600,
+      "0": 7929900
+    },
+    "largest_pool_work_fraction": 0.5076923076923077,
+    "zero_queue_task_fraction": 0.6901098901098901,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 325,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2925,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 650,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 195,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 2.5868237635,
+    "audited_edges_whole_run": 5880
+  },
+  {
+    "batch": "dag",
+    "case": "initial",
+    "seed": 20264000,
+    "cohort_requests": 65,
+    "path_means_ms": {
+      "latency_ms": 355.73879218461536,
+      "path_dispatch_rpc_ms": 0.8657573230769231,
+      "path_submit_to_start_ms": 60.92122749230769,
+      "path_execution_wall_ms": 293.95169689230767,
+      "request_tail_ms": 0.00011047692307692308
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8538800,
+      "0": 7080700
+    },
+    "largest_pool_work_fraction": 0.5466756298216973,
+    "zero_queue_task_fraction": 0.5133089133089133,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 325,
+        "migrated": 135,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2925,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 650,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 195,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 11,
+    "mean_live_requests": 3.9279197326666666,
+    "audited_edges_whole_run": 5880
+  },
+  {
+    "batch": "dag",
+    "case": "sticky",
+    "seed": 20264000,
+    "cohort_requests": 65,
+    "path_means_ms": {
+      "latency_ms": 249.50624532307694,
+      "path_dispatch_rpc_ms": 1.8626542615384614,
+      "path_submit_to_start_ms": 11.575036015384615,
+      "path_execution_wall_ms": 236.06846655384615,
+      "request_tail_ms": 8.84923076923077e-05
+    },
+    "target_cpu_by_pool_us": {
+      "0": 7674800,
+      "1": 7944700
+    },
+    "largest_pool_work_fraction": 0.5086398412241109,
+    "zero_queue_task_fraction": 0.7831501831501831,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 325,
+        "migrated": 129,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2925,
+        "migrated": 216,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 650,
+        "migrated": 261,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 195,
+        "migrated": 12,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 9,
+    "mean_live_requests": 2.747272402,
+    "audited_edges_whole_run": 5880
+  },
+  {
+    "batch": "dag",
+    "case": "all-forks",
+    "seed": 20264001,
+    "cohort_requests": 81,
+    "path_means_ms": {
+      "latency_ms": 247.31325274074072,
+      "path_dispatch_rpc_ms": 1.240850950617284,
+      "path_submit_to_start_ms": 10.492844222222223,
+      "path_execution_wall_ms": 235.57944243209877,
+      "request_tail_ms": 0.00011513580246913582
+    },
+    "target_cpu_by_pool_us": {
+      "1": 9657300,
+      "0": 9807000
+    },
+    "largest_pool_work_fraction": 0.5038455017647694,
+    "zero_queue_task_fraction": 0.7548500881834215,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 405,
+        "migrated": 164,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3645,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 810,
+        "migrated": 342,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 243,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 9,
+    "mean_live_requests": 3.251014283,
+    "audited_edges_whole_run": 7420
+  },
+  {
+    "batch": "dag",
+    "case": "home",
+    "seed": 20264001,
+    "cohort_requests": 81,
+    "path_means_ms": {
+      "latency_ms": 229.04505076543208,
+      "path_dispatch_rpc_ms": 0.8603979012345678,
+      "path_submit_to_start_ms": 15.326578074074074,
+      "path_execution_wall_ms": 212.85797880246915,
+      "request_tail_ms": 9.598765432098765e-05
+    },
+    "target_cpu_by_pool_us": {
+      "0": 9612000,
+      "1": 9852300
+    },
+    "largest_pool_work_fraction": 0.5061728395061729,
+    "zero_queue_task_fraction": 0.6964530668234372,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 405,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3645,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 810,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 243,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 3.0272257933333333,
+    "audited_edges_whole_run": 7420
+  },
+  {
+    "batch": "dag",
+    "case": "initial",
+    "seed": 20264001,
+    "cohort_requests": 81,
+    "path_means_ms": {
+      "latency_ms": 412.20573749382714,
+      "path_dispatch_rpc_ms": 0.9513047407407408,
+      "path_submit_to_start_ms": 83.45163959259258,
+      "path_execution_wall_ms": 327.8026904197531,
+      "request_tail_ms": 0.00010274074074074074
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8328400,
+      "0": 11135900
+    },
+    "largest_pool_work_fraction": 0.5721192131235133,
+    "zero_queue_task_fraction": 0.4079952968841858,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 405,
+        "migrated": 169,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3645,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 810,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 243,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 11,
+    "mean_live_requests": 5.405921444333333,
+    "audited_edges_whole_run": 7420
+  },
+  {
+    "batch": "dag",
+    "case": "sticky",
+    "seed": 20264001,
+    "cohort_requests": 81,
+    "path_means_ms": {
+      "latency_ms": 233.83693172839506,
+      "path_dispatch_rpc_ms": 1.3925637407407407,
+      "path_submit_to_start_ms": 7.446303728395062,
+      "path_execution_wall_ms": 224.99796471604938,
+      "request_tail_ms": 9.954320987654322e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 9836600,
+      "0": 9627700
+    },
+    "largest_pool_work_fraction": 0.5053662345935893,
+    "zero_queue_task_fraction": 0.811875367430923,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 405,
+        "migrated": 164,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3645,
+        "migrated": 300,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 810,
+        "migrated": 325,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 243,
+        "migrated": 20,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 3.0740971845,
+    "audited_edges_whole_run": 7420
+  },
+  {
+    "batch": "dag",
+    "case": "all-forks",
+    "seed": 20264002,
+    "cohort_requests": 85,
+    "path_means_ms": {
+      "latency_ms": 355.9291337529412,
+      "path_dispatch_rpc_ms": 1.0211903058823528,
+      "path_submit_to_start_ms": 50.75905931764706,
+      "path_execution_wall_ms": 304.14875483529414,
+      "request_tail_ms": 0.00012929411764705883
+    },
+    "target_cpu_by_pool_us": {
+      "0": 10334600,
+      "1": 10090900
+    },
+    "largest_pool_work_fraction": 0.5059655822378889,
+    "zero_queue_task_fraction": 0.5338935574229692,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 425,
+        "migrated": 175,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3825,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 850,
+        "migrated": 370,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 255,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 13,
+    "mean_live_requests": 4.8309961108333335,
+    "audited_edges_whole_run": 7350
+  },
+  {
+    "batch": "dag",
+    "case": "home",
+    "seed": 20264002,
+    "cohort_requests": 85,
+    "path_means_ms": {
+      "latency_ms": 365.8834023764706,
+      "path_dispatch_rpc_ms": 0.7144354235294117,
+      "path_submit_to_start_ms": 62.803791294117644,
+      "path_execution_wall_ms": 302.3650761647059,
+      "request_tail_ms": 9.949411764705884e-05
+    },
+    "target_cpu_by_pool_us": {
+      "0": 10332900,
+      "1": 10092600
+    },
+    "largest_pool_work_fraction": 0.5058823529411764,
+    "zero_queue_task_fraction": 0.47581699346405226,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 425,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3825,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 850,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 255,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 13,
+    "mean_live_requests": 4.999657842833333,
+    "audited_edges_whole_run": 7350
+  },
+  {
+    "batch": "dag",
+    "case": "initial",
+    "seed": 20264002,
+    "cohort_requests": 85,
+    "path_means_ms": {
+      "latency_ms": 520.2472137294118,
+      "path_dispatch_rpc_ms": 0.871998505882353,
+      "path_submit_to_start_ms": 162.50579734117647,
+      "path_execution_wall_ms": 356.8693279882353,
+      "request_tail_ms": 8.989411764705882e-05
+    },
+    "target_cpu_by_pool_us": {
+      "0": 9435400,
+      "1": 10990100
+    },
+    "largest_pool_work_fraction": 0.5380578198820102,
+    "zero_queue_task_fraction": 0.29374416433239964,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 425,
+        "migrated": 196,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3825,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 850,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 255,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 17,
+    "mean_live_requests": 7.1322011671666665,
+    "audited_edges_whole_run": 7350
+  },
+  {
+    "batch": "dag",
+    "case": "sticky",
+    "seed": 20264002,
+    "cohort_requests": 85,
+    "path_means_ms": {
+      "latency_ms": 345.05637745882353,
+      "path_dispatch_rpc_ms": 1.0464089529411764,
+      "path_submit_to_start_ms": 44.505094070588235,
+      "path_execution_wall_ms": 299.5047606588235,
+      "request_tail_ms": 0.00011377647058823531
+    },
+    "target_cpu_by_pool_us": {
+      "0": 10326200,
+      "1": 10099300
+    },
+    "largest_pool_work_fraction": 0.5055543315953098,
+    "zero_queue_task_fraction": 0.5703081232492997,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 425,
+        "migrated": 178,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3825,
+        "migrated": 629,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 850,
+        "migrated": 338,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 255,
+        "migrated": 30,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 12,
+    "mean_live_requests": 4.7008624065,
+    "audited_edges_whole_run": 7350
+  },
+  {
+    "batch": "dag",
+    "case": "all-forks",
+    "seed": 20264003,
+    "cohort_requests": 73,
+    "path_means_ms": {
+      "latency_ms": 226.80309995890408,
+      "path_dispatch_rpc_ms": 0.9984018630136986,
+      "path_submit_to_start_ms": 8.998553767123287,
+      "path_execution_wall_ms": 216.80606171232878,
+      "request_tail_ms": 8.261643835616438e-05
+    },
+    "target_cpu_by_pool_us": {
+      "0": 8810300,
+      "1": 8731600
+    },
+    "largest_pool_work_fraction": 0.5022432005655032,
+    "zero_queue_task_fraction": 0.7806044792346162,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 365,
+        "migrated": 146,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3285,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 730,
+        "migrated": 305,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 219,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 2.959525431,
+    "audited_edges_whole_run": 6440
+  },
+  {
+    "batch": "dag",
+    "case": "home",
+    "seed": 20264003,
+    "cohort_requests": 73,
+    "path_means_ms": {
+      "latency_ms": 217.47727701369863,
+      "path_dispatch_rpc_ms": 0.7972013835616438,
+      "path_submit_to_start_ms": 13.661778356164385,
+      "path_execution_wall_ms": 203.01820798630138,
+      "request_tail_ms": 8.928767123287672e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8650800,
+      "0": 8891100
+    },
+    "largest_pool_work_fraction": 0.5068493150684932,
+    "zero_queue_task_fraction": 0.7110241356816699,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 365,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3285,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 730,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 219,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 2.846101142333333,
+    "audited_edges_whole_run": 6440
+  },
+  {
+    "batch": "dag",
+    "case": "initial",
+    "seed": 20264003,
+    "cohort_requests": 73,
+    "path_means_ms": {
+      "latency_ms": 364.5593068767123,
+      "path_dispatch_rpc_ms": 0.8969075479452054,
+      "path_submit_to_start_ms": 60.25420691780822,
+      "path_execution_wall_ms": 303.4081038904109,
+      "request_tail_ms": 8.852054794520547e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 7496100,
+      "0": 10045800
+    },
+    "largest_pool_work_fraction": 0.5726745677492175,
+    "zero_queue_task_fraction": 0.47205914329202,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 365,
+        "migrated": 156,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3285,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 730,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 219,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 10,
+    "mean_live_requests": 4.605994960666667,
+    "audited_edges_whole_run": 6440
+  },
+  {
+    "batch": "dag",
+    "case": "sticky",
+    "seed": 20264003,
+    "cohort_requests": 73,
+    "path_means_ms": {
+      "latency_ms": 200.33631680821918,
+      "path_dispatch_rpc_ms": 1.2404502191780822,
+      "path_submit_to_start_ms": 5.314694630136986,
+      "path_execution_wall_ms": 193.78108093150684,
+      "request_tail_ms": 9.102739726027397e-05
+    },
+    "target_cpu_by_pool_us": {
+      "0": 8608700,
+      "1": 8933200
+    },
+    "largest_pool_work_fraction": 0.5092492831449272,
+    "zero_queue_task_fraction": 0.8288758425744727,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 365,
+        "migrated": 147,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3285,
+        "migrated": 206,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 730,
+        "migrated": 291,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 219,
+        "migrated": 11,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 2.643265507,
+    "audited_edges_whole_run": 6440
+  },
+  {
+    "batch": "dag",
+    "case": "all-forks",
+    "seed": 20264004,
+    "cohort_requests": 70,
+    "path_means_ms": {
+      "latency_ms": 305.4085141,
+      "path_dispatch_rpc_ms": 1.5958302714285715,
+      "path_submit_to_start_ms": 90.49840127142858,
+      "path_execution_wall_ms": 213.31418507142857,
+      "request_tail_ms": 9.74857142857143e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8249000,
+      "0": 8572000
+    },
+    "largest_pool_work_fraction": 0.5096010938707568,
+    "zero_queue_task_fraction": 0.6521541950113379,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 350,
+        "migrated": 146,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3150,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 700,
+        "migrated": 279,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 210,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 15,
+    "mean_live_requests": 2.5868407191666667,
+    "audited_edges_whole_run": 6930
+  },
+  {
+    "batch": "dag",
+    "case": "home",
+    "seed": 20264004,
+    "cohort_requests": 70,
+    "path_means_ms": {
+      "latency_ms": 330.19257350000004,
+      "path_dispatch_rpc_ms": 0.8402343571428572,
+      "path_submit_to_start_ms": 101.84991375714286,
+      "path_execution_wall_ms": 227.5023191,
+      "request_tail_ms": 0.00010628571428571429
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8410500,
+      "0": 8410500
+    },
+    "largest_pool_work_fraction": 0.5,
+    "zero_queue_task_fraction": 0.5775510204081633,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 350,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3150,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 700,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 210,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 15,
+    "mean_live_requests": 2.7733917936666668,
+    "audited_edges_whole_run": 6930
+  },
+  {
+    "batch": "dag",
+    "case": "initial",
+    "seed": 20264004,
+    "cohort_requests": 70,
+    "path_means_ms": {
+      "latency_ms": 445.9018323428571,
+      "path_dispatch_rpc_ms": 0.7969824428571428,
+      "path_submit_to_start_ms": 136.25724254285714,
+      "path_execution_wall_ms": 308.8475004142857,
+      "request_tail_ms": 0.00010694285714285715
+    },
+    "target_cpu_by_pool_us": {
+      "1": 6566600,
+      "0": 10254400
+    },
+    "largest_pool_work_fraction": 0.6096189287200523,
+    "zero_queue_task_fraction": 0.4392290249433107,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 350,
+        "migrated": 145,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3150,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 700,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 210,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 15,
+    "mean_live_requests": 4.347062949166666,
+    "audited_edges_whole_run": 6930
+  },
+  {
+    "batch": "dag",
+    "case": "sticky",
+    "seed": 20264004,
+    "cohort_requests": 70,
+    "path_means_ms": {
+      "latency_ms": 303.7527364142857,
+      "path_dispatch_rpc_ms": 1.0062581285714285,
+      "path_submit_to_start_ms": 90.77930855714287,
+      "path_execution_wall_ms": 211.9670679857143,
+      "request_tail_ms": 0.00010174285714285714
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8414600,
+      "0": 8406400
+    },
+    "largest_pool_work_fraction": 0.5002437429403721,
+    "zero_queue_task_fraction": 0.673469387755102,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 350,
+        "migrated": 140,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3150,
+        "migrated": 367,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 700,
+        "migrated": 279,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 210,
+        "migrated": 27,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 15,
+    "mean_live_requests": 2.5322238101666668,
+    "audited_edges_whole_run": 6930
+  },
+  {
+    "batch": "dag",
+    "case": "all-forks",
+    "seed": 20264005,
+    "cohort_requests": 63,
+    "path_means_ms": {
+      "latency_ms": 203.97476484126986,
+      "path_dispatch_rpc_ms": 1.3334823809523808,
+      "path_submit_to_start_ms": 8.466539523809523,
+      "path_execution_wall_ms": 194.17464674603175,
+      "request_tail_ms": 9.61904761904762e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 7528500,
+      "0": 7610400
+    },
+    "largest_pool_work_fraction": 0.5027049521431544,
+    "zero_queue_task_fraction": 0.7956664147140338,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 315,
+        "migrated": 125,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2835,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 630,
+        "migrated": 253,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 189,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 2.21763056,
+    "audited_edges_whole_run": 6370
+  },
+  {
+    "batch": "dag",
+    "case": "home",
+    "seed": 20264005,
+    "cohort_requests": 63,
+    "path_means_ms": {
+      "latency_ms": 196.8584971111111,
+      "path_dispatch_rpc_ms": 0.7167668253968253,
+      "path_submit_to_start_ms": 12.56356553968254,
+      "path_execution_wall_ms": 183.57807834920635,
+      "request_tail_ms": 8.63968253968254e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 7689600,
+      "0": 7449300
+    },
+    "largest_pool_work_fraction": 0.5079365079365079,
+    "zero_queue_task_fraction": 0.7299067775258251,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 315,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2835,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 630,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 189,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 2.103260149,
+    "audited_edges_whole_run": 6370
+  },
+  {
+    "batch": "dag",
+    "case": "initial",
+    "seed": 20264005,
+    "cohort_requests": 63,
+    "path_means_ms": {
+      "latency_ms": 342.07204363492065,
+      "path_dispatch_rpc_ms": 0.49427301587301586,
+      "path_submit_to_start_ms": 51.33077923809524,
+      "path_execution_wall_ms": 290.2469097142857,
+      "request_tail_ms": 8.166666666666667e-05
+    },
+    "target_cpu_by_pool_us": {
+      "0": 7897600,
+      "1": 7241300
+    },
+    "largest_pool_work_fraction": 0.5216759473938001,
+    "zero_queue_task_fraction": 0.5233056185437138,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 315,
+        "migrated": 126,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2835,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 630,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 189,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 3.640513997333333,
+    "audited_edges_whole_run": 6370
+  },
+  {
+    "batch": "dag",
+    "case": "sticky",
+    "seed": 20264005,
+    "cohort_requests": 63,
+    "path_means_ms": {
+      "latency_ms": 181.51352423809524,
+      "path_dispatch_rpc_ms": 1.124736761904762,
+      "path_submit_to_start_ms": 4.76802365079365,
+      "path_execution_wall_ms": 175.6206664285714,
+      "request_tail_ms": 9.739682539682539e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 7739400,
+      "0": 7399500
+    },
+    "largest_pool_work_fraction": 0.5112260468065711,
+    "zero_queue_task_fraction": 0.8447971781305115,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 315,
+        "migrated": 128,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2835,
+        "migrated": 139,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 630,
+        "migrated": 253,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 189,
+        "migrated": 7,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 1.9416313986666667,
+    "audited_edges_whole_run": 6370
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t16",
+    "seed": 20265000,
+    "cohort_requests": 69,
+    "path_means_ms": {
+      "latency_ms": 225.26998169565215,
+      "path_dispatch_rpc_ms": 0.5563406666666667,
+      "path_submit_to_start_ms": 24.224540565217392,
+      "path_execution_wall_ms": 200.48903311594205,
+      "request_tail_ms": 6.734782608695652e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8410500,
+      "0": 8170200
+    },
+    "largest_pool_work_fraction": 0.5072463768115942,
+    "zero_queue_task_fraction": 0.6625258799171843,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 345,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3105,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 690,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 207,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 11,
+    "mean_live_requests": 2.163440184833333,
+    "audited_edges_whole_run": 6510
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t2",
+    "seed": 20265000,
+    "cohort_requests": 69,
+    "path_means_ms": {
+      "latency_ms": 216.81871357971013,
+      "path_dispatch_rpc_ms": 0.13584750724637681,
+      "path_submit_to_start_ms": 168.2394887826087,
+      "path_execution_wall_ms": 48.44326820289855,
+      "request_tail_ms": 0.00010908695652173913
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8410500,
+      "0": 8170200
+    },
+    "largest_pool_work_fraction": 0.5072463768115942,
+    "zero_queue_task_fraction": 0.05751092707614447,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 345,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3105,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 690,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 207,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 11,
+    "mean_live_requests": 2.098299900833333,
+    "audited_edges_whole_run": 6510
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t16",
+    "seed": 20265001,
+    "cohort_requests": 71,
+    "path_means_ms": {
+      "latency_ms": 361.4917385633803,
+      "path_dispatch_rpc_ms": 0.7846534929577464,
+      "path_submit_to_start_ms": 83.49092198591549,
+      "path_execution_wall_ms": 277.2160686056338,
+      "request_tail_ms": 9.447887323943662e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8650800,
+      "0": 8410500
+    },
+    "largest_pool_work_fraction": 0.5070422535211268,
+    "zero_queue_task_fraction": 0.45182204337133913,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 355,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3195,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 710,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 213,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 13,
+    "mean_live_requests": 4.2324548858333335,
+    "audited_edges_whole_run": 6650
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t2",
+    "seed": 20265001,
+    "cohort_requests": 71,
+    "path_means_ms": {
+      "latency_ms": 359.33206225352114,
+      "path_dispatch_rpc_ms": 0.11383961971830986,
+      "path_submit_to_start_ms": 310.29561864788735,
+      "path_execution_wall_ms": 48.92249081690141,
+      "request_tail_ms": 0.00011316901408450705
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8650800,
+      "0": 8410500
+    },
+    "largest_pool_work_fraction": 0.5070422535211268,
+    "zero_queue_task_fraction": 0.035546613011401745,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 355,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3195,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 710,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 213,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 13,
+    "mean_live_requests": 4.211551573166667,
+    "audited_edges_whole_run": 6650
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t16",
+    "seed": 20265002,
+    "cohort_requests": 58,
+    "path_means_ms": {
+      "latency_ms": 179.64403218965518,
+      "path_dispatch_rpc_ms": 0.8794129482758621,
+      "path_submit_to_start_ms": 12.833359689655174,
+      "path_execution_wall_ms": 165.93115201724137,
+      "request_tail_ms": 0.0001075344827586207
+    },
+    "target_cpu_by_pool_us": {
+      "1": 6968700,
+      "0": 6968700
+    },
+    "largest_pool_work_fraction": 0.5,
+    "zero_queue_task_fraction": 0.7320744389709907,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 290,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2610,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 580,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 174,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 1.7232848201666666,
+    "audited_edges_whole_run": 5600
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t2",
+    "seed": 20265002,
+    "cohort_requests": 58,
+    "path_means_ms": {
+      "latency_ms": 173.41449889655172,
+      "path_dispatch_rpc_ms": 0.11636213793103449,
+      "path_submit_to_start_ms": 124.70633279310344,
+      "path_execution_wall_ms": 48.591708396551724,
+      "request_tail_ms": 9.556896551724138e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 6968700,
+      "0": 6968700
+    },
+    "largest_pool_work_fraction": 0.5,
+    "zero_queue_task_fraction": 0.0692391899288451,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 290,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 2610,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 580,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 174,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 1.6687333523333334,
+    "audited_edges_whole_run": 5600
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t16",
+    "seed": 20265003,
+    "cohort_requests": 75,
+    "path_means_ms": {
+      "latency_ms": 274.1364555733333,
+      "path_dispatch_rpc_ms": 0.75716644,
+      "path_submit_to_start_ms": 29.941812879999997,
+      "path_execution_wall_ms": 243.43738912,
+      "request_tail_ms": 8.713333333333333e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 9131400,
+      "0": 8891100
+    },
+    "largest_pool_work_fraction": 0.5066666666666667,
+    "zero_queue_task_fraction": 0.6251851851851852,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 375,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3375,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 750,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 225,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 11,
+    "mean_live_requests": 3.414715441833333,
+    "audited_edges_whole_run": 7210
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t2",
+    "seed": 20265003,
+    "cohort_requests": 75,
+    "path_means_ms": {
+      "latency_ms": 263.4791495733333,
+      "path_dispatch_rpc_ms": 0.14472814666666667,
+      "path_submit_to_start_ms": 214.75967696,
+      "path_execution_wall_ms": 48.574674959999996,
+      "request_tail_ms": 6.950666666666666e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 9131400,
+      "0": 8891100
+    },
+    "largest_pool_work_fraction": 0.5066666666666667,
+    "zero_queue_task_fraction": 0.0364021164021164,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 375,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3375,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 750,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 225,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 11,
+    "mean_live_requests": 3.2837540211666667,
+    "audited_edges_whole_run": 7210
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t16",
+    "seed": 20265004,
+    "cohort_requests": 70,
+    "path_means_ms": {
+      "latency_ms": 218.15003554285715,
+      "path_dispatch_rpc_ms": 0.7439396428571429,
+      "path_submit_to_start_ms": 15.616991185714284,
+      "path_execution_wall_ms": 201.78901692857144,
+      "request_tail_ms": 8.778571428571429e-05
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8410500,
+      "0": 8410500
+    },
+    "largest_pool_work_fraction": 0.5,
+    "zero_queue_task_fraction": 0.700453514739229,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 350,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3150,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 700,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 210,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 2.5642513378333334,
+    "audited_edges_whole_run": 6090
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t2",
+    "seed": 20265004,
+    "cohort_requests": 70,
+    "path_means_ms": {
+      "latency_ms": 211.3931345142857,
+      "path_dispatch_rpc_ms": 0.1439698142857143,
+      "path_submit_to_start_ms": 162.1741448142857,
+      "path_execution_wall_ms": 49.07490394285715,
+      "request_tail_ms": 0.00011594285714285715
+    },
+    "target_cpu_by_pool_us": {
+      "1": 8410500,
+      "0": 8410500
+    },
+    "largest_pool_work_fraction": 0.5,
+    "zero_queue_task_fraction": 0.050793650793650794,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 350,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3150,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 700,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 210,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 8,
+    "mean_live_requests": 2.4901438185,
+    "audited_edges_whole_run": 6090
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t16",
+    "seed": 20265005,
+    "cohort_requests": 71,
+    "path_means_ms": {
+      "latency_ms": 184.01471160563378,
+      "path_dispatch_rpc_ms": 0.8133135633802817,
+      "path_submit_to_start_ms": 11.541863154929576,
+      "path_execution_wall_ms": 171.65941632394365,
+      "request_tail_ms": 0.00011856338028169014
+    },
+    "target_cpu_by_pool_us": {
+      "0": 8650800,
+      "1": 8410500
+    },
+    "largest_pool_work_fraction": 0.5070422535211268,
+    "zero_queue_task_fraction": 0.746031746031746,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 355,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3195,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 710,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 213,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 2.1478387648333332,
+    "audited_edges_whole_run": 7420
+  },
+  {
+    "batch": "dag-threads",
+    "case": "home-t2",
+    "seed": 20265005,
+    "cohort_requests": 71,
+    "path_means_ms": {
+      "latency_ms": 177.58614805633803,
+      "path_dispatch_rpc_ms": 0.21813850704225352,
+      "path_submit_to_start_ms": 128.13520276056337,
+      "path_execution_wall_ms": 49.23268278873239,
+      "request_tail_ms": 0.000124
+    },
+    "target_cpu_by_pool_us": {
+      "0": 8650800,
+      "1": 8410500
+    },
+    "largest_pool_work_fraction": 0.5070422535211268,
+    "zero_queue_task_fraction": 0.06550413592667113,
+    "routing_by_transition": {
+      "initial_fork": {
+        "callbacks": 355,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "ordinary_successor": {
+        "callbacks": 3195,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "later_fork": {
+        "callbacks": 710,
+        "migrated": 0,
+        "cross_numa": 0
+      },
+      "join": {
+        "callbacks": 213,
+        "migrated": 0,
+        "cross_numa": 0
+      }
+    },
+    "peak_live_requests": 7,
+    "mean_live_requests": 2.081128812333333,
+    "audited_edges_whole_run": 7420
+  }
+]

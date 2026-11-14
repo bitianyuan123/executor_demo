@@ -1,0 +1,10 @@
+[1/10] Building CXX object experiments/independent/CMakeFiles/independent_load.dir/src/main.cpp.o
+[2/10] Building CXX object experiments/dag/CMakeFiles/executor_demo.dir/main.cpp.o
+[3/10] Building CXX object experiments/dag/CMakeFiles/dag_folly.dir/main.cpp.o
+[4/10] Building CXX object experiments/dag/CMakeFiles/business_executor_test.dir/tests/business_executor_test.cpp.o
+[5/10] Building CXX object experiments/dag/CMakeFiles/affinity_executor_test.dir/root/rank_demo/folly/folly/executors/experimental/test/AffinityExecutorTest.cpp.o
+[6/10] Linking CXX executable experiments/independent/independent_load
+[7/10] Linking CXX executable executor_demo
+[8/10] Linking CXX executable dag_folly
+[9/10] Linking CXX executable experiments/dag/business_executor_test
+[10/10] Linking CXX executable experiments/dag/affinity_executor_test

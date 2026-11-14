@@ -14,6 +14,16 @@ def cpulist(cpus):
     return ','.join(map(str,cpus))
 
 
+def make_schedule(cases, repeats, seed):
+    """Same-seed comparisons stay close in time, with a randomized order per block."""
+    rng=random.Random(seed)
+    schedule=[]
+    for repetition in range(repeats):
+        block=list(cases);rng.shuffle(block)
+        schedule.extend((repetition,c) for c in block)
+    return schedule
+
+
 def generate(preset, cpus=None, numa=None):
     allowed=sorted(os.sched_getaffinity(0))
     if preset=='target':
@@ -61,6 +71,15 @@ def execute(args):
         args.write_config.write_text(json.dumps(spec,indent=2)+'\n')
         print(args.write_config)
         return
+    analysis=spec.get('analysis',{})
+    warmup=float(analysis.get('warmup_seconds',0))
+    end=analysis.get('steady_end_seconds')
+    overrides=dict(v.split('=',1) for v in args.override)
+    for case in spec['cases']:
+        config=dict(spec.get('base',{}));config.update(case.get('options',{}));config.update(overrides)
+        duration=float(config.get('duration',5))
+        if warmup<0 or warmup>=duration or (end is not None and (float(end)<=warmup or float(end)>duration)):
+            raise ValueError('analysis cohort lies outside actual duration; revise analysis in the matrix after changing duration')
     if args.output.exists():
         raise ValueError('matrix output already exists')
     args.output.mkdir(parents=True)
@@ -76,16 +95,18 @@ def execute(args):
         raise ValueError('case names must be distinct single directory names')
     repeats=args.repeats if args.repeats is not None else spec.get('repeats',1)
     if repeats<1:raise ValueError('repeats must be positive')
-    seed=int(spec.get('seed',420));rng=random.Random(seed)
-    schedule=[(r,c) for r in range(repeats) for c in cases]
-    rng.shuffle(schedule)
+    seed=int(spec.get('seed',420))
+    # Keep same-seed comparisons in a time block; randomize case order within
+    # each block to avoid a persistent warm/cold or frequency drift ordering.
+    schedule=make_schedule(cases,repeats,seed)
     binary=args.binary.resolve()
     manifest={'binary':str(binary),'binary_sha256':hashlib.sha256(binary.read_bytes()).hexdigest(),
-              'matrix_seed':seed,'runs':[]}
+              'matrix_seed':seed,'design_family':spec.get('family'),'tier':spec.get('tier'),
+              'schedule':'randomized cases within repetition blocks','analysis':analysis,'runs':[]}
     for repetition,case in schedule:
         options=dict(spec.get('base',{}));options.update(case.get('options',{}))
         options['seed']=seed+repetition
-        options.update(dict(v.split('=',1) for v in args.override))
+        options.update(overrides)
         run=args.output/f"{case['name']}-r{repetition}"
         command=[str(binary),'--output',str(run)]
         for key,value in options.items():command.extend(['--'+key,str(value)])
@@ -99,6 +120,9 @@ def execute(args):
             code='timeout'
         entry={'case':case['name'],'repetition':repetition,'seed':options['seed'],'path':str(run),
                'command':command,'returncode':code,'wall_seconds':time.time()-begin}
+        for key in ['comparison_group','question','sample_plan']:
+            if key in case:entry[key]=case[key]
+        if 'sample_plan' in case:entry['sample_plan_unmodified']=not bool(overrides)
         if code==0 and (run/'summary.json').exists():entry['summary']=json.loads((run/'summary.json').read_text())
         manifest['runs'].append(entry)
         (args.output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
@@ -106,8 +130,10 @@ def execute(args):
         if code!=0 and not args.keep_going:raise RuntimeError('run failed; see log and manifest')
     good=[r['path'] for r in manifest['runs'] if r['returncode']==0 and 'summary' in r]
     if good:
-        subprocess.run([os.sys.executable,str(Path(__file__).with_name('analyze.py')),*good,
-                        '--output',str(args.output/'analysis')],check=True)
+        analysis_command=[os.sys.executable,str(Path(__file__).with_name('analyze.py')),*good,
+                          '--warmup-seconds',str(warmup),'--output',str(args.output/'analysis')]
+        if end is not None:analysis_command.extend(['--steady-end-seconds',str(end)])
+        subprocess.run(analysis_command,check=True)
 
 
 def main():

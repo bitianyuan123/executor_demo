@@ -1,0 +1,32 @@
+Internal ctest changing into directory: /root/rank_demo/executor_demo/build
+Test project /root/rank_demo/executor_demo/build
+      Start  1: paired_comparison_statistics
+ 1/13 Test  #1: paired_comparison_statistics .....   Passed    0.09 sec
+      Start  2: independent_functional
+ 2/13 Test  #2: independent_functional ...........   Passed    0.90 sec
+      Start  3: independent_analysis
+ 3/13 Test  #3: independent_analysis .............   Passed    0.06 sec
+      Start  4: independent_prediction
+ 4/13 Test  #4: independent_prediction ...........   Passed    0.05 sec
+      Start  5: demo_functional
+ 5/13 Test  #5: demo_functional ..................   Passed    1.09 sec
+      Start  6: analysis_statistics
+ 6/13 Test  #6: analysis_statistics ..............   Passed    0.05 sec
+      Start  7: graph_analysis
+ 7/13 Test  #7: graph_analysis ...................   Passed    0.05 sec
+      Start  8: dag_workload_design
+ 8/13 Test  #8: dag_workload_design ..............   Passed    0.64 sec
+      Start  9: business_executor_test
+ 9/13 Test  #9: business_executor_test ...........   Passed    0.04 sec
+      Start 10: affinity_executor_test
+10/13 Test #10: affinity_executor_test ...........   Passed    0.06 sec
+      Start 11: folly_backend_functional
+11/13 Test #11: folly_backend_functional .........   Passed    1.09 sec
+      Start 12: backend_equivalence
+12/13 Test #12: backend_equivalence ..............   Passed    0.90 sec
+      Start 13: metric_probe_functional
+13/13 Test #13: metric_probe_functional ..........   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Total Test time (real) =   5.07 sec

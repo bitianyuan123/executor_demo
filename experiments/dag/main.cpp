@@ -122,15 +122,17 @@ std::vector<int> allowedCpus() {
 struct Options {
   std::string output = "results", cpus, numa, capacities;
   std::string affinity = "none", policy = "home", metric = "work", queue = "default", workMode = "cpu";
-  std::string graph = "chains", waveWidths, waveDepths, balanceForks = "all";
+  std::string graph = "chains", waveWidths, waveDepths, balanceForks = "all", arrival = "regular";
+  std::string candidateScope = "all";
   std::vector<size_t> widths, depths;
   size_t pools = 6, threads = 2, fanoutMin = 20, fanoutMax = 40, chainLength = 2;
   size_t maxInflight = 128, memoryKb = 0;
   uint64_t requests = 0, cpuUs = 1000, joinUs = 100, rpcDelayUs = 5000, seed = 42, wakeUs = 0;
   uint64_t sampleMs = 100, estimateUs = 0, iterationsPerUs = 64;
+  uint64_t longMinUs = 0, longMaxUs = 0;
   bool taskLog = true;
   double qps = 12, duration = 10, jitter = 0.5, longProb = 0.02, longFactor = 8;
-  double rpcProb = 0, drainSeconds = 30, crossNumaPenaltyUs = 0, minGainUs = 0, relativeGain = 0;
+  double rpcProb = 0, rpcJitter = 0, drainSeconds = 30, crossNumaPenaltyUs = 0, minGainUs = 0, relativeGain = 0;
 };
 const char* help = R"HELP(Real Folly CPUThreadPoolExecutor affinity/DAG experiment (Linux).
 Usage: executor_demo [--option VALUE ...]
@@ -142,9 +144,12 @@ Usage: executor_demo [--option VALUE ...]
   --affinity none|cluster|numa  none inherits allowed cpuset; numa unions same-label CPU lists
   --policy home|borrow|sticky|fanout|least-load  (home)
   --metric work|queue|pending  Work estimate, native semaphore guess, or wrapper pending (work)
+  --candidate-scope all|preferred-numa  Restrict candidates to preferred group's NUMA (all)
+                               Restricted scope needs explicit CPU/NUMA and cluster/numa affinity.
   --queue default|lifo|throttled --wake-us N (default, 0; nonzero only throttled, <=1e6)
   --qps N --duration SECONDS --requests N    Regular open-loop arrivals (12,10,0)
                                requests=0 uses duration; positive count also capped by duration
+  --arrival regular|poisson    Seeded arrival schedule independent of work/routing (regular)
   --graph chains|waves         chains keeps original independent chains plus one join (chains)
   --fanout-min N --fanout-max N --chain-length N  chains width range and chain depth (20,40,2)
   --wave-widths '20,4,8'       Required in waves: branch count in each fork/join wave
@@ -154,8 +159,10 @@ Usage: executor_demo [--option VALUE ...]
                                Total CPU nodes = sum(width * depth) + number of waves.
   --cpu-us N --jitter F         Nominal per-operator CPU microseconds and uniform +/- fraction (1000,.5)
   --long-prob F --long-factor F Heavy-tail probability and multiplier (.02,8)
+  --long-min-us N --long-max-us N  Optional absolute uniform tail; both required, overrides factor
   --join-us N                  CPU microseconds of every wave join, including final join (100)
   --rpc-prob F --rpc-delay-us N Split operators around timer-driven RPC suspension (0,5000)
+  --rpc-jitter F               Uniform +/- fraction of RPC delay, independently seeded (0)
   --work-mode cpu|iterations  CPU-time target or fixed work amount across placements (cpu)
   --iterations-per-us N        Fixed-mode loop iterations per nominal work microsecond (64)
   --memory-kb N                Shared read-only per-request dataset, main-thread first touch (0)
@@ -194,6 +201,8 @@ Options parse(int argc, char** argv) {
     else if (key == "--wave-widths") o.waveWidths = val;
     else if (key == "--wave-depths") o.waveDepths = val;
     else if (key == "--balance-forks") o.balanceForks = val;
+    else if (key == "--arrival") o.arrival = val;
+    else if (key == "--candidate-scope") o.candidateScope = val;
     else if (key == "--pools") o.pools = parseU64(val);
     else if (key == "--threads") o.threads = parseU64(val);
     else if (key == "--fanout-min") o.fanoutMin = parseU64(val);
@@ -205,6 +214,8 @@ Options parse(int argc, char** argv) {
     else if (key == "--cpu-us") o.cpuUs = parseU64(val);
     else if (key == "--join-us") o.joinUs = parseU64(val);
     else if (key == "--rpc-delay-us") o.rpcDelayUs = parseU64(val);
+    else if (key == "--long-min-us") o.longMinUs = parseU64(val);
+    else if (key == "--long-max-us") o.longMaxUs = parseU64(val);
     else if (key == "--seed") o.seed = parseU64(val);
     else if (key == "--wake-us") o.wakeUs = parseU64(val);
     else if (key == "--sample-ms") o.sampleMs = parseU64(val);
@@ -217,6 +228,7 @@ Options parse(int argc, char** argv) {
     else if (key == "--long-prob") o.longProb = parseDouble(val);
     else if (key == "--long-factor") o.longFactor = parseDouble(val);
     else if (key == "--rpc-prob") o.rpcProb = parseDouble(val);
+    else if (key == "--rpc-jitter") o.rpcJitter = parseDouble(val);
     else if (key == "--drain-seconds") o.drainSeconds = parseDouble(val);
     else if (key == "--cross-numa-penalty-us") o.crossNumaPenaltyUs = parseDouble(val);
     else if (key == "--min-gain-us") o.minGainUs = parseDouble(val);
@@ -230,14 +242,19 @@ Options parse(int argc, char** argv) {
       !(o.qps > 0 && o.qps <= 1000000) || !(o.duration > 0 && o.duration <= 86400) ||
       o.requests > 1000000 || std::ceil(o.qps * o.duration) > 1000000 ||
       o.jitter < 0 || o.jitter > 1 || o.longProb < 0 || o.longProb > 1 || o.longFactor < 1 ||
-      double(o.cpuUs) * (1 + o.jitter) * o.longFactor > 10000000 ||
+      double(o.cpuUs) * (1 + o.jitter) * (o.longMaxUs ? 1 : o.longFactor) > 10000000 ||
+      bool(o.longMinUs) != bool(o.longMaxUs) || o.longMinUs > o.longMaxUs || o.longMaxUs > 10000000 ||
       o.rpcProb < 0 || o.rpcProb > 1 || o.rpcDelayUs > 3600000000ULL ||
+      o.rpcJitter < 0 || o.rpcJitter > 1 || double(o.rpcDelayUs) * (1 + o.rpcJitter) > 3600000000ULL ||
       o.wakeUs > 1000000 || (o.wakeUs != 0 && o.queue != "throttled") ||
       o.drainSeconds < 0 || o.drainSeconds > 86400 || !o.sampleMs || o.sampleMs > 60000 ||
       (o.workMode != "cpu" && o.workMode != "iterations") || !o.iterationsPerUs || o.iterationsPerUs > 1000000 ||
       o.estimateUs > 10000000 || o.crossNumaPenaltyUs < 0 || o.minGainUs < 0 || o.relativeGain < 0 || o.relativeGain >= 1)
     throw std::invalid_argument("configuration outside supported bounds; see --help");
   if (o.graph != "chains" && o.graph != "waves") throw std::invalid_argument("graph must be chains or waves");
+  if (o.arrival != "regular" && o.arrival != "poisson") throw std::invalid_argument("arrival must be regular or poisson");
+  if (o.candidateScope != "all" && o.candidateScope != "preferred-numa")
+    throw std::invalid_argument("candidate-scope must be all or preferred-numa");
   if (o.balanceForks != "initial" && o.balanceForks != "all") throw std::invalid_argument("balance-forks must be initial or all");
   if (o.graph == "chains" && (!o.waveWidths.empty() || !o.waveDepths.empty()))
     throw std::invalid_argument("wave-widths/depths require graph=waves");
@@ -296,6 +313,27 @@ Topology topology(const Options& o) {
   if (o.affinity != "none" && o.cpus.empty())
     throw std::invalid_argument("binding needs explicit --cpus; physical clusters are never inferred");
   if (o.affinity == "numa" && o.numa.empty()) throw std::invalid_argument("numa binding needs --numa");
+  if (o.candidateScope == "preferred-numa") {
+    if (o.affinity == "none" || o.cpus.empty() || o.numa.empty())
+      throw std::invalid_argument("preferred-numa needs explicit --cpus/--numa and cluster or numa affinity");
+    // Group labels alone cannot establish where a worker may actually execute.
+    // Validate physical NUMA membership before a restricted candidate policy.
+    for (size_t group = 0; group < o.pools; ++group) for (int cpu : t.configured[group]) {
+      const auto cpuPath = std::filesystem::path("/sys/devices/system/cpu") / ("cpu" + std::to_string(cpu));
+      int actual = -1;
+      for (const auto& entry : std::filesystem::directory_iterator(cpuPath)) {
+        const auto name = entry.path().filename().string();
+        if (name.size() > 4 && name.rfind("node", 0) == 0 &&
+            name.find_first_not_of("0123456789", 4) == std::string::npos) {
+          if (actual != -1) throw std::invalid_argument("ambiguous sysfs NUMA membership");
+          actual = int(parseU64(name.substr(4)));
+        }
+      }
+      if (actual != t.numa[group])
+        throw std::invalid_argument("NUMA label does not match sysfs for CPU " + std::to_string(cpu));
+    }
+    t.config.candidateScope = Executor::CandidateScope::PreferredNuma;
+  }
   std::vector<double> caps;
   if (!o.capacities.empty()) {
     auto cs = split(o.capacities, ',');
@@ -353,7 +391,7 @@ struct TaskRecord {
   std::string status;
 };
 struct Node {
-  uint64_t workUs = 0;
+  uint64_t workUs = 0, rpcDelayUs = 0;
   bool rpc = false;
   TaskRecord records[2];
 };
@@ -428,7 +466,7 @@ class Experiment {
       if (std::filesystem::exists(path(f))) throw std::runtime_error("refusing to overwrite existing run: " + path(f));
     tasks_.open(path("tasks.csv")); requests_.open(path("requests.csv")); pools_.open(path("pools.csv"));
     if (!tasks_ || !requests_ || !pools_) throw std::runtime_error("cannot create output files");
-    tasks_ << "request_id,node_id,stage,home_group,parent_group,chosen_group,submit_ns,start_ns,finish_ns,enqueue_us,cpu_us,wall_us,pending_before,inflight_before,outstanding_before,outstanding_cpu_us_before,queue_before,work_estimate_us,fanout,depth,is_fanout,migrated,cross_numa,preferred_load_us,chosen_load_us,move_reason,work_target_us,worker_tid,status,wave,kind,balance_eligible,predecessors\n";
+    tasks_ << "request_id,node_id,stage,home_group,parent_group,chosen_group,submit_ns,start_ns,finish_ns,enqueue_us,cpu_us,wall_us,pending_before,inflight_before,outstanding_before,outstanding_cpu_us_before,queue_before,work_estimate_us,fanout,depth,is_fanout,migrated,cross_numa,preferred_load_us,chosen_load_us,move_reason,work_target_us,worker_tid,status,wave,kind,balance_eligible,predecessors,rpc_delay_target_us\n";
     requests_ << "request_id,scheduled_ns,offered_ns,first_start_ns,finish_ns,latency_us,accepted_to_finish_us,admission_lag_us,status,fanout,planned_cpu_us,operator_nodes,cpu_nodes,waves\n";
     pools_ << "time_ns,group,pending,inflight,outstanding,estimated_outstanding_cpu_us,queue_depth,submitted,completed,rejected,migrated_in,failed,capacity\n";
     executor_ = std::make_unique<Executor>(topo_.config);
@@ -450,17 +488,28 @@ class Experiment {
     if (logger_.joinable()) logger_.join();
   }
   int run() {
+    // Generate exogenous arrivals before starting the clock. A Poisson horizon
+    // must not be capped at ceil(rate * duration), which would clip busy seeds.
+    std::vector<uint64_t> arrivals;
+    double nextSeconds = 0;
+    const uint64_t limit = options_.requests ? options_.requests : 1000000;
+    for (uint64_t id = 0; ; ++id) {
+      if (options_.arrival == "poisson")
+        nextSeconds += -std::log1p(-unit(options_.seed ^ mix(id) ^ 0xa771a1ULL)) / options_.qps;
+      else nextSeconds = double(id) / options_.qps;
+      if (nextSeconds >= options_.duration || (options_.requests && id >= limit)) break;
+      if (id >= limit) throw std::invalid_argument("arrival realization exceeds one million requests; shorten duration");
+      arrivals.push_back(uint64_t(nextSeconds * 1e9));
+    }
     logger_ = std::thread([this] { loggerLoop(); });
     sampler_ = std::thread([this] { samplerLoop(); });
-    const auto scheduledOrigin = now();
-    uint64_t count = uint64_t(std::ceil(options_.qps * options_.duration));
-    if (options_.requests) count = std::min(count, options_.requests);
-    for (uint64_t id = 0; id < count; ++id) {
-      uint64_t offset = uint64_t(double(id) * 1e9 / options_.qps);
+    arrivalOrigin_ = now();
+    for (uint64_t id = 0; id < arrivals.size(); ++id) {
+      uint64_t offset = arrivals[id];
       // Use the exact same clock and absolute origin for deadlines and CSVs.
       // Sampling steady_clock and CLOCK_MONOTONIC separately can invert timestamps
       // if the producer is preempted between the two samples.
-      const uint64_t deadlineNs = origin_ + scheduledOrigin + offset;
+      const uint64_t deadlineNs = origin_ + arrivalOrigin_ + offset;
       const timespec deadline{time_t(deadlineNs / 1000000000ULL), long(deadlineNs % 1000000000ULL)};
       int sleepError;
       do { sleepError = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, nullptr); }
@@ -469,7 +518,7 @@ class Experiment {
       auto offeredAt = now();
       // A slot includes finished requests not yet serialized, bounding detailed telemetry too.
       const bool admitted = active_.load(std::memory_order_relaxed) < options_.maxInflight;
-      auto r = makeRequest(id, scheduledOrigin + offset, admitted);
+      auto r = makeRequest(id, arrivalOrigin_ + offset, admitted);
       r->offered = offeredAt;
       ++offered_;
       if (!admitted) {
@@ -534,9 +583,17 @@ class Experiment {
     for (size_t i = 0; i < r->operatorCount; ++i) {
       auto k = mix(key ^ mix(i + 1));
       double work = double(options_.cpuUs) * (1 + options_.jitter * (2 * unit(k) - 1));
-      if (unit(k ^ 0xdeadbeefULL) < options_.longProb) work *= options_.longFactor;
+      if (unit(k ^ 0xdeadbeefULL) < options_.longProb) {
+        work = options_.longMaxUs ? options_.longMinUs +
+            unit(k ^ 0x7a11ULL) * (options_.longMaxUs - options_.longMinUs) : work * options_.longFactor;
+      }
       const auto workUs = std::max<uint64_t>(2, uint64_t(std::llround(work)));
-      if (admitted) { r->nodes[i].workUs = workUs; r->nodes[i].rpc = unit(k ^ 0xa10a10ULL) < options_.rpcProb; }
+      if (admitted) {
+        r->nodes[i].workUs = workUs;
+        r->nodes[i].rpc = unit(k ^ 0xa10a10ULL) < options_.rpcProb;
+        r->nodes[i].rpcDelayUs = uint64_t(std::llround(options_.rpcDelayUs *
+            (1 + options_.rpcJitter * (2 * unit(k ^ 0xd31a9ULL) - 1))));
+      }
       r->plannedCpuUs += workUs;
     }
     r->plannedCpuUs += options_.joinUs * r->widths.size();
@@ -605,7 +662,7 @@ class Experiment {
         if (!ok) { if (record.status == "canceled") r->canceled.store(true); branchDone(r, wave, decision.chosen); return; }
         if (n.rpc && stage == 0) {
           try {
-            timers_.add(std::chrono::microseconds(options_.rpcDelayUs), [this, r, wave, branch, depth, chosen = decision.chosen] {
+            timers_.add(std::chrono::microseconds(n.rpcDelayUs), [this, r, wave, branch, depth, chosen = decision.chosen] {
               submitNode(r, wave, branch, depth, 1, chosen);
             });
           } catch (...) { r->failed.store(true); branchDone(r, wave, decision.chosen); }
@@ -680,7 +737,7 @@ class Experiment {
       }
     } else if (t.depth > 0) tasks_ << id - 1;
     else if (t.wave > 0) tasks_ << r.operatorCount + t.wave - 1;
-    tasks_ << '\n';
+    tasks_ << ',' << (stage == 1 ? r.nodes[id].rpcDelayUs : 0) << '\n';
     ++tasksLogged_;
   }
   void loggerLoop() {
@@ -761,21 +818,27 @@ class Experiment {
     auto temporary = path("metadata.json.tmp");
     std::ofstream out(temporary);
     utsname host{}; uname(&host);
-    out << std::setprecision(16) << "{\n  \"schema_version\": 2, \"phase\": " << json(phase)
+    out << std::setprecision(16) << "{\n  \"schema_version\": 3, \"phase\": " << json(phase)
         << ", \"backend\": " << json(kBackend)
         << ", \"pid\": " << getpid() << ",\n  \"clock\": \"CLOCK_MONOTONIC\", \"origin_monotonic_ns\": " << origin_
+        << ", \"arrival_origin_ns\": " << arrivalOrigin_
         << ", \"cpu_clock\": \"CLOCK_THREAD_CPUTIME_ID\",\n  \"architecture\": " << json(host.machine)
         << ", \"kernel\": " << json(host.release) << ", \"hostname\": " << json(host.nodename)
         << ",\n  \"allowed_cpus\": [" << joinInts(topo_.allowed) << "], \"effective_cpuset_overlap\": " << (topo_.overlaps ? "true" : "false")
+        << ", \"numa_labels_verified\": " << (options_.candidateScope == "preferred-numa" ? "true" : "false")
         << ",\n  \"config\": {\"pools\": " << options_.pools << ", \"threads_per_pool\": " << options_.threads
         << ", \"affinity\": " << json(options_.affinity) << ", \"policy\": " << json(options_.policy) << ", \"metric\": " << json(options_.metric)
         << ", \"queue\": " << json(options_.queue) << ", \"wake_us\": " << options_.wakeUs << ", \"seed\": " << options_.seed
         << ", \"qps\": " << options_.qps << ", \"duration\": " << options_.duration << ", \"requests\": " << options_.requests
+        << ", \"arrival\": " << json(options_.arrival)
+        << ", \"candidate_scope\": " << json(options_.candidateScope)
         << ", \"fanout_min\": " << options_.fanoutMin << ", \"fanout_max\": " << options_.fanoutMax << ", \"chain_length\": " << options_.chainLength
         << ", \"graph\": " << json(options_.graph) << ", \"wave_widths\": " << json(options_.waveWidths)
         << ", \"wave_depths\": " << json(options_.waveDepths) << ", \"balance_forks\": " << json(options_.balanceForks)
         << ", \"cpu_us\": " << options_.cpuUs << ", \"jitter\": " << options_.jitter << ", \"long_prob\": " << options_.longProb
-        << ", \"long_factor\": " << options_.longFactor << ", \"join_us\": " << options_.joinUs << ", \"rpc_prob\": " << options_.rpcProb
+        << ", \"long_factor\": " << options_.longFactor << ", \"long_min_us\": " << options_.longMinUs
+        << ", \"long_max_us\": " << options_.longMaxUs << ", \"join_us\": " << options_.joinUs << ", \"rpc_prob\": " << options_.rpcProb
+        << ", \"rpc_jitter\": " << options_.rpcJitter
         << ", \"rpc_delay_us\": " << options_.rpcDelayUs << ", \"max_inflight\": " << options_.maxInflight
         << ", \"drain_seconds\": " << options_.drainSeconds << ", \"sample_ms\": " << options_.sampleMs << ", \"memory_kb\": " << options_.memoryKb
         << ", \"cross_numa_penalty_us\": " << options_.crossNumaPenaltyUs << ", \"min_gain_us\": " << options_.minGainUs
@@ -806,6 +869,7 @@ class Experiment {
     std::filesystem::rename(temporary, path("metadata.json"));
   }
   Options options_;
+  uint64_t arrivalOrigin_ = 0;
   Topology topo_;
   std::unique_ptr<Executor> executor_;
   Timers timers_;

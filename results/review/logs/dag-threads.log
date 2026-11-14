@@ -1,0 +1,120 @@
+RUN results/review/runs/dag-threads/r0-home-t16
+RUN results/review/runs/dag-threads/r0-home-t2
+RUN results/review/runs/dag-threads/r1-home-t2
+RUN results/review/runs/dag-threads/r1-home-t16
+RUN results/review/runs/dag-threads/r2-home-t2
+RUN results/review/runs/dag-threads/r2-home-t16
+RUN results/review/runs/dag-threads/r3-home-t16
+RUN results/review/runs/dag-threads/r3-home-t2
+RUN results/review/runs/dag-threads/r4-home-t2
+RUN results/review/runs/dag-threads/r4-home-t16
+RUN results/review/runs/dag-threads/r5-home-t2
+RUN results/review/runs/dag-threads/r5-home-t16
+# 实测汇总
+
+所有时延来自实际输出；CPU 工作以线程 CPU 时钟计量。
+
+| run | 完成请求 | 状态计数 | 均值 ms | p99 ms | 入队等待均值 ms | 算子 kernel CPU s | 迁移次数 |
+|---|---:|---|---:|---:|---:|---:|---:|
+| r0-home-t16 | 93 | {'completed': 93} | 212.624 | 555.271 | 1.354 | 22.354 | 0.000 |
+| r0-home-t2 | 93 | {'completed': 93} | 204.783 | 558.551 | 9.952 | 22.354 | 0.000 |
+| r1-home-t2 | 95 | {'completed': 95} | 316.832 | 708.220 | 17.191 | 22.835 | 0.000 |
+| r1-home-t16 | 95 | {'completed': 95} | 321.622 | 683.617 | 4.188 | 22.835 | 0.000 |
+| r2-home-t2 | 80 | {'completed': 80} | 184.950 | 413.315 | 8.788 | 19.229 | 0.000 |
+| r2-home-t16 | 80 | {'completed': 80} | 191.710 | 413.429 | 0.875 | 19.229 | 0.000 |
+| r3-home-t16 | 103 | {'completed': 103} | 262.469 | 547.582 | 1.637 | 24.758 | 0.000 |
+| r3-home-t2 | 103 | {'completed': 103} | 252.062 | 519.383 | 12.773 | 24.757 | 0.000 |
+| r4-home-t2 | 87 | {'completed': 87} | 197.403 | 413.231 | 9.502 | 20.912 | 0.000 |
+| r4-home-t16 | 87 | {'completed': 87} | 203.844 | 417.823 | 0.896 | 20.912 | 0.000 |
+| r5-home-t2 | 106 | {'completed': 106} | 286.840 | 866.523 | 15.327 | 25.479 | 0.000 |
+| r5-home-t16 | 106 | {'completed': 106} | 296.944 | 886.796 | 5.224 | 25.479 | 0.000 |
+
+## 负载与任务入队等待的相关性
+
+| run | 指标 | 样本数 | Pearson | Spearman |
+|---|---|---:|---:|---:|
+| r0-home-t16 | queue_before | 5859 | 0.904 | 0.804 |
+| r0-home-t16 | pending_before | 5859 | 0.904 | 0.805 |
+| r0-home-t16 | inflight_before | 5859 | 0.438 | -0.004 |
+| r0-home-t16 | outstanding_before | 5859 | 0.677 | 0.166 |
+| r0-home-t16 | outstanding_cpu_us_before | 5859 | 0.661 | 0.140 |
+| r0-home-t16 | chosen_load_us | 5859 | 0.890 | 0.803 |
+| r0-home-t2 | queue_before | 5859 | 0.983 | 0.903 |
+| r0-home-t2 | pending_before | 5859 | 0.984 | 0.905 |
+| r0-home-t2 | inflight_before | 5859 | 0.344 | 0.472 |
+| r0-home-t2 | outstanding_before | 5859 | 0.981 | 0.884 |
+| r0-home-t2 | outstanding_cpu_us_before | 5859 | 0.978 | 0.867 |
+| r0-home-t2 | chosen_load_us | 5859 | 0.948 | 0.845 |
+| r1-home-t2 | queue_before | 5985 | 0.991 | 0.971 |
+| r1-home-t2 | pending_before | 5985 | 0.991 | 0.971 |
+| r1-home-t2 | inflight_before | 5985 | 0.352 | 0.461 |
+| r1-home-t2 | outstanding_before | 5985 | 0.990 | 0.964 |
+| r1-home-t2 | outstanding_cpu_us_before | 5985 | 0.990 | 0.961 |
+| r1-home-t2 | chosen_load_us | 5985 | 0.947 | 0.900 |
+| r1-home-t16 | queue_before | 5985 | 0.952 | 0.910 |
+| r1-home-t16 | pending_before | 5985 | 0.952 | 0.911 |
+| r1-home-t16 | inflight_before | 5985 | 0.598 | 0.477 |
+| r1-home-t16 | outstanding_before | 5985 | 0.823 | 0.595 |
+| r1-home-t16 | outstanding_cpu_us_before | 5985 | 0.819 | 0.585 |
+| r1-home-t16 | chosen_load_us | 5985 | 0.934 | 0.903 |
+| r2-home-t2 | queue_before | 5040 | 0.974 | 0.896 |
+| r2-home-t2 | pending_before | 5040 | 0.974 | 0.897 |
+| r2-home-t2 | inflight_before | 5040 | 0.367 | 0.449 |
+| r2-home-t2 | outstanding_before | 5040 | 0.968 | 0.868 |
+| r2-home-t2 | outstanding_cpu_us_before | 5040 | 0.964 | 0.850 |
+| r2-home-t2 | chosen_load_us | 5040 | 0.943 | 0.843 |
+| r2-home-t16 | queue_before | 5040 | 0.870 | 0.769 |
+| r2-home-t16 | pending_before | 5040 | 0.871 | 0.772 |
+| r2-home-t16 | inflight_before | 5040 | 0.179 | -0.190 |
+| r2-home-t16 | outstanding_before | 5040 | 0.448 | 0.002 |
+| r2-home-t16 | outstanding_cpu_us_before | 5040 | 0.418 | -0.027 |
+| r2-home-t16 | chosen_load_us | 5040 | 0.867 | 0.769 |
+| r3-home-t16 | queue_before | 6489 | 0.893 | 0.835 |
+| r3-home-t16 | pending_before | 6489 | 0.893 | 0.835 |
+| r3-home-t16 | inflight_before | 6489 | 0.330 | 0.059 |
+| r3-home-t16 | outstanding_before | 6489 | 0.597 | 0.232 |
+| r3-home-t16 | outstanding_cpu_us_before | 6489 | 0.583 | 0.216 |
+| r3-home-t16 | chosen_load_us | 6489 | 0.881 | 0.834 |
+| r3-home-t2 | queue_before | 6489 | 0.986 | 0.958 |
+| r3-home-t2 | pending_before | 6489 | 0.986 | 0.957 |
+| r3-home-t2 | inflight_before | 6489 | 0.354 | 0.438 |
+| r3-home-t2 | outstanding_before | 6489 | 0.984 | 0.950 |
+| r3-home-t2 | outstanding_cpu_us_before | 6489 | 0.984 | 0.949 |
+| r3-home-t2 | chosen_load_us | 6489 | 0.943 | 0.892 |
+| r4-home-t2 | queue_before | 5481 | 0.971 | 0.924 |
+| r4-home-t2 | pending_before | 5481 | 0.971 | 0.924 |
+| r4-home-t2 | inflight_before | 5481 | 0.399 | 0.473 |
+| r4-home-t2 | outstanding_before | 5481 | 0.966 | 0.906 |
+| r4-home-t2 | outstanding_cpu_us_before | 5481 | 0.961 | 0.893 |
+| r4-home-t2 | chosen_load_us | 5481 | 0.933 | 0.873 |
+| r4-home-t16 | queue_before | 5481 | 0.876 | 0.774 |
+| r4-home-t16 | pending_before | 5481 | 0.878 | 0.778 |
+| r4-home-t16 | inflight_before | 5481 | 0.145 | -0.163 |
+| r4-home-t16 | outstanding_before | 5481 | 0.421 | 0.032 |
+| r4-home-t16 | outstanding_cpu_us_before | 5481 | 0.393 | 0.006 |
+| r4-home-t16 | chosen_load_us | 5481 | 0.874 | 0.774 |
+| r5-home-t2 | queue_before | 6678 | 0.994 | 0.943 |
+| r5-home-t2 | pending_before | 6678 | 0.994 | 0.943 |
+| r5-home-t2 | inflight_before | 6678 | 0.289 | 0.476 |
+| r5-home-t2 | outstanding_before | 6678 | 0.994 | 0.928 |
+| r5-home-t2 | outstanding_cpu_us_before | 6678 | 0.994 | 0.918 |
+| r5-home-t2 | chosen_load_us | 6678 | 0.960 | 0.880 |
+| r5-home-t16 | queue_before | 6678 | 0.988 | 0.864 |
+| r5-home-t16 | pending_before | 6678 | 0.988 | 0.866 |
+| r5-home-t16 | inflight_before | 6678 | 0.637 | 0.266 |
+| r5-home-t16 | outstanding_before | 6678 | 0.919 | 0.394 |
+| r5-home-t16 | outstanding_cpu_us_before | 6678 | 0.914 | 0.376 |
+| r5-home-t16 | chosen_load_us | 6678 | 0.967 | 0.859 |
+
+## 解释边界
+
+- 每秒 p99 在低 QPS 下通常接近当秒最大值；跨运行比较请使用多轮独立重复，保留每轮结果。
+- 任务样本共享 request、池和时间段，不能当作独立重复；本报告没有对任务相关系数提供虚假的独立样本显著性。
+- 不再输出将request当独立样本的均值区间。用compare_runs.py按完整seed配对重采样，并检查预声明工作量契约与尾部样本门槛。
+- 任务工作量、扇出、策略选池和过载拒绝均会混杂相关性；JSON 提供请求初始负载、计划工作量相关性及少量同工作量分层。
+- wall-cpu 包含抢占、阻塞及计时开销，不能直接命名为 runqueue 时间；请配合 proc.csv 或 perf sched。
+- 算子 kernel CPU 秒不包含后继路由、Folly 队列/唤醒、日志和 AIO；JSON 另有外部采样的 executor CPU，采样首尾可能漏计。关闭 task log 时无样本标为 n/a。
+- 零队列深度不表示 CPU 空闲。queue depth 的语义取决于 Folly 队列和信号量；本实验还记录 submitted-not-started。
+- 拒绝或删失请求必须一起报告；仅比较完成请求 p99 可能奖励主动丢弃慢请求的策略。
+- 本地 VM 的结果不证明 ARM 的 NUMA/缓存迁移成本或生产收益。
+

@@ -1,0 +1,33 @@
+CMake Warning (dev) at /root/rank_demo/folly/_install/lib/cmake/folly/folly-config.cmake:86 (find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  experiments/independent/CMakeLists.txt:5 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found folly: /root/rank_demo/folly/_install
+CMake Warning (dev) at /root/rank_demo/folly/_install/lib/cmake/folly/folly-config.cmake:86 (find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  experiments/dag/CMakeLists.txt:6 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found folly: /root/rank_demo/folly/_install
+CMake Warning (dev) at /root/rank_demo/folly/_install/lib/cmake/folly/folly-config.cmake:86 (find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  experiments/metrics/CMakeLists.txt:5 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found folly: /root/rank_demo/folly/_install
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /root/rank_demo/executor_demo/build

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Sequential, randomized-order paired experiments. Never runs workloads in parallel."""
 import argparse
+import hashlib
 import json
 import os
 import pathlib
@@ -40,13 +41,17 @@ def main():
     p.add_argument("--only", help="comma-separated case names or substring filters")
     p.add_argument("--cases-json", help="JSON array of {name,args} overrides local partitions for production")
     p.add_argument("--timeout-seconds", type=float, help="explicit process timeout; default effective duration+drain+40")
+    p.add_argument("--proc-interval", type=float, default=.5, help="/proc sampling seconds; 0 disables external sampling")
     p.add_argument("--extra", nargs=argparse.REMAINDER, default=[], help="extra demo arguments, put last")
     a = p.parse_args()
-    if a.repeats < 1 or a.duration <= 0:
+    if a.repeats < 1 or a.duration <= 0 or a.proc_interval < 0:
         p.error("positive repeats and duration required")
     binary = str(pathlib.Path(a.binary).resolve())
+    binary_hash = hashlib.sha256(pathlib.Path(binary).read_bytes()).hexdigest()
     root = pathlib.Path(a.output)
-    root.mkdir(parents=True, exist_ok=True)
+    if root.exists():
+        p.error('matrix output already exists; choose a fresh directory')
+    root.mkdir(parents=True)
     topology = capture()
     (root / "environment.json").write_text(json.dumps(topology, indent=2) + "\n")
     cases = local_cases(sorted(os.sched_getaffinity(0)))
@@ -58,6 +63,9 @@ def main():
         cases = [(n, v) for n, v in cases if any(pattern in n for pattern in patterns)]
     if not cases:
         p.error("no matching cases")
+    names = [name for name, _ in cases]
+    if len(names) != len(set(names)) or any(not name or '/' in name or name in ('.', '..') for name in names):
+        p.error('case names must be distinct single directory names')
     jobs = []
     for repeat in range(a.repeats):
         ordered = list(cases)
@@ -86,20 +94,22 @@ def main():
             process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT)
             sampler = subprocess.Popen([sys.executable, str(pathlib.Path(__file__).with_name("proc_sample.py")),
                 "--pid", str(process.pid), "--workers", str(destination / "workers.csv"),
-                "--output", str(destination / "proc.csv"), "--interval", "0.5"])
+                "--output", str(destination / "proc.csv"), "--interval", str(a.proc_interval)]) if a.proc_interval else None
             try:
                 rc = process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 process.kill()
                 rc = process.wait()
             finally:
-                try:
-                    sampler.wait(timeout=3)
-                except subprocess.TimeoutExpired:
-                    sampler.terminate()
-                    sampler.wait()
+                if sampler:
+                    try:
+                        sampler.wait(timeout=3)
+                    except subprocess.TimeoutExpired:
+                        sampler.terminate()
+                        sampler.wait()
         failures += int(rc != 0)
         manifest.append({"name": name, "repeat": repeat, "seed": a.seed+repeat,
+                         "binary_sha256": binary_hash, "proc_interval_seconds": a.proc_interval,
                          "command": command, "returncode": rc,
                          "elapsed_s": time.monotonic()-started, "directory": str(destination)})
         (root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

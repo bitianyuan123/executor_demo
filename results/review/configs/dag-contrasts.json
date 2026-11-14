@@ -1,0 +1,49 @@
+{
+  "stage": "dag",
+  "window": {
+    "start_s": 1,
+    "end_s": 7
+  },
+  "minimum_pairs": 5,
+  "minimum_tail_observations": 20,
+  "bootstrap_draws": 5000,
+  "comparisons": [
+    {
+      "name": "initial-fanout-vs-home",
+      "baseline": "home",
+      "candidate": "initial",
+      "allowed_changes": [
+        "policy",
+        "balance-forks"
+      ],
+      "workload": {
+        "same_cohort_ids": true,
+        "cohort_total_relative_tolerance": 0
+      }
+    },
+    {
+      "name": "later-forks-added",
+      "baseline": "initial",
+      "candidate": "all-forks",
+      "allowed_changes": [
+        "balance-forks"
+      ],
+      "workload": {
+        "same_cohort_ids": true,
+        "cohort_total_relative_tolerance": 0
+      }
+    },
+    {
+      "name": "ordinary-successor-balancing-added",
+      "baseline": "all-forks",
+      "candidate": "sticky",
+      "allowed_changes": [
+        "policy"
+      ],
+      "workload": {
+        "same_cohort_ids": true,
+        "cohort_total_relative_tolerance": 0
+      }
+    }
+  ]
+}

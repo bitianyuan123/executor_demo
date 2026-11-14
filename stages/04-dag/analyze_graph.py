@@ -103,6 +103,10 @@ def analyze(directory):
                 dependencies.append(dependency)
                 edge_count += 1
             predecessors[key] = dependencies
+            if key[1] == 1 and 'rpc_delay_target_us' in row:
+                delay_us = int(row['rpc_delay_target_us'])
+                if delay_us < 0 or submit - int(task_map[(key[0], 0)]['finish_ns']) < delay_us * 1000:
+                    raise ValueError('RPC continuation submitted before its configured timer delay')
         terminal = (int(request['cpu_nodes']) - 1, 0)
         if task_map[terminal]['kind'] != 'join':
             raise ValueError('terminal must be final join')
@@ -144,8 +148,28 @@ def analyze(directory):
               'path_kernel_cpu_ms', 'request_tail_ms', 'parallel_sum_execution_wall_ms', 'parallel_sum_submit_to_start_ms')
     aggregates = {field: {'mean': statistics.mean([row[field] for row in results]) if results else None,
                           'p99': percentile([row[field] for row in results], .99)} for field in fields}
+    # Separate ordinary successor migration from fork migration; a global move
+    # rate alone cannot answer whether rebalancing after the first fork helped.
+    transitions = {}
+    for task in tasks:
+        if task.get('status') != 'completed' or 'chosen_group' not in task:
+            continue
+        kind = ('join' if task['kind'] == 'join' else 'rpc_resume' if int(task['stage']) == 1
+                else 'ordinary_successor' if int(task.get('depth', 0)) > 0
+                else 'initial_fork' if int(task.get('wave', 0)) == 0 else 'later_fork')
+        transitions.setdefault(kind, []).append(task)
+    routing = {}
+    for kind, group in transitions.items():
+        waits = [float(task['enqueue_us']) for task in group]
+        routing[kind] = {'callbacks': len(group),
+                         'migrated': sum(int(task.get('migrated', 0)) for task in group),
+                         'cross_numa': sum(int(task.get('cross_numa', 0)) for task in group),
+                         'return_home': sum(task.get('move_reason') == 'return_home' for task in group),
+                         'mean_submit_to_start_us': statistics.mean(waits),
+                         'p99_submit_to_start_us': percentile(waits, .99)}
     return {'directory': str(directory), 'requests_completed': len(results), 'edges_checked': edge_count,
             'excluded_requests': len(requests) - len(results), 'aggregates_ms': aggregates, 'requests': results,
+            'routing_by_transition': routing,
             'limitations': ['The path uses the latest observed predecessor at each join; it is not an intrinsic service-only critical path.',
                             'The latest recorded CPU finish can differ from the branch that performs the final dependency decrement and selects join parent.',
                             'Submit-to-start combines Folly work, wakeup, and kernel scheduling; it is not kernel runq delay.',

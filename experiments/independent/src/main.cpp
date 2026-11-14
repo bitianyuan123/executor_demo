@@ -94,10 +94,11 @@ template<class T> std::string array(const std::vector<T>& xs) {
 struct Opt {
   std::string output = "independent-run", cpus, numa, affinity = "none", deployment = "dev";
   std::string instrumentation = "full", arrival = "regular", workMode = "cpu";
+  std::string meanNormalization = "none", burstPlacement = "local";
   size_t pools = 2, threads = 2, burstMin = 1, burstMax = 1, maxOutstanding = 10000, maxPlanned = 1000000;
   uint64_t cpuUs = 1000, estimateUs = 0, seed = 42, arrivals = 0, sampleMs = 100, iterationsPerUs = 64;
   size_t maxSamples=1000000; uint64_t failTask=std::numeric_limits<uint64_t>::max();
-  double rate = 100, duration = 5, jitter = .5, tailProb = .02, tailFactor = 8, drain = 30;
+  double rate = 100, duration = 5, jitter = .5, tailProb = .02, tailFactor = 8, drain = 30, estimateJitter = 0;
 };
 const char* help = R"(Independent original Folly CPUThreadPoolExecutor experiment.
 All options take one value. No AffinityExecutor, graph, RPC or cross-pool routing.
@@ -109,10 +110,13 @@ All options take one value. No AffinityExecutor, graph, RPC or cross-pool routin
 --arrival-rate N --duration S       Open-loop arrivals/second and offered duration (100,5)
 --arrival regular|poisson --arrivals N  N=0 means duration determines count
 --burst-min N --burst-max N         Independent jobs per arrival, same round-robin pool (1,1)
+--burst-placement local|spread     One RR pool per arrival or RR pool per task (local)
 --cpu-us N --jitter F               Uniform CPU budget around N, fraction F (1000,.5)
 --long-prob F --long-factor F       Mixture tail probability and multiplier (.02,8)
+--mean-normalization none|exact    exact rescales finite workload to mean cpu-us (none)
 --work-mode cpu|iterations --iterations-per-us N  CPU target or fixed loop work (cpu,64)
 --estimate-us N                    full-mode work estimate, 0=known synthetic target
+--estimate-jitter F                Independent multiplicative U(1-F,1+F) estimate error (0)
 --instrumentation none|queue|counters|full  Increasing observation levels (full)
 --sample-ms N --seed N             Periodic snapshots and deterministic workload (100,42)
 --max-samples N                    Bound periodic sample rows; report truncation (1000000)
@@ -138,6 +142,8 @@ Opt parse(int argc, char** argv) {
     else if (k == "--instrumentation") o.instrumentation = v;
     else if (k == "--arrival") o.arrival = v;
     else if (k == "--work-mode") o.workMode = v;
+    else if (k == "--mean-normalization") o.meanNormalization = v;
+    else if (k == "--burst-placement") o.burstPlacement = v;
     else if (k == "--pools") o.pools = integer(v);
     else if (k == "--threads") o.threads = integer(v);
     else if (k == "--burst-min") o.burstMin = integer(v);
@@ -158,6 +164,7 @@ Opt parse(int argc, char** argv) {
     else if (k == "--long-prob") o.tailProb = number(v);
     else if (k == "--long-factor") o.tailFactor = number(v);
     else if (k == "--drain-seconds") o.drain = number(v);
+    else if (k == "--estimate-jitter") o.estimateJitter = number(v);
     else throw std::invalid_argument("unknown option " + k);
   }
   auto choice = [](const std::string& x, std::initializer_list<const char*> vals) {
@@ -166,7 +173,8 @@ Opt parse(int argc, char** argv) {
   };
   if (!choice(o.deployment,{"dev","target"}) || !choice(o.affinity,{"none","numa","cluster"}) ||
       !choice(o.instrumentation,{"none","queue","counters","full"}) || !choice(o.arrival,{"regular","poisson"}) ||
-      !choice(o.workMode,{"cpu","iterations"})) throw std::invalid_argument("invalid enum option");
+      !choice(o.workMode,{"cpu","iterations"}) || !choice(o.meanNormalization,{"none","exact"}) ||
+      !choice(o.burstPlacement,{"local","spread"})) throw std::invalid_argument("invalid enum option");
   if (!o.pools || o.pools > 1024 || !o.threads || o.threads > 10000 || !o.burstMin || o.burstMax < o.burstMin ||
       !o.maxOutstanding || !o.maxPlanned || o.maxPlanned > 10000000 || !o.cpuUs || o.cpuUs > 3600000000ULL ||
       !o.iterationsPerUs || o.iterationsPerUs > 1000000 || o.rate <= 0 || o.rate > 1e7 || o.duration <= 0 ||
@@ -174,6 +182,7 @@ Opt parse(int argc, char** argv) {
       o.tailProb < 0 || o.tailProb > 1 || o.tailFactor < 1 || o.tailFactor > 1000 || !o.sampleMs ||
       o.sampleMs > 60000 || o.maxSamples > 10000000 || o.estimateUs > 3600000000000ULL)
     throw std::invalid_argument("option outside supported bounds");
+  if(o.estimateJitter<0 || o.estimateJitter>=1) throw std::invalid_argument("estimate-jitter must be in [0,1)");
   if (o.deployment == "target" && (o.pools != 6 || o.cpus.empty() || o.numa.empty()))
     throw std::invalid_argument("target requires pools=6 and explicit cpus/numa");
   if (o.affinity != "none" && o.cpus.empty()) throw std::invalid_argument("affinity requires explicit CPU groups");
@@ -255,7 +264,6 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
   std::uniform_int_distribution<size_t> width(o.burstMin,o.burstMax);
   std::exponential_distribution<double> interval(o.rate);
   std::vector<Task> tasks;
-  uint64_t totalEstimate=0;
   double t = o.arrival == "regular" ? 0 : interval(arrival);
   for (size_t b=0; t < o.duration && (!o.arrivals || b < o.arrivals); ++b) {
     size_t k = width(widths);
@@ -263,13 +271,38 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
     auto when = uint64_t(t * 1e9); bursts.push_back({tasks.size(),k,b%o.pools,when});
     for (size_t j=0; j<k; ++j) {
       auto target = uint64_t(std::max(1., double(o.cpuUs) * (1 + o.jitter*(2*unit(workload)-1)) * (unit(workload)<o.tailProb ? o.tailFactor : 1)));
-      Task r; r.id=tasks.size(); r.burst=b; r.pool=b%o.pools; r.planned=when; r.target=target;
-      r.estimate=o.estimateUs ? o.estimateUs : target;
-      if(r.estimate>uint64_t(std::numeric_limits<int64_t>::max())-totalEstimate)
-        throw std::invalid_argument("sum of work estimates exceeds supported range");
-      totalEstimate+=r.estimate;tasks.push_back(r);
+      Task r; r.id=tasks.size(); r.burst=b;
+      r.pool=o.burstPlacement=="local" ? b%o.pools : r.id%o.pools;
+      r.planned=when; r.target=target; tasks.push_back(r);
     }
     t = o.arrival == "regular" ? double(b+1)/o.rate : t+interval(arrival);
+  }
+  // An opt-in finite-sample control: preserve a positive budget per task and
+  // distribute the remainder proportionally, using cumulative rounding so the
+  // integer total is exactly N * cpuUs without a sort or another O(N) buffer.
+  // Raw/default workloads remain unchanged for compatibility with old evidence.
+  if(o.meanNormalization=="exact" && !tasks.empty()) {
+    long double weights=0;
+    for(const auto& r:tasks)weights+=r.target-1;
+    uint64_t extra=uint64_t(tasks.size())*(o.cpuUs-1), assigned=0;
+    long double cumulative=0;
+    for(size_t i=0;i<tasks.size();++i) {
+      auto& r=tasks[i]; cumulative+=r.target-1;
+      uint64_t next=i+1==tasks.size() ? extra :
+        (weights ? uint64_t(std::round(cumulative/weights*extra)) : uint64_t(i+1)*(o.cpuUs-1));
+      r.target=1+next-assigned; assigned=next;
+    }
+  }
+  uint64_t totalEstimate=0;
+  std::mt19937_64 estimates(o.seed ^ 0x71d3babeULL);
+  for(auto& r:tasks) {
+    if(r.target>std::numeric_limits<uint64_t>::max()/std::max<uint64_t>(1000,o.iterationsPerUs))
+      throw std::invalid_argument("normalized task budget exceeds supported clock/work range");
+    r.estimate=o.estimateUs ? o.estimateUs : r.target;
+    if(o.estimateJitter)r.estimate=uint64_t(std::max(1.,double(r.estimate)*(1+o.estimateJitter*(2*unit(estimates)-1))));
+    if(r.estimate>uint64_t(std::numeric_limits<int64_t>::max())-totalEstimate)
+      throw std::invalid_argument("sum of work estimates exceeds supported range");
+    totalEstimate+=r.estimate;
   }
   return tasks;
 }
@@ -333,8 +366,10 @@ int run(const Opt& o) {
     <<",\"pools\":"<<o.pools<<",\"threads_per_pool\":"<<o.threads<<",\"allowed_cpus\":"<<array(l.inherited)<<",\"numa_labels\":"<<array(l.nodes)<<",\"effective_masks\":[";
   for(size_t i=0;i<l.masks.size();++i) { if(i)metadata<<','; metadata<<array(l.masks[i]); }
   metadata<<"],\"arrival\":"<<js(o.arrival)<<",\"arrival_rate\":"<<o.rate<<",\"duration_seconds\":"<<o.duration<<",\"arrival_limit\":"<<o.arrivals
-    <<",\"burst_min\":"<<o.burstMin<<",\"burst_max\":"<<o.burstMax<<",\"cpu_us\":"<<o.cpuUs<<",\"jitter\":"<<o.jitter
-    <<",\"long_prob\":"<<o.tailProb<<",\"long_factor\":"<<o.tailFactor<<",\"estimate_us\":"<<o.estimateUs<<",\"seed\":"<<o.seed
+    <<",\"burst_min\":"<<o.burstMin<<",\"burst_max\":"<<o.burstMax<<",\"burst_placement\":"<<js(o.burstPlacement)
+    <<",\"mean_normalization\":"<<js(o.meanNormalization)<<",\"cpu_us\":"<<o.cpuUs<<",\"jitter\":"<<o.jitter
+    <<",\"long_prob\":"<<o.tailProb<<",\"long_factor\":"<<o.tailFactor<<",\"estimate_us\":"<<o.estimateUs
+    <<",\"estimate_jitter\":"<<o.estimateJitter<<",\"seed\":"<<o.seed
     <<",\"work_mode\":"<<js(o.workMode)<<",\"iterations_per_us\":"<<o.iterationsPerUs<<",\"max_outstanding\":"<<o.maxOutstanding
     <<",\"max_planned_tasks\":"<<o.maxPlanned<<",\"sample_ms\":"<<o.sampleMs<<",\"max_samples\":"<<o.maxSamples<<",\"fail_task\":"<<(o.failTask==std::numeric_limits<uint64_t>::max()?"null":std::to_string(o.failTask))<<",\"drain_seconds\":"<<o.drain
     <<",\"planned_arrivals\":"<<bursts.size()<<",\"planned_tasks\":"<<tasks.size()<<",\"clock\":\"CLOCK_MONOTONIC relative ns\","

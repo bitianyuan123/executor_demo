@@ -1,0 +1,16 @@
+Internal ctest changing into directory: /root/rank_demo/executor_demo/build-dag
+Test project /root/rank_demo/executor_demo/build-dag
+    Start 1: demo_functional
+1/5 Test #1: demo_functional ..................   Passed    1.09 sec
+    Start 2: analysis_statistics
+2/5 Test #2: analysis_statistics ..............   Passed    0.05 sec
+    Start 3: graph_analysis
+3/5 Test #3: graph_analysis ...................   Passed    0.05 sec
+    Start 4: dag_workload_design
+4/5 Test #4: dag_workload_design ..............   Passed    0.62 sec
+    Start 5: business_executor_test
+5/5 Test #5: business_executor_test ...........   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   1.86 sec

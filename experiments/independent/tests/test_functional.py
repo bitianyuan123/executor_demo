@@ -95,10 +95,41 @@ class Functional(unittest.TestCase):
         a=self.run_case(**{'arrivals':20,'burst-min':1,'burst-max':1})
         b=self.run_case(**{'arrivals':2,'burst-min':10,'burst-max':10})
         self.assertEqual([r['target_cpu_us'] for r in a[2]],[r['target_cpu_us'] for r in b[2]])
+    def test_exact_mean_distribution_and_estimate_controls(self):
+        for jitter,prob,factor in [(0,0,1),(.5,0,1),(.5,.2,8)]:
+            m,s,rows,_=self.run_case(**{'mean-normalization':'exact','cpu-us':137,'arrivals':10,
+                'burst-min':5,'burst-max':5,'jitter':jitter,'long-prob':prob,'long-factor':factor,
+                'work-mode':'iterations','iterations-per-us':1})
+            self.assertEqual(sum(int(r['target_cpu_us']) for r in rows),len(rows)*137)
+            self.assertTrue(all(int(r['target_cpu_us'])>=1 for r in rows))
+            self.assertEqual(m['mean_normalization'],'exact')
+            self.assertTrue(all(r['estimate_us']==r['target_cpu_us'] for r in rows))
+        _,_,rows,_=self.run_case(**{'mean-normalization':'exact','cpu-us':1,'estimate-us':9,
+                                    'work-mode':'iterations','iterations-per-us':1})
+        self.assertTrue(all(r['target_cpu_us']=='1' and r['estimate_us']=='9' for r in rows))
+    def test_spread_is_only_pool_assignment_change(self):
+        args={'pools':2,'arrivals':5,'burst-min':4,'burst-max':4,'mean-normalization':'exact'}
+        local=self.run_case(**args)[2]
+        m,_,spread,_=self.run_case(**args,**{'burst-placement':'spread'})
+        self.assertEqual(m['burst_placement'],'spread')
+        fields=['task','burst','planned_ns','target_cpu_us','estimate_us']
+        self.assertEqual([[r[k] for k in fields] for r in local],[[r[k] for k in fields] for r in spread])
+        self.assertTrue(all(int(r['pool'])==int(r['task'])%2 for r in spread))
+        self.assertTrue(all(int(r['pool'])==int(r['burst'])%2 for r in local))
+    def test_estimation_noise_does_not_change_workload(self):
+        a=self.run_case(seed=56)[2]
+        b=self.run_case(seed=56,**{'estimate-jitter':.75})[2]
+        c=self.run_case(seed=56,**{'estimate-jitter':.75})[2]
+        keys=['task','pool','planned_ns','target_cpu_us']
+        self.assertEqual([[r[k] for k in keys] for r in a],[[r[k] for k in keys] for r in b])
+        self.assertEqual([r['estimate_us'] for r in b],[r['estimate_us'] for r in c])
+        self.assertNotEqual([r['estimate_us'] for r in a],[r['estimate_us'] for r in b])
+        self.assertTrue(all(.25*int(r['target_cpu_us'])-1<=int(r['estimate_us'])<=1.75*int(r['target_cpu_us']) for r in b))
     def test_invalid_inputs_and_existing_output(self):
         bad=[['--pools','0'],['--affinity','cluster'],['--deployment','target'],['--instrumentation','wat'],
              ['--jitter','1'],['--cpu-us','-1'],['--max-planned-tasks','1','--burst-min','2','--burst-max','2'],
-             ['--cpus','9999'],['--pools','2','--cpus','0;0'],['--numa','999999'],['--arrival-rate','nan']]
+             ['--cpus','9999'],['--pools','2','--cpus','0;0'],['--numa','999999'],['--arrival-rate','nan'],
+             ['--mean-normalization','bad'],['--burst-placement','bad'],['--estimate-jitter','1']]
         for opts in bad:
             r=subprocess.run([str(BINARY),*opts,'--output',str(self.root/'bad')],capture_output=True,text=True,timeout=5)
             self.assertNotEqual(r.returncode,0,opts)

@@ -45,6 +45,21 @@ class GraphAnalysisTests(unittest.TestCase):
         self.assertAlmostEqual(result['parallel_sum_execution_wall_ms'], .155)
         self.assertAlmostEqual(result['parallel_sum_submit_to_start_ms'], .045)
 
+    def test_rpc_target_delay_cannot_be_shortened(self):
+        for row in self.tasks:
+            row['rpc_delay_target_us'] = '0'
+        continuation = dict(self.tasks[0], stage='1', predecessors='0',
+                            submit_ns='110000', start_ns='115000', finish_ns='120000',
+                            rpc_delay_target_us='20')
+        self.tasks.insert(1, continuation)
+        self.write('tasks.csv', self.tasks)
+        summary_path = self.path / 'summary.json'
+        summary = json.loads(summary_path.read_text())
+        summary['task_rows'] = 4
+        summary_path.write_text(json.dumps(summary))
+        with self.assertRaisesRegex(ValueError, 'RPC continuation'):
+            analyze(self.path)
+
     def test_dependency_violation_is_rejected(self):
         self.tasks[-1]['submit_ns'] = '70000'
         self.write('tasks.csv', self.tasks)

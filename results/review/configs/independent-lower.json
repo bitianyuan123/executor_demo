@@ -1,0 +1,55 @@
+{
+  "base": {
+    "deployment": "dev",
+    "pools": 2,
+    "threads": 1,
+    "cpus": "0,1;2,3",
+    "affinity": "cluster",
+    "duration": 8,
+    "cpu-us": 1000,
+    "jitter": 0.5,
+    "long-prob": 0,
+    "long-factor": 8,
+    "mean-normalization": "exact",
+    "burst-placement": "local",
+    "instrumentation": "full",
+    "sample-ms": 50,
+    "max-outstanding": 30000,
+    "drain-seconds": 30
+  },
+  "repeats": 6,
+  "seed": 20263000,
+  "analysis": {
+    "warmup_seconds": 1,
+    "steady_end_seconds": 7
+  },
+  "cases": [
+    {
+      "name": "smooth-uniform",
+      "options": {
+        "arrival-rate": 800.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "burst-local-uniform",
+      "options": {
+        "arrival-rate": 40.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "burst-spread-uniform",
+      "options": {
+        "arrival-rate": 40.0,
+        "burst-min": 20,
+        "burst-max": 20,
+        "burst-placement": "spread"
+      }
+    }
+  ],
+  "tier": "post-review-lower-demand-confirmation",
+  "note": "Independent seed batch at half nominal demand; added after original batch exposed large run variability. No original runs dropped."
+}

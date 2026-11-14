@@ -1,0 +1,216 @@
+RUN results/review/runs/dag/r0-home
+RUN results/review/runs/dag/r0-all-forks
+RUN results/review/runs/dag/r0-initial
+RUN results/review/runs/dag/r0-sticky
+RUN results/review/runs/dag/r1-all-forks
+RUN results/review/runs/dag/r1-home
+RUN results/review/runs/dag/r1-sticky
+RUN results/review/runs/dag/r1-initial
+RUN results/review/runs/dag/r2-initial
+RUN results/review/runs/dag/r2-all-forks
+RUN results/review/runs/dag/r2-sticky
+RUN results/review/runs/dag/r2-home
+RUN results/review/runs/dag/r3-sticky
+RUN results/review/runs/dag/r3-home
+RUN results/review/runs/dag/r3-initial
+RUN results/review/runs/dag/r3-all-forks
+RUN results/review/runs/dag/r4-home
+RUN results/review/runs/dag/r4-sticky
+RUN results/review/runs/dag/r4-all-forks
+RUN results/review/runs/dag/r4-initial
+RUN results/review/runs/dag/r5-home
+RUN results/review/runs/dag/r5-all-forks
+RUN results/review/runs/dag/r5-initial
+RUN results/review/runs/dag/r5-sticky
+# 实测汇总
+
+所有时延来自实际输出；CPU 工作以线程 CPU 时钟计量。
+
+| run | 完成请求 | 状态计数 | 均值 ms | p99 ms | 入队等待均值 ms | 算子 kernel CPU s | 迁移次数 |
+|---|---:|---|---:|---:|---:|---:|---:|
+| r0-home | 84 | {'completed': 84} | 215.645 | 434.787 | 0.927 | 20.191 | 0.000 |
+| r0-all-forks | 84 | {'completed': 84} | 214.246 | 396.168 | 0.438 | 20.402 | 512.000 |
+| r0-initial | 84 | {'completed': 84} | 330.585 | 602.539 | 3.164 | 20.274 | 172.000 |
+| r0-sticky | 84 | {'completed': 84} | 222.280 | 583.737 | 0.644 | 21.415 | 774.000 |
+| r1-all-forks | 106 | {'completed': 106} | 255.354 | 452.599 | 0.695 | 25.563 | 661.000 |
+| r1-home | 106 | {'completed': 106} | 231.642 | 424.250 | 1.071 | 25.479 | 0.000 |
+| r1-sticky | 106 | {'completed': 106} | 238.452 | 417.318 | 0.480 | 25.479 | 1084.000 |
+| r1-initial | 106 | {'completed': 106} | 425.065 | 758.252 | 5.839 | 25.479 | 225.000 |
+| r2-initial | 105 | {'completed': 105} | 484.161 | 849.049 | 8.665 | 25.239 | 239.000 |
+| r2-all-forks | 105 | {'completed': 105} | 324.886 | 613.131 | 2.488 | 25.239 | 671.000 |
+| r2-sticky | 105 | {'completed': 105} | 316.595 | 604.564 | 2.369 | 25.239 | 1362.000 |
+| r2-home | 105 | {'completed': 105} | 334.335 | 683.657 | 3.493 | 25.239 | 0.000 |
+| r3-sticky | 92 | {'completed': 92} | 206.295 | 405.843 | 0.443 | 22.114 | 856.000 |
+| r3-home | 92 | {'completed': 92} | 221.971 | 420.246 | 0.925 | 22.114 | 0.000 |
+| r3-initial | 92 | {'completed': 92} | 358.374 | 556.147 | 3.283 | 22.114 | 196.000 |
+| r3-all-forks | 92 | {'completed': 92} | 230.285 | 423.161 | 0.481 | 22.114 | 564.000 |
+| r4-home | 99 | {'completed': 99} | 351.383 | 936.397 | 7.166 | 23.797 | 0.000 |
+| r4-sticky | 99 | {'completed': 99} | 325.277 | 882.461 | 6.173 | 23.797 | 1244.000 |
+| r4-all-forks | 99 | {'completed': 99} | 325.103 | 884.987 | 5.867 | 23.797 | 610.000 |
+| r4-initial | 99 | {'completed': 99} | 464.125 | 925.364 | 9.010 | 23.796 | 200.000 |
+| r5-home | 91 | {'completed': 91} | 208.796 | 367.296 | 0.855 | 21.873 | 0.000 |
+| r5-all-forks | 91 | {'completed': 91} | 222.746 | 425.689 | 0.472 | 21.874 | 550.000 |
+| r5-initial | 91 | {'completed': 91} | 372.469 | 601.190 | 3.698 | 21.874 | 190.000 |
+| r5-sticky | 91 | {'completed': 91} | 195.721 | 363.238 | 0.339 | 21.874 | 801.000 |
+
+## 负载与任务入队等待的相关性
+
+| run | 指标 | 样本数 | Pearson | Spearman |
+|---|---|---:|---:|---:|
+| r0-home | queue_before | 5292 | 0.879 | 0.781 |
+| r0-home | pending_before | 5292 | 0.881 | 0.784 |
+| r0-home | inflight_before | 5292 | 0.127 | -0.146 |
+| r0-home | outstanding_before | 5292 | 0.403 | 0.038 |
+| r0-home | outstanding_cpu_us_before | 5292 | 0.377 | 0.014 |
+| r0-home | chosen_load_us | 5292 | 0.873 | 0.780 |
+| r0-all-forks | queue_before | 5292 | 0.803 | 0.668 |
+| r0-all-forks | pending_before | 5292 | 0.804 | 0.673 |
+| r0-all-forks | inflight_before | 5292 | 0.270 | -0.131 |
+| r0-all-forks | outstanding_before | 5292 | 0.392 | -0.049 |
+| r0-all-forks | outstanding_cpu_us_before | 5292 | 0.385 | -0.057 |
+| r0-all-forks | chosen_load_us | 5292 | 0.792 | 0.668 |
+| r0-initial | queue_before | 5292 | 0.944 | 0.891 |
+| r0-initial | pending_before | 5292 | 0.944 | 0.892 |
+| r0-initial | inflight_before | 5292 | 0.510 | 0.375 |
+| r0-initial | outstanding_before | 5292 | 0.755 | 0.510 |
+| r0-initial | outstanding_cpu_us_before | 5292 | 0.751 | 0.502 |
+| r0-initial | chosen_load_us | 5292 | 0.932 | 0.885 |
+| r0-sticky | queue_before | 5292 | 0.752 | 0.645 |
+| r0-sticky | pending_before | 5292 | 0.754 | 0.651 |
+| r0-sticky | inflight_before | 5292 | 0.236 | -0.082 |
+| r0-sticky | outstanding_before | 5292 | 0.354 | -0.002 |
+| r0-sticky | outstanding_cpu_us_before | 5292 | 0.349 | -0.009 |
+| r0-sticky | chosen_load_us | 5292 | 0.749 | 0.645 |
+| r1-all-forks | queue_before | 6678 | 0.840 | 0.743 |
+| r1-all-forks | pending_before | 6678 | 0.837 | 0.748 |
+| r1-all-forks | inflight_before | 6678 | 0.390 | 0.048 |
+| r1-all-forks | outstanding_before | 6678 | 0.509 | 0.133 |
+| r1-all-forks | outstanding_cpu_us_before | 6678 | 0.505 | 0.125 |
+| r1-all-forks | chosen_load_us | 6678 | 0.829 | 0.742 |
+| r1-home | queue_before | 6678 | 0.871 | 0.798 |
+| r1-home | pending_before | 6678 | 0.871 | 0.801 |
+| r1-home | inflight_before | 6678 | 0.164 | -0.115 |
+| r1-home | outstanding_before | 6678 | 0.441 | 0.088 |
+| r1-home | outstanding_cpu_us_before | 6678 | 0.418 | 0.068 |
+| r1-home | chosen_load_us | 6678 | 0.862 | 0.797 |
+| r1-sticky | queue_before | 6678 | 0.707 | 0.625 |
+| r1-sticky | pending_before | 6678 | 0.708 | 0.636 |
+| r1-sticky | inflight_before | 6678 | 0.225 | -0.045 |
+| r1-sticky | outstanding_before | 6678 | 0.319 | 0.031 |
+| r1-sticky | outstanding_cpu_us_before | 6678 | 0.309 | 0.021 |
+| r1-sticky | chosen_load_us | 6678 | 0.703 | 0.625 |
+| r1-initial | queue_before | 6678 | 0.963 | 0.946 |
+| r1-initial | pending_before | 6678 | 0.963 | 0.946 |
+| r1-initial | inflight_before | 6678 | 0.526 | 0.628 |
+| r1-initial | outstanding_before | 6678 | 0.822 | 0.784 |
+| r1-initial | outstanding_cpu_us_before | 6678 | 0.821 | 0.781 |
+| r1-initial | chosen_load_us | 6678 | 0.942 | 0.932 |
+| r2-initial | queue_before | 6615 | 0.971 | 0.961 |
+| r2-initial | pending_before | 6615 | 0.971 | 0.962 |
+| r2-initial | inflight_before | 6615 | 0.560 | 0.712 |
+| r2-initial | outstanding_before | 6615 | 0.876 | 0.863 |
+| r2-initial | outstanding_cpu_us_before | 6615 | 0.877 | 0.862 |
+| r2-initial | chosen_load_us | 6615 | 0.945 | 0.941 |
+| r2-all-forks | queue_before | 6615 | 0.945 | 0.866 |
+| r2-all-forks | pending_before | 6615 | 0.945 | 0.869 |
+| r2-all-forks | inflight_before | 6615 | 0.526 | 0.462 |
+| r2-all-forks | outstanding_before | 6615 | 0.736 | 0.545 |
+| r2-all-forks | outstanding_cpu_us_before | 6615 | 0.734 | 0.541 |
+| r2-all-forks | chosen_load_us | 6615 | 0.925 | 0.861 |
+| r2-sticky | queue_before | 6615 | 0.941 | 0.835 |
+| r2-sticky | pending_before | 6615 | 0.940 | 0.837 |
+| r2-sticky | inflight_before | 6615 | 0.540 | 0.457 |
+| r2-sticky | outstanding_before | 6615 | 0.729 | 0.532 |
+| r2-sticky | outstanding_cpu_us_before | 6615 | 0.727 | 0.528 |
+| r2-sticky | chosen_load_us | 6615 | 0.924 | 0.832 |
+| r2-home | queue_before | 6615 | 0.944 | 0.907 |
+| r2-home | pending_before | 6615 | 0.944 | 0.908 |
+| r2-home | inflight_before | 6615 | 0.504 | 0.415 |
+| r2-home | outstanding_before | 6615 | 0.763 | 0.561 |
+| r2-home | outstanding_cpu_us_before | 6615 | 0.757 | 0.553 |
+| r2-home | chosen_load_us | 6615 | 0.930 | 0.902 |
+| r3-sticky | queue_before | 5796 | 0.775 | 0.627 |
+| r3-sticky | pending_before | 5796 | 0.775 | 0.635 |
+| r3-sticky | inflight_before | 5796 | 0.249 | -0.102 |
+| r3-sticky | outstanding_before | 5796 | 0.360 | -0.029 |
+| r3-sticky | outstanding_cpu_us_before | 5796 | 0.350 | -0.039 |
+| r3-sticky | chosen_load_us | 5796 | 0.774 | 0.626 |
+| r3-home | queue_before | 5796 | 0.875 | 0.784 |
+| r3-home | pending_before | 5796 | 0.876 | 0.784 |
+| r3-home | inflight_before | 5796 | 0.090 | -0.124 |
+| r3-home | outstanding_before | 5796 | 0.363 | 0.061 |
+| r3-home | outstanding_cpu_us_before | 5796 | 0.335 | 0.040 |
+| r3-home | chosen_load_us | 5796 | 0.872 | 0.783 |
+| r3-initial | queue_before | 5796 | 0.914 | 0.916 |
+| r3-initial | pending_before | 5796 | 0.914 | 0.918 |
+| r3-initial | inflight_before | 5796 | 0.563 | 0.527 |
+| r3-initial | outstanding_before | 5796 | 0.744 | 0.654 |
+| r3-initial | outstanding_cpu_us_before | 5796 | 0.740 | 0.648 |
+| r3-initial | chosen_load_us | 5796 | 0.891 | 0.908 |
+| r3-all-forks | queue_before | 5796 | 0.777 | 0.689 |
+| r3-all-forks | pending_before | 5796 | 0.777 | 0.695 |
+| r3-all-forks | inflight_before | 5796 | 0.293 | -0.050 |
+| r3-all-forks | outstanding_before | 5796 | 0.402 | 0.033 |
+| r3-all-forks | outstanding_cpu_us_before | 5796 | 0.394 | 0.024 |
+| r3-all-forks | chosen_load_us | 5796 | 0.762 | 0.687 |
+| r4-home | queue_before | 6237 | 0.987 | 0.906 |
+| r4-home | pending_before | 6237 | 0.987 | 0.907 |
+| r4-home | inflight_before | 6237 | 0.648 | 0.467 |
+| r4-home | outstanding_before | 6237 | 0.919 | 0.577 |
+| r4-home | outstanding_cpu_us_before | 6237 | 0.916 | 0.563 |
+| r4-home | chosen_load_us | 6237 | 0.964 | 0.898 |
+| r4-sticky | queue_before | 6237 | 0.987 | 0.844 |
+| r4-sticky | pending_before | 6237 | 0.987 | 0.846 |
+| r4-sticky | inflight_before | 6237 | 0.689 | 0.519 |
+| r4-sticky | outstanding_before | 6237 | 0.920 | 0.568 |
+| r4-sticky | outstanding_cpu_us_before | 6237 | 0.918 | 0.563 |
+| r4-sticky | chosen_load_us | 6237 | 0.962 | 0.839 |
+| r4-all-forks | queue_before | 6237 | 0.987 | 0.857 |
+| r4-all-forks | pending_before | 6237 | 0.987 | 0.856 |
+| r4-all-forks | inflight_before | 6237 | 0.677 | 0.509 |
+| r4-all-forks | outstanding_before | 6237 | 0.913 | 0.565 |
+| r4-all-forks | outstanding_cpu_us_before | 6237 | 0.912 | 0.560 |
+| r4-all-forks | chosen_load_us | 6237 | 0.960 | 0.850 |
+| r4-initial | queue_before | 6237 | 0.982 | 0.954 |
+| r4-initial | pending_before | 6237 | 0.982 | 0.954 |
+| r4-initial | inflight_before | 6237 | 0.566 | 0.696 |
+| r4-initial | outstanding_before | 6237 | 0.898 | 0.810 |
+| r4-initial | outstanding_cpu_us_before | 6237 | 0.896 | 0.807 |
+| r4-initial | chosen_load_us | 6237 | 0.955 | 0.937 |
+| r5-home | queue_before | 5733 | 0.884 | 0.771 |
+| r5-home | pending_before | 5733 | 0.885 | 0.772 |
+| r5-home | inflight_before | 5733 | 0.008 | -0.207 |
+| r5-home | outstanding_before | 5733 | 0.299 | -0.012 |
+| r5-home | outstanding_cpu_us_before | 5733 | 0.267 | -0.035 |
+| r5-home | chosen_load_us | 5733 | 0.878 | 0.771 |
+| r5-all-forks | queue_before | 5733 | 0.802 | 0.691 |
+| r5-all-forks | pending_before | 5733 | 0.800 | 0.691 |
+| r5-all-forks | inflight_before | 5733 | 0.305 | -0.068 |
+| r5-all-forks | outstanding_before | 5733 | 0.419 | 0.015 |
+| r5-all-forks | outstanding_cpu_us_before | 5733 | 0.411 | 0.006 |
+| r5-all-forks | chosen_load_us | 5733 | 0.789 | 0.690 |
+| r5-initial | queue_before | 5733 | 0.937 | 0.922 |
+| r5-initial | pending_before | 5733 | 0.937 | 0.923 |
+| r5-initial | inflight_before | 5733 | 0.536 | 0.519 |
+| r5-initial | outstanding_before | 5733 | 0.755 | 0.663 |
+| r5-initial | outstanding_cpu_us_before | 5733 | 0.751 | 0.658 |
+| r5-initial | chosen_load_us | 5733 | 0.914 | 0.913 |
+| r5-sticky | queue_before | 5733 | 0.716 | 0.600 |
+| r5-sticky | pending_before | 5733 | 0.721 | 0.612 |
+| r5-sticky | inflight_before | 5733 | 0.186 | -0.141 |
+| r5-sticky | outstanding_before | 5733 | 0.284 | -0.067 |
+| r5-sticky | outstanding_cpu_us_before | 5733 | 0.271 | -0.077 |
+| r5-sticky | chosen_load_us | 5733 | 0.710 | 0.599 |
+
+## 解释边界
+
+- 每秒 p99 在低 QPS 下通常接近当秒最大值；跨运行比较请使用多轮独立重复，保留每轮结果。
+- 任务样本共享 request、池和时间段，不能当作独立重复；本报告没有对任务相关系数提供虚假的独立样本显著性。
+- 不再输出将request当独立样本的均值区间。用compare_runs.py按完整seed配对重采样，并检查预声明工作量契约与尾部样本门槛。
+- 任务工作量、扇出、策略选池和过载拒绝均会混杂相关性；JSON 提供请求初始负载、计划工作量相关性及少量同工作量分层。
+- wall-cpu 包含抢占、阻塞及计时开销，不能直接命名为 runqueue 时间；请配合 proc.csv 或 perf sched。
+- 算子 kernel CPU 秒不包含后继路由、Folly 队列/唤醒、日志和 AIO；JSON 另有外部采样的 executor CPU，采样首尾可能漏计。关闭 task log 时无样本标为 n/a。
+- 零队列深度不表示 CPU 空闲。queue depth 的语义取决于 Folly 队列和信号量；本实验还记录 submitted-not-started。
+- 拒绝或删失请求必须一起报告；仅比较完成请求 p99 可能奖励主动丢弃慢请求的策略。
+- 本地 VM 的结果不证明 ARM 的 NUMA/缓存迁移成本或生产收益。
+

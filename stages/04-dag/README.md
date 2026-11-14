@@ -2,6 +2,8 @@
 
 本阶段回答“原始业务的 request 亲和、就绪算子路由、跨池借用和回迁如何取舍”。阶段 3 的独立随机任务只负责建立负载与等待的基础关系；这里有独立可执行程序、图模型、实验矩阵和验收门槛，不把两者的实验样本混合解释。
 
+本轮复审与修订见 [EXPERIMENT_REVIEW.md](EXPERIMENT_REVIEW.md)：补充固定业务需求与容量归一两类矩阵、均值校准的 700～800 ms 绝对尾部、Poisson 到达、随机 RPC、普通后继均衡以及同 NUMA 候选域对照。历史结果不自动适用于新增负载。
+
 默认工程在 [`experiments/dag`](../../experiments/dag/)，使用**业务侧路由器 + 原版 Folly CPUThreadPoolExecutor**。它无需安装阶段 5 的 Folly 扩展。阶段 5 可将同一份 DAG 工作负载编译为库扩展后端，对照接入位置是否改变行为；库位置本身不是性能优化。
 
 ## 1. 从真实业务保留哪些机制
@@ -9,9 +11,9 @@
 | 真实条件 | 本阶段对应 | 保留与简化 |
 |---|---|---|
 | IO 接收 → worker 建图 → executor 执行 | 开放到达发生器建立图后提交 executor | 只研究 executor；不模拟前两个池的排队、序列化和压缩 |
-| 整体 QPS 12，多 request 同时存在 | `--qps 12`，requestID round-robin home | 以计划时间开放到达；慢请求不会降低新到达速率 |
+| 整体 QPS 12，多 request 同时存在 | `--qps 12 --arrival regular|poisson`，requestID round-robin home | 以计划时间开放到达；慢请求不会降低新到达速率 |
 | 初始大量 ready 算子，之后有依赖 | 初始宽波 + 链 + 多父 join + 后续 fork | 实现真实依赖计数；不是一次闭包里顺序运行全图 |
-| 20～400 次子任务，平均 100 ms、少量 700～800 ms | 显式总节点预算、抖动、长尾 | 必须先核实 100 ms 是线程 CPU 时间还是墙钟时间 |
+| 20～400 次子任务，平均 100 ms、少量 700～800 ms | 显式总节点预算、抖动、倍数或绝对范围长尾 | 必须先核实 100 ms 是线程 CPU 时间还是墙钟时间 |
 | executor 唤醒 executor | 所有节点、join、RPC continuation 独立 `add` | 允许同一工作线程下一次取到后继，但从不内联执行后继 |
 | 部分算子调用下游服务 | 独立 timer 线程在延迟后重新提交 continuation | 等待不占 executor；未模拟网络和下游拥塞 |
 | 六池、每池数百线程、三种绑定 | 显式六池、可变线程数、none/numa/cluster | 绑定只改变 worker 的允许 CPU；需要真实拓扑验证 |
@@ -156,14 +158,14 @@ taskset -c 0-3 python3 scripts/run_matrix.py --binary build-dag/executor_demo \
 
 上面的 `taskset -c 0-3` 必须同步换成六个 executor cluster masks 的**精确并集**；不能沿用全部服务器 CPU。生成器发现显式并集与当前进程 allowed mask 不同会输出警告，但仍允许在开发机生成测试机配置。最终以运行记录里的 `allowed_cpus`、每池 `effective_cpus` 与拓扑信息核实公平性。
 
-生成其他实验时替换 `--family routing|shape|stress`；运行器通过 `--only` 按名字筛选小批量实验。生成器默认每算子固定预算、无尾部/RPC，stress 每次只引入一个机制。`--extra` 放最后，会覆盖 JSON 中同名选项；在 manifest 中复核最终生效命令，避免无意覆盖需要对照的变量。
+生成其他实验时替换 `--family routing|shape|stress|capacity|production|continuation|locality`（新增家族参数及预算说明见复审文档）；运行器通过 `--only` 按名字筛选小批量实验。生成器默认每算子固定预算、无尾部/RPC，stress 每次只引入一个机制。`--extra` 放最后，会覆盖 JSON 中同名选项；在 manifest 中复核最终生效命令，避免无意覆盖需要对照的变量。
 
 每轮同 seed 成对比较并随机化场景顺序；多轮使用不同 seed。整个矩阵串行执行，避免多个实验争用同一开发机。正式测试建议先 30～60 s 试运行检查容量，再用足够长窗口收集至少数千乃至更多 request；12 QPS 下 3 s 只有 36 次请求，不足以稳定评估 p99。记录预热段与测量段，若用当前程序全程汇总，需在独立离线分析中排除预热而不是悄悄改变统计口径。
 
 ## 8. 原始数据、依赖审计与时延分解
 
 - `requests.csv`：计划/实际到达、首段开始、完成、延迟、状态、总业务算子 `operator_nodes`、含 join 的 `cpu_nodes`、波数、名义总 CPU。
-- `tasks.csv`：算子 ID 与 RPC stage、wave、operator/join、依赖 ID、home/parent/chosen、提交/开始/结束时间、该段 CPU/墙钟、路由快照。stage 1 的同 ID 前驱指 stage 0；其他边指前驱最后一段。
+- `tasks.csv`（schema 3 向后增加 `rpc_delay_target_us`，stage 1 记录此次计划 RPC 延迟）：算子 ID 与 RPC stage、wave、operator/join、依赖 ID、home/parent/chosen、提交/开始/结束时间、该段 CPU/墙钟、路由快照。stage 1 的同 ID 前驱指 stage 0；其他边指前驱最后一段。
 - `pools.csv`：周期负载及计数。`queue_depth` 是 Folly 用户态任务队列口径；**不是 Linux runq 长度**。
 - `seconds.csv`：按完成时刻归属的每秒平均和 p99；输出在结束时生成。不得平均各秒 p99 当作整轮 p99。
 - `workers.csv`/外部 `proc.csv`：池与 TID 对应、低频内核 CPU/调度数据。schedstats 未启用时不能把 runq 时间 0 解读为没有调度等待。
@@ -176,7 +178,7 @@ taskset -c 0-3 python3 scripts/run_matrix.py --binary build-dag/executor_demo \
 
 路径回溯选的是最大的已记录前驱 `finish_ns`，不保证与触发 join 递减计数的线程相同；二者之间的提交间隙被完整保留。因而这是与观测时间守恒的解释路径，不是“真实内核唤醒链”追踪，也不是不受调度影响的纯服务时间关键路径。
 
-**并行任务累计等待不能直接相加解释请求时延。** 分析器同时保留全图累计量和完成路径量，以免把 400 条分支的并行等待相加成几百倍端到端时延。各分量的 p99 也不可相加；逐请求分解守恒，均值分量可相加。
+**并行任务累计等待不能直接相加解释请求时延。** 分析器同时保留全图累计量和完成路径量，以免把 400 条分支的并行等待相加成几百倍端到端时延。各分量的 p99 也不可相加；逐请求分解守恒，均值分量可相加。分析器另按初始 fork、后续 fork、普通后继、RPC 恢复、join 输出迁移和等待，支持直接对照“普通后继忙时是否再次均衡”。
 
 基础分析器计算负载与 submit-to-start 关系、请求初始快照与请求时延关系，并按名义工作量分层。请求初始队列都为零时相关系数没有定义；不能用“零相关”反驳突发后的拥塞。DAG 就绪节点不是独立样本，同 request/同轮内有强相关；策略对照以独立运行的配对差值为主，再做按 request 或时间块的重采样。
 

@@ -22,7 +22,7 @@
 - 阶段5库版：Folly分支中的 `folly/executors/experimental/AffinityExecutor.h`。
 - 同一个DAG驱动通过编译选项分别生成 `executor_demo`（业务版）和 `dag_folly`（库版），metadata中的 `backend` 标识分别为 `business` / `folly_experimental`。
 
-两版**故意使用相同算法**，区别为命名空间、类名和代码归属。业务版由 `scripts/sync_business_executor.py` 从实验header生成，已提交生成产物及17项等价的单元测试；普通业务版构建不运行生成器、不读取Folly实验源码。这样阶段4不依赖阶段5分支，且对比不会把算法差异错误归因于“放在库里”。`business-source.json`记录哈希，检查器防止静默漂移。长期维护宜选择一个归属，不建议永久维护两份独立演进的逻辑。
+两版**故意使用相同算法**，区别为命名空间、类名和代码归属。业务版由 `scripts/sync_business_executor.py` 从实验header生成，已提交生成产物及22项等价的单元测试（含本轮新增5项候选域测试）；普通业务版构建不运行生成器、不读取Folly实验源码。这样阶段4不依赖阶段5分支，且对比不会把算法差异错误归因于“放在库里”。`business-source.json`记录哈希，检查器防止静默漂移。长期维护宜选择一个归属，不建议永久维护两份独立演进的逻辑。
 
 ```bash
 # 阶段4：仅已安装的原版Folly即可
@@ -36,13 +36,15 @@ python3 stages/05-placement/compare_backends.py \
   --output results/local/placement-compare
 ```
 
-`compare_backends.py`串行执行5种策略×2个后端，核对同一seed的任务/CPU阶段预算、全部请求完成、home规则与守恒。并发快照与线程时序可能导致不同placement，因此不要求borrow/sticky路线逐项相同，也不以某一次时延更低宣称打包位置更快。完整自动化还分别运行两种后端的DAG依赖/RPC/取消测试和两套执行器测试。
+`compare_backends.py`串行执行5种策略×2个后端，再加受限候选域的Poisson/随机RPC场景×2个后端，共12轮。核对同一seed的计划到达、任务/CPU阶段预算、RPC目标、全部请求完成、home规则与守恒。并发快照与线程时序可能导致不同placement，因此不要求borrow/sticky路线逐项相同，也不以某一次时延更低宣称打包位置更快。完整自动化还分别运行两种后端的DAG依赖/RPC/取消测试和两套执行器测试。
 
 ## 3. API职责
 
 `Hint{home,parent,hasParent,isFanout,estimatedCpuUs}`描述就绪任务；每次接收返回不可变 `Decision`，后继保存实际chosen池，而不是共享一个可变“request当前池”。多父join的parent约定必须由业务给出。`add`可以拒绝，业务必须将拒绝传播到图，不可静默丢失子节点后永远等join。
 
 负载只影响**新就绪任务的放置**。当前没有偷取已入队任务、抢占运行中算子或动态修改正在执行线程的亲和mask。Borrow会在后继提交时重新偏好home；sticky跟随实际父池；fanout是否允许二次fork参与由阶段4的 `--balance-forks initial|all`决定。库只使用isFanout，不认识图层次。
+
+本轮增加 `CandidateScope::All/PreferredNuma`，默认All保持兼容。PreferredNuma先按本次preferred池的NUMA标签限制候选，再比较负载；LeastLoad也遵守。Borrow的preferred为home，Sticky/Fanout为实际parent（初始为home）。库要求标签已知，但标签不等于真实物理绑定；DAG前端额外验证sysfs CPU归属并禁止none绑定配合受限域。来自外部的跨域parent仍可被Borrow回迁至home，因此不能将该选项描述为“任何source到chosen都禁止跨NUMA”。两版同步实现这一可选机制，实际内存局部性仍需目标机证据。
 
 分组封装不是普通 `folly::Executor` 子类：它要求显式hint并支持拒绝，不能把这种语义伪装成无条件的 `void add(Func)`。它仍组合原版CPU池，实现的是库中可选分组能力，未改写底层futex协议。
 
@@ -52,7 +54,7 @@ python3 stages/05-placement/compare_backends.py \
 2. 在阶段4分别证明借出、跟随、回迁、仅初始fork或所有fork的收益，记录CPU/请求、尾时延、拒绝和迁移。首先同NUMA借用，再考虑跨NUMA。
 3. 固定CPU预算适合排队研究；局部性成本应使用固定工作量和真实数据访问、真实NUMA内存放置。当前只读数据由发生器first-touch，尚不能证明home回迁改善远端内存代价。
 4. 标定有效容量、SMT收益、共享NUMA mask重叠、cgroup quota。capacity不能让同一NUMA的3个池各自声称拥有该NUMA全部独占容量。
-5. 校准收益阈值和估计误差，再考虑驻留时间、每分支迁移预算、公平性及同NUMA优先候选。当前没有独立冷却机制，默认零阈值不是生产推荐值。
+5. 校准收益阈值和估计误差，比较已实现的同NUMA候选硬约束与全机候选，再考虑驻留时间、每分支迁移预算和公平性。当前没有独立冷却机制，默认零阈值不是生产推荐值。
 6. 异步RPC期间请求仍存活，关闭流程先排空完整DAG和外部回调再join。当前库只自动追踪自身回调内的后继提交。
 7. 当前满池拒绝不自动改选另一池；若要fallback，必须有界、保留deadline、计入拒绝/尝试，不能无限重试。
 

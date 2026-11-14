@@ -1,0 +1,388 @@
+{
+  "platform": "Linux-6.12.95+deb13-amd64-x86_64-with-glibc2.41",
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cpus": [
+    {
+      "cpu": 0,
+      "topology": {
+        "physical_package_id": "0",
+        "die_id": "0",
+        "cluster_id": "65535",
+        "cluster_cpus_list": "0-1",
+        "core_id": "0",
+        "core_cpus_list": "0-1",
+        "thread_siblings_list": "0-1"
+      },
+      "caches": [
+        {
+          "level": "1",
+          "type": "Data",
+          "id": "0",
+          "shared_cpu_list": "0-1",
+          "size": "32K"
+        },
+        {
+          "level": "1",
+          "type": "Instruction",
+          "id": "0",
+          "shared_cpu_list": "0-1",
+          "size": "32K"
+        },
+        {
+          "level": "2",
+          "type": "Unified",
+          "id": "0",
+          "shared_cpu_list": "0-1",
+          "size": "1024K"
+        },
+        {
+          "level": "3",
+          "type": "Unified",
+          "id": "0",
+          "shared_cpu_list": "0-3",
+          "size": "16384K"
+        }
+      ]
+    },
+    {
+      "cpu": 1,
+      "topology": {
+        "physical_package_id": "0",
+        "die_id": "0",
+        "cluster_id": "65535",
+        "cluster_cpus_list": "0-1",
+        "core_id": "0",
+        "core_cpus_list": "0-1",
+        "thread_siblings_list": "0-1"
+      },
+      "caches": [
+        {
+          "level": "1",
+          "type": "Data",
+          "id": "0",
+          "shared_cpu_list": "0-1",
+          "size": "32K"
+        },
+        {
+          "level": "1",
+          "type": "Instruction",
+          "id": "0",
+          "shared_cpu_list": "0-1",
+          "size": "32K"
+        },
+        {
+          "level": "2",
+          "type": "Unified",
+          "id": "0",
+          "shared_cpu_list": "0-1",
+          "size": "1024K"
+        },
+        {
+          "level": "3",
+          "type": "Unified",
+          "id": "0",
+          "shared_cpu_list": "0-3",
+          "size": "16384K"
+        }
+      ]
+    },
+    {
+      "cpu": 2,
+      "topology": {
+        "physical_package_id": "0",
+        "die_id": "0",
+        "cluster_id": "65535",
+        "cluster_cpus_list": "2-3",
+        "core_id": "1",
+        "core_cpus_list": "2-3",
+        "thread_siblings_list": "2-3"
+      },
+      "caches": [
+        {
+          "level": "1",
+          "type": "Data",
+          "id": "1",
+          "shared_cpu_list": "2-3",
+          "size": "32K"
+        },
+        {
+          "level": "1",
+          "type": "Instruction",
+          "id": "1",
+          "shared_cpu_list": "2-3",
+          "size": "32K"
+        },
+        {
+          "level": "2",
+          "type": "Unified",
+          "id": "1",
+          "shared_cpu_list": "2-3",
+          "size": "1024K"
+        },
+        {
+          "level": "3",
+          "type": "Unified",
+          "id": "0",
+          "shared_cpu_list": "0-3",
+          "size": "16384K"
+        }
+      ]
+    },
+    {
+      "cpu": 3,
+      "topology": {
+        "physical_package_id": "0",
+        "die_id": "0",
+        "cluster_id": "65535",
+        "cluster_cpus_list": "2-3",
+        "core_id": "1",
+        "core_cpus_list": "2-3",
+        "thread_siblings_list": "2-3"
+      },
+      "caches": [
+        {
+          "level": "1",
+          "type": "Data",
+          "id": "1",
+          "shared_cpu_list": "2-3",
+          "size": "32K"
+        },
+        {
+          "level": "1",
+          "type": "Instruction",
+          "id": "1",
+          "shared_cpu_list": "2-3",
+          "size": "32K"
+        },
+        {
+          "level": "2",
+          "type": "Unified",
+          "id": "1",
+          "shared_cpu_list": "2-3",
+          "size": "1024K"
+        },
+        {
+          "level": "3",
+          "type": "Unified",
+          "id": "0",
+          "shared_cpu_list": "0-3",
+          "size": "16384K"
+        }
+      ]
+    }
+  ],
+  "numa_nodes": {
+    "node0": "0-3"
+  },
+  "cgroup": "0::/user.slice/user-0.slice/session-16.scope",
+  "cgroup_ancestors": [
+    {
+      "path": "/sys/fs/cgroup/user.slice/user-0.slice/session-16.scope",
+      "cpu.max": "max 100000",
+      "cpu.stat": "usage_usec 27433874324\nuser_usec 24570841019\nsystem_usec 2863033304\nnice_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "cpuset.cpus.effective": null,
+      "cpuset.mems.effective": null,
+      "memory.max": "max"
+    },
+    {
+      "path": "/sys/fs/cgroup/user.slice/user-0.slice",
+      "cpu.max": "max 100000",
+      "cpu.stat": "usage_usec 27587287279\nuser_usec 24647317625\nsystem_usec 2939969653\nnice_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "cpuset.cpus.effective": null,
+      "cpuset.mems.effective": null,
+      "memory.max": "max"
+    },
+    {
+      "path": "/sys/fs/cgroup/user.slice",
+      "cpu.max": "max 100000",
+      "cpu.stat": "usage_usec 27587457167\nuser_usec 24647416316\nsystem_usec 2940040850\nnice_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "cpuset.cpus.effective": null,
+      "cpuset.mems.effective": null,
+      "memory.max": "max"
+    },
+    {
+      "path": "/sys/fs/cgroup",
+      "cpu.max": null,
+      "cpu.stat": "usage_usec 77963552000\nuser_usec 47593492000\nsystem_usec 30370060000\nnice_usec 2180000\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+      "cpuset.cpus.effective": "0-3",
+      "cpuset.mems.effective": "0",
+      "memory.max": null
+    }
+  ],
+  "lscpu": {
+    "lscpu": [
+      {
+        "field": "Architecture:",
+        "data": "x86_64"
+      },
+      {
+        "field": "CPU op-mode(s):",
+        "data": "32-bit, 64-bit"
+      },
+      {
+        "field": "Address sizes:",
+        "data": "52 bits physical, 48 bits virtual"
+      },
+      {
+        "field": "Byte Order:",
+        "data": "Little Endian"
+      },
+      {
+        "field": "CPU(s):",
+        "data": "4"
+      },
+      {
+        "field": "On-line CPU(s) list:",
+        "data": "0-3"
+      },
+      {
+        "field": "Vendor ID:",
+        "data": "AuthenticAMD"
+      },
+      {
+        "field": "Model name:",
+        "data": "AMD EPYC 9754 128-Core Processor"
+      },
+      {
+        "field": "CPU family:",
+        "data": "25"
+      },
+      {
+        "field": "Model:",
+        "data": "160"
+      },
+      {
+        "field": "Thread(s) per core:",
+        "data": "2"
+      },
+      {
+        "field": "Core(s) per socket:",
+        "data": "2"
+      },
+      {
+        "field": "Socket(s):",
+        "data": "1"
+      },
+      {
+        "field": "Stepping:",
+        "data": "2"
+      },
+      {
+        "field": "BogoMIPS:",
+        "data": "4500.07"
+      },
+      {
+        "field": "Flags:",
+        "data": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl xtopology cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ibpb vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 avx512_bf16 clzero xsaveerptr wbnoinvd arat avx512vbmi umip avx512_vbmi2 vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm"
+      },
+      {
+        "field": "Hypervisor vendor:",
+        "data": "KVM"
+      },
+      {
+        "field": "Virtualization type:",
+        "data": "full"
+      },
+      {
+        "field": "L1d cache:",
+        "data": "64 KiB (2 instances)"
+      },
+      {
+        "field": "L1i cache:",
+        "data": "64 KiB (2 instances)"
+      },
+      {
+        "field": "L2 cache:",
+        "data": "2 MiB (2 instances)"
+      },
+      {
+        "field": "L3 cache:",
+        "data": "16 MiB (1 instance)"
+      },
+      {
+        "field": "NUMA node(s):",
+        "data": "1"
+      },
+      {
+        "field": "NUMA node0 CPU(s):",
+        "data": "0-3"
+      },
+      {
+        "field": "Vulnerability Gather data sampling:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Indirect target selection:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Itlb multihit:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability L1tf:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Mds:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Meltdown:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Mmio stale data:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Reg file data sampling:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Retbleed:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Spec rstack overflow:",
+        "data": "Vulnerable"
+      },
+      {
+        "field": "Vulnerability Spec store bypass:",
+        "data": "Vulnerable"
+      },
+      {
+        "field": "Vulnerability Spectre v1:",
+        "data": "Mitigation; usercopy/swapgs barriers and __user pointer sanitization"
+      },
+      {
+        "field": "Vulnerability Spectre v2:",
+        "data": "Mitigation; Retpolines; IBPB conditional; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected"
+      },
+      {
+        "field": "Vulnerability Srbds:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Tsa:",
+        "data": "Vulnerable: Clear CPU buffers attempted, no microcode"
+      },
+      {
+        "field": "Vulnerability Tsx async abort:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Vmscape:",
+        "data": "Not affected"
+      }
+    ]
+  },
+  "sched_schedstats": "0",
+  "perf_event_paranoid": "3",
+  "warning": "Topology is OS/VM reported; cluster is not necessarily LLC; SMT siblings do not double capacity."
+}

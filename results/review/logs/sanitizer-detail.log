@@ -1,0 +1,249 @@
+Start testing: Nov 14 10:59 CST
+----------------------------------------------------------
+1/10 Testing: paired_comparison_statistics
+1/10 Test: paired_comparison_statistics
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/tests/comparison_test.py"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize
+"paired_comparison_statistics" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.031s
+
+OK
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"paired_comparison_statistics" end time: Nov 14 10:59 CST
+"paired_comparison_statistics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/10 Testing: independent_functional
+2/10 Test: independent_functional
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/independent/tests/test_functional.py" "/root/rank_demo/executor_demo/build-staged-sanitize/experiments/independent/independent_load"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/independent
+"independent_functional" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+............
+----------------------------------------------------------------------
+Ran 12 tests in 1.359s
+
+OK
+<end of output>
+Test time =   1.41 sec
+----------------------------------------------------------
+Test Passed.
+"independent_functional" end time: Nov 14 10:59 CST
+"independent_functional" time elapsed: 00:00:01
+----------------------------------------------------------
+
+3/10 Testing: independent_analysis
+3/10 Test: independent_analysis
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/independent/tests/test_analysis.py"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/independent
+"independent_analysis" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.010s
+
+OK
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"independent_analysis" end time: Nov 14 10:59 CST
+"independent_analysis" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/10 Testing: independent_prediction
+4/10 Test: independent_prediction
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/independent/../../stages/03-independent/test_predict.py"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/independent
+"independent_prediction" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+OK
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"independent_prediction" end time: Nov 14 10:59 CST
+"independent_prediction" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/10 Testing: demo_functional
+5/10 Test: demo_functional
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/tests/demo_functional.py" "/root/rank_demo/executor_demo/build-staged-sanitize/executor_demo"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/dag
+"demo_functional" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 1.562s
+
+OK
+<end of output>
+Test time =   1.61 sec
+----------------------------------------------------------
+Test Passed.
+"demo_functional" end time: Nov 14 10:59 CST
+"demo_functional" time elapsed: 00:00:01
+----------------------------------------------------------
+
+6/10 Testing: analysis_statistics
+6/10 Test: analysis_statistics
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/tests/analysis_test.py"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/dag
+"analysis_statistics" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"analysis_statistics" end time: Nov 14 10:59 CST
+"analysis_statistics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/10 Testing: graph_analysis
+7/10 Test: graph_analysis
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/stages/04-dag/test_graph_analysis.py"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/dag
+"graph_analysis" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.005s
+
+OK
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"graph_analysis" end time: Nov 14 10:59 CST
+"graph_analysis" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/10 Testing: dag_workload_design
+8/10 Test: dag_workload_design
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/stages/04-dag/test_workload_design.py" "/root/rank_demo/executor_demo/build-staged-sanitize/executor_demo"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/dag
+"dag_workload_design" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.785s
+
+OK
+<end of output>
+Test time =   0.84 sec
+----------------------------------------------------------
+Test Passed.
+"dag_workload_design" end time: Nov 14 10:59 CST
+"dag_workload_design" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/10 Testing: business_executor_test
+9/10 Test: business_executor_test
+Command: "/root/rank_demo/executor_demo/build-staged-sanitize/experiments/dag/business_executor_test"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/dag
+"business_executor_test" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+Running main() from ./googletest/src/gtest_main.cc
+[==========] Running 22 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 22 tests from BusinessExecutor
+[ RUN      ] BusinessExecutor.HomeKeepsBusyGroup
+[       OK ] BusinessExecutor.HomeKeepsBusyGroup (2 ms)
+[ RUN      ] BusinessExecutor.BorrowAvoidsBusyHomeAndReportsReturnMigration
+[       OK ] BusinessExecutor.BorrowAvoidsBusyHomeAndReportsReturnMigration (1 ms)
+[ RUN      ] BusinessExecutor.StickyUsesParentAsPreferred
+[       OK ] BusinessExecutor.StickyUsesParentAsPreferred (1 ms)
+[ RUN      ] BusinessExecutor.FanoutBalancesOnlyFlaggedSubmissions
+[       OK ] BusinessExecutor.FanoutBalancesOnlyFlaggedSubmissions (1 ms)
+[ RUN      ] BusinessExecutor.QueueComparatorCannotSeeRunningTask
+[       OK ] BusinessExecutor.QueueComparatorCannotSeeRunningTask (2 ms)
+[ RUN      ] BusinessExecutor.CrossNumaPenaltyAndHysteresisPreventSmallGains
+[       OK ] BusinessExecutor.CrossNumaPenaltyAndHysteresisPreventSmallGains (2 ms)
+[ RUN      ] BusinessExecutor.LeastLoadIgnoresAffinityPenaltyAndHysteresis
+[       OK ] BusinessExecutor.LeastLoadIgnoresAffinityPenaltyAndHysteresis (0 ms)
+[ RUN      ] BusinessExecutor.PreferredNumaBorrowsLocallyDespiteLowerRemoteLoad
+[       OK ] BusinessExecutor.PreferredNumaBorrowsLocallyDespiteLowerRemoteLoad (1 ms)
+[ RUN      ] BusinessExecutor.PreferredNumaStickyAnchorsActualParentDomain
+[       OK ] BusinessExecutor.PreferredNumaStickyAnchorsActualParentDomain (1 ms)
+[ RUN      ] BusinessExecutor.PreferredNumaAlsoConstrainsLeastLoad
+[       OK ] BusinessExecutor.PreferredNumaAlsoConstrainsLeastLoad (1 ms)
+[ RUN      ] BusinessExecutor.PreferredNumaBorrowCanReturnFromExternalRemoteParent
+[       OK ] BusinessExecutor.PreferredNumaBorrowCanReturnFromExternalRemoteParent (0 ms)
+[ RUN      ] BusinessExecutor.PreferredNumaRequiresKnownLabelsButAllKeepsCompatibility
+[       OK ] BusinessExecutor.PreferredNumaRequiresKnownLabelsButAllKeepsCompatibility (1 ms)
+[ RUN      ] BusinessExecutor.BorrowChargesReturnToHomeAgainstActualSource
+[       OK ] BusinessExecutor.BorrowChargesReturnToHomeAgainstActualSource (0 ms)
+[ RUN      ] BusinessExecutor.NonblockingRejectionPreservesAccounting
+[       OK ] BusinessExecutor.NonblockingRejectionPreservesAccounting (0 ms)
+[ RUN      ] BusinessExecutor.EstimatedWorkOverflowRollsBackReservation
+[       OK ] BusinessExecutor.EstimatedWorkOverflowRollsBackReservation (1 ms)
+[ RUN      ] BusinessExecutor.ThrowingCallbackReleasesEveryCounter
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+E20261114 10:59:13.467458 2645567 Executor.cpp:41] ThreadPoolExecutor: func threw unhandled std::runtime_error: test failure
+[       OK ] BusinessExecutor.ThrowingCallbackReleasesEveryCounter (1 ms)
+[ RUN      ] BusinessExecutor.JoinDrainsRecursivelySubmittedCrossGroupChildren
+[       OK ] BusinessExecutor.JoinDrainsRecursivelySubmittedCrossGroupChildren (9 ms)
+[ RUN      ] BusinessExecutor.ConcurrentProducersHaveExactQuiescentCounters
+[       OK ] BusinessExecutor.ConcurrentProducersHaveExactQuiescentCounters (22 ms)
+[ RUN      ] BusinessExecutor.ConcurrentJoinClosesAdmissionWithoutLosingAcceptedTasks
+[       OK ] BusinessExecutor.ConcurrentJoinClosesAdmissionWithoutLosingAcceptedTasks (59 ms)
+[ RUN      ] BusinessExecutor.RequestContextIsCapturedByUnderlyingPool
+[       OK ] BusinessExecutor.RequestContextIsCapturedByUnderlyingPool (1 ms)
+[ RUN      ] BusinessExecutor.InvalidConfigurationAndHintsFailClearly
+[       OK ] BusinessExecutor.InvalidConfigurationAndHintsFailClearly (1 ms)
+[ RUN      ] BusinessExecutor.BindingIsAppliedBeforeFirstTaskAndTidsAreAvailable
+[       OK ] BusinessExecutor.BindingIsAppliedBeforeFirstTaskAndTidsAreAvailable (1 ms)
+[----------] 22 tests from BusinessExecutor (117 ms total)
+
+[----------] Global test environment tear-down
+[==========] 22 tests from 1 test suite ran. (117 ms total)
+[  PASSED  ] 22 tests.
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"business_executor_test" end time: Nov 14 10:59 CST
+"business_executor_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/10 Testing: metric_probe_functional
+10/10 Test: metric_probe_functional
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/metrics/test_probe.py" "/root/rank_demo/executor_demo/build-staged-sanitize/experiments/metrics/metric_cost_bench"
+Directory: /root/rank_demo/executor_demo/build-staged-sanitize/experiments/metrics
+"metric_probe_functional" start time: Nov 14 10:59 CST
+Output:
+----------------------------------------------------------
+PASS: metric probe CLI, read schema, update conservation, overwrite protection
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"metric_probe_functional" end time: Nov 14 10:59 CST
+"metric_probe_functional" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 14 10:59 CST

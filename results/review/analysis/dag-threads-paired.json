@@ -1,0 +1,1758 @@
+{
+  "schema": 1,
+  "stage": "dag",
+  "specification": {
+    "stage": "dag",
+    "window": {
+      "start_s": 1,
+      "end_s": 7
+    },
+    "minimum_pairs": 5,
+    "minimum_tail_observations": 20,
+    "bootstrap_draws": 5000,
+    "note": "Independent diagnostic batch after main DAG path analysis showed callback wall dominating; no original runs dropped.",
+    "comparisons": [
+      {
+        "name": "thread-oversubscription",
+        "baseline": "home-t2",
+        "candidate": "home-t16",
+        "allowed_changes": [
+          "threads"
+        ],
+        "workload": {
+          "same_cohort_ids": true,
+          "cohort_total_relative_tolerance": 0
+        }
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "name": "thread-oversubscription",
+      "baseline": "home-t2",
+      "candidate": "home-t16",
+      "contract": {
+        "name": "thread-oversubscription",
+        "baseline": "home-t2",
+        "candidate": "home-t16",
+        "allowed_changes": [
+          "threads"
+        ],
+        "workload": {
+          "same_cohort_ids": true,
+          "cohort_total_relative_tolerance": 0
+        }
+      },
+      "status": "paired_estimate",
+      "pairs": [
+        {
+          "seed": 20265000,
+          "baseline": "results/review/runs/dag-threads/r0-home-t2",
+          "candidate": "results/review/runs/dag-threads/r0-home-t16",
+          "errors": [],
+          "changed_options": [
+            "threads"
+          ],
+          "tail_sample_adequate": false,
+          "cohort_work_difference_pct": 0.0,
+          "differences": {
+            "planned_latency_ms_mean": 8.451268115942014,
+            "planned_latency_ms_p99": -3.2799600000000737,
+            "submitted_latency_ms_mean": 8.02766544927536,
+            "submitted_latency_ms_p99": -3.2814049999999497,
+            "admission_lag_ms_mean": 0.42360266666666674,
+            "admission_lag_ms_p99": 2.963214
+          },
+          "relative_differences_pct": {
+            "planned_latency_ms_mean": 3.8978499486553853,
+            "planned_latency_ms_p99": -0.5872269228351379,
+            "submitted_latency_ms_mean": 3.704302256931835,
+            "submitted_latency_ms_p99": -0.5875450368144075,
+            "admission_lag_ms_mean": 396.746386283828,
+            "admission_lag_ms_p99": 289.0159439839185
+          }
+        },
+        {
+          "seed": 20265001,
+          "baseline": "results/review/runs/dag-threads/r1-home-t2",
+          "candidate": "results/review/runs/dag-threads/r1-home-t16",
+          "errors": [],
+          "changed_options": [
+            "threads"
+          ],
+          "tail_sample_adequate": false,
+          "cohort_work_difference_pct": 0.0,
+          "differences": {
+            "planned_latency_ms_mean": 2.159676309859151,
+            "planned_latency_ms_p99": -24.60215400000004,
+            "submitted_latency_ms_mean": 1.5149443239436664,
+            "submitted_latency_ms_p99": -26.636546000000067,
+            "admission_lag_ms_mean": 0.644731985915493,
+            "admission_lag_ms_p99": 5.180014
+          },
+          "relative_differences_pct": {
+            "planned_latency_ms_mean": 0.6010252178207942,
+            "planned_latency_ms_p99": -3.4738028641724927,
+            "submitted_latency_ms_mean": 0.42170182682363944,
+            "submitted_latency_ms_p99": -3.761360518740242,
+            "admission_lag_ms_mean": 743.7749429446136,
+            "admission_lag_ms_p99": 577.1378274941925
+          }
+        },
+        {
+          "seed": 20265002,
+          "baseline": "results/review/runs/dag-threads/r2-home-t2",
+          "candidate": "results/review/runs/dag-threads/r2-home-t16",
+          "errors": [],
+          "changed_options": [
+            "threads"
+          ],
+          "tail_sample_adequate": false,
+          "cohort_work_difference_pct": 0.0,
+          "differences": {
+            "planned_latency_ms_mean": 6.229533293103458,
+            "planned_latency_ms_p99": 2.0551229999999805,
+            "submitted_latency_ms_mean": 5.513831517241357,
+            "submitted_latency_ms_p99": 1.5399779999999623,
+            "admission_lag_ms_mean": 0.7157017758620691,
+            "admission_lag_ms_p99": 5.462148
+          },
+          "relative_differences_pct": {
+            "planned_latency_ms_mean": 3.592279384216668,
+            "planned_latency_ms_p99": 0.5126973845376526,
+            "submitted_latency_ms_mean": 3.1810227370326682,
+            "submitted_latency_ms_p99": 0.384199680188102,
+            "admission_lag_ms_mean": 902.320081922581,
+            "admission_lag_ms_p99": 501.70134790695545
+          }
+        },
+        {
+          "seed": 20265003,
+          "baseline": "results/review/runs/dag-threads/r3-home-t2",
+          "candidate": "results/review/runs/dag-threads/r3-home-t16",
+          "errors": [],
+          "changed_options": [
+            "threads"
+          ],
+          "tail_sample_adequate": false,
+          "cohort_work_difference_pct": 0.0,
+          "differences": {
+            "planned_latency_ms_mean": 10.657306000000005,
+            "planned_latency_ms_p99": 16.536434999999983,
+            "submitted_latency_ms_mean": 10.044376479999983,
+            "submitted_latency_ms_p99": 14.71652199999994,
+            "admission_lag_ms_mean": 0.6129295200000001,
+            "admission_lag_ms_p99": 5.571388000000001
+          },
+          "relative_differences_pct": {
+            "planned_latency_ms_mean": 4.044838469100109,
+            "planned_latency_ms_p99": 3.1013280463457527,
+            "submitted_latency_ms_mean": 3.8139469834142625,
+            "submitted_latency_ms_p99": 2.760306439716542,
+            "admission_lag_ms_mean": 510.56702613903974,
+            "admission_lag_ms_p99": 294.35880637389585
+          }
+        },
+        {
+          "seed": 20265004,
+          "baseline": "results/review/runs/dag-threads/r4-home-t2",
+          "candidate": "results/review/runs/dag-threads/r4-home-t16",
+          "errors": [],
+          "changed_options": [
+            "threads"
+          ],
+          "tail_sample_adequate": false,
+          "cohort_work_difference_pct": 0.0,
+          "differences": {
+            "planned_latency_ms_mean": 6.756901028571463,
+            "planned_latency_ms_p99": 4.591785000000016,
+            "submitted_latency_ms_mean": 6.198129314285694,
+            "submitted_latency_ms_p99": 4.591375999999968,
+            "admission_lag_ms_mean": 0.5587717142857143,
+            "admission_lag_ms_p99": 2.1280410000000005
+          },
+          "relative_differences_pct": {
+            "planned_latency_ms_mean": 3.1963673011882188,
+            "planned_latency_ms_p99": 1.1111907222110418,
+            "submitted_latency_ms_mean": 2.933666480939223,
+            "submitted_latency_ms_p99": 1.1112451762361308,
+            "admission_lag_ms_mean": 476.49620389358864,
+            "admission_lag_ms_p99": 100.47697313284286
+          }
+        },
+        {
+          "seed": 20265005,
+          "baseline": "results/review/runs/dag-threads/r5-home-t2",
+          "candidate": "results/review/runs/dag-threads/r5-home-t16",
+          "errors": [],
+          "changed_options": [
+            "threads"
+          ],
+          "tail_sample_adequate": false,
+          "cohort_work_difference_pct": 0.0,
+          "differences": {
+            "planned_latency_ms_mean": 6.428563549295745,
+            "planned_latency_ms_p99": -6.38399099999998,
+            "submitted_latency_ms_mean": 5.891721549295767,
+            "submitted_latency_ms_p99": -7.9933489999999665,
+            "admission_lag_ms_mean": 0.536842,
+            "admission_lag_ms_p99": 2.8562959999999995
+          },
+          "relative_differences_pct": {
+            "planned_latency_ms_mean": 3.619969023291336,
+            "planned_latency_ms_p99": -1.6427733514829068,
+            "submitted_latency_ms_mean": 3.3212125339187937,
+            "submitted_latency_ms_p99": -2.057199985177882,
+            "admission_lag_ms_mean": 283.3767466176893,
+            "admission_lag_ms_p99": 156.75433609125054
+          }
+        }
+      ],
+      "estimates": {
+        "planned_latency_ms_mean": {
+          "mean": 6.780541382795306,
+          "ci95": [
+            4.652788561199064,
+            8.846880493056872
+          ],
+          "pairs": 6,
+          "min": 2.159676309859151,
+          "max": 10.657306000000005,
+          "per_pair": [
+            8.451268115942014,
+            2.159676309859151,
+            6.229533293103458,
+            10.657306000000005,
+            6.756901028571463,
+            6.428563549295745
+          ],
+          "relative_pct": {
+            "mean": 3.1587215573787524,
+            "ci95": [
+              2.086210321099554,
+              3.849604207169832
+            ],
+            "pairs": 6,
+            "min": 0.6010252178207942,
+            "max": 4.044838469100109,
+            "per_pair": [
+              3.8978499486553853,
+              0.6010252178207942,
+              3.592279384216668,
+              4.044838469100109,
+              3.1963673011882188,
+              3.619969023291336
+            ]
+          },
+          "tail_sample_adequate": true
+        },
+        "planned_latency_ms_p99": {
+          "mean": -1.8471270000000193,
+          "ci95": null,
+          "pairs": 6,
+          "min": -24.60215400000004,
+          "max": 16.536434999999983,
+          "per_pair": [
+            -3.2799600000000737,
+            -24.60215400000004,
+            2.0551229999999805,
+            16.536434999999983,
+            4.591785000000016,
+            -6.38399099999998
+          ],
+          "relative_pct": {
+            "mean": -0.1630978308993484,
+            "ci95": null,
+            "pairs": 6,
+            "min": -3.4738028641724927,
+            "max": 3.1013280463457527,
+            "per_pair": [
+              -0.5872269228351379,
+              -3.4738028641724927,
+              0.5126973845376526,
+              3.1013280463457527,
+              1.1111907222110418,
+              -1.6427733514829068
+            ]
+          },
+          "tail_sample_adequate": false
+        },
+        "submitted_latency_ms_mean": {
+          "mean": 6.198444772340305,
+          "ci95": [
+            4.047409875438902,
+            8.261057992635406
+          ],
+          "pairs": 6,
+          "min": 1.5149443239436664,
+          "max": 10.044376479999983,
+          "per_pair": [
+            8.02766544927536,
+            1.5149443239436664,
+            5.513831517241357,
+            10.044376479999983,
+            6.198129314285694,
+            5.891721549295767
+          ],
+          "relative_pct": {
+            "mean": 2.8959754698434037,
+            "ci95": [
+              1.8473494925624407,
+              3.589788958607276
+            ],
+            "pairs": 6,
+            "min": 0.42170182682363944,
+            "max": 3.8139469834142625,
+            "per_pair": [
+              3.704302256931835,
+              0.42170182682363944,
+              3.1810227370326682,
+              3.8139469834142625,
+              2.933666480939223,
+              3.3212125339187937
+            ]
+          },
+          "tail_sample_adequate": true
+        },
+        "submitted_latency_ms_p99": {
+          "mean": -2.8439040000000184,
+          "ci95": null,
+          "pairs": 6,
+          "min": -26.636546000000067,
+          "max": 14.71652199999994,
+          "per_pair": [
+            -3.2814049999999497,
+            -26.636546000000067,
+            1.5399779999999623,
+            14.71652199999994,
+            4.591375999999968,
+            -7.9933489999999665
+          ],
+          "relative_pct": {
+            "mean": -0.3583923740986261,
+            "ci95": null,
+            "pairs": 6,
+            "min": -3.761360518740242,
+            "max": 2.760306439716542,
+            "per_pair": [
+              -0.5875450368144075,
+              -3.761360518740242,
+              0.384199680188102,
+              2.760306439716542,
+              1.1112451762361308,
+              -2.057199985177882
+            ]
+          },
+          "tail_sample_adequate": false
+        },
+        "admission_lag_ms_mean": {
+          "mean": 0.5820966104549905,
+          "ci95": [
+            0.5055848400000001,
+            0.6540618706260553
+          ],
+          "pairs": 6,
+          "min": 0.42360266666666674,
+          "max": 0.7157017758620691,
+          "per_pair": [
+            0.42360266666666674,
+            0.644731985915493,
+            0.7157017758620691,
+            0.6129295200000001,
+            0.5587717142857143,
+            0.536842
+          ],
+          "relative_pct": {
+            "mean": 552.2135646335568,
+            "ci95": [
+              396.8967196801857,
+              728.1922130336003
+            ],
+            "pairs": 6,
+            "min": 283.3767466176893,
+            "max": 902.320081922581,
+            "per_pair": [
+              396.746386283828,
+              743.7749429446136,
+              902.320081922581,
+              510.56702613903974,
+              476.49620389358864,
+              283.3767466176893
+            ]
+          },
+          "tail_sample_adequate": true
+        },
+        "admission_lag_ms_p99": {
+          "mean": 4.026850166666667,
+          "ci95": null,
+          "pairs": 6,
+          "min": 2.1280410000000005,
+          "max": 5.571388000000001,
+          "per_pair": [
+            2.963214,
+            5.180014,
+            5.462148,
+            5.571388000000001,
+            2.1280410000000005,
+            2.8562959999999995
+          ],
+          "relative_pct": {
+            "mean": 319.9075391638426,
+            "ci95": null,
+            "pairs": 6,
+            "min": 100.47697313284286,
+            "max": 577.1378274941925,
+            "per_pair": [
+              289.0159439839185,
+              577.1378274941925,
+              501.70134790695545,
+              294.35880637389585,
+              100.47697313284286,
+              156.75433609125054
+            ]
+          },
+          "tail_sample_adequate": false
+        }
+      }
+    }
+  ],
+  "runs": [
+    {
+      "path": "results/review/runs/dag-threads/r0-home-t2",
+      "case": "home-t2",
+      "seed": 20265000,
+      "repeat": 0,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 2.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 69
+      },
+      "whole_run_statuses": {
+        "completed": 93
+      },
+      "completed": 69,
+      "expected_top_1pct_count": 0.6900000000000001,
+      "metrics": {
+        "planned_latency_ms_mean": 216.81871357971013,
+        "planned_latency_ms_p99": 558.550685,
+        "submitted_latency_ms_mean": 216.71194444927536,
+        "submitted_latency_ms_p99": 558.494208,
+        "admission_lag_ms_mean": 0.1067691304347826,
+        "admission_lag_ms_p99": 1.025277
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "later_cohort_latency_growth: inspect overload_or_nonstationarity",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 10.666666666666666,
+            "submitted_rate": 10.666666666666666,
+            "completed_rate": 10.333333333333334,
+            "cohort_mean_latency_ms": 158.05450478125
+          },
+          {
+            "planned_rate": 12.333333333333334,
+            "submitted_rate": 12.333333333333334,
+            "completed_rate": 10.0,
+            "cohort_mean_latency_ms": 267.64181308108107
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          3,
+          4,
+          11
+        ],
+        "queue_sum_slope_per_second": 1.7165979588587208,
+        "queue_sum_half_means": [
+          4.85,
+          8.35
+        ],
+        "pool_sample_times": 120,
+        "drain_after_horizon_s": 0.11543104799999959,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 93,
+        "service_sha256": "6b6ad4869214bfa2c290d60383ba63f5d14460cfcd764049e384bf0f8e9ceaff",
+        "total_target_cpu_us": 22347900,
+        "arrival_sha256": "750bf5518b25a1624b1782267ff885fec05d07e3c415f4891256161d84378b9c",
+        "graph_sha256": "a1c129835c7bee4b88b0c70ac98da326bd109e4e6cbe2b1f5121a03c16d009ed",
+        "cohort_units": 69,
+        "cohort_ids_sha256": "21ac23a8713989f7ad569e9193c1be51cf433702775e69ed77b2966e62824099",
+        "cohort_target_cpu_us": 16580700
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r0-home-t16",
+      "case": "home-t16",
+      "seed": 20265000,
+      "repeat": 0,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 16.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 69
+      },
+      "whole_run_statuses": {
+        "completed": 93
+      },
+      "completed": 69,
+      "expected_top_1pct_count": 0.6900000000000001,
+      "metrics": {
+        "planned_latency_ms_mean": 225.26998169565215,
+        "planned_latency_ms_p99": 555.270725,
+        "submitted_latency_ms_mean": 224.73960989855073,
+        "submitted_latency_ms_p99": 555.212803,
+        "admission_lag_ms_mean": 0.5303717971014493,
+        "admission_lag_ms_p99": 3.988491
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "later_cohort_latency_growth: inspect overload_or_nonstationarity",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 10.666666666666666,
+            "submitted_rate": 10.666666666666666,
+            "completed_rate": 10.333333333333334,
+            "cohort_mean_latency_ms": 164.72712315625
+          },
+          {
+            "planned_rate": 12.333333333333334,
+            "submitted_rate": 12.333333333333334,
+            "completed_rate": 10.0,
+            "cohort_mean_latency_ms": 277.63137286486483
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          3,
+          4,
+          11
+        ],
+        "queue_sum_slope_per_second": 0.6269664206841242,
+        "queue_sum_half_means": [
+          0.15,
+          1.5423728813559323
+        ],
+        "pool_sample_times": 119,
+        "drain_after_horizon_s": 0.12640374799999954,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 93,
+        "service_sha256": "6b6ad4869214bfa2c290d60383ba63f5d14460cfcd764049e384bf0f8e9ceaff",
+        "total_target_cpu_us": 22347900,
+        "arrival_sha256": "750bf5518b25a1624b1782267ff885fec05d07e3c415f4891256161d84378b9c",
+        "graph_sha256": "a1c129835c7bee4b88b0c70ac98da326bd109e4e6cbe2b1f5121a03c16d009ed",
+        "cohort_units": 69,
+        "cohort_ids_sha256": "21ac23a8713989f7ad569e9193c1be51cf433702775e69ed77b2966e62824099",
+        "cohort_target_cpu_us": 16580700
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r1-home-t2",
+      "case": "home-t2",
+      "seed": 20265001,
+      "repeat": 1,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 2.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 71
+      },
+      "whole_run_statuses": {
+        "completed": 95
+      },
+      "completed": 71,
+      "expected_top_1pct_count": 0.71,
+      "metrics": {
+        "planned_latency_ms_mean": 359.33206225352114,
+        "planned_latency_ms_p99": 708.219636,
+        "submitted_latency_ms_mean": 359.24537850704223,
+        "submitted_latency_ms_p99": 708.162535,
+        "admission_lag_ms_mean": 0.08668374647887324,
+        "admission_lag_ms_p99": 0.897535
+      },
+      "warnings": [
+        "later_cohort_latency_growth: inspect overload_or_nonstationarity",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 9.333333333333334,
+            "submitted_rate": 9.333333333333334,
+            "completed_rate": 9.333333333333334,
+            "cohort_mean_latency_ms": 152.72253325
+          },
+          {
+            "planned_rate": 14.333333333333334,
+            "submitted_rate": 14.333333333333334,
+            "completed_rate": 14.0,
+            "cohort_mean_latency_ms": 493.868499744186
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          1,
+          1,
+          2
+        ],
+        "queue_sum_slope_per_second": 6.721583723743122,
+        "queue_sum_half_means": [
+          4.1,
+          25.866666666666667
+        ],
+        "pool_sample_times": 120,
+        "drain_after_horizon_s": 0.11922618200000024,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 95,
+        "service_sha256": "bdb8a1b0c956784e56327f4bb76aaffd21994cfff29df8f59fba9f67e7a4027c",
+        "total_target_cpu_us": 22828500,
+        "arrival_sha256": "7ec334c4660709e28e600ef38feb3c350a068aee16bcf257b5a07d78e1bdaeee",
+        "graph_sha256": "938d0754c3a4571b22a6de12bde681168c62d3d2413a2d6b162578804b212c25",
+        "cohort_units": 71,
+        "cohort_ids_sha256": "75a8ecc6fc17f55e6141f180ce853c23454d7596979f97238cf6fdf1cf7b32f2",
+        "cohort_target_cpu_us": 17061300
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r1-home-t16",
+      "case": "home-t16",
+      "seed": 20265001,
+      "repeat": 1,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 16.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 71
+      },
+      "whole_run_statuses": {
+        "completed": 95
+      },
+      "completed": 71,
+      "expected_top_1pct_count": 0.71,
+      "metrics": {
+        "planned_latency_ms_mean": 361.4917385633803,
+        "planned_latency_ms_p99": 683.617482,
+        "submitted_latency_ms_mean": 360.7603228309859,
+        "submitted_latency_ms_p99": 681.525989,
+        "admission_lag_ms_mean": 0.7314157323943662,
+        "admission_lag_ms_p99": 6.077549
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "later_cohort_latency_growth: inspect overload_or_nonstationarity",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 9.333333333333334,
+            "submitted_rate": 9.333333333333334,
+            "completed_rate": 9.333333333333334,
+            "cohort_mean_latency_ms": 159.19090589285716
+          },
+          {
+            "planned_rate": 14.333333333333334,
+            "submitted_rate": 14.333333333333334,
+            "completed_rate": 14.0,
+            "cohort_mean_latency_ms": 493.22251332558136
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          1,
+          1,
+          2
+        ],
+        "queue_sum_slope_per_second": 2.337005444969597,
+        "queue_sum_half_means": [
+          0.3559322033898305,
+          7.483333333333333
+        ],
+        "pool_sample_times": 119,
+        "drain_after_horizon_s": 0.12597448400000033,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 95,
+        "service_sha256": "bdb8a1b0c956784e56327f4bb76aaffd21994cfff29df8f59fba9f67e7a4027c",
+        "total_target_cpu_us": 22828500,
+        "arrival_sha256": "7ec334c4660709e28e600ef38feb3c350a068aee16bcf257b5a07d78e1bdaeee",
+        "graph_sha256": "938d0754c3a4571b22a6de12bde681168c62d3d2413a2d6b162578804b212c25",
+        "cohort_units": 71,
+        "cohort_ids_sha256": "75a8ecc6fc17f55e6141f180ce853c23454d7596979f97238cf6fdf1cf7b32f2",
+        "cohort_target_cpu_us": 17061300
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r2-home-t2",
+      "case": "home-t2",
+      "seed": 20265002,
+      "repeat": 2,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 2.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 58
+      },
+      "whole_run_statuses": {
+        "completed": 80
+      },
+      "completed": 58,
+      "expected_top_1pct_count": 0.58,
+      "metrics": {
+        "planned_latency_ms_mean": 173.41449889655172,
+        "planned_latency_ms_p99": 400.845228,
+        "submitted_latency_ms_mean": 173.33518094827588,
+        "submitted_latency_ms_p99": 400.827507,
+        "admission_lag_ms_mean": 0.07931794827586207,
+        "admission_lag_ms_p99": 1.088725
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 9.333333333333334,
+            "submitted_rate": 9.333333333333334,
+            "completed_rate": 9.333333333333334,
+            "cohort_mean_latency_ms": 164.63583835714286
+          },
+          {
+            "planned_rate": 10.0,
+            "submitted_rate": 10.0,
+            "completed_rate": 10.0,
+            "cohort_mean_latency_ms": 181.6079154
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          2,
+          2,
+          2
+        ],
+        "queue_sum_slope_per_second": 0.1198540980827387,
+        "queue_sum_half_means": [
+          4.583333333333333,
+          5.666666666666667
+        ],
+        "pool_sample_times": 120,
+        "drain_after_horizon_s": 0.12633308800000087,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 80,
+        "service_sha256": "35c5a3d89ed5a3f512ea88c21b3334ef937d256dd6a69302c9132a04791c6ab2",
+        "total_target_cpu_us": 19224000,
+        "arrival_sha256": "d364423097c2eefdc69a6dff2a78caf20f08973a58ca5b1783d208d7c3a50454",
+        "graph_sha256": "079d89b760a6845e76b644e802adb8b610f0c67f78d43db6ba8da300c250f406",
+        "cohort_units": 58,
+        "cohort_ids_sha256": "1bcc5e11f0c0c0aab621c4d148f2999b6649ab463171f4452aac4d3c93bd24af",
+        "cohort_target_cpu_us": 13937400
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r2-home-t16",
+      "case": "home-t16",
+      "seed": 20265002,
+      "repeat": 2,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 16.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 58
+      },
+      "whole_run_statuses": {
+        "completed": 80
+      },
+      "completed": 58,
+      "expected_top_1pct_count": 0.58,
+      "metrics": {
+        "planned_latency_ms_mean": 179.64403218965518,
+        "planned_latency_ms_p99": 402.900351,
+        "submitted_latency_ms_mean": 178.84901246551723,
+        "submitted_latency_ms_p99": 402.367485,
+        "admission_lag_ms_mean": 0.7950197241379311,
+        "admission_lag_ms_p99": 6.550873
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 9.333333333333334,
+            "submitted_rate": 9.333333333333334,
+            "completed_rate": 9.333333333333334,
+            "cohort_mean_latency_ms": 170.94185092857145
+          },
+          {
+            "planned_rate": 10.0,
+            "submitted_rate": 10.0,
+            "completed_rate": 10.0,
+            "cohort_mean_latency_ms": 187.76606803333334
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          2,
+          2,
+          2
+        ],
+        "queue_sum_slope_per_second": 0.0039419943026252225,
+        "queue_sum_half_means": [
+          0.2542372881355932,
+          0.48333333333333334
+        ],
+        "pool_sample_times": 119,
+        "drain_after_horizon_s": 0.13172085799999955,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 80,
+        "service_sha256": "35c5a3d89ed5a3f512ea88c21b3334ef937d256dd6a69302c9132a04791c6ab2",
+        "total_target_cpu_us": 19224000,
+        "arrival_sha256": "d364423097c2eefdc69a6dff2a78caf20f08973a58ca5b1783d208d7c3a50454",
+        "graph_sha256": "079d89b760a6845e76b644e802adb8b610f0c67f78d43db6ba8da300c250f406",
+        "cohort_units": 58,
+        "cohort_ids_sha256": "1bcc5e11f0c0c0aab621c4d148f2999b6649ab463171f4452aac4d3c93bd24af",
+        "cohort_target_cpu_us": 13937400
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r3-home-t2",
+      "case": "home-t2",
+      "seed": 20265003,
+      "repeat": 3,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 2.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 75
+      },
+      "whole_run_statuses": {
+        "completed": 103
+      },
+      "completed": 75,
+      "expected_top_1pct_count": 0.75,
+      "metrics": {
+        "planned_latency_ms_mean": 263.4791495733333,
+        "planned_latency_ms_p99": 533.204961,
+        "submitted_latency_ms_mean": 263.35910078666666,
+        "submitted_latency_ms_p99": 533.148124,
+        "admission_lag_ms_mean": 0.12004878666666667,
+        "admission_lag_ms_p99": 1.89272
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 12.0,
+            "submitted_rate": 12.0,
+            "completed_rate": 13.333333333333334,
+            "cohort_mean_latency_ms": 337.12442583333336
+          },
+          {
+            "planned_rate": 13.0,
+            "submitted_rate": 13.0,
+            "completed_rate": 12.0,
+            "cohort_mean_latency_ms": 195.49889456410256
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          6,
+          2,
+          5
+        ],
+        "queue_sum_slope_per_second": -1.417632496650316,
+        "queue_sum_half_means": [
+          14.55,
+          7.283333333333333
+        ],
+        "pool_sample_times": 120,
+        "drain_after_horizon_s": 0.09494811399999925,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 103,
+        "service_sha256": "4bc1fa1f797b3c9fd6279301c61d98666db135d6989b69bedb37df6193fd3227",
+        "total_target_cpu_us": 24750900,
+        "arrival_sha256": "6f99acbe77c983b3626ab287c632078399e305932231f565dc95aa198f6fb5f3",
+        "graph_sha256": "de0d70a4300b5f80b07bf3bd6da5b026634227cf3b912e33b38f8e5b3eb30637",
+        "cohort_units": 75,
+        "cohort_ids_sha256": "03c068e70e7204e99991ec89da5c24df64ad5fe50c84b25ffd239274585a6381",
+        "cohort_target_cpu_us": 18022500
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r3-home-t16",
+      "case": "home-t16",
+      "seed": 20265003,
+      "repeat": 3,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 16.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 75
+      },
+      "whole_run_statuses": {
+        "completed": 103
+      },
+      "completed": 75,
+      "expected_top_1pct_count": 0.75,
+      "metrics": {
+        "planned_latency_ms_mean": 274.1364555733333,
+        "planned_latency_ms_p99": 549.741396,
+        "submitted_latency_ms_mean": 273.40347726666664,
+        "submitted_latency_ms_p99": 547.864646,
+        "admission_lag_ms_mean": 0.7329783066666667,
+        "admission_lag_ms_p99": 7.464108
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 12.0,
+            "submitted_rate": 12.0,
+            "completed_rate": 13.333333333333334,
+            "cohort_mean_latency_ms": 349.49010691666666
+          },
+          {
+            "planned_rate": 13.0,
+            "submitted_rate": 13.0,
+            "completed_rate": 12.0,
+            "cohort_mean_latency_ms": 204.57923894871794
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          6,
+          2,
+          5
+        ],
+        "queue_sum_slope_per_second": -0.37598342964082154,
+        "queue_sum_half_means": [
+          2.288135593220339,
+          0.711864406779661
+        ],
+        "pool_sample_times": 118,
+        "drain_after_horizon_s": 0.06960153700000049,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 103,
+        "service_sha256": "4bc1fa1f797b3c9fd6279301c61d98666db135d6989b69bedb37df6193fd3227",
+        "total_target_cpu_us": 24750900,
+        "arrival_sha256": "6f99acbe77c983b3626ab287c632078399e305932231f565dc95aa198f6fb5f3",
+        "graph_sha256": "de0d70a4300b5f80b07bf3bd6da5b026634227cf3b912e33b38f8e5b3eb30637",
+        "cohort_units": 75,
+        "cohort_ids_sha256": "03c068e70e7204e99991ec89da5c24df64ad5fe50c84b25ffd239274585a6381",
+        "cohort_target_cpu_us": 18022500
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r4-home-t2",
+      "case": "home-t2",
+      "seed": 20265004,
+      "repeat": 4,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 2.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 70
+      },
+      "whole_run_statuses": {
+        "completed": 87
+      },
+      "completed": 70,
+      "expected_top_1pct_count": 0.7000000000000001,
+      "metrics": {
+        "planned_latency_ms_mean": 211.3931345142857,
+        "planned_latency_ms_p99": 413.231042,
+        "submitted_latency_ms_mean": 211.27586774285714,
+        "submitted_latency_ms_p99": 413.173987,
+        "admission_lag_ms_mean": 0.11726677142857143,
+        "admission_lag_ms_p99": 2.117939
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 10.666666666666666,
+            "submitted_rate": 10.666666666666666,
+            "completed_rate": 9.666666666666666,
+            "cohort_mean_latency_ms": 193.937555375
+          },
+          {
+            "planned_rate": 12.666666666666666,
+            "submitted_rate": 12.666666666666666,
+            "completed_rate": 14.666666666666666,
+            "cohort_mean_latency_ms": 226.09256957894735
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          3,
+          6,
+          0
+        ],
+        "queue_sum_slope_per_second": 1.1868770078177309,
+        "queue_sum_half_means": [
+          4.6,
+          10.283333333333333
+        ],
+        "pool_sample_times": 120,
+        "drain_after_horizon_s": 0,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 87,
+        "service_sha256": "73aefae356567356f6d0a8483767f360f4c8be449e708473d588a7640d4dab03",
+        "total_target_cpu_us": 20906100,
+        "arrival_sha256": "fc090d08de315dec9fc6d1f2390471062d7f6fd870784034149383028306a87f",
+        "graph_sha256": "3a3eb83ea96caaf0a02ee7c03c26bbd204a45ce3b54561da8c6d8c23290a8408",
+        "cohort_units": 70,
+        "cohort_ids_sha256": "90af215a1c704a0baf8a65ab8fd7012a198976f551f0ec1f2df46ff23f13e521",
+        "cohort_target_cpu_us": 16821000
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r4-home-t16",
+      "case": "home-t16",
+      "seed": 20265004,
+      "repeat": 4,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 16.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 70
+      },
+      "whole_run_statuses": {
+        "completed": 87
+      },
+      "completed": 70,
+      "expected_top_1pct_count": 0.7000000000000001,
+      "metrics": {
+        "planned_latency_ms_mean": 218.15003554285715,
+        "planned_latency_ms_p99": 417.822827,
+        "submitted_latency_ms_mean": 217.47399705714284,
+        "submitted_latency_ms_p99": 417.765363,
+        "admission_lag_ms_mean": 0.6760384857142857,
+        "admission_lag_ms_p99": 4.24598
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 10.666666666666666,
+            "submitted_rate": 10.666666666666666,
+            "completed_rate": 9.666666666666666,
+            "cohort_mean_latency_ms": 203.69921353125
+          },
+          {
+            "planned_rate": 12.666666666666666,
+            "submitted_rate": 12.666666666666666,
+            "completed_rate": 14.666666666666666,
+            "cohort_mean_latency_ms": 230.31914881578948
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          3,
+          6,
+          0
+        ],
+        "queue_sum_slope_per_second": 0.10452823003618514,
+        "queue_sum_half_means": [
+          0.3898305084745763,
+          0.9666666666666667
+        ],
+        "pool_sample_times": 119,
+        "drain_after_horizon_s": 0,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 87,
+        "service_sha256": "73aefae356567356f6d0a8483767f360f4c8be449e708473d588a7640d4dab03",
+        "total_target_cpu_us": 20906100,
+        "arrival_sha256": "fc090d08de315dec9fc6d1f2390471062d7f6fd870784034149383028306a87f",
+        "graph_sha256": "3a3eb83ea96caaf0a02ee7c03c26bbd204a45ce3b54561da8c6d8c23290a8408",
+        "cohort_units": 70,
+        "cohort_ids_sha256": "90af215a1c704a0baf8a65ab8fd7012a198976f551f0ec1f2df46ff23f13e521",
+        "cohort_target_cpu_us": 16821000
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r5-home-t2",
+      "case": "home-t2",
+      "seed": 20265005,
+      "repeat": 5,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 2.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 71
+      },
+      "whole_run_statuses": {
+        "completed": 106
+      },
+      "completed": 71,
+      "expected_top_1pct_count": 0.71,
+      "metrics": {
+        "planned_latency_ms_mean": 177.58614805633803,
+        "planned_latency_ms_p99": 388.610577,
+        "submitted_latency_ms_mean": 177.39670343661973,
+        "submitted_latency_ms_p99": 388.554786,
+        "admission_lag_ms_mean": 0.18944461971830986,
+        "admission_lag_ms_p99": 1.822148
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "later_cohort_latency_growth: inspect overload_or_nonstationarity",
+        "substantial_drain_after_planned_horizon",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 10.0,
+            "submitted_rate": 10.0,
+            "completed_rate": 9.333333333333334,
+            "cohort_mean_latency_ms": 147.85453020000003
+          },
+          {
+            "planned_rate": 13.666666666666666,
+            "submitted_rate": 13.666666666666666,
+            "completed_rate": 14.0,
+            "cohort_mean_latency_ms": 199.34099039024392
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          1,
+          3,
+          2
+        ],
+        "queue_sum_slope_per_second": 1.3336347134616369,
+        "queue_sum_half_means": [
+          3.566666666666667,
+          8.45
+        ],
+        "pool_sample_times": 120,
+        "drain_after_horizon_s": 0.6278715740000003,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 106,
+        "service_sha256": "8fa6ab999b5f6dd10fb7af9ce08992583bb0c367b06061e3b7c0ea613c8cf72e",
+        "total_target_cpu_us": 25471800,
+        "arrival_sha256": "f25f2f8b27899653cbc0dc28759c4498f79600e6f6199d5d0e1554800d52cc98",
+        "graph_sha256": "766c38e7b19a4ed96f87416a291feca61c8ba7594bb28ff7146acdd67b1abb4c",
+        "cohort_units": 71,
+        "cohort_ids_sha256": "c7cdcf02cea17ff4dc08ee80336964401d5df98195dba1494a68d5f6ad438354",
+        "cohort_target_cpu_us": 17061300
+      }
+    },
+    {
+      "path": "results/review/runs/dag-threads/r5-home-t16",
+      "case": "home-t16",
+      "seed": 20265005,
+      "repeat": 5,
+      "binary_sha256": "0f7230fcc96be7b2e467a88fc9a2bafb2ab0cc8a17904db11460220d2d7f88cb",
+      "options": {
+        "duration": 8.0,
+        "qps": 12.0,
+        "cpu-us": 4000.0,
+        "fanout-min": 20.0,
+        "fanout-max": 20.0,
+        "chain-length": 2.0,
+        "max-inflight": 128.0,
+        "drain-seconds": 60.0,
+        "pools": 2.0,
+        "threads": 16.0,
+        "cpus": "0,1;2,3",
+        "numa": "0,0",
+        "affinity": "cluster",
+        "graph": "waves",
+        "wave-widths": "5,5,5",
+        "wave-depths": "4,4,4",
+        "jitter": 0.0,
+        "long-prob": 0.0,
+        "join-us": 100.0,
+        "metric": "queue",
+        "arrival": "poisson",
+        "rpc-prob": 0.0,
+        "sample-ms": 50.0,
+        "policy": "home",
+        "balance-forks": "all",
+        "_external_proc_interval_seconds": 0.0
+      },
+      "allowed_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "window_s": [
+        1.0,
+        7.0
+      ],
+      "effective_cpu_union": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "cohort_statuses": {
+        "completed": 71
+      },
+      "whole_run_statuses": {
+        "completed": 106
+      },
+      "completed": 71,
+      "expected_top_1pct_count": 0.71,
+      "metrics": {
+        "planned_latency_ms_mean": 184.01471160563378,
+        "planned_latency_ms_p99": 382.226586,
+        "submitted_latency_ms_mean": 183.2884249859155,
+        "submitted_latency_ms_p99": 380.561437,
+        "admission_lag_ms_mean": 0.7262866197183099,
+        "admission_lag_ms_p99": 4.678444
+      },
+      "warnings": [
+        "generator_or_submission_lag_p99_above_1ms",
+        "later_cohort_latency_growth: inspect overload_or_nonstationarity",
+        "substantial_drain_after_planned_horizon",
+        "short_window: no_sustainable_capacity_claim"
+      ],
+      "diagnostics": {
+        "halves": [
+          {
+            "planned_rate": 10.0,
+            "submitted_rate": 10.0,
+            "completed_rate": 9.333333333333334,
+            "cohort_mean_latency_ms": 150.2637574
+          },
+          {
+            "planned_rate": 13.666666666666666,
+            "submitted_rate": 13.666666666666666,
+            "completed_rate": 14.0,
+            "cohort_mean_latency_ms": 208.71053175609757
+          }
+        ],
+        "completed_outstanding_at_start_mid_end": [
+          1,
+          3,
+          2
+        ],
+        "queue_sum_slope_per_second": 0.05757560496046706,
+        "queue_sum_half_means": [
+          0.2833333333333333,
+          0.6440677966101694
+        ],
+        "pool_sample_times": 119,
+        "drain_after_horizon_s": 0.6378488450000006,
+        "whole_run_incomplete": 0
+      },
+      "workload": {
+        "units": 106,
+        "service_sha256": "8fa6ab999b5f6dd10fb7af9ce08992583bb0c367b06061e3b7c0ea613c8cf72e",
+        "total_target_cpu_us": 25471800,
+        "arrival_sha256": "f25f2f8b27899653cbc0dc28759c4498f79600e6f6199d5d0e1554800d52cc98",
+        "graph_sha256": "766c38e7b19a4ed96f87416a291feca61c8ba7594bb28ff7146acdd67b1abb4c",
+        "cohort_units": 71,
+        "cohort_ids_sha256": "c7cdcf02cea17ff4dc08ee80336964401d5df98195dba1494a68d5f6ad438354",
+        "cohort_target_cpu_us": 17061300
+      }
+    }
+  ],
+  "interpretation": [
+    "Difference is candidate minus baseline; negative latency difference is lower latency.",
+    "Estimand: equally weighted mean of per-run means or per-run p99 differences, not pooled p99.",
+    "CI: exploratory percentile bootstrap over independent seed pairs, not task/request rows.",
+    "At least five pairs enables CI; more repeats and independent batches are needed for small improvements.",
+    "Tail threshold is a sample sufficiency heuristic, not proof of p99 precision or independent observations.",
+    "Short windows, queue trends, lag and drain are diagnostics; this tool does not certify stationarity.",
+    "Multiple contrasts are exploratory without simultaneous inference or a separately confirmed primary contrast.",
+    "Same nominal CPU budget is not identical useful work in CPU-clock mode; use fixed iterations for locality."
+  ]
+}

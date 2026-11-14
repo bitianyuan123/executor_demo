@@ -14,7 +14,7 @@ ctest --test-dir build-independent --output-on-failure
 build-independent/independent_load --help
 ```
 
-独立项目包含三组CTest：9个黑盒测试方法覆盖原版执行器、计数守恒、四档插桩、确定性任务预算、绑定/RR、拒绝、取消、故障清理、采样截断和非法输入；5个分析测试覆盖p99、相关系数、缺失数据和矩阵生成；8个整轮留出预测测试检查训练/测试隔离与缺测处理。它们验证功能，不验证性能优劣。
+独立项目包含三组CTest：12个黑盒测试方法覆盖原版执行器、计数守恒、四档插桩、确定性任务预算、绑定/RR、拒绝、取消、故障清理、采样截断和非法输入；11个分析/设计测试覆盖p99、相关系数、缺失数据和矩阵生成；8个整轮留出预测测试检查训练/测试隔离与缺测处理。它们验证功能，不验证性能优劣。
 
 ## 开发机分步运行
 
@@ -26,7 +26,7 @@ python3 experiments/independent/scripts/run_matrix.py \
   --output results/runs/independent-quick
 ```
 
-输出目录必须不存在，防止覆盖既有证据。结果包含原始任务/批次CSV、JSON配置、每秒统计、分析报告和运行manifest。每轮串行执行，所有配置次序随机化。quick不能当作稳态容量测量。
+输出目录必须不存在，防止覆盖既有证据。结果包含原始任务/批次CSV、JSON配置、每秒统计、分析报告和运行manifest。每轮串行执行，同重复号的 case 构成一个时间块，块内配置次序随机化。quick不能当作稳态容量测量。
 
 先生成较大扫描配置并审查，而不是立即跑全部组合：
 
@@ -39,7 +39,7 @@ python3 experiments/independent/scripts/run_matrix.py \
   --output results/runs/independent-thread-sweep
 ```
 
-JSON形式是 `{"base":{公共参数},"repeats":3,"seed":420,"cases":[{"name":"名称","options":{覆盖参数}}]}`。参数名与命令行一致、不带`--`。可重复使用 `--override duration=30` 等覆盖所有case；runner保存实际命令和二进制SHA256，失败不会被静默加入成功分析。需要更多压力时，先核对CPU目标与可用资源，再逐级增加arrival-rate。
+JSON形式是 `{"base":{公共参数},"repeats":3,"seed":420,"analysis":{"warmup_seconds":2,"steady_end_seconds":8},"cases":[{"name":"名称","options":{覆盖参数}}]}`。`analysis` 可省略；存在时 runner 自动使用该计划到达窗口。参数名与命令行一致、不带`--`。可重复使用 `--override duration=30` 等覆盖所有case；改变时长时必须同步修改配置中的 analysis 窗口，否则越界会被拒绝；runner保存实际命令和二进制SHA256，失败不会被静默加入成功分析。需要更多压力时，先核对CPU目标与可用资源，再逐级增加arrival-rate。
 
 单次运行示例：
 
@@ -80,7 +80,33 @@ python3 experiments/independent/scripts/run_matrix.py \
   --output results/runs/independent-target-first
 ```
 
-候选target矩阵包含120秒运行、5次重复、100ms随机服务预算、8/16/64/256线程。100/400任务的burst是潜在过载探针，请按设计报告先标定能力，再改arrival-rate/准入和drain限制。检查内存及线程资源上限；无须一次运行全部矩阵。
+上述旧 target preset 仅用于历史粗筛，不能覆盖全部正式因果对照。它包含120秒运行、5次重复、100ms随机服务预算、8/16/64/256线程。完整正式候选设计应改用下节的分族生成器。100/400任务的burst是潜在过载探针，请按设计报告先标定能力，再改arrival-rate/准入和drain限制。检查内存及线程资源上限；无须一次运行全部矩阵。
+
+## 本轮新增的可控实验设计
+
+完整复核及九个实验族见[设计复核](../../stages/03-independent/DESIGN_REVIEW.md)。建议先生成一族，再审查、选择运行，而不是使用一个混合所有变量的大矩阵：
+
+```bash
+python3 stages/03-independent/make_cases.py --family burst \
+  --deployment dev --task-rate 1600 --duration 8 --warmup 2 \
+  --output /tmp/stage3-burst.json
+python3 experiments/independent/scripts/run_matrix.py \
+  --config /tmp/stage3-burst.json --binary build-independent/independent_load \
+  --output results/runs/independent-burst-review
+```
+
+新增控制项：`--mean-normalization exact` 让有限样本总预算精确等于任务数乘 cpu-us；`--burst-placement spread` 在相同 arrival 下将独立任务轮流放到各池；`--estimate-jitter .75` 只给观测估计添加独立随机误差。默认分别为 none、local、0，原始数据的工作负载定义保持不变。bursts.csv 的 pool 仍为该 arrival 的 RR home 标签，spread 下各 task 的实际池以 tasks.csv 的 pool 为准。
+
+目标机示例（1000 tasks/s 仅为命令格式示例，必须替换为你的已测能力）：
+
+```bash
+python3 stages/03-independent/make_cases.py --family burst --deployment target \
+  --cpus "$CLUSTER_CPU_LISTS" --numa "$CLUSTER_NUMA_IDS" \
+  --capacity-task-rate 1000 --load-fractions .2,.5,.8,1.1 \
+  --output /tmp/stage3-target-burst.json
+```
+
+目标机生成器默认300秒、30秒预热、7个独立重复，输出预计运行小时数及每个case的任务/arrival样本数警告；这些是候选起点，不是统计功效保证。未测容量时使用显式 `--task-rate`，结果仅报告实际任务率与 offered CPU demand。`calibration` 族要求目标机显式给 `--rates`；`qps12` 固定到达率且会随扇出提高总需求，与等压力burst实验分开。
 
 ## 分析与插桩对照
 

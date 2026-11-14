@@ -6,3 +6,6 @@ results/runs/
 results/local/
 results/staged/runs/
 results/staged/placement/
+results/review/runs/
+results/review/pilot-*/
+results/review/analysis/*-paths.json

@@ -1,0 +1,8 @@
+[1/8] Building CXX object experiments/independent/CMakeFiles/independent_load.dir/src/main.cpp.o
+[2/8] Building CXX object experiments/dag/CMakeFiles/executor_demo.dir/main.cpp.o
+[3/8] Building CXX object experiments/dag/CMakeFiles/business_executor_test.dir/tests/business_executor_test.cpp.o
+[4/8] Building CXX object experiments/metrics/CMakeFiles/metric_cost_bench.dir/main.cpp.o
+[5/8] Linking CXX executable experiments/independent/independent_load
+[6/8] Linking CXX executable executor_demo
+[7/8] Linking CXX executable experiments/dag/business_executor_test
+[8/8] Linking CXX executable experiments/metrics/metric_cost_bench

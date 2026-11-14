@@ -1,0 +1,4 @@
+[1/4] Building CXX object CMakeFiles/executor_demo.dir/main.cpp.o
+[2/4] Building CXX object CMakeFiles/business_executor_test.dir/tests/business_executor_test.cpp.o
+[3/4] Linking CXX executable executor_demo
+[4/4] Linking CXX executable business_executor_test

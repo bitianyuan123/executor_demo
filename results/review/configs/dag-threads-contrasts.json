@@ -1,0 +1,25 @@
+{
+  "stage": "dag",
+  "window": {
+    "start_s": 1,
+    "end_s": 7
+  },
+  "minimum_pairs": 5,
+  "minimum_tail_observations": 20,
+  "bootstrap_draws": 5000,
+  "note": "Independent diagnostic batch after main DAG path analysis showed callback wall dominating; no original runs dropped.",
+  "comparisons": [
+    {
+      "name": "thread-oversubscription",
+      "baseline": "home-t2",
+      "candidate": "home-t16",
+      "allowed_changes": [
+        "threads"
+      ],
+      "workload": {
+        "same_cohort_ids": true,
+        "cohort_total_relative_tolerance": 0
+      }
+    }
+  ]
+}
