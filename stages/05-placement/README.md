@@ -2,6 +2,10 @@
 
 本阶段只讨论**能力放在哪里、接口边界和集成代价**。先读完阶段3的独立负载结果、阶段4的DAG策略对照，再决定是否需要库级能力。把同一段代码移入Folly不应被解释为自动提高性能。
 
+阶段4新增的[RequestExecutor门面](../../experiments/affinity/README.md)把多池、home/parent传递和登记式异步续接藏在总池内部，业务只负责请求标识、依赖就绪、fork及已知工作估计。它目前是业务可复用适配库，不是Folly默认行为；本阶段仍有意义：决定成熟后是否将通用机制放入opt-in库、如何兼容Future/KeepAlive、拒绝/取消/关闭和不同业务的上下文。当前两位置等价测试覆盖底层分组器，**尚未把新增高层门面移入Folly**，不能把该测试说成高层门面的双位置验收。
+
+底层新增`readLoad(group)`、`readQueueDepth(group)`诊断/评分入口，不获取TID列表、不加线程列表锁；已同步业务生成版。完整快照仍单独取TID。本轮没有修改默认CPUThreadPoolExecutor队列或唤醒协议。
+
 ## 1. 判断与推荐
 
 当前推荐先在业务侧接入：业务知道request home、依赖何时满足、哪里是fork、多个父节点的数据归属、RPC continuation的来源、截止时间和失败传播；普通 `Executor::add(Func)` 看不到这些语义。只有某个requestID无法推断哪400个任务属于同一次fork，也不能推断join应回哪个cluster。
@@ -22,7 +26,7 @@
 - 阶段5库版：Folly分支中的 `folly/executors/experimental/AffinityExecutor.h`。
 - 同一个DAG驱动通过编译选项分别生成 `executor_demo`（业务版）和 `dag_folly`（库版），metadata中的 `backend` 标识分别为 `business` / `folly_experimental`。
 
-两版**故意使用相同算法**，区别为命名空间、类名和代码归属。业务版由 `scripts/sync_business_executor.py` 从实验header生成，已提交生成产物及22项等价的单元测试（含本轮新增5项候选域测试）；普通业务版构建不运行生成器、不读取Folly实验源码。这样阶段4不依赖阶段5分支，且对比不会把算法差异错误归因于“放在库里”。`business-source.json`记录哈希，检查器防止静默漂移。长期维护宜选择一个归属，不建议永久维护两份独立演进的逻辑。
+两版**故意使用相同算法**，区别为命名空间、类名和代码归属。业务版由 `scripts/sync_business_executor.py` 从实验header生成，已提交生成产物及两套各24项单元测试（覆盖候选域及单池负载读取接口）；普通业务版构建不运行生成器、不读取Folly实验源码。这样阶段4不依赖阶段5分支，且对比不会把算法差异错误归因于“放在库里”。`business-source.json`记录哈希，检查器防止静默漂移。长期维护宜选择一个归属，不建议永久维护两份独立演进的逻辑。
 
 ```bash
 # 阶段4：仅已安装的原版Folly即可

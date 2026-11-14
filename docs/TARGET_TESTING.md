@@ -4,6 +4,8 @@
 
 当前回传进度已完成独立任务条件p50/p95/p99及256线程DAG home基线。按[第五批审阅与执行步骤](TARGET_PILOT_05_DAG_BASELINE_REVIEW.md)进入`s4-routing`五策略对照；无需重复前面阶段。`conditional_latency.py`与`dag_terminal_report.py`均为只读Python分析，新增路由终端统计不需要重编Folly或C++。本文后续的大矩阵和确认阶段保留为按需扩展，当前不要一次全部执行。
 
+针对随后明确的“透明总池、二层均衡、子图真实数据亲和”目标，新增[阶段4 v2独立工程及校准步骤](../experiments/affinity/README.md)。下一次这类研究先编译`affinity`并做低负载固定工作校准；上段`s4-routing`仍可用于旧DAG路由控制实验，但不替代v2的缓存/回迁验证。此前0001～0005结果继续有效，无需重跑阶段3。
+
 ## 0. 固定实际资源与解释口径
 
 附件实际报告2个socket、4个NUMA、24个cluster、192个物理核、384个逻辑CPU；每个cluster为8核×SMT2，其L3共享范围与cluster一致（23296 KiB）。这与最初描述的整机规模不同，因此本轮取一个明确的六cluster子集：

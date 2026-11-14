@@ -1,0 +1,63 @@
+Affinity v2: scheduled-request cohort; late completions are retained.
+Window: warmup=0s, length=all remaining arrivals; nearest-rank quantiles.
+Per-run descriptive statistics; no confidence interval or claim of independent tail samples.
+Operator CPU/wall values cover the operator callback, including its successor submission; they are not a hardware stall decomposition.
+CPU groups (cluster): [{"capacity":1,"cpus":[0],"numa":0},{"capacity":1,"cpus":[1],"numa":0}]
+| run | model/policy/continuation | completed/offered | mean ms | p95 ms | p99 ms | task wait p99 ms | operator CPU/wall mean ms | migrations/tasks | cross-NUMA |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| seed-101-home | mixed/home/parent | 8/8 | 0.807 | 0.841 | 0.841 | 0.153 | 0.047/0.048 | 0/120 | 0 |
+  seed-101-home: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=101, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.567
+  work_signature_sha256_prefix=108c33cbcadcdf51, arrival_hash=17674638696432103673, checksum=14702177910786832223, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.006528, process CPU/completed-request ms=0.816, peak_inflight=1, submission lag p99 ms=0.064
+  seed-101-home: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+| seed-101-outstanding | mixed/outstanding/parent | 8/8 | 0.564 | 0.585 | 0.585 | 0.111 | 0.049/0.050 | 36/120 | 0 |
+  seed-101-outstanding: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=101, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.593
+  work_signature_sha256_prefix=108c33cbcadcdf51, arrival_hash=17674638696432103673, checksum=14702177910786832223, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.006981, process CPU/completed-request ms=0.873, peak_inflight=1, submission lag p99 ms=0.068
+  seed-101-outstanding: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+| seed-101-queue | mixed/queue/parent | 8/8 | 0.660 | 0.712 | 0.712 | 0.079 | 0.050/0.051 | 32/120 | 0 |
+  seed-101-queue: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=101, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.606
+  work_signature_sha256_prefix=108c33cbcadcdf51, arrival_hash=17674638696432103673, checksum=14702177910786832223, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.007021, process CPU/completed-request ms=0.878, peak_inflight=1, submission lag p99 ms=0.070
+  seed-101-queue: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+| seed-101-work | mixed/work/parent | 8/8 | 0.590 | 0.626 | 0.626 | 0.126 | 0.052/0.052 | 37/120 | 0 |
+  seed-101-work: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=101, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.621
+  work_signature_sha256_prefix=108c33cbcadcdf51, arrival_hash=17674638696432103673, checksum=14702177910786832223, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.007315, process CPU/completed-request ms=0.914, peak_inflight=1, submission lag p99 ms=0.071
+  seed-101-work: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+| seed-102-home | mixed/home/parent | 8/8 | 0.806 | 0.875 | 0.875 | 0.156 | 0.047/0.047 | 0/120 | 0 |
+  seed-102-home: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=102, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.560
+  work_signature_sha256_prefix=2477698e7de80f90, arrival_hash=17674638696432103673, checksum=10135320007994681972, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.006497, process CPU/completed-request ms=0.812, peak_inflight=1, submission lag p99 ms=0.071
+  seed-102-home: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+| seed-102-outstanding | mixed/outstanding/parent | 8/8 | 0.585 | 0.634 | 0.634 | 0.119 | 0.050/0.050 | 38/120 | 0 |
+  seed-102-outstanding: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=102, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.598
+  work_signature_sha256_prefix=2477698e7de80f90, arrival_hash=17674638696432103673, checksum=10135320007994681972, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.007081, process CPU/completed-request ms=0.885, peak_inflight=1, submission lag p99 ms=0.074
+  seed-102-outstanding: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+| seed-102-queue | mixed/queue/parent | 8/8 | 0.628 | 0.665 | 0.665 | 0.069 | 0.048/0.049 | 32/120 | 0 |
+  seed-102-queue: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=102, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.578
+  work_signature_sha256_prefix=2477698e7de80f90, arrival_hash=17674638696432103673, checksum=10135320007994681972, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.006607, process CPU/completed-request ms=0.826, peak_inflight=1, submission lag p99 ms=0.065
+  seed-102-queue: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+| seed-102-work | mixed/work/parent | 8/8 | 1.051 | 3.316 | 3.316 | 2.703 | 0.053/0.057 | 46/120 | 0 |
+  seed-102-work: tail sample screen: n<1000 (nominal top 1%=0.1 requests)
+  seed=102, affinity=cluster, threads/pool=2, whole completed/rejected-or-failed=8/0, operator CPU/request ms=0.632
+  work_signature_sha256_prefix=2477698e7de80f90, arrival_hash=17674638696432103673, checksum=10135320007994681972, pages={"errno":0,"known":0,"nodes":{},"sampled":0,"status":"disabled"}
+  WHOLE RUN (not cohort): process CPU s=0.007907, process CPU/completed-request ms=0.988, peak_inflight=1, submission lag p99 ms=0.085
+  seed-102-work: no overlapping requests observed; this run cannot establish multi-request contention behavior.
+
+Matched home deltas (candidate - home; negative means lower latency):
+  seed-101-outstanding vs seed-101-home: n=8, delta mean/p95/p99 ms=-0.243/-0.256/-0.256; descriptive only.
+  seed-101-queue vs seed-101-home: n=8, delta mean/p95/p99 ms=-0.147/-0.129/-0.129; descriptive only.
+  seed-101-work vs seed-101-home: n=8, delta mean/p95/p99 ms=-0.218/-0.215/-0.215; descriptive only.
+  seed-102-outstanding vs seed-102-home: n=8, delta mean/p95/p99 ms=-0.220/-0.241/-0.241; descriptive only.
+  seed-102-queue vs seed-102-home: n=8, delta mean/p95/p99 ms=-0.178/-0.210/-0.210; descriptive only.
+  seed-102-work vs seed-102-home: n=8, delta mean/p95/p99 ms=+0.245/+2.442/+2.442; descriptive only.

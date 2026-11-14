@@ -1,0 +1,51 @@
+{
+  "schema": "affinity-v2-matrix",
+  "binary": "/root/rank_demo/executor_demo/build-affinity/affinity_demo",
+  "binary_sha256": "7765ab6a53238dae087d5b4bcb19b3b3bb4fe5b38a457804080910a47ff4b055",
+  "sources_sha256": {
+    "main.cpp": "fbf7a4c1ff4f26e4d0cd9ed4933a2efd6b46f1b54c5b3be23a4d02215ccb750c",
+    "include/executor_demo/RequestExecutor.h": "98880e04690d9f0d7027ab6694b6058417b0e43649ea8a83dff27a726632637f",
+    "include/executor_demo/LocalityWorkload.h": "a53950456689d0438617dc3555a1bb1a820060f0a7c71289f00bd831e18c0f8a",
+    "../dag/include/executor_demo/BusinessExecutor.h": "4f5a248f32cc7427f5190a2c214a13395f4695868e12fb14af3ce05b03e0a20b"
+  },
+  "machine": "x86_64",
+  "kernel": "6.12.95+deb13-amd64",
+  "caller_allowed_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "argv": [
+    "--suite",
+    "routing",
+    "--seeds",
+    "101,102",
+    "--output",
+    "results/review/affinity-v2-smoke",
+    "--run",
+    "--base-args",
+    "--requests",
+    "8",
+    "--qps",
+    "40",
+    "--widths",
+    "4,2",
+    "--depths",
+    "2,2",
+    "--model",
+    "mixed",
+    "--shared-kb",
+    "64",
+    "--branch-kb",
+    "16",
+    "--iterations",
+    "10000",
+    "--accesses",
+    "1000",
+    "--max-inflight",
+    "16",
+    "--memory-mb",
+    "64"
+  ]
+}

@@ -3,7 +3,7 @@
   "folly_base_tag": "v2026.10.26.00",
   "folly_base_commit": "c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c",
   "folly_experiment_branch": "experiment/grouped-executor-20261114",
-  "folly_experiment_commit": "560e225e85229a3573061f66cab7e9207c98a9b0",
+  "folly_experiment_commit": "4d7cc97d0203a6195d1bc14bb8f9801d7e136239",
   "cxx_standard": 20,
   "validated_compiler": "GCC 14.2.0",
   "validated_platform": "Debian 13 x86_64 Linux",

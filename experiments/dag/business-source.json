@@ -1,7 +1,7 @@
 {
   "canonical_header": "folly/executors/experimental/AffinityExecutor.h",
-  "canonical_header_sha256": "528e1dccad93130fad9e9af77e4fb829c7ecc222f496a7e964f2b182e0dfb9c3",
-  "canonical_test_sha256": "1bff57fb5dc369cc3b053b80fe3e7d62b1f86451c4084b54f8e2cb0bf7d02367",
-  "business_header_sha256": "65ba2b7735c6e85ddd7059ee729f5f808f0c7287ca6ab6f44771ef85710f2b16",
+  "canonical_header_sha256": "525de27d3cdc807b045b85d1eb22a30667f7e8ef07d16acb3994b1c0d7794bf1",
+  "canonical_test_sha256": "51e8e82ec1554f9febb76358e7f0c7f3d9989246a4997541d116f5a627dd3a42",
+  "business_header_sha256": "4f5a248f32cc7427f5190a2c214a13395f4695868e12fb14af3ce05b03e0a20b",
   "transformation": "namespace/class/include changes only; same placement algorithm and accounting"
 }

@@ -12,6 +12,8 @@
 
 先看[本次工程复核与阶段验收](stages/README.md)，每一步都定义了输入、产物、可支持的结论和不能跨越的推断。旧版DAG实验数据仍保留在[历史结果](results/validation.md)，不会将它冒充新阶段3的独立任务证据。
 
+阶段4现新增独立的[两层调度审查与设计](stages/04-dag/TWO_LEVEL_DESIGN.md)和[透明总池/固定工作量局部性实验v2](experiments/affinity/README.md)：业务不传池编号，支持请求染色、自动后继上下文、登记式RPC续接、fork/all均衡、parent/home策略及真正分支读写依赖。旧DAG和已测基线保留；v2需显式运行 `./scripts/build_stage.sh affinity`，不会改变默认构建和历史实验语义。
+
 再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
 
 ## 获取与依赖

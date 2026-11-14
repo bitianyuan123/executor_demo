@@ -1,0 +1,123 @@
+{
+  "accesses": 1000,
+  "affinity": "cluster",
+  "arrival_hash": "17674638696432103673",
+  "balance_at": "all",
+  "checksum": "14702177910786832223",
+  "completed": 8,
+  "continuation": "parent",
+  "cross_numa": 0,
+  "depths": [
+    2,
+    2
+  ],
+  "duration_with_drain_s": 0.175778403,
+  "failed_or_rejected": 0,
+  "groups": [
+    {
+      "capacity": 1,
+      "cpus": [
+        0
+      ],
+      "numa": 0
+    },
+    {
+      "capacity": 1,
+      "cpus": [
+        1
+      ],
+      "numa": 0
+    }
+  ],
+  "iterations": 10000,
+  "max_inflight": 16,
+  "memory_mb": 64,
+  "migrations": 36,
+  "model": "mixed",
+  "nodes_per_request": 15,
+  "observed_task_cpu_s": 0.005892124,
+  "observed_tasks": 120,
+  "options": {
+    "accesses": "1000",
+    "branch-kb": "16",
+    "depths": "2,2",
+    "iterations": "10000",
+    "max-inflight": "16",
+    "memory-mb": "64",
+    "model": "mixed",
+    "output": "results/review/affinity-v2-smoke/seed-101-outstanding",
+    "policy": "outstanding",
+    "qps": "40",
+    "requests": "8",
+    "seed": "101",
+    "shared-kb": "64",
+    "widths": "4,2"
+  },
+  "origin_ns": 2014442232076768,
+  "page_query_enabled": false,
+  "pages": {
+    "errno": 0,
+    "known": 0,
+    "nodes": {},
+    "sampled": 0,
+    "status": "disabled"
+  },
+  "payload_budget_at_max_inflight": 2633728,
+  "payload_bytes_per_request": 163840,
+  "peak_inflight": 1,
+  "policy": "outstanding",
+  "process_cpu_s": 0.006981389,
+  "qps": 40,
+  "request_mean_ms": 0.5641972500000001,
+  "request_p50_ms": 0.560859,
+  "request_p95_ms": 0.58533,
+  "request_p99_ms": 0.58533,
+  "requests": 8,
+  "routing": {
+    "batch_chunk": 1,
+    "busy_high": 1,
+    "cross_numa": false,
+    "cross_numa_penalty": 0,
+    "estimate_mode": "constant",
+    "estimate_us": 1000,
+    "home_policy": "rr",
+    "max_hops": 4,
+    "max_outstanding": 0,
+    "min_gain": 0,
+    "return_low": 0.5
+  },
+  "schema": "affinity-v2",
+  "seed": 101,
+  "task_wait_p99_ms": 0.111416,
+  "task_wall_p99_ms": 0.148036,
+  "threads_per_pool": 2,
+  "trace": true,
+  "widths": [
+    4,
+    2
+  ],
+  "work_contract": {
+    "accesses": 1000,
+    "arrival": "regular",
+    "branch_bytes": 16384,
+    "depths": [
+      2,
+      2
+    ],
+    "iterations": 10000,
+    "jitter": 0,
+    "long_every": 0,
+    "long_factor": 8,
+    "model": "mixed",
+    "qps": 40,
+    "requests": 8,
+    "seed": 101,
+    "shared_bytes": 65536,
+    "widths": [
+      4,
+      2
+    ],
+    "work_scale_scope": "task"
+  },
+  "work_signature": "{\"work_scale_scope\":\"task\",\"branch_bytes\":16384,\"shared_bytes\":65536,\"long_factor\":8,\"long_every\":0,\"jitter\":0,\"iterations\":10000,\"depths\":[2,2],\"accesses\":1000,\"model\":\"mixed\",\"widths\":[4,2],\"arrival\":\"regular\",\"qps\":40,\"requests\":8,\"seed\":101}"
+}
