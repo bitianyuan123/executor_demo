@@ -1,0 +1,773 @@
+[
+  {
+    "directory": "results/staged/runs/dag/r0-base-cluster-t16",
+    "requests_completed": 36,
+    "edges_checked": 2880,
+    "excluded_requests": 0,
+    "aggregates_ms": {
+      "latency_ms": {
+        "mean": 64.27424327777777,
+        "p99": 77.275634
+      },
+      "path_dispatch_rpc_ms": {
+        "mean": 0.15112475,
+        "p99": 0.178077
+      },
+      "path_submit_to_start_ms": {
+        "mean": 40.57138341666666,
+        "p99": 56.510099
+      },
+      "path_execution_wall_ms": {
+        "mean": 23.551663444444443,
+        "p99": 31.051387
+      },
+      "path_kernel_cpu_ms": {
+        "mean": 6.6584009166666664,
+        "p99": 12.737774
+      },
+      "request_tail_ms": {
+        "mean": 7.166666666666667e-05,
+        "p99": 0.000171
+      },
+      "parallel_sum_execution_wall_ms": {
+        "mean": 378.1944710277778,
+        "p99": 430.934394
+      },
+      "parallel_sum_submit_to_start_ms": {
+        "mean": 661.3640656388889,
+        "p99": 1022.8955189999999
+      }
+    },
+    "requests": [
+      {
+        "request_id": "0",
+        "path_stages": 6,
+        "latency_ms": 77.275634,
+        "path_dispatch_rpc_ms": 0.142405,
+        "path_submit_to_start_ms": 56.510099,
+        "path_execution_wall_ms": 20.62307,
+        "path_kernel_cpu_ms": 6.305466,
+        "request_tail_ms": 6e-05,
+        "parallel_sum_execution_wall_ms": 424.77932400000003,
+        "parallel_sum_submit_to_start_ms": 1022.8955189999999,
+        "path": [
+          "39:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "1",
+        "path_stages": 6,
+        "latency_ms": 63.738599,
+        "path_dispatch_rpc_ms": 0.148774,
+        "path_submit_to_start_ms": 39.551263,
+        "path_execution_wall_ms": 24.038522,
+        "path_kernel_cpu_ms": 6.304895,
+        "request_tail_ms": 4e-05,
+        "parallel_sum_execution_wall_ms": 379.09698499999996,
+        "parallel_sum_submit_to_start_ms": 617.598137,
+        "path": [
+          "39:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "2",
+        "path_stages": 6,
+        "latency_ms": 64.51876,
+        "path_dispatch_rpc_ms": 0.158985,
+        "path_submit_to_start_ms": 38.886975,
+        "path_execution_wall_ms": 25.472751,
+        "path_kernel_cpu_ms": 6.305156,
+        "request_tail_ms": 4.9e-05,
+        "parallel_sum_execution_wall_ms": 387.012674,
+        "parallel_sum_submit_to_start_ms": 608.334466,
+        "path": [
+          "38:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "58:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "3",
+        "path_stages": 6,
+        "latency_ms": 60.715666,
+        "path_dispatch_rpc_ms": 0.15559,
+        "path_submit_to_start_ms": 35.665002,
+        "path_execution_wall_ms": 24.895024,
+        "path_kernel_cpu_ms": 6.306844000000001,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 382.03948599999995,
+        "parallel_sum_submit_to_start_ms": 607.136955,
+        "path": [
+          "39:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "4",
+        "path_stages": 6,
+        "latency_ms": 62.429669,
+        "path_dispatch_rpc_ms": 0.165828,
+        "path_submit_to_start_ms": 35.169827,
+        "path_execution_wall_ms": 27.093964,
+        "path_kernel_cpu_ms": 6.306156,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 427.651903,
+        "parallel_sum_submit_to_start_ms": 598.80731,
+        "path": [
+          "38:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "55:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "5",
+        "path_stages": 6,
+        "latency_ms": 70.831767,
+        "path_dispatch_rpc_ms": 0.178077,
+        "path_submit_to_start_ms": 39.602242,
+        "path_execution_wall_ms": 31.051387,
+        "path_kernel_cpu_ms": 12.737774,
+        "request_tail_ms": 6.1e-05,
+        "parallel_sum_execution_wall_ms": 430.934394,
+        "parallel_sum_submit_to_start_ms": 704.667087,
+        "path": [
+          "36:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "6",
+        "path_stages": 6,
+        "latency_ms": 75.400981,
+        "path_dispatch_rpc_ms": 0.155515,
+        "path_submit_to_start_ms": 51.261558,
+        "path_execution_wall_ms": 23.983848,
+        "path_kernel_cpu_ms": 12.554875,
+        "request_tail_ms": 6e-05,
+        "parallel_sum_execution_wall_ms": 397.383353,
+        "parallel_sum_submit_to_start_ms": 818.401956,
+        "path": [
+          "37:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "7",
+        "path_stages": 6,
+        "latency_ms": 76.196133,
+        "path_dispatch_rpc_ms": 0.170653,
+        "path_submit_to_start_ms": 55.173542,
+        "path_execution_wall_ms": 20.851878,
+        "path_kernel_cpu_ms": 6.305696999999999,
+        "request_tail_ms": 6e-05,
+        "parallel_sum_execution_wall_ms": 361.891167,
+        "parallel_sum_submit_to_start_ms": 1004.679429,
+        "path": [
+          "37:0",
+          "60:0",
+          "44:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "8",
+        "path_stages": 6,
+        "latency_ms": 62.694016,
+        "path_dispatch_rpc_ms": 0.128562,
+        "path_submit_to_start_ms": 37.655062,
+        "path_execution_wall_ms": 24.910343,
+        "path_kernel_cpu_ms": 6.305595,
+        "request_tail_ms": 4.9e-05,
+        "parallel_sum_execution_wall_ms": 395.05884399999997,
+        "parallel_sum_submit_to_start_ms": 597.094534,
+        "path": [
+          "39:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "58:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "9",
+        "path_stages": 6,
+        "latency_ms": 63.274192,
+        "path_dispatch_rpc_ms": 0.128706,
+        "path_submit_to_start_ms": 39.718993,
+        "path_execution_wall_ms": 23.426443,
+        "path_kernel_cpu_ms": 6.305804999999999,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 396.381795,
+        "parallel_sum_submit_to_start_ms": 635.764225,
+        "path": [
+          "39:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "10",
+        "path_stages": 6,
+        "latency_ms": 60.669313,
+        "path_dispatch_rpc_ms": 0.142338,
+        "path_submit_to_start_ms": 39.176321,
+        "path_execution_wall_ms": 21.350594,
+        "path_kernel_cpu_ms": 6.306124999999999,
+        "request_tail_ms": 6e-05,
+        "parallel_sum_execution_wall_ms": 379.38665399999996,
+        "parallel_sum_submit_to_start_ms": 615.186102,
+        "path": [
+          "38:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "58:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "11",
+        "path_stages": 6,
+        "latency_ms": 66.200518,
+        "path_dispatch_rpc_ms": 0.140374,
+        "path_submit_to_start_ms": 43.516964,
+        "path_execution_wall_ms": 22.543131,
+        "path_kernel_cpu_ms": 6.305505000000001,
+        "request_tail_ms": 4.9e-05,
+        "parallel_sum_execution_wall_ms": 402.999324,
+        "parallel_sum_submit_to_start_ms": 634.5898669999999,
+        "path": [
+          "39:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "12",
+        "path_stages": 6,
+        "latency_ms": 63.492802,
+        "path_dispatch_rpc_ms": 0.162072,
+        "path_submit_to_start_ms": 41.615512,
+        "path_execution_wall_ms": 21.715068,
+        "path_kernel_cpu_ms": 6.306755,
+        "request_tail_ms": 0.00015,
+        "parallel_sum_execution_wall_ms": 359.448184,
+        "parallel_sum_submit_to_start_ms": 631.9110969999999,
+        "path": [
+          "39:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "13",
+        "path_stages": 6,
+        "latency_ms": 62.870383,
+        "path_dispatch_rpc_ms": 0.146863,
+        "path_submit_to_start_ms": 38.996255,
+        "path_execution_wall_ms": 23.727215,
+        "path_kernel_cpu_ms": 6.305154,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 420.313724,
+        "parallel_sum_submit_to_start_ms": 571.69719,
+        "path": [
+          "39:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "14",
+        "path_stages": 6,
+        "latency_ms": 60.679086,
+        "path_dispatch_rpc_ms": 0.136638,
+        "path_submit_to_start_ms": 37.381281,
+        "path_execution_wall_ms": 23.161106,
+        "path_kernel_cpu_ms": 6.3052850000000005,
+        "request_tail_ms": 6.1e-05,
+        "parallel_sum_execution_wall_ms": 373.90663,
+        "parallel_sum_submit_to_start_ms": 612.973296,
+        "path": [
+          "38:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "55:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "15",
+        "path_stages": 6,
+        "latency_ms": 64.740771,
+        "path_dispatch_rpc_ms": 0.125787,
+        "path_submit_to_start_ms": 39.72886,
+        "path_execution_wall_ms": 24.885964,
+        "path_kernel_cpu_ms": 6.304944999999999,
+        "request_tail_ms": 0.00016,
+        "parallel_sum_execution_wall_ms": 378.995536,
+        "parallel_sum_submit_to_start_ms": 639.960513,
+        "path": [
+          "39:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "58:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "16",
+        "path_stages": 6,
+        "latency_ms": 64.736899,
+        "path_dispatch_rpc_ms": 0.148204,
+        "path_submit_to_start_ms": 39.481898,
+        "path_execution_wall_ms": 25.106637,
+        "path_kernel_cpu_ms": 6.305497,
+        "request_tail_ms": 0.00016,
+        "parallel_sum_execution_wall_ms": 365.794954,
+        "parallel_sum_submit_to_start_ms": 627.6951339999999,
+        "path": [
+          "38:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "17",
+        "path_stages": 6,
+        "latency_ms": 62.759828,
+        "path_dispatch_rpc_ms": 0.132726,
+        "path_submit_to_start_ms": 39.449137,
+        "path_execution_wall_ms": 23.177915,
+        "path_kernel_cpu_ms": 6.305405,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 394.43237400000004,
+        "parallel_sum_submit_to_start_ms": 637.144998,
+        "path": [
+          "37:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "18",
+        "path_stages": 6,
+        "latency_ms": 65.277243,
+        "path_dispatch_rpc_ms": 0.140043,
+        "path_submit_to_start_ms": 43.770178,
+        "path_execution_wall_ms": 21.366953,
+        "path_kernel_cpu_ms": 6.306565,
+        "request_tail_ms": 6.9e-05,
+        "parallel_sum_execution_wall_ms": 343.859382,
+        "parallel_sum_submit_to_start_ms": 648.090245,
+        "path": [
+          "39:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "19",
+        "path_stages": 6,
+        "latency_ms": 60.701115,
+        "path_dispatch_rpc_ms": 0.170331,
+        "path_submit_to_start_ms": 35.542615,
+        "path_execution_wall_ms": 24.988118,
+        "path_kernel_cpu_ms": 6.3052459999999995,
+        "request_tail_ms": 5.1e-05,
+        "parallel_sum_execution_wall_ms": 372.153211,
+        "parallel_sum_submit_to_start_ms": 616.937976,
+        "path": [
+          "36:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "58:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "20",
+        "path_stages": 6,
+        "latency_ms": 60.973348,
+        "path_dispatch_rpc_ms": 0.153546,
+        "path_submit_to_start_ms": 35.957429,
+        "path_execution_wall_ms": 24.862323,
+        "path_kernel_cpu_ms": 6.3058760000000005,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 355.189305,
+        "parallel_sum_submit_to_start_ms": 633.861056,
+        "path": [
+          "37:0",
+          "60:0",
+          "45:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "21",
+        "path_stages": 6,
+        "latency_ms": 61.794789,
+        "path_dispatch_rpc_ms": 0.131715,
+        "path_submit_to_start_ms": 38.770602,
+        "path_execution_wall_ms": 22.892421,
+        "path_kernel_cpu_ms": 6.305834999999999,
+        "request_tail_ms": 5.1e-05,
+        "parallel_sum_execution_wall_ms": 368.561312,
+        "parallel_sum_submit_to_start_ms": 641.580297,
+        "path": [
+          "38:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "22",
+        "path_stages": 6,
+        "latency_ms": 63.991032,
+        "path_dispatch_rpc_ms": 0.174691,
+        "path_submit_to_start_ms": 42.273039,
+        "path_execution_wall_ms": 21.543142,
+        "path_kernel_cpu_ms": 6.305586,
+        "request_tail_ms": 0.00016,
+        "parallel_sum_execution_wall_ms": 372.578504,
+        "parallel_sum_submit_to_start_ms": 752.318809,
+        "path": [
+          "39:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "23",
+        "path_stages": 6,
+        "latency_ms": 60.652618,
+        "path_dispatch_rpc_ms": 0.156232,
+        "path_submit_to_start_ms": 39.644402,
+        "path_execution_wall_ms": 20.851934,
+        "path_kernel_cpu_ms": 6.305204000000001,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 361.677801,
+        "parallel_sum_submit_to_start_ms": 628.253297,
+        "path": [
+          "39:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "58:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "24",
+        "path_stages": 6,
+        "latency_ms": 63.40014,
+        "path_dispatch_rpc_ms": 0.173216,
+        "path_submit_to_start_ms": 39.427308,
+        "path_execution_wall_ms": 23.799445,
+        "path_kernel_cpu_ms": 6.304983999999999,
+        "request_tail_ms": 0.000171,
+        "parallel_sum_execution_wall_ms": 360.431361,
+        "parallel_sum_submit_to_start_ms": 629.4031779999999,
+        "path": [
+          "39:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "25",
+        "path_stages": 6,
+        "latency_ms": 64.244111,
+        "path_dispatch_rpc_ms": 0.148489,
+        "path_submit_to_start_ms": 41.798128,
+        "path_execution_wall_ms": 22.297444,
+        "path_kernel_cpu_ms": 6.305224000000001,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 382.444923,
+        "parallel_sum_submit_to_start_ms": 652.5806530000001,
+        "path": [
+          "39:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "26",
+        "path_stages": 6,
+        "latency_ms": 62.869517,
+        "path_dispatch_rpc_ms": 0.160865,
+        "path_submit_to_start_ms": 37.501545,
+        "path_execution_wall_ms": 25.207038,
+        "path_kernel_cpu_ms": 6.309485000000001,
+        "request_tail_ms": 6.9e-05,
+        "parallel_sum_execution_wall_ms": 337.131775,
+        "parallel_sum_submit_to_start_ms": 655.370746,
+        "path": [
+          "36:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "27",
+        "path_stages": 6,
+        "latency_ms": 63.60256,
+        "path_dispatch_rpc_ms": 0.156895,
+        "path_submit_to_start_ms": 39.64871,
+        "path_execution_wall_ms": 23.796875,
+        "path_kernel_cpu_ms": 6.306274999999999,
+        "request_tail_ms": 8e-05,
+        "parallel_sum_execution_wall_ms": 323.96407400000004,
+        "parallel_sum_submit_to_start_ms": 685.597572,
+        "path": [
+          "38:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "28",
+        "path_stages": 6,
+        "latency_ms": 60.872794,
+        "path_dispatch_rpc_ms": 0.167612,
+        "path_submit_to_start_ms": 37.663614,
+        "path_execution_wall_ms": 23.041498,
+        "path_kernel_cpu_ms": 6.304405,
+        "request_tail_ms": 7e-05,
+        "parallel_sum_execution_wall_ms": 393.346703,
+        "parallel_sum_submit_to_start_ms": 592.98935,
+        "path": [
+          "39:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "58:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "29",
+        "path_stages": 6,
+        "latency_ms": 62.879992,
+        "path_dispatch_rpc_ms": 0.152148,
+        "path_submit_to_start_ms": 40.893507,
+        "path_execution_wall_ms": 21.834297,
+        "path_kernel_cpu_ms": 6.305174,
+        "request_tail_ms": 4e-05,
+        "parallel_sum_execution_wall_ms": 364.489865,
+        "parallel_sum_submit_to_start_ms": 666.973112,
+        "path": [
+          "36:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "30",
+        "path_stages": 6,
+        "latency_ms": 63.387709,
+        "path_dispatch_rpc_ms": 0.138666,
+        "path_submit_to_start_ms": 39.729369,
+        "path_execution_wall_ms": 23.519624,
+        "path_kernel_cpu_ms": 6.305294,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 377.25047600000005,
+        "parallel_sum_submit_to_start_ms": 619.018867,
+        "path": [
+          "39:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "31",
+        "path_stages": 6,
+        "latency_ms": 64.393467,
+        "path_dispatch_rpc_ms": 0.167974,
+        "path_submit_to_start_ms": 43.848556,
+        "path_execution_wall_ms": 20.376897,
+        "path_kernel_cpu_ms": 6.306366,
+        "request_tail_ms": 4e-05,
+        "parallel_sum_execution_wall_ms": 349.02846600000004,
+        "parallel_sum_submit_to_start_ms": 682.418667,
+        "path": [
+          "38:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "32",
+        "path_stages": 6,
+        "latency_ms": 64.752507,
+        "path_dispatch_rpc_ms": 0.139903,
+        "path_submit_to_start_ms": 39.498376,
+        "path_execution_wall_ms": 25.114179,
+        "path_kernel_cpu_ms": 6.3050559999999995,
+        "request_tail_ms": 4.9e-05,
+        "parallel_sum_execution_wall_ms": 380.302944,
+        "parallel_sum_submit_to_start_ms": 614.5404669999999,
+        "path": [
+          "38:0",
+          "60:0",
+          "49:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "33",
+        "path_stages": 6,
+        "latency_ms": 63.276615,
+        "path_dispatch_rpc_ms": 0.12905,
+        "path_submit_to_start_ms": 42.939775,
+        "path_execution_wall_ms": 20.207739,
+        "path_kernel_cpu_ms": 6.306745,
+        "request_tail_ms": 5.1e-05,
+        "parallel_sum_execution_wall_ms": 366.527625,
+        "parallel_sum_submit_to_start_ms": 630.9115370000001,
+        "path": [
+          "39:0",
+          "60:0",
+          "48:0",
+          "61:0",
+          "59:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "34",
+        "path_stages": 6,
+        "latency_ms": 62.636025,
+        "path_dispatch_rpc_ms": 0.171871,
+        "path_submit_to_start_ms": 37.493524,
+        "path_execution_wall_ms": 24.97058,
+        "path_kernel_cpu_ms": 6.304984999999999,
+        "request_tail_ms": 5e-05,
+        "parallel_sum_execution_wall_ms": 385.407863,
+        "parallel_sum_submit_to_start_ms": 644.212127,
+        "path": [
+          "39:0",
+          "60:0",
+          "47:0",
+          "61:0",
+          "57:0",
+          "62:0"
+        ]
+      },
+      {
+        "request_id": "35",
+        "path_stages": 6,
+        "latency_ms": 60.942159,
+        "path_dispatch_rpc_ms": 0.139147,
+        "path_submit_to_start_ms": 35.628335,
+        "path_execution_wall_ms": 25.174517,
+        "path_kernel_cpu_ms": 6.321194,
+        "request_tail_ms": 0.00016,
+        "parallel_sum_execution_wall_ms": 363.148062,
+        "parallel_sum_submit_to_start_ms": 627.510592,
+        "path": [
+          "37:0",
+          "60:0",
+          "46:0",
+          "61:0",
+          "56:0",
+          "62:0"
+        ]
+      }
+    ],
+    "limitations": [
+      "The path uses the latest observed predecessor at each join; it is not an intrinsic service-only critical path.",
+      "The latest recorded CPU finish can differ from the branch that performs the final dependency decrement and selects join parent.",
+      "Submit-to-start combines Folly work, wakeup, and kernel scheduling; it is not kernel runq delay.",
+      "Dispatch/RPC includes admission lag, producer fanout, async timer, and successor submission.",
+      "CPU is measured only around the synthetic kernel; execution wall minus CPU is not a direct runq measurement.",
+      "Per-request parallel sums overlap and are not additive components of request latency.",
+      "The p99 of individual components does not add to request p99; decomposition is exact per request."
+    ]
+  }
+]

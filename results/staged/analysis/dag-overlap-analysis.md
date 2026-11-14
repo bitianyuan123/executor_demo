@@ -1,0 +1,81 @@
+# 实测汇总
+
+所有时延来自实际输出；CPU 工作以线程 CPU 时钟计量。
+
+| run | 完成请求 | 状态计数 | 均值 ms | p99 ms | 入队等待均值 ms | 算子 kernel CPU s | 迁移次数 |
+|---|---:|---|---:|---:|---:|---:|---:|
+| r0-route-sticky-all | 72 | {'completed': 72} | 72.567 | 167.268 | 8.824 | 17.686 | 2071.000 |
+| r0-base-cluster-t16 | 72 | {'completed': 72} | 146.904 | 465.788 | 21.721 | 18.076 | 0.000 |
+| r0-route-fanout-all | 72 | {'completed': 72} | 77.197 | 226.078 | 9.030 | 17.876 | 2036.000 |
+| r0-route-borrow-all | 72 | {'completed': 72} | 70.585 | 123.912 | 8.767 | 17.666 | 2142.000 |
+| r1-route-sticky-all | 72 | {'completed': 72} | 69.979 | 138.714 | 8.557 | 17.497 | 2046.000 |
+| r1-route-fanout-all | 72 | {'completed': 72} | 68.935 | 116.315 | 8.543 | 17.542 | 2053.000 |
+| r1-base-cluster-t16 | 72 | {'completed': 72} | 124.201 | 133.796 | 19.450 | 17.307 | 0.000 |
+| r1-route-borrow-all | 72 | {'completed': 72} | 70.798 | 145.498 | 8.698 | 17.654 | 2146.000 |
+
+## 负载与任务入队等待的相关性
+
+| run | 指标 | 样本数 | Pearson | Spearman |
+|---|---|---:|---:|---:|
+| r0-route-sticky-all | queue_before | 4536 | 0.929 | 0.977 |
+| r0-route-sticky-all | pending_before | 4536 | 0.930 | 0.977 |
+| r0-route-sticky-all | inflight_before | 4536 | -0.033 | -0.180 |
+| r0-route-sticky-all | outstanding_before | 4536 | 0.928 | 0.947 |
+| r0-route-sticky-all | outstanding_cpu_us_before | 4536 | 0.932 | 0.954 |
+| r0-route-sticky-all | chosen_load_us | 4536 | 0.928 | 0.976 |
+| r0-base-cluster-t16 | queue_before | 4536 | 0.933 | 0.982 |
+| r0-base-cluster-t16 | pending_before | 4536 | 0.932 | 0.982 |
+| r0-base-cluster-t16 | inflight_before | 4536 | 0.107 | -0.124 |
+| r0-base-cluster-t16 | outstanding_before | 4536 | 0.935 | 0.970 |
+| r0-base-cluster-t16 | outstanding_cpu_us_before | 4536 | 0.937 | 0.972 |
+| r0-base-cluster-t16 | chosen_load_us | 4536 | 0.925 | 0.975 |
+| r0-route-fanout-all | queue_before | 4536 | 0.927 | 0.977 |
+| r0-route-fanout-all | pending_before | 4536 | 0.926 | 0.975 |
+| r0-route-fanout-all | inflight_before | 4536 | -0.050 | -0.166 |
+| r0-route-fanout-all | outstanding_before | 4536 | 0.908 | 0.938 |
+| r0-route-fanout-all | outstanding_cpu_us_before | 4536 | 0.912 | 0.945 |
+| r0-route-fanout-all | chosen_load_us | 4536 | 0.924 | 0.973 |
+| r0-route-borrow-all | queue_before | 4536 | 0.939 | 0.976 |
+| r0-route-borrow-all | pending_before | 4536 | 0.939 | 0.976 |
+| r0-route-borrow-all | inflight_before | 4536 | -0.077 | -0.183 |
+| r0-route-borrow-all | outstanding_before | 4536 | 0.929 | 0.949 |
+| r0-route-borrow-all | outstanding_cpu_us_before | 4536 | 0.932 | 0.956 |
+| r0-route-borrow-all | chosen_load_us | 4536 | 0.938 | 0.975 |
+| r1-route-sticky-all | queue_before | 4536 | 0.953 | 0.979 |
+| r1-route-sticky-all | pending_before | 4536 | 0.954 | 0.978 |
+| r1-route-sticky-all | inflight_before | 4536 | -0.157 | -0.250 |
+| r1-route-sticky-all | outstanding_before | 4536 | 0.946 | 0.948 |
+| r1-route-sticky-all | outstanding_cpu_us_before | 4536 | 0.950 | 0.955 |
+| r1-route-sticky-all | chosen_load_us | 4536 | 0.952 | 0.978 |
+| r1-route-fanout-all | queue_before | 4536 | 0.949 | 0.981 |
+| r1-route-fanout-all | pending_before | 4536 | 0.949 | 0.980 |
+| r1-route-fanout-all | inflight_before | 4536 | -0.153 | -0.228 |
+| r1-route-fanout-all | outstanding_before | 4536 | 0.944 | 0.955 |
+| r1-route-fanout-all | outstanding_cpu_us_before | 4536 | 0.947 | 0.961 |
+| r1-route-fanout-all | chosen_load_us | 4536 | 0.948 | 0.981 |
+| r1-base-cluster-t16 | queue_before | 4536 | 0.993 | 0.993 |
+| r1-base-cluster-t16 | pending_before | 4536 | 0.993 | 0.994 |
+| r1-base-cluster-t16 | inflight_before | 4536 | -0.138 | -0.215 |
+| r1-base-cluster-t16 | outstanding_before | 4536 | 0.994 | 0.991 |
+| r1-base-cluster-t16 | outstanding_cpu_us_before | 4536 | 0.994 | 0.991 |
+| r1-base-cluster-t16 | chosen_load_us | 4536 | 0.993 | 0.993 |
+| r1-route-borrow-all | queue_before | 4536 | 0.922 | 0.975 |
+| r1-route-borrow-all | pending_before | 4536 | 0.922 | 0.975 |
+| r1-route-borrow-all | inflight_before | 4536 | -0.080 | -0.147 |
+| r1-route-borrow-all | outstanding_before | 4536 | 0.907 | 0.944 |
+| r1-route-borrow-all | outstanding_cpu_us_before | 4536 | 0.911 | 0.951 |
+| r1-route-borrow-all | chosen_load_us | 4536 | 0.920 | 0.973 |
+
+## 解释边界
+
+- 每秒 p99 在低 QPS 下通常接近当秒最大值；跨运行比较请使用多轮独立重复，保留每轮结果。
+- 任务样本共享 request、池和时间段，不能当作独立重复；本报告没有对任务相关系数提供虚假的独立样本显著性。
+- JSON 中 request 重采样均值区间只供描述；请求仍可能时间相关，生产推断宜按完整重复运行或时间块 bootstrap。
+- 任务工作量、扇出、策略选池和过载拒绝均会混杂相关性；JSON 提供请求初始负载、计划工作量相关性及少量同工作量分层。
+- wall-cpu 包含抢占、阻塞及计时开销，不能直接命名为 runqueue 时间；请配合 proc.csv 或 perf sched。
+- 算子 kernel CPU 秒不包含后继路由、Folly 队列/唤醒、日志和 AIO；JSON 另有外部采样的 executor CPU，采样首尾可能漏计。关闭 task log 时无样本标为 n/a。
+- 零队列深度不表示 CPU 空闲。queue depth 的语义取决于 Folly 队列和信号量；本实验还记录 submitted-not-started。
+- 拒绝或删失请求必须一起报告；仅比较完成请求 p99 可能奖励主动丢弃慢请求的策略。
+- 本地 VM 的结果不证明 ARM 的 NUMA/缓存迁移成本或生产收益。
+
+矩阵计划 8 轮；有效完整运行 8 轮；异常/不完整 0 轮。所有退出码与命令见 manifest.json。

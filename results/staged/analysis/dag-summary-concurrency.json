@@ -1,0 +1,242 @@
+[
+  {
+    "case": "base-none-t16",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.46447250013058156
+  },
+  {
+    "case": "shape-late-borrow",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.440061088716757
+  },
+  {
+    "case": "base-cluster-t16",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.77147263681824
+  },
+  {
+    "case": "base-none-t2",
+    "repeat": 0,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.7401968830962165
+  },
+  {
+    "case": "shape-even-home",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7688371188910758
+  },
+  {
+    "case": "base-numa-t2",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7267716715329502
+  },
+  {
+    "case": "base-numa-t16",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.432437242884162
+  },
+  {
+    "case": "shape-late-home",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7572233975701192
+  },
+  {
+    "case": "stress-tail-sticky",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.5819745059245397
+  },
+  {
+    "case": "shape-deep-borrow",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.6070361492921303
+  },
+  {
+    "case": "stress-rpc-sticky",
+    "repeat": 0,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 1.1913651716327331
+  },
+  {
+    "case": "shape-even-borrow",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.4280551445755713
+  },
+  {
+    "case": "route-sticky-all",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.4486221454933409
+  },
+  {
+    "case": "route-borrow-all",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.4295077674706568
+  },
+  {
+    "case": "base-cluster-t2",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7360579578493034
+  },
+  {
+    "case": "route-fanout-initial",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.547866249985712
+  },
+  {
+    "case": "shape-deep-home",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7841240021609562
+  },
+  {
+    "case": "stress-tail-home",
+    "repeat": 0,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.9125774138319158
+  },
+  {
+    "case": "stress-rpc-home",
+    "repeat": 0,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 1.311996084066674
+  },
+  {
+    "case": "route-fanout-all",
+    "repeat": 0,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.4396973558361414
+  },
+  {
+    "case": "base-none-t16",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.45077678010600203
+  },
+  {
+    "case": "shape-even-borrow",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.43064720639541265
+  },
+  {
+    "case": "stress-rpc-sticky",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 1.2218827831745085
+  },
+  {
+    "case": "route-fanout-all",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.4332323125514088
+  },
+  {
+    "case": "stress-rpc-home",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 1.318259463323777
+  },
+  {
+    "case": "base-numa-t2",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.7376930481975255
+  },
+  {
+    "case": "stress-tail-sticky",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.5171902587054692
+  },
+  {
+    "case": "stress-tail-home",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.8616587161124195
+  },
+  {
+    "case": "base-none-t2",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.7398572509031327
+  },
+  {
+    "case": "shape-late-home",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.747597401742137
+  },
+  {
+    "case": "shape-even-home",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7560544719194222
+  },
+  {
+    "case": "route-fanout-initial",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.5457496584444791
+  },
+  {
+    "case": "shape-deep-borrow",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.5900833393269352
+  },
+  {
+    "case": "base-cluster-t2",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.729236999158357
+  },
+  {
+    "case": "shape-late-borrow",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.42345872169397497
+  },
+  {
+    "case": "route-borrow-all",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.44757661906346097
+  },
+  {
+    "case": "base-cluster-t16",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7595764673223816
+  },
+  {
+    "case": "shape-deep-home",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.7838502137483182
+  },
+  {
+    "case": "base-numa-t16",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.42538291449867305
+  },
+  {
+    "case": "route-sticky-all",
+    "repeat": 1,
+    "peak_open_requests": 1,
+    "mean_open_during_admission": 0.44061081988950784
+  }
+]

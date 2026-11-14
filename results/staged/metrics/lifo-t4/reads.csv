@@ -1,0 +1,17 @@
+state,threads,metric,samples,batch,mean_ns_per_call,p50_batch_ns_per_call,p99_batch_ns_per_call,min_batch_ns_per_call,max_batch_ns_per_call
+idle,4,loop_baseline,80,100,0.8965,0.89,1.6,0.69,1.6
+idle,4,native_queue,80,100,2.69775,2.7,3.2,2.59,3.2
+idle,4,relaxed_one_load,80,100,0.613875,0.61,1.01,0.49,1.01
+idle,4,relaxed_three_loads,80,100,0.851,0.8,1.29,0.8,1.29
+idle,4,pending_api,80,100,6.67275,6.61,8.1,6.4,8.1
+idle,4,pool_stats_light,80,100,8.58713,8.6,8.9,8.49,8.9
+idle,4,pool_stats,80,100,44.8578,44.8,45.2,44.79,45.2
+idle,4,used_cpu_time,80,10,590.154,575.1,1200,568.9,1200
+cpu_busy_with_backlog,4,loop_baseline,80,100,0.78875,0.8,1.2,0.7,1.2
+cpu_busy_with_backlog,4,native_queue,80,100,3.6415,3.6,3.9,3.5,3.9
+cpu_busy_with_backlog,4,relaxed_one_load,80,100,0.79,0.8,1.2,0.7,1.2
+cpu_busy_with_backlog,4,relaxed_three_loads,80,100,1.16988,1.2,1.4,1.09,1.4
+cpu_busy_with_backlog,4,pending_api,80,100,8.64363,8.6,8.91,8.49,8.91
+cpu_busy_with_backlog,4,pool_stats_light,80,100,12.9122,12.9,13.3,12.8,13.3
+cpu_busy_with_backlog,4,pool_stats,80,100,48.3916,48.4,48.51,48.2,48.51
+cpu_busy_with_backlog,4,used_cpu_time,80,10,857.235,856,920,849,920

@@ -87,19 +87,26 @@ class DemoTests(unittest.TestCase):
                 if not task_log:
                     continue
                 task_map = {(int(t["node_id"]), int(t["stage"])): t for t in by_request[r["request_id"]]}
-                fanout = int(r["fanout"])
-                join = task_map[(fanout * chain, 0)]
-                for branch in range(fanout):
-                    previous_finish = 0
-                    for depth in range(chain):
-                        node = branch * chain + depth
+                node_ids = {node for node, _ in task_map}
+                self.assertEqual(len(task_map), len(by_request[r["request_id"]]), "duplicate node stage")
+                self.assertEqual(node_ids, set(range(int(r["cpu_nodes"]))))
+                self.assertEqual(sum(t["kind"] == "join" for t in task_map.values()), int(r["waves"]))
+                target_cpu = sum(float(t["work_target_us"]) for t in task_map.values())
+                self.assertEqual(target_cpu, int(r["planned_cpu_us"]))
+                for (node, stage), task in task_map.items():
+                    dependencies = [int(x) for x in task["predecessors"].split(";") if x]
+                    for dependency in dependencies:
+                        # RPC continuation depends on stage 0 of itself. Graph edges
+                        # depend on the predecessor's final stage, after its RPC.
+                        previous = task_map[(dependency, 0)] if dependency == node else task_map.get((dependency, 1), task_map[(dependency, 0)])
+                        self.assertGreaterEqual(int(task["submit_ns"]), int(previous["finish_ns"]))
+                    if stage == 1:
                         first = task_map[(node, 0)]
-                        self.assertGreaterEqual(int(first["submit_ns"]), previous_finish)
-                        last = task_map.get((node, 1), first)
-                        if last is not first:
-                            self.assertGreaterEqual(int(last["submit_ns"]), int(first["finish_ns"]) + metadata["config"]["rpc_delay_us"] * 1000)
-                        previous_finish = int(last["finish_ns"])
-                    self.assertGreaterEqual(int(join["submit_ns"]), previous_finish)
+                        self.assertGreaterEqual(int(task["submit_ns"]), int(first["finish_ns"]) + metadata["config"]["rpc_delay_us"] * 1000)
+                    if task["kind"] == "join":
+                        wave = int(task["wave"])
+                        width = int(r["fanout"]) if metadata["config"]["graph"] == "chains" else int(metadata["config"]["wave_widths"].split(",")[wave])
+                        self.assertEqual(len(dependencies), width)
                 self.assertTrue(all(t["status"] == "completed" for t in task_map.values()))
         seconds = rows(out / "seconds.csv")
         self.assertEqual(sum(int(r["completed"]) for r in seconds), summary["completed"])
@@ -128,6 +135,35 @@ class DemoTests(unittest.TestCase):
         _, tasks, _ = self.validate(out)
         self.assertEqual(len(tasks), 6 * (3 * 2 * 2 + 1))
         self.assertTrue(all(t["work_estimate_us"] == "77" for t in tasks))
+
+    def test_waves_multiple_dependencies_and_repeated_forks(self):
+        for rpc in ("0", "1"):
+            out = self.run_demo("--graph", "waves", "--wave-widths", "5,1,3", "--wave-depths", "2,3,1",
+                                "--rpc-prob", rpc, "--rpc-delay-us", "100", "--policy", "sticky")
+            requests, tasks, _ = self.validate(out)
+            self.assertTrue(all(r["operator_nodes"] == "16" and r["cpu_nodes"] == "19" for r in requests))
+            self.assertEqual(len(tasks), 6 * (16 * (2 if rpc == "1" else 1) + 3))
+            self.assertEqual({t["wave"] for t in tasks}, {"0", "1", "2"})
+
+    def test_fanout_balance_boundary(self):
+        for boundary in ("initial", "all"):
+            out = self.run_demo("--graph", "waves", "--wave-widths", "8,2,6", "--wave-depths", "1,1,2",
+                                "--policy", "fanout", "--balance-forks", boundary, "--rpc-prob", "1",
+                                "--rpc-delay-us", "100")
+            _, tasks, _ = self.validate(out)
+            eligible = [t for t in tasks if t["balance_eligible"] == "1"]
+            self.assertEqual(len(eligible), 6 * (8 if boundary == "initial" else 16))
+            for task in tasks:
+                should_balance = task["is_fanout"] == "1" and (boundary == "all" or task["wave"] == "0")
+                self.assertEqual(task["balance_eligible"] == "1", should_balance)
+                if not should_balance:
+                    self.assertEqual(task["chosen_group"], task["parent_group"])
+
+    def test_waves_cutoff(self):
+        out = self.run_demo("--graph", "waves", "--wave-widths", "8,4,2", "--wave-depths", "1,2,1",
+                            "--requests", "1", "--cpu-us", "200000", "--drain-seconds", "0")
+        self.validate(out, complete=False)
+        self.assertEqual(json.loads((out / "summary.json").read_text())["censored"], 1)
 
     def test_fixed_iteration_work(self):
         out = self.run_demo("--work-mode", "iterations", "--iterations-per-us", "20", "--memory-kb", "8")
@@ -175,7 +211,7 @@ class DemoTests(unittest.TestCase):
         self.assertTrue(metadata["effective_cpuset_overlap"])
 
     def test_invalid_and_overwrite_refused(self):
-        for args in (("--affinity", "cluster"), ("--cpu-us", "-1"), ("--qps", "nan"), ("--policy", "bad"), ("--wake-us", "1"), ("--queue", "throttled", "--wake-us", "18446744073709551615")):
+        for args in (("--graph", "waves"), ("--wave-widths", "2,3"), ("--graph", "waves", "--wave-widths", "2,3", "--wave-depths", "1"), ("--balance-forks", "bad"), ("--affinity", "cluster"), ("--cpu-us", "-1"), ("--qps", "nan"), ("--policy", "bad"), ("--wake-us", "1"), ("--queue", "throttled", "--wake-us", "18446744073709551615")):
             result = subprocess.run([BINARY, "--output", str(Path(self.temp.name) / "invalid"), *args], text=True, capture_output=True)
             self.assertNotEqual(result.returncode, 0)
         out = self.run_demo()

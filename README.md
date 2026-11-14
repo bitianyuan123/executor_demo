@@ -1,19 +1,25 @@
-# Executor 亲和、负载与图计算时延实验
+# Folly线程池：五阶段分析与独立实验
 
-本工程使用**真实 Folly CPUThreadPoolExecutor**，提供可重复的开放环流量、扇出链与汇合 DAG、异步 RPC 定时回调、多池路由和逐任务观测。本地 x86 结果用于验证机制，不代表 ARM NUMA 的性能收益。
+按业务理解 → Folly机制 → 独立任务负载 → 复杂DAG → 能力归属逐步验证。**一个仓库管理五个阶段，但简单任务实验、DAG实验和成本探针是独立CMake工程**，无需一次运行所有实验。阶段2～4仅依赖原版Folly；阶段5才需要实验扩展。
 
-- Demo 分支：`experiment/affinity-load-20261114`
-- Folly 分支：`experiment/grouped-executor-20261114`
-- Folly 基线：tag `v2026.10.26.00`，commit `c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c`
-- 本次扩展固定提交：`150b684e0679de6962755be2d1411e41d4bd6b4c`，见 [依赖锁定文件](dependencies.lock.json)。
-- 扩展：`folly/executors/experimental/AffinityExecutor.h`；组合现有 CPU 池，不修改默认 CPUThreadPoolExecutor 行为。
+| 阶段 | 独立交付 | 要回答的问题 | 验证入口 |
+|---|---|---|---|
+| 1 | [真实业务分析报告](stages/01-business/README.md) | 已知负载、局部突发、容量与未知项 | 核对业务口径和目标机拓扑 |
+| 2 | [Folly分析报告](stages/02-folly/README.md) | 任务队列、唤醒、内核runq、负载获取的成本与覆盖范围 | [读取/维护成本探针](experiments/metrics/README.md) |
+| 3 | [独立任务实验设计与指南](stages/03-independent/README.md) | 排除DAG与迁移后，负载怎样影响任务平均/p99 | `experiments/independent` |
+| 4 | [复杂DAG设计与指南](stages/04-dag/README.md) | 初始大扇出、依赖、多次fork、RPC和亲和策略 | `experiments/dag`，默认业务侧路由 |
+| 5 | [业务侧与Folly扩展的判断、工程和对照](stages/05-placement/README.md) | 同一能力该放在哪里，集成是否等价 | 业务版与可选库版分别构建 |
 
-## 编译与测试
+先看[本次工程复核与阶段验收](stages/README.md)，每一步都定义了输入、产物、可支持的结论和不能跨越的推断。旧版DAG实验数据仍保留在[历史结果](results/validation.md)，不会将它冒充新阶段3的独立任务证据。
 
-Linux、C++20、CMake >= 3.20、Ninja、Python 3；验证环境为 Debian 13 / GCC 14。4GB 环境建议 `BUILD_JOBS=1`。首次完整 Folly 编译需要一定时间和磁盘空间。
+## 获取与依赖
+
+- Demo分支：`experiment/affinity-load-20261114`。
+- 原版Folly基线：tag `v2026.10.26.00`，commit `c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c`。
+- 可选Folly扩展分支：`experiment/grouped-executor-20261114`，固定提交见[锁定文件](dependencies.lock.json)。
+- Linux、C++20、CMake≥3.20、Ninja、Python3；验证环境为Debian13/GCC14。
 
 ```bash
-# Debian/Ubuntu；其他发行版使用等价开发包。
 sudo apt-get update
 sudo apt-get install -y build-essential cmake ninja-build git python3 \
   libboost-context-dev libboost-filesystem-dev libboost-program-options-dev \
@@ -22,45 +28,30 @@ sudo apt-get install -y build-essential cmake ninja-build git python3 \
   libgoogle-glog-dev libssl-dev libunwind-dev liblz4-dev libzstd-dev \
   libsnappy-dev zlib1g-dev libiberty-dev libgtest-dev libfast-float-dev
 
-git clone --branch experiment/grouped-executor-20261114 git@github.com:bitianyuan123/folly.git
-git clone --branch experiment/affinity-load-20261114 git@github.com:bitianyuan123/executor_demo.git
-cd executor_demo
+# 前四阶段可以直接使用原版tag
+ git clone --branch v2026.10.26.00 git@github.com:bitianyuan123/folly.git
+ git clone --branch experiment/affinity-load-20261114 git@github.com:bitianyuan123/executor_demo.git
+ cd executor_demo
+# 首次完整编译、安装Folly并编译各独立工程；4GB建议-j1
 BUILD_JOBS=1 ./scripts/build.sh
-./build/executor_demo --help
-ctest --test-dir build --output-on-failure
 ```
 
-目录不相邻时设置 `FOLLY_SOURCE_DIR=/path/to/folly`；安装目录可设置 `FOLLY_PREFIX`。源码头文件与链接的 Folly 必须来自相同基线，不能任意混用系统版本。
-
-## 快速试跑
+已有匹配版本的Folly安装时，无需重新编译Folly。`FOLLY_PREFIX`默认为相邻 `../folly/_install`，可显式指定；只构建所需阶段：
 
 ```bash
-python3 scripts/topology.py --output results/my-topology.json
-
-# 六个逻辑线程组共享本机 CPU，没有假造六个物理 cluster。
-./build/executor_demo --output results/local/smoke \
-  --pools 6 --threads 4 --affinity none --policy home \
-  --qps 12 --duration 5 --fanout-min 20 --fanout-max 40 \
-  --chain-length 2 --cpu-us 1000 --seed 42
-python3 scripts/analyze.py results/local/smoke --output results/local/smoke-analysis
-
-# 两个 CPU 分区的机制对照；串行运行，每轮随机案例顺序。
-python3 scripts/run_matrix.py --output results/local/matrix --repeats 3 \
-  --only split-t2-home,split-t2-borrow,split-t16-home,split-t16-borrow
+FOLLY_PREFIX=/path/to/folly/install BUILD_JOBS=1 ./scripts/build_stage.sh metrics
+FOLLY_PREFIX=/path/to/folly/install BUILD_JOBS=1 ./scripts/build_stage.sh independent
+FOLLY_PREFIX=/path/to/folly/install BUILD_JOBS=1 ./scripts/build_stage.sh dag
 ```
 
-`--cpu-us` 是每段算子的线程 CPU 时间，不是 sleep 或墙钟忙等。每请求总 CPU 需求约为 `fanout × chain-length × cpu-us`，还需加抖动、长尾和汇合节点。在本机直接使用业务的 100ms 和大扇出，可能很快过载。
+对应产物位于 `build-metrics/metric_cost_bench`、`build-independent/independent_load`、`build-dag/executor_demo`。DAG可执行文件保留旧名以兼容历史命令，metadata明确记录business后端。各目录也可以直接 `cmake -S experiments/<目录> -B <构建目录> -DCMAKE_PREFIX_PATH=...`，不依赖根CMake。
 
-## 阅读顺序
+阶段5再将Folly源码切到实验分支，按其独立指南构建 `build-placement/executor_demo` 与 `build-placement/dag_folly`。源码头文件、生成配置和链接库必须来自兼容基线，不可随意混用系统Folly版本。
 
-| 文档 | 内容 |
-|---|---|
-| [整体模型](docs/model.md) | 业务工作量、容量、扇出、关键路径与内核调度 |
-| [Folly 唤醒源码](docs/folly-wakeup.md) | 入队、信号量、唤醒、取任务及统计接口 |
-| [设计](docs/design.md) | 指标、策略、低扰动计量及业务侧 / Folly 层职责 |
-| [实验指南](docs/experiments.md) | ARM 部署、负载扫点、RPC、迁移、perf 与统计方法 |
-| [生产复核清单](docs/production-review.md) | 当前未知项、风险与业务环境待验证证据 |
-| [本地结果](results/validation.md) | 实际编译、测试、实验结果及其限制 |
-| [内核追踪诊断](docs/perf-diagnostic.md) | 独立 perf 轮次的真实调度等待及追踪扰动 |
+## 在测试环境分步执行
 
-五种路由策略为 `home`、`borrow`、`sticky`、`fanout`、`least-load`。计量包含已提交未开始、已开始未结束以及未完成 CPU 工作估计，并保留 Folly 队列深度作对照。NUMA 标签用于路由，不自动绑定内存。每秒 p99 在 12 QPS 下样本很少，策略决策须结合完整请求时延、拒绝率、多轮对照和内核证据。
+先保存 `python3 scripts/topology.py --output results/local/topology.json`，核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
+
+阶段3先固定服务分布扫描负载和线程数，再比较三种亲和；阶段4先固定DAG与home，再改变跨池策略和fork位置。每次只扩展一个主要问题，串行运行、同seed配对、交错重复，保存所有拒绝/取消/未完成任务和发生器落后。每秒p99只作波动观察，正式比较以完整样本和独立重复为主。
+
+新阶段的实际验证见[分阶段验证记录](stages/VALIDATION.md)。目标ARM环境未在此运行，NUMA局部性收益、真实业务参数与最终策略仍按各阶段的人工复核项验证。

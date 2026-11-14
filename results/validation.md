@@ -1,5 +1,7 @@
 # 本地验证与测量结果（2026-11-14，Asia/Shanghai）
 
+> 这是提交 `8b6884e` 的历史DAG实验记录，不是新阶段3的独立任务实验。新的分阶段构建、测试和数据见[分阶段验证](../stages/VALIDATION.md)。
+
 交付使用真实 Folly 库，固定基线为 `v2026.10.26.00 / c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c`。完整工程和编译入口见 [README](../README.md)，源码与内核解释见 [Folly 唤醒分析](../docs/folly-wakeup.md)。本页描述实际执行过的验证，不把建议的 ARM 实验写成已完成。
 
 ## 环境和验证范围

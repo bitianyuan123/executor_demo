@@ -1,5 +1,7 @@
 # 实验、部署与对比分析
 
+> 历史版说明：本文对应首轮工程与结果。重新分阶段后的独立报告和当前实现以[阶段文档](../stages/04-dag/README.md)为准；旧实验数据仍保留用于复核。
+
 ## 环境与单位
 
 先执行 `python3 scripts/topology.py --output results/topology.json`，保存 allowed cpuset、NUMA、core、SMT sibling、cluster、缓存共享列表、cgroup 祖先配额和内核版本。CPU 编号不保证相邻同 cluster；cluster 不保证等于 LLC；48 物理核 / 96 逻辑 CPU 不能按 96 个独立满速核计算容量。

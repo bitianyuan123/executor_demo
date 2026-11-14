@@ -1,5 +1,7 @@
 # Folly CPUThreadPoolExecutor：实际代码、唤醒与计量
 
+> 历史版说明：本文对应首轮工程与结果。重新分阶段后的独立报告和当前实现以[阶段文档](../stages/02-folly/README.md)为准；旧实验数据仍保留用于复核。
+
 分析固定到 `v2026.10.26.00`，提交 `c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c`。下文链接采用该提交，避免主干更新改变语义。上线前必须对照业务实际版本、构造函数、传入队列、gflags 和 wakeUpInterval；“Folly CPU 线程池都如此”的泛化不成立。该版本 upstream 链接已核验，仓库现重定向到 `meta/folly`。
 
 ## 1. 先回答三个关键问题

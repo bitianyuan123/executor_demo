@@ -3,8 +3,13 @@
   "folly_base_tag": "v2026.10.26.00",
   "folly_base_commit": "c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c",
   "folly_experiment_branch": "experiment/grouped-executor-20261114",
-  "folly_experiment_commit": "150b684e0679de6962755be2d1411e41d4bd6b4c",
+  "folly_experiment_commit": "dccd2f331534385f604b3b87b224c392dd834aee",
   "cxx_standard": 20,
   "validated_compiler": "GCC 14.2.0",
-  "validated_platform": "Debian 13 x86_64 Linux"
+  "validated_platform": "Debian 13 x86_64 Linux",
+  "stock_folly_sufficient_for_stages": [
+    2,
+    3,
+    4
+  ]
 }

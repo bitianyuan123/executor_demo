@@ -1,0 +1,295 @@
+Start testing: Nov 14 09:38 CST
+----------------------------------------------------------
+1/11 Testing: independent_functional
+1/11 Test: independent_functional
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/independent/tests/test_functional.py" "/root/rank_demo/executor_demo/build/experiments/independent/independent_load"
+Directory: /root/rank_demo/executor_demo/build/experiments/independent
+"independent_functional" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.544s
+
+OK
+<end of output>
+Test time =   0.59 sec
+----------------------------------------------------------
+Test Passed.
+"independent_functional" end time: Nov 14 09:38 CST
+"independent_functional" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/11 Testing: independent_analysis
+2/11 Test: independent_analysis
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/independent/tests/test_analysis.py"
+Directory: /root/rank_demo/executor_demo/build/experiments/independent
+"independent_analysis" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"independent_analysis" end time: Nov 14 09:38 CST
+"independent_analysis" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/11 Testing: independent_prediction
+3/11 Test: independent_prediction
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/independent/../../stages/03-independent/test_predict.py"
+Directory: /root/rank_demo/executor_demo/build/experiments/independent
+"independent_prediction" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+OK
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"independent_prediction" end time: Nov 14 09:38 CST
+"independent_prediction" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/11 Testing: demo_functional
+4/11 Test: demo_functional
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/tests/demo_functional.py" "/root/rank_demo/executor_demo/build/executor_demo"
+Directory: /root/rank_demo/executor_demo/build/experiments/dag
+"demo_functional" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 1.050s
+
+OK
+<end of output>
+Test time =   1.10 sec
+----------------------------------------------------------
+Test Passed.
+"demo_functional" end time: Nov 14 09:38 CST
+"demo_functional" time elapsed: 00:00:01
+----------------------------------------------------------
+
+5/11 Testing: analysis_statistics
+5/11 Test: analysis_statistics
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/tests/analysis_test.py"
+Directory: /root/rank_demo/executor_demo/build/experiments/dag
+"analysis_statistics" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"analysis_statistics" end time: Nov 14 09:38 CST
+"analysis_statistics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/11 Testing: graph_analysis
+6/11 Test: graph_analysis
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/stages/04-dag/test_graph_analysis.py"
+Directory: /root/rank_demo/executor_demo/build/experiments/dag
+"graph_analysis" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+OK
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"graph_analysis" end time: Nov 14 09:38 CST
+"graph_analysis" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/11 Testing: business_executor_test
+7/11 Test: business_executor_test
+Command: "/root/rank_demo/executor_demo/build/experiments/dag/business_executor_test"
+Directory: /root/rank_demo/executor_demo/build/experiments/dag
+"business_executor_test" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+Running main() from ./googletest/src/gtest_main.cc
+[==========] Running 17 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 17 tests from BusinessExecutor
+[ RUN      ] BusinessExecutor.HomeKeepsBusyGroup
+[       OK ] BusinessExecutor.HomeKeepsBusyGroup (0 ms)
+[ RUN      ] BusinessExecutor.BorrowAvoidsBusyHomeAndReportsReturnMigration
+[       OK ] BusinessExecutor.BorrowAvoidsBusyHomeAndReportsReturnMigration (0 ms)
+[ RUN      ] BusinessExecutor.StickyUsesParentAsPreferred
+[       OK ] BusinessExecutor.StickyUsesParentAsPreferred (0 ms)
+[ RUN      ] BusinessExecutor.FanoutBalancesOnlyFlaggedSubmissions
+[       OK ] BusinessExecutor.FanoutBalancesOnlyFlaggedSubmissions (0 ms)
+[ RUN      ] BusinessExecutor.QueueComparatorCannotSeeRunningTask
+[       OK ] BusinessExecutor.QueueComparatorCannotSeeRunningTask (0 ms)
+[ RUN      ] BusinessExecutor.CrossNumaPenaltyAndHysteresisPreventSmallGains
+[       OK ] BusinessExecutor.CrossNumaPenaltyAndHysteresisPreventSmallGains (0 ms)
+[ RUN      ] BusinessExecutor.LeastLoadIgnoresAffinityPenaltyAndHysteresis
+[       OK ] BusinessExecutor.LeastLoadIgnoresAffinityPenaltyAndHysteresis (0 ms)
+[ RUN      ] BusinessExecutor.BorrowChargesReturnToHomeAgainstActualSource
+[       OK ] BusinessExecutor.BorrowChargesReturnToHomeAgainstActualSource (0 ms)
+[ RUN      ] BusinessExecutor.NonblockingRejectionPreservesAccounting
+[       OK ] BusinessExecutor.NonblockingRejectionPreservesAccounting (0 ms)
+[ RUN      ] BusinessExecutor.EstimatedWorkOverflowRollsBackReservation
+[       OK ] BusinessExecutor.EstimatedWorkOverflowRollsBackReservation (0 ms)
+[ RUN      ] BusinessExecutor.ThrowingCallbackReleasesEveryCounter
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+E20261114 09:38:56.354837 2614654 Executor.cpp:41] ThreadPoolExecutor: func threw unhandled std::runtime_error: test failure
+[       OK ] BusinessExecutor.ThrowingCallbackReleasesEveryCounter (0 ms)
+[ RUN      ] BusinessExecutor.JoinDrainsRecursivelySubmittedCrossGroupChildren
+[       OK ] BusinessExecutor.JoinDrainsRecursivelySubmittedCrossGroupChildren (2 ms)
+[ RUN      ] BusinessExecutor.ConcurrentProducersHaveExactQuiescentCounters
+[       OK ] BusinessExecutor.ConcurrentProducersHaveExactQuiescentCounters (17 ms)
+[ RUN      ] BusinessExecutor.ConcurrentJoinClosesAdmissionWithoutLosingAcceptedTasks
+[       OK ] BusinessExecutor.ConcurrentJoinClosesAdmissionWithoutLosingAcceptedTasks (14 ms)
+[ RUN      ] BusinessExecutor.RequestContextIsCapturedByUnderlyingPool
+[       OK ] BusinessExecutor.RequestContextIsCapturedByUnderlyingPool (0 ms)
+[ RUN      ] BusinessExecutor.InvalidConfigurationAndHintsFailClearly
+[       OK ] BusinessExecutor.InvalidConfigurationAndHintsFailClearly (0 ms)
+[ RUN      ] BusinessExecutor.BindingIsAppliedBeforeFirstTaskAndTidsAreAvailable
+[       OK ] BusinessExecutor.BindingIsAppliedBeforeFirstTaskAndTidsAreAvailable (0 ms)
+[----------] 17 tests from BusinessExecutor (38 ms total)
+
+[----------] Global test environment tear-down
+[==========] 17 tests from 1 test suite ran. (38 ms total)
+[  PASSED  ] 17 tests.
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"business_executor_test" end time: Nov 14 09:38 CST
+"business_executor_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/11 Testing: affinity_executor_test
+8/11 Test: affinity_executor_test
+Command: "/root/rank_demo/executor_demo/build/experiments/dag/affinity_executor_test"
+Directory: /root/rank_demo/executor_demo/build/experiments/dag
+"affinity_executor_test" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+Running main() from ./googletest/src/gtest_main.cc
+[==========] Running 17 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 17 tests from AffinityExecutor
+[ RUN      ] AffinityExecutor.HomeKeepsBusyGroup
+[       OK ] AffinityExecutor.HomeKeepsBusyGroup (0 ms)
+[ RUN      ] AffinityExecutor.BorrowAvoidsBusyHomeAndReportsReturnMigration
+[       OK ] AffinityExecutor.BorrowAvoidsBusyHomeAndReportsReturnMigration (0 ms)
+[ RUN      ] AffinityExecutor.StickyUsesParentAsPreferred
+[       OK ] AffinityExecutor.StickyUsesParentAsPreferred (0 ms)
+[ RUN      ] AffinityExecutor.FanoutBalancesOnlyFlaggedSubmissions
+[       OK ] AffinityExecutor.FanoutBalancesOnlyFlaggedSubmissions (0 ms)
+[ RUN      ] AffinityExecutor.QueueComparatorCannotSeeRunningTask
+[       OK ] AffinityExecutor.QueueComparatorCannotSeeRunningTask (0 ms)
+[ RUN      ] AffinityExecutor.CrossNumaPenaltyAndHysteresisPreventSmallGains
+[       OK ] AffinityExecutor.CrossNumaPenaltyAndHysteresisPreventSmallGains (0 ms)
+[ RUN      ] AffinityExecutor.LeastLoadIgnoresAffinityPenaltyAndHysteresis
+[       OK ] AffinityExecutor.LeastLoadIgnoresAffinityPenaltyAndHysteresis (0 ms)
+[ RUN      ] AffinityExecutor.BorrowChargesReturnToHomeAgainstActualSource
+[       OK ] AffinityExecutor.BorrowChargesReturnToHomeAgainstActualSource (0 ms)
+[ RUN      ] AffinityExecutor.NonblockingRejectionPreservesAccounting
+[       OK ] AffinityExecutor.NonblockingRejectionPreservesAccounting (0 ms)
+[ RUN      ] AffinityExecutor.EstimatedWorkOverflowRollsBackReservation
+[       OK ] AffinityExecutor.EstimatedWorkOverflowRollsBackReservation (0 ms)
+[ RUN      ] AffinityExecutor.ThrowingCallbackReleasesEveryCounter
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+E20261114 09:38:56.397316 2614819 Executor.cpp:41] ThreadPoolExecutor: func threw unhandled std::runtime_error: test failure
+[       OK ] AffinityExecutor.ThrowingCallbackReleasesEveryCounter (0 ms)
+[ RUN      ] AffinityExecutor.JoinDrainsRecursivelySubmittedCrossGroupChildren
+[       OK ] AffinityExecutor.JoinDrainsRecursivelySubmittedCrossGroupChildren (3 ms)
+[ RUN      ] AffinityExecutor.ConcurrentProducersHaveExactQuiescentCounters
+[       OK ] AffinityExecutor.ConcurrentProducersHaveExactQuiescentCounters (14 ms)
+[ RUN      ] AffinityExecutor.ConcurrentJoinClosesAdmissionWithoutLosingAcceptedTasks
+[       OK ] AffinityExecutor.ConcurrentJoinClosesAdmissionWithoutLosingAcceptedTasks (14 ms)
+[ RUN      ] AffinityExecutor.RequestContextIsCapturedByUnderlyingPool
+[       OK ] AffinityExecutor.RequestContextIsCapturedByUnderlyingPool (0 ms)
+[ RUN      ] AffinityExecutor.InvalidConfigurationAndHintsFailClearly
+[       OK ] AffinityExecutor.InvalidConfigurationAndHintsFailClearly (0 ms)
+[ RUN      ] AffinityExecutor.BindingIsAppliedBeforeFirstTaskAndTidsAreAvailable
+[       OK ] AffinityExecutor.BindingIsAppliedBeforeFirstTaskAndTidsAreAvailable (0 ms)
+[----------] 17 tests from AffinityExecutor (35 ms total)
+
+[----------] Global test environment tear-down
+[==========] 17 tests from 1 test suite ran. (35 ms total)
+[  PASSED  ] 17 tests.
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"affinity_executor_test" end time: Nov 14 09:38 CST
+"affinity_executor_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/11 Testing: folly_backend_functional
+9/11 Test: folly_backend_functional
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/tests/demo_functional.py" "/root/rank_demo/executor_demo/build/dag_folly"
+Directory: /root/rank_demo/executor_demo/build/experiments/dag
+"folly_backend_functional" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 1.044s
+
+OK
+<end of output>
+Test time =   1.09 sec
+----------------------------------------------------------
+Test Passed.
+"folly_backend_functional" end time: Nov 14 09:38 CST
+"folly_backend_functional" time elapsed: 00:00:01
+----------------------------------------------------------
+
+10/11 Testing: backend_equivalence
+10/11 Test: backend_equivalence
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/stages/05-placement/compare_backends.py" "--business" "/root/rank_demo/executor_demo/build/executor_demo" "--library" "/root/rank_demo/executor_demo/build/dag_folly"
+Directory: /root/rank_demo/executor_demo/build/experiments/dag
+"backend_equivalence" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+PASS: business/Folly packaging, 5 policies, 10 runs, equal work and completion invariants
+<end of output>
+Test time =   0.80 sec
+----------------------------------------------------------
+Test Passed.
+"backend_equivalence" end time: Nov 14 09:38 CST
+"backend_equivalence" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/11 Testing: metric_probe_functional
+11/11 Test: metric_probe_functional
+Command: "/usr/bin/python3" "/root/rank_demo/executor_demo/experiments/metrics/test_probe.py" "/root/rank_demo/executor_demo/build/experiments/metrics/metric_cost_bench"
+Directory: /root/rank_demo/executor_demo/build/experiments/metrics
+"metric_probe_functional" start time: Nov 14 09:38 CST
+Output:
+----------------------------------------------------------
+PASS: metric probe CLI, read schema, update conservation, overwrite protection
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"metric_probe_functional" end time: Nov 14 09:38 CST
+"metric_probe_functional" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 14 09:38 CST

@@ -1,0 +1,50 @@
+[
+  {
+    "case": "route-sticky-all",
+    "repeat": 0,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.8697218313764633
+  },
+  {
+    "case": "base-cluster-t16",
+    "repeat": 0,
+    "peak_open_requests": 5,
+    "mean_open_during_admission": 1.746690843746682
+  },
+  {
+    "case": "route-fanout-all",
+    "repeat": 0,
+    "peak_open_requests": 3,
+    "mean_open_during_admission": 0.9268769161999991
+  },
+  {
+    "case": "route-borrow-all",
+    "repeat": 0,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.8453100130254777
+  },
+  {
+    "case": "route-sticky-all",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.8391294078713316
+  },
+  {
+    "case": "route-fanout-all",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.8217741590363492
+  },
+  {
+    "case": "base-cluster-t16",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 1.4830571680254487
+  },
+  {
+    "case": "route-borrow-all",
+    "repeat": 1,
+    "peak_open_requests": 2,
+    "mean_open_during_admission": 0.8472723100940421
+  }
+]

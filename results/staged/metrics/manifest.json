@@ -1,0 +1,112 @@
+[
+  {
+    "command": [
+      "build-metrics/metric_cost_bench",
+      "--output",
+      "results/staged/metrics/default-t64",
+      "--threads",
+      "64",
+      "--queue",
+      "default",
+      "--samples",
+      "80",
+      "--batch",
+      "100",
+      "--operations",
+      "500000",
+      "--repeats",
+      "3"
+    ],
+    "returncode": 0,
+    "output": "results/staged/metrics/default-t64\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "build-metrics/metric_cost_bench",
+      "--output",
+      "results/staged/metrics/default-t4",
+      "--threads",
+      "4",
+      "--queue",
+      "default",
+      "--samples",
+      "80",
+      "--batch",
+      "100",
+      "--operations",
+      "500000",
+      "--repeats",
+      "3"
+    ],
+    "returncode": 0,
+    "output": "results/staged/metrics/default-t4\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "build-metrics/metric_cost_bench",
+      "--output",
+      "results/staged/metrics/default-t16",
+      "--threads",
+      "16",
+      "--queue",
+      "default",
+      "--samples",
+      "80",
+      "--batch",
+      "100",
+      "--operations",
+      "500000",
+      "--repeats",
+      "3"
+    ],
+    "returncode": 0,
+    "output": "results/staged/metrics/default-t16\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "build-metrics/metric_cost_bench",
+      "--output",
+      "results/staged/metrics/lifo-t4",
+      "--threads",
+      "4",
+      "--queue",
+      "lifo",
+      "--samples",
+      "80",
+      "--batch",
+      "100",
+      "--operations",
+      "500000",
+      "--repeats",
+      "3"
+    ],
+    "returncode": 0,
+    "output": "results/staged/metrics/lifo-t4\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "build-metrics/metric_cost_bench",
+      "--output",
+      "results/staged/metrics/default-t1",
+      "--threads",
+      "1",
+      "--queue",
+      "default",
+      "--samples",
+      "80",
+      "--batch",
+      "100",
+      "--operations",
+      "500000",
+      "--repeats",
+      "3"
+    ],
+    "returncode": 0,
+    "output": "results/staged/metrics/default-t1\n",
+    "stderr": ""
+  }
+]

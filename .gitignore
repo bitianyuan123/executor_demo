@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 results/runs/
 results/local/
+results/staged/runs/
+results/staged/placement/

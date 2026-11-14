@@ -1,0 +1,7 @@
+{
+  "canonical_header": "folly/executors/experimental/AffinityExecutor.h",
+  "canonical_header_sha256": "228daf7dcd63f2285d7a2d7968feec6e5fa1dc11397e774521d0d91d63962654",
+  "canonical_test_sha256": "a9ed5ce3a33c3986c26a58335277ed1d1481b30428e2bf17fc993918ee17f7da",
+  "business_header_sha256": "70cac94111d57ca5f7996f848a4464a00e3eb2f544e4e512e861b171392fe9d4",
+  "transformation": "namespace/class/include changes only; same placement algorithm and accounting"
+}

@@ -1,0 +1,970 @@
+[
+  {
+    "run": "results/staged/runs/dag-overlap/r0-route-sticky-all",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 72.56722638888888,
+    "latency_p50_ms": 67.3145,
+    "latency_p99_ms": 167.268,
+    "request_resample_mean_ci95_ms": [
+      68.77108750000001,
+      77.61547083333333
+    ],
+    "enqueue_mean_ms": 8.823597443342152,
+    "enqueue_p99_ms": 40.6119,
+    "cpu_total_s": 17.686366445,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 17.686366445,
+    "sampled_executor_cpu_s": 16.396233436,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 57,
+      "fraction_of_completed_tasks": 0.012566137566137565,
+      "enqueue_mean_ms": 0.08977649122807017,
+      "enqueue_p99_ms": 2.1114699999999997
+    },
+    "execution_offcpu_or_overhead_s": 35.914863132,
+    "migrations": 2071.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.9286761784609907,
+        "spearman": 0.9769178117636677
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.9295763391122792,
+        "spearman": 0.976707054635746
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": -0.03310965104284586,
+        "spearman": -0.17986574861387677
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.9278600915949033,
+        "spearman": 0.9469402409452139
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9319647608718541,
+        "spearman": 0.9541895466236571
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9278054238708441,
+        "spearman": 0.9756654432508147
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": 0.43762236997758536,
+        "spearman": 0.38590345116845526
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": 0.43762236997758536,
+        "spearman": 0.38590345116845526
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 827,
+        "wait_mean_ms": 0.0368606469165659,
+        "wait_p99_ms": 0.6394070000000001
+      },
+      "1-3": {
+        "n": 1336,
+        "wait_mean_ms": 2.2392255149700597,
+        "wait_p99_ms": 6.384060000000001
+      },
+      "4-15": {
+        "n": 1884,
+        "wait_mean_ms": 12.984966008492568,
+        "wait_p99_ms": 39.274699999999996
+      },
+      "16-63": {
+        "n": 489,
+        "wait_mean_ms": 25.64023108384458,
+        "wait_p99_ms": 56.3022
+      }
+    }
+  },
+  {
+    "run": "results/staged/runs/dag-overlap/r0-base-cluster-t16",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 146.90429166666667,
+    "latency_p50_ms": 124.021,
+    "latency_p99_ms": 465.788,
+    "request_resample_mean_ci95_ms": [
+      131.90897222222222,
+      163.88255555555554
+    ],
+    "enqueue_mean_ms": 21.7214669664903,
+    "enqueue_p99_ms": 97.18339999999999,
+    "cpu_total_s": 18.075939293,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 18.075939293,
+    "sampled_executor_cpu_s": 16.804139995,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 18,
+      "fraction_of_completed_tasks": 0.003968253968253968,
+      "enqueue_mean_ms": 0.3153187777777778,
+      "enqueue_p99_ms": 5.52642
+    },
+    "execution_offcpu_or_overhead_s": 63.550784818,
+    "migrations": 0.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.9330664841174272,
+        "spearman": 0.9820958844166435
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.9318931650327227,
+        "spearman": 0.9816993551151239
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": 0.10708454038220788,
+        "spearman": -0.1238388850340484
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.9353755547547361,
+        "spearman": 0.9699896994737752
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9366184109800312,
+        "spearman": 0.971537144079829
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9245539382230549,
+        "spearman": 0.9750745215923524
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": 0.3453719541153995,
+        "spearman": 0.34705240447792773
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": 0.37677401778155356,
+        "spearman": 0.4812562145808732
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": 0.4043051556452258,
+        "spearman": 0.4811477394973112
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": 0.34537195411539945,
+        "spearman": 0.34705240447792773
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": 0.34537195411539945,
+        "spearman": 0.34705240447792773
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 420,
+        "wait_mean_ms": 0.03896001428571429,
+        "wait_p99_ms": 0.7971130000000001
+      },
+      "1-3": {
+        "n": 639,
+        "wait_mean_ms": 1.876818269170579,
+        "wait_p99_ms": 8.008569999999999
+      },
+      "4-15": {
+        "n": 1745,
+        "wait_mean_ms": 11.001270418338109,
+        "wait_p99_ms": 34.2511
+      },
+      "16-63": {
+        "n": 1732,
+        "wait_mean_ms": 45.10144757505774,
+        "wait_p99_ms": 113.966
+      }
+    }
+  },
+  {
+    "run": "results/staged/runs/dag-overlap/r0-route-fanout-all",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 77.19684444444445,
+    "latency_p50_ms": 68.78710000000001,
+    "latency_p99_ms": 226.078,
+    "request_resample_mean_ci95_ms": [
+      71.65596111111111,
+      84.53044861111111
+    ],
+    "enqueue_mean_ms": 9.029544338624339,
+    "enqueue_p99_ms": 42.212199999999996,
+    "cpu_total_s": 17.875707352000003,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 17.875707352000003,
+    "sampled_executor_cpu_s": 16.855762759,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 55,
+      "fraction_of_completed_tasks": 0.012125220458553791,
+      "enqueue_mean_ms": 0.04208376363636364,
+      "enqueue_p99_ms": 1.05789
+    },
+    "execution_offcpu_or_overhead_s": 37.827599601,
+    "migrations": 2036.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.9269409517737535,
+        "spearman": 0.9765047378732293
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.9259668793075219,
+        "spearman": 0.975109459687573
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": -0.049848960415105684,
+        "spearman": -0.16555431299085827
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.9084805866046743,
+        "spearman": 0.9376098766697681
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9121255158875488,
+        "spearman": 0.9445819106700751
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9242318793148091,
+        "spearman": 0.9734858529752697
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": 0.017544519669004294,
+        "spearman": 0.22366534041796907
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": 0.22308389421549493,
+        "spearman": 0.39035422899696265
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": 0.18683903444119565,
+        "spearman": 0.389703252348115
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": 0.017544519669004294,
+        "spearman": 0.22366534041796907
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": 0.017544519669004294,
+        "spearman": 0.22366534041796907
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 814,
+        "wait_mean_ms": 0.03739766953316953,
+        "wait_p99_ms": 0.387692
+      },
+      "1-3": {
+        "n": 1311,
+        "wait_mean_ms": 2.2165715369946604,
+        "wait_p99_ms": 6.91587
+      },
+      "4-15": {
+        "n": 1906,
+        "wait_mean_ms": 12.957758726128016,
+        "wait_p99_ms": 35.8834
+      },
+      "16-63": {
+        "n": 505,
+        "wait_mean_ms": 26.38447128712871,
+        "wait_p99_ms": 57.3369
+      }
+    }
+  },
+  {
+    "run": "results/staged/runs/dag-overlap/r0-route-borrow-all",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 70.58489305555555,
+    "latency_p50_ms": 67.3742,
+    "latency_p99_ms": 123.912,
+    "request_resample_mean_ci95_ms": [
+      68.1713236111111,
+      73.41050277777778
+    ],
+    "enqueue_mean_ms": 8.767342824294532,
+    "enqueue_p99_ms": 37.2037,
+    "cpu_total_s": 17.665981996,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 17.665981996,
+    "sampled_executor_cpu_s": 16.472434136,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 27,
+      "fraction_of_completed_tasks": 0.005952380952380952,
+      "enqueue_mean_ms": 0.12588618518518518,
+      "enqueue_p99_ms": 1.1489500000000001
+    },
+    "execution_offcpu_or_overhead_s": 34.897100483,
+    "migrations": 2142.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.9388282441936747,
+        "spearman": 0.9763335164540177
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.9390003994617169,
+        "spearman": 0.9762011157569463
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": -0.07667936063856964,
+        "spearman": -0.18301677422902038
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.928798771068074,
+        "spearman": 0.9486428720152564
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9318973268765859,
+        "spearman": 0.9555688420806561
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9379999044158348,
+        "spearman": 0.9752482870811079
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": 0.07305221734230667,
+        "spearman": 0.26174156113222413
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": 0.07305221734230667,
+        "spearman": 0.26174156113222413
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 766,
+        "wait_mean_ms": 0.028516783289817233,
+        "wait_p99_ms": 0.25782499999999997
+      },
+      "1-3": {
+        "n": 1395,
+        "wait_mean_ms": 2.1744761111111113,
+        "wait_p99_ms": 6.12364
+      },
+      "4-15": {
+        "n": 1879,
+        "wait_mean_ms": 12.825607354976052,
+        "wait_p99_ms": 36.4699
+      },
+      "16-63": {
+        "n": 496,
+        "wait_mean_ms": 25.431679032258064,
+        "wait_p99_ms": 55.0249
+      }
+    }
+  },
+  {
+    "run": "results/staged/runs/dag-overlap/r1-route-sticky-all",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 69.9790388888889,
+    "latency_p50_ms": 67.4757,
+    "latency_p99_ms": 138.714,
+    "request_resample_mean_ci95_ms": [
+      67.83058611111112,
+      72.70845555555556
+    ],
+    "enqueue_mean_ms": 8.556821026455028,
+    "enqueue_p99_ms": 30.324099999999998,
+    "cpu_total_s": 17.496534741,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 17.496534741,
+    "sampled_executor_cpu_s": 16.207910388,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 45,
+      "fraction_of_completed_tasks": 0.00992063492063492,
+      "enqueue_mean_ms": 0.10249284444444444,
+      "enqueue_p99_ms": 3.22693
+    },
+    "execution_offcpu_or_overhead_s": 34.353108452,
+    "migrations": 2046.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.9531910427876336,
+        "spearman": 0.9788377305084481
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.9536023334063958,
+        "spearman": 0.9777780486439898
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": -0.15652729606802804,
+        "spearman": -0.24992400775121024
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.9458866514463758,
+        "spearman": 0.9483231944692521
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9497697475184114,
+        "spearman": 0.9554429960006685
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9520910194985827,
+        "spearman": 0.9779400554195317
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": 0.04551324120159109,
+        "spearman": 0.1570375597688946
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": 0.04551324120159109,
+        "spearman": 0.1570375597688946
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": 0.04551324120159109,
+        "spearman": 0.1570375597688946
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": 0.045513241201591094,
+        "spearman": 0.1570375597688946
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": 0.045513241201591094,
+        "spearman": 0.1570375597688946
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 828,
+        "wait_mean_ms": 0.043761653381642514,
+        "wait_p99_ms": 0.50542
+      },
+      "1-3": {
+        "n": 1325,
+        "wait_mean_ms": 2.228322518490566,
+        "wait_p99_ms": 6.37279
+      },
+      "4-15": {
+        "n": 1886,
+        "wait_mean_ms": 12.456766272534464,
+        "wait_p99_ms": 29.6238
+      },
+      "16-63": {
+        "n": 497,
+        "wait_mean_ms": 24.811905432595573,
+        "wait_p99_ms": 54.7127
+      }
+    }
+  },
+  {
+    "run": "results/staged/runs/dag-overlap/r1-route-fanout-all",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 68.93478888888889,
+    "latency_p50_ms": 67.4557,
+    "latency_p99_ms": 116.315,
+    "request_resample_mean_ci95_ms": [
+      67.56068194444444,
+      70.94076527777777
+    ],
+    "enqueue_mean_ms": 8.542529777998237,
+    "enqueue_p99_ms": 32.2479,
+    "cpu_total_s": 17.541500345,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 17.541500345,
+    "sampled_executor_cpu_s": 16.165741567,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 26,
+      "fraction_of_completed_tasks": 0.005731922398589065,
+      "enqueue_mean_ms": 0.05705065384615385,
+      "enqueue_p99_ms": 1.23529
+    },
+    "execution_offcpu_or_overhead_s": 33.975878008,
+    "migrations": 2053.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.9485340370349833,
+        "spearman": 0.9810173966990828
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.9487536413169084,
+        "spearman": 0.9802469346765983
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": -0.15279758466327714,
+        "spearman": -0.2278229207608313
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.9438158068201008,
+        "spearman": 0.9545058557538086
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9471569422388139,
+        "spearman": 0.9612223817471467
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9481381754980626,
+        "spearman": 0.980528222379614
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": 0.09903947957633172,
+        "spearman": 0.23601129885879493
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": 0.09903947957633172,
+        "spearman": 0.23601129885879493
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 812,
+        "wait_mean_ms": 0.024411038177339903,
+        "wait_p99_ms": 0.066679
+      },
+      "1-3": {
+        "n": 1351,
+        "wait_mean_ms": 2.1206752035529237,
+        "wait_p99_ms": 5.62385
+      },
+      "4-15": {
+        "n": 1896,
+        "wait_mean_ms": 12.564561028481013,
+        "wait_p99_ms": 33.7259
+      },
+      "16-63": {
+        "n": 477,
+        "wait_mean_ms": 25.24455639412998,
+        "wait_p99_ms": 53.449400000000004
+      }
+    }
+  },
+  {
+    "run": "results/staged/runs/dag-overlap/r1-base-cluster-t16",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 124.20111111111112,
+    "latency_p50_ms": 123.699,
+    "latency_p99_ms": 133.796,
+    "request_resample_mean_ci95_ms": [
+      123.61795833333333,
+      124.75186111111111
+    ],
+    "enqueue_mean_ms": 19.44996262477954,
+    "enqueue_p99_ms": 60.6948,
+    "cpu_total_s": 17.306535280000002,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 17.306535280000002,
+    "sampled_executor_cpu_s": 16.022528684,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 0,
+      "fraction_of_completed_tasks": 0.0,
+      "enqueue_mean_ms": null,
+      "enqueue_p99_ms": null
+    },
+    "execution_offcpu_or_overhead_s": 56.722431981,
+    "migrations": 0.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.9932003254190939,
+        "spearman": 0.9931987518426525
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.9930939505185697,
+        "spearman": 0.9936619332564361
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": -0.13813120706403748,
+        "spearman": -0.21485794355516966
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.9935616061943997,
+        "spearman": 0.9905158954568933
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9938430176002605,
+        "spearman": 0.9913161616191286
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9932055256111245,
+        "spearman": 0.9932243732469982
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 434,
+        "wait_mean_ms": 0.01419208064516129,
+        "wait_p99_ms": 0.059709000000000005
+      },
+      "1-3": {
+        "n": 651,
+        "wait_mean_ms": 1.6877817096774195,
+        "wait_p99_ms": 4.22811
+      },
+      "4-15": {
+        "n": 1746,
+        "wait_mean_ms": 10.059444278350515,
+        "wait_p99_ms": 22.1309
+      },
+      "16-63": {
+        "n": 1705,
+        "wait_mean_ms": 40.79550469208211,
+        "wait_p99_ms": 62.856199999999994
+      }
+    }
+  },
+  {
+    "run": "results/staged/runs/dag-overlap/r1-route-borrow-all",
+    "requests": {
+      "completed": 72
+    },
+    "completed_tasks": 4536,
+    "latency_mean_ms": 70.79755,
+    "latency_p50_ms": 67.8023,
+    "latency_p99_ms": 145.498,
+    "request_resample_mean_ci95_ms": [
+      68.20091805555556,
+      73.67356388888889
+    ],
+    "enqueue_mean_ms": 8.698425296296296,
+    "enqueue_p99_ms": 41.218599999999995,
+    "cpu_total_s": 17.653829133000002,
+    "cpu_measurement_scope": "logged operator kernels only; excludes child routing/Folly/logging/AIO; null means no task samples",
+    "cpu_completed_tasks_s": 17.653829133000002,
+    "sampled_executor_cpu_s": 16.40920186,
+    "sampled_executor_runqueue_s": null,
+    "schedstats_enabled": false,
+    "zero_queue_with_inflight_over_capacity": {
+      "n": 44,
+      "fraction_of_completed_tasks": 0.009700176366843033,
+      "enqueue_mean_ms": 0.11595795454545454,
+      "enqueue_p99_ms": 1.53424
+    },
+    "execution_offcpu_or_overhead_s": 34.511454119,
+    "migrations": 2146.0,
+    "cross_numa": 0.0,
+    "task_load_vs_enqueue": {
+      "queue_before": {
+        "n": 4536,
+        "pearson": 0.921561088034851,
+        "spearman": 0.9749315724257441
+      },
+      "pending_before": {
+        "n": 4536,
+        "pearson": 0.922204415078503,
+        "spearman": 0.9750231647243808
+      },
+      "inflight_before": {
+        "n": 4536,
+        "pearson": -0.07986891497863666,
+        "spearman": -0.14654733752757024
+      },
+      "outstanding_before": {
+        "n": 4536,
+        "pearson": 0.9073606398730285,
+        "spearman": 0.9442557523981393
+      },
+      "outstanding_cpu_us_before": {
+        "n": 4536,
+        "pearson": 0.9106574809076868,
+        "spearman": 0.9510939918855713
+      },
+      "chosen_load_us": {
+        "n": 4536,
+        "pearson": 0.9202919268874699,
+        "spearman": 0.9733537768461797
+      }
+    },
+    "request_initial_load_vs_latency": {
+      "queue_before": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      },
+      "inflight_before": {
+        "n": 72,
+        "pearson": 0.02788000639811706,
+        "spearman": 0.23601129885879493
+      },
+      "outstanding_before": {
+        "n": 72,
+        "pearson": 0.028019402945771477,
+        "spearman": 0.23601129885879493
+      },
+      "chosen_load_us": {
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    },
+    "request_planned_work_vs_latency": {
+      "n": 72,
+      "pearson": null,
+      "spearman": null
+    },
+    "request_workload_strata": [
+      {
+        "fanout": 40,
+        "planned_work_10ms_bucket": 24,
+        "n": 72,
+        "pearson": null,
+        "spearman": null
+      }
+    ],
+    "queue_bins": {
+      "0": {
+        "n": 780,
+        "wait_mean_ms": 0.03126448205128205,
+        "wait_p99_ms": 0.22941499999999998
+      },
+      "1-3": {
+        "n": 1386,
+        "wait_mean_ms": 2.179319240981241,
+        "wait_p99_ms": 6.3081700000000005
+      },
+      "4-15": {
+        "n": 1912,
+        "wait_mean_ms": 12.876259979079498,
+        "wait_p99_ms": 40.028400000000005
+      },
+      "16-63": {
+        "n": 458,
+        "wait_mean_ms": 25.746125109170304,
+        "wait_p99_ms": 59.0291
+      }
+    }
+  }
+]

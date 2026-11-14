@@ -1,0 +1,260 @@
+{
+  "base": {
+    "deployment": "dev",
+    "pools": 2,
+    "cpus": "0,1;2,3",
+    "duration": 3,
+    "cpu-us": 1000,
+    "jitter": 0.5,
+    "long-prob": 0.02,
+    "long-factor": 8,
+    "instrumentation": "full",
+    "sample-ms": 100,
+    "max-outstanding": 30000,
+    "drain-seconds": 30
+  },
+  "cases": [
+    {
+      "name": "cluster-t1-r400-b1",
+      "options": {
+        "affinity": "cluster",
+        "threads": 1,
+        "arrival-rate": 400.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "cluster-t1-r400-b20",
+      "options": {
+        "affinity": "cluster",
+        "threads": 1,
+        "arrival-rate": 20.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "cluster-t1-r1600-b1",
+      "options": {
+        "affinity": "cluster",
+        "threads": 1,
+        "arrival-rate": 1600.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "cluster-t1-r1600-b20",
+      "options": {
+        "affinity": "cluster",
+        "threads": 1,
+        "arrival-rate": 80.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "cluster-t1-r3200-b1",
+      "options": {
+        "affinity": "cluster",
+        "threads": 1,
+        "arrival-rate": 3200.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "cluster-t1-r3200-b20",
+      "options": {
+        "affinity": "cluster",
+        "threads": 1,
+        "arrival-rate": 160.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "cluster-t8-r400-b1",
+      "options": {
+        "affinity": "cluster",
+        "threads": 8,
+        "arrival-rate": 400.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "cluster-t8-r400-b20",
+      "options": {
+        "affinity": "cluster",
+        "threads": 8,
+        "arrival-rate": 20.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "cluster-t8-r1600-b1",
+      "options": {
+        "affinity": "cluster",
+        "threads": 8,
+        "arrival-rate": 1600.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "cluster-t8-r1600-b20",
+      "options": {
+        "affinity": "cluster",
+        "threads": 8,
+        "arrival-rate": 80.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "cluster-t8-r3200-b1",
+      "options": {
+        "affinity": "cluster",
+        "threads": 8,
+        "arrival-rate": 3200.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "cluster-t8-r3200-b20",
+      "options": {
+        "affinity": "cluster",
+        "threads": 8,
+        "arrival-rate": 160.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "none-t1-r400-b1",
+      "options": {
+        "affinity": "none",
+        "threads": 1,
+        "arrival-rate": 400.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "none-t1-r400-b20",
+      "options": {
+        "affinity": "none",
+        "threads": 1,
+        "arrival-rate": 20.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "none-t1-r1600-b1",
+      "options": {
+        "affinity": "none",
+        "threads": 1,
+        "arrival-rate": 1600.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "none-t1-r1600-b20",
+      "options": {
+        "affinity": "none",
+        "threads": 1,
+        "arrival-rate": 80.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "none-t1-r3200-b1",
+      "options": {
+        "affinity": "none",
+        "threads": 1,
+        "arrival-rate": 3200.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "none-t1-r3200-b20",
+      "options": {
+        "affinity": "none",
+        "threads": 1,
+        "arrival-rate": 160.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "none-t8-r400-b1",
+      "options": {
+        "affinity": "none",
+        "threads": 8,
+        "arrival-rate": 400.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "none-t8-r400-b20",
+      "options": {
+        "affinity": "none",
+        "threads": 8,
+        "arrival-rate": 20.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "none-t8-r1600-b1",
+      "options": {
+        "affinity": "none",
+        "threads": 8,
+        "arrival-rate": 1600.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "none-t8-r1600-b20",
+      "options": {
+        "affinity": "none",
+        "threads": 8,
+        "arrival-rate": 80.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    },
+    {
+      "name": "none-t8-r3200-b1",
+      "options": {
+        "affinity": "none",
+        "threads": 8,
+        "arrival-rate": 3200.0,
+        "burst-min": 1,
+        "burst-max": 1
+      }
+    },
+    {
+      "name": "none-t8-r3200-b20",
+      "options": {
+        "affinity": "none",
+        "threads": 8,
+        "arrival-rate": 160.0,
+        "burst-min": 20,
+        "burst-max": 20
+      }
+    }
+  ],
+  "repeats": 2,
+  "seed": 20261114
+}

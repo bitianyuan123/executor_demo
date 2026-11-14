@@ -1,0 +1,74 @@
+[
+  {
+    "case": "base-cluster-t16",
+    "repeats": 2,
+    "requests": 144,
+    "mean_ms": 135.5527013888889,
+    "p99_ms": 422.719,
+    "run_means_ms": [
+      146.90429166666667,
+      124.2011111111111
+    ],
+    "run_p99_ms": [
+      465.788,
+      133.796
+    ],
+    "rejected": 0,
+    "censored": 0,
+    "failed": 0
+  },
+  {
+    "case": "route-borrow-all",
+    "repeats": 2,
+    "requests": 144,
+    "mean_ms": 70.69122152777778,
+    "p99_ms": 123.912,
+    "run_means_ms": [
+      70.58489305555555,
+      70.79755
+    ],
+    "run_p99_ms": [
+      123.912,
+      145.498
+    ],
+    "rejected": 0,
+    "censored": 0,
+    "failed": 0
+  },
+  {
+    "case": "route-fanout-all",
+    "repeats": 2,
+    "requests": 144,
+    "mean_ms": 73.06581666666666,
+    "p99_ms": 224.583,
+    "run_means_ms": [
+      77.19684444444445,
+      68.93478888888889
+    ],
+    "run_p99_ms": [
+      226.078,
+      116.315
+    ],
+    "rejected": 0,
+    "censored": 0,
+    "failed": 0
+  },
+  {
+    "case": "route-sticky-all",
+    "repeats": 2,
+    "requests": 144,
+    "mean_ms": 71.27313263888888,
+    "p99_ms": 161.515,
+    "run_means_ms": [
+      72.56722638888888,
+      69.97903888888888
+    ],
+    "run_p99_ms": [
+      167.268,
+      138.714
+    ],
+    "rejected": 0,
+    "censored": 0,
+    "failed": 0
+  }
+]

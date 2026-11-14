@@ -1,0 +1,51 @@
+{
+  "base": {
+    "deployment": "dev",
+    "pools": 2,
+    "cpus": "0,1;2,3",
+    "duration": 3,
+    "cpu-us": 1000,
+    "jitter": 0.5,
+    "long-prob": 0.02,
+    "long-factor": 8,
+    "instrumentation": "full",
+    "sample-ms": 100,
+    "max-outstanding": 30000,
+    "drain-seconds": 30,
+    "affinity": "cluster",
+    "threads": 2,
+    "work-mode": "iterations",
+    "iterations-per-us": 512,
+    "arrival-rate": 1200,
+    "burst-min": 1,
+    "burst-max": 1
+  },
+  "cases": [
+    {
+      "name": "observe-none",
+      "options": {
+        "instrumentation": "none"
+      }
+    },
+    {
+      "name": "observe-queue",
+      "options": {
+        "instrumentation": "queue"
+      }
+    },
+    {
+      "name": "observe-counters",
+      "options": {
+        "instrumentation": "counters"
+      }
+    },
+    {
+      "name": "observe-full",
+      "options": {
+        "instrumentation": "full"
+      }
+    }
+  ],
+  "repeats": 4,
+  "seed": 20261214
+}

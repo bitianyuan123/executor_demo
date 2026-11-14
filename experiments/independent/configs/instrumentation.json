@@ -1,0 +1,30 @@
+{
+  "base": {
+    "deployment": "dev",
+    "pools": 1,
+    "threads": 4,
+    "affinity": "none",
+    "arrival-rate": 100,
+    "duration": 10,
+    "burst-min": 1,
+    "burst-max": 1,
+    "cpu-us": 3000,
+    "jitter": 0.5,
+    "long-prob": 0.02,
+    "long-factor": 8,
+    "work-mode": "iterations",
+    "iterations-per-us": 64,
+    "sample-ms": 100,
+    "max-outstanding": 10000,
+    "max-samples": 100000,
+    "drain-seconds": 30
+  },
+  "seed": 420,
+  "repeats": 5,
+  "cases": [
+    {"name": "observe-none", "options": {"instrumentation": "none"}},
+    {"name": "observe-queue", "options": {"instrumentation": "queue"}},
+    {"name": "observe-counters", "options": {"instrumentation": "counters"}},
+    {"name": "observe-full", "options": {"instrumentation": "full"}}
+  ]
+}

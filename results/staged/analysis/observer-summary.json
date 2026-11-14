@@ -1,0 +1,1938 @@
+{
+  "aggregates": [
+    {
+      "case": "observe-counters",
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607724,
+        "affinity": "cluster",
+        "instrumentation": "counters",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "repeats": 4,
+      "completed": 14400,
+      "rejected": 0,
+      "canceled": 0,
+      "failed": 0,
+      "pooled_mean_ms": 1.2154875225000001,
+      "pooled_p99_ms": 8.728392,
+      "wall_mean_ms": 1.161563923611111,
+      "run_mean_range_ms": [
+        1.18439853667,
+        1.28612061389
+      ],
+      "run_p99_range_ms": [
+        7.619604,
+        9.39266
+      ],
+      "run_wait_range_ms": [
+        0.0343530938889,
+        0.0977689661111
+      ],
+      "process_cpu_per_task_us": [
+        1175.035,
+        1168.6774999999998,
+        1164.7780555555555,
+        1206.8855555555556
+      ]
+    },
+    {
+      "case": "observe-full",
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607780,
+        "affinity": "cluster",
+        "instrumentation": "full",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "repeats": 4,
+      "completed": 14400,
+      "rejected": 0,
+      "canceled": 0,
+      "failed": 0,
+      "pooled_mean_ms": 1.2023976875,
+      "pooled_p99_ms": 8.29107,
+      "wall_mean_ms": 1.1561929556944446,
+      "run_mean_range_ms": [
+        1.1992515775,
+        1.21109813833
+      ],
+      "run_p99_range_ms": [
+        7.642365,
+        8.577005
+      ],
+      "run_wait_range_ms": [
+        0.03755883,
+        0.0563734541667
+      ],
+      "process_cpu_per_task_us": [
+        1174.1161111111114,
+        1177.6480555555556,
+        1166.2125,
+        1166.3416666666667
+      ]
+    },
+    {
+      "case": "observe-none",
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607693,
+        "affinity": "cluster",
+        "instrumentation": "none",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "repeats": 4,
+      "completed": 14400,
+      "rejected": 0,
+      "canceled": 0,
+      "failed": 0,
+      "pooled_mean_ms": 1.1958791291666666,
+      "pooled_p99_ms": 8.273481,
+      "wall_mean_ms": 1.1516644511111112,
+      "run_mean_range_ms": [
+        1.18948176944,
+        1.20055513333
+      ],
+      "run_p99_range_ms": [
+        7.459267,
+        8.593616
+      ],
+      "run_wait_range_ms": [
+        0.0388020627778,
+        0.0508814516667
+      ],
+      "process_cpu_per_task_us": [
+        1175.8524999999997,
+        1163.6427777777778,
+        1167.4341666666667,
+        1169.8872222222221
+      ]
+    },
+    {
+      "case": "observe-queue",
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607703,
+        "affinity": "cluster",
+        "instrumentation": "queue",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "repeats": 4,
+      "completed": 14400,
+      "rejected": 0,
+      "canceled": 0,
+      "failed": 0,
+      "pooled_mean_ms": 1.2029242710416665,
+      "pooled_p99_ms": 8.28281,
+      "wall_mean_ms": 1.1531846666666665,
+      "run_mean_range_ms": [
+        1.18207656278,
+        1.22896428361
+      ],
+      "run_p99_range_ms": [
+        7.559095,
+        8.543356
+      ],
+      "run_wait_range_ms": [
+        0.0293461158333,
+        0.0715802322222
+      ],
+      "process_cpu_per_task_us": [
+        1174.0919444444444,
+        1161.4116666666666,
+        1175.5352777777778,
+        1169.6538888888888
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "case": "observe-none",
+      "repetition": 2,
+      "seed": 20261216,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607693,
+        "affinity": "cluster",
+        "instrumentation": "none",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000334883,
+        "task_mean_ms": 1.19637805222,
+        "task_p99_ms": 8.593616,
+        "submit_to_start_mean_ms": 0.0388020627778,
+        "planned_to_end_mean_ms": 1.25668025444,
+        "burst_mean_ms": 1.19649604056,
+        "burst_p99_ms": 8.593856,
+        "arrival_lag_mean_ms": 0.0601842138889,
+        "arrival_lag_p99_ms": 0.078733,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 0,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.229062,
+        "process_system_cpu_seconds": 0.004007
+      },
+      "target_sha256": "33eed640545df495e11ebf00b5d6b777bffcc7341a567438d5bf10a955c1542e"
+    },
+    {
+      "case": "observe-queue",
+      "repetition": 2,
+      "seed": 20261216,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607703,
+        "affinity": "cluster",
+        "instrumentation": "queue",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000308582,
+        "task_mean_ms": 1.20130257472,
+        "task_p99_ms": 8.543356,
+        "submit_to_start_mean_ms": 0.0442694183333,
+        "planned_to_end_mean_ms": 1.2598898575,
+        "burst_mean_ms": 1.20140440306,
+        "burst_p99_ms": 8.543436,
+        "arrival_lag_mean_ms": 0.0584854544444,
+        "arrival_lag_p99_ms": 0.076129,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.196033,
+        "process_system_cpu_seconds": 0.030698
+      },
+      "target_sha256": "33eed640545df495e11ebf00b5d6b777bffcc7341a567438d5bf10a955c1542e"
+    },
+    {
+      "case": "observe-counters",
+      "repetition": 2,
+      "seed": 20261216,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607724,
+        "affinity": "cluster",
+        "instrumentation": "counters",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000297494,
+        "task_mean_ms": 1.20338587306,
+        "task_p99_ms": 8.83558,
+        "submit_to_start_mean_ms": 0.0424411127778,
+        "planned_to_end_mean_ms": 1.26170360806,
+        "burst_mean_ms": 1.20348447944,
+        "burst_p99_ms": 8.835671,
+        "arrival_lag_mean_ms": 0.0582191286111,
+        "arrival_lag_p99_ms": 0.082337,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.225828,
+        "process_system_cpu_seconds": 0.004298
+      },
+      "target_sha256": "33eed640545df495e11ebf00b5d6b777bffcc7341a567438d5bf10a955c1542e"
+    },
+    {
+      "case": "observe-queue",
+      "repetition": 3,
+      "seed": 20261217,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607750,
+        "affinity": "cluster",
+        "instrumentation": "queue",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261217,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000296344,
+        "task_mean_ms": 1.19935366306,
+        "task_p99_ms": 8.385539,
+        "submit_to_start_mean_ms": 0.0537626511111,
+        "planned_to_end_mean_ms": 1.25742081083,
+        "burst_mean_ms": 1.19945217361,
+        "burst_p99_ms": 8.385959,
+        "arrival_lag_mean_ms": 0.0579686372222,
+        "arrival_lag_p99_ms": 0.077725,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.168286,
+        "process_system_cpu_seconds": 0.012796
+      },
+      "target_sha256": "6938c2981acc4a29a6c107cfa1e39c34a21af078920afb38e66491be089bf8c9"
+    },
+    {
+      "case": "observe-full",
+      "repetition": 2,
+      "seed": 20261216,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607780,
+        "affinity": "cluster",
+        "instrumentation": "full",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261216,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000307303,
+        "task_mean_ms": 1.1992515775,
+        "task_p99_ms": 8.577005,
+        "submit_to_start_mean_ms": 0.04212585,
+        "planned_to_end_mean_ms": 1.25727702917,
+        "burst_mean_ms": 1.19935005694,
+        "burst_p99_ms": 8.577055,
+        "arrival_lag_mean_ms": 0.0579269722222,
+        "arrival_lag_p99_ms": 0.07645,
+        "work_cpu_mean_ms": 1.15423483194,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.214202,
+        "process_system_cpu_seconds": 0.012616
+      },
+      "target_sha256": "33eed640545df495e11ebf00b5d6b777bffcc7341a567438d5bf10a955c1542e"
+    },
+    {
+      "case": "observe-full",
+      "repetition": 1,
+      "seed": 20261215,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607793,
+        "affinity": "cluster",
+        "instrumentation": "full",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261215,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.001352351,
+        "task_mean_ms": 1.19974839944,
+        "task_p99_ms": 7.8833,
+        "submit_to_start_mean_ms": 0.03755883,
+        "planned_to_end_mean_ms": 1.25914591611,
+        "burst_mean_ms": 1.19984756972,
+        "burst_p99_ms": 7.88336,
+        "arrival_lag_mean_ms": 0.0592983463889,
+        "arrival_lag_p99_ms": 0.082304,
+        "work_cpu_mean_ms": 1.15740333472,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.227615,
+        "process_system_cpu_seconds": 0.011918
+      },
+      "target_sha256": "8c8bd6362a9a5e867e6f2c9f61ae5061e01c177f9bdd97d88cd05b7ba0e20816"
+    },
+    {
+      "case": "observe-counters",
+      "repetition": 1,
+      "seed": 20261215,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607820,
+        "affinity": "cluster",
+        "instrumentation": "counters",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261215,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.002380332,
+        "task_mean_ms": 1.18439853667,
+        "task_p99_ms": 7.619604,
+        "submit_to_start_mean_ms": 0.0343530938889,
+        "planned_to_end_mean_ms": 1.24227815528,
+        "burst_mean_ms": 1.18449645833,
+        "burst_p99_ms": 7.619684,
+        "arrival_lag_mean_ms": 0.0577816969444,
+        "arrival_lag_p99_ms": 0.074046,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.206377,
+        "process_system_cpu_seconds": 0.000862
+      },
+      "target_sha256": "8c8bd6362a9a5e867e6f2c9f61ae5061e01c177f9bdd97d88cd05b7ba0e20816"
+    },
+    {
+      "case": "observe-counters",
+      "repetition": 3,
+      "seed": 20261217,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607831,
+        "affinity": "cluster",
+        "instrumentation": "counters",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261217,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000296913,
+        "task_mean_ms": 1.18804506639,
+        "task_p99_ms": 8.138665,
+        "submit_to_start_mean_ms": 0.0411312227778,
+        "planned_to_end_mean_ms": 1.247029785,
+        "burst_mean_ms": 1.18813354333,
+        "burst_p99_ms": 8.138705,
+        "arrival_lag_mean_ms": 0.0588962416667,
+        "arrival_lag_p99_ms": 0.077105,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.158551,
+        "process_system_cpu_seconds": 0.03465
+      },
+      "target_sha256": "6938c2981acc4a29a6c107cfa1e39c34a21af078920afb38e66491be089bf8c9"
+    },
+    {
+      "case": "observe-none",
+      "repetition": 3,
+      "seed": 20261217,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607844,
+        "affinity": "cluster",
+        "instrumentation": "none",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261217,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000298294,
+        "task_mean_ms": 1.19710156167,
+        "task_p99_ms": 8.301942,
+        "submit_to_start_mean_ms": 0.0508814516667,
+        "planned_to_end_mean_ms": 1.25504124111,
+        "burst_mean_ms": 1.19721831444,
+        "burst_p99_ms": 8.302011,
+        "arrival_lag_mean_ms": 0.0578229266667,
+        "arrival_lag_p99_ms": 0.077723,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 0,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.177425,
+        "process_system_cpu_seconds": 0.011689
+      },
+      "target_sha256": "6938c2981acc4a29a6c107cfa1e39c34a21af078920afb38e66491be089bf8c9"
+    },
+    {
+      "case": "observe-full",
+      "repetition": 3,
+      "seed": 20261217,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607881,
+        "affinity": "cluster",
+        "instrumentation": "full",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261217,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.001369232,
+        "task_mean_ms": 1.19949263472,
+        "task_p99_ms": 8.29107,
+        "submit_to_start_mean_ms": 0.0487607930556,
+        "planned_to_end_mean_ms": 1.25769753639,
+        "burst_mean_ms": 1.1995969275,
+        "burst_p99_ms": 8.29115,
+        "arrival_lag_mean_ms": 0.0581006088889,
+        "arrival_lag_p99_ms": 0.076694,
+        "work_cpu_mean_ms": 1.1457876425,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.186417,
+        "process_system_cpu_seconds": 0.011948
+      },
+      "target_sha256": "6938c2981acc4a29a6c107cfa1e39c34a21af078920afb38e66491be089bf8c9"
+    },
+    {
+      "case": "observe-full",
+      "repetition": 0,
+      "seed": 20261214,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607898,
+        "affinity": "cluster",
+        "instrumentation": "full",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261214,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000307204,
+        "task_mean_ms": 1.21109813833,
+        "task_p99_ms": 7.642365,
+        "submit_to_start_mean_ms": 0.0563734541667,
+        "planned_to_end_mean_ms": 1.27107705417,
+        "burst_mean_ms": 1.21119809028,
+        "burst_p99_ms": 7.642415,
+        "arrival_lag_mean_ms": 0.0598789638889,
+        "arrival_lag_p99_ms": 0.075913,
+        "work_cpu_mean_ms": 1.14581290972,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 3.852667,
+        "process_system_cpu_seconds": 0.346163
+      },
+      "target_sha256": "1452c1b1ff9124f480689a43a93542f46da57b8e06bbff212637cf800820b1ef"
+    },
+    {
+      "case": "observe-none",
+      "repetition": 0,
+      "seed": 20261214,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607914,
+        "affinity": "cluster",
+        "instrumentation": "none",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261214,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000293914,
+        "task_mean_ms": 1.18948176944,
+        "task_p99_ms": 7.459267,
+        "submit_to_start_mean_ms": 0.0399070225,
+        "planned_to_end_mean_ms": 1.24998140167,
+        "burst_mean_ms": 1.18959369222,
+        "burst_p99_ms": 7.459437,
+        "arrival_lag_mean_ms": 0.0603877094444,
+        "arrival_lag_p99_ms": 0.076555,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 0,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.202763,
+        "process_system_cpu_seconds": 0
+      },
+      "target_sha256": "1452c1b1ff9124f480689a43a93542f46da57b8e06bbff212637cf800820b1ef"
+    },
+    {
+      "case": "observe-queue",
+      "repetition": 0,
+      "seed": 20261214,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607937,
+        "affinity": "cluster",
+        "instrumentation": "queue",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261214,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000300212,
+        "task_mean_ms": 1.22896428361,
+        "task_p99_ms": 8.221224,
+        "submit_to_start_mean_ms": 0.0715802322222,
+        "planned_to_end_mean_ms": 1.31412076194,
+        "burst_mean_ms": 1.22907333333,
+        "burst_p99_ms": 8.221273,
+        "arrival_lag_mean_ms": 0.0850474286111,
+        "arrival_lag_p99_ms": 0.44621,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.184824,
+        "process_system_cpu_seconds": 0.047103
+      },
+      "target_sha256": "1452c1b1ff9124f480689a43a93542f46da57b8e06bbff212637cf800820b1ef"
+    },
+    {
+      "case": "observe-queue",
+      "repetition": 1,
+      "seed": 20261215,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607957,
+        "affinity": "cluster",
+        "instrumentation": "queue",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261215,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.00141689,
+        "task_mean_ms": 1.18207656278,
+        "task_p99_ms": 7.559095,
+        "submit_to_start_mean_ms": 0.0293461158333,
+        "planned_to_end_mean_ms": 1.23983592417,
+        "burst_mean_ms": 1.18218948806,
+        "burst_p99_ms": 7.559145,
+        "arrival_lag_mean_ms": 0.0576464361111,
+        "arrival_lag_p99_ms": 0.07794,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.201777,
+        "process_system_cpu_seconds": 0.008977
+      },
+      "target_sha256": "8c8bd6362a9a5e867e6f2c9f61ae5061e01c177f9bdd97d88cd05b7ba0e20816"
+    },
+    {
+      "case": "observe-none",
+      "repetition": 1,
+      "seed": 20261215,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607978,
+        "affinity": "cluster",
+        "instrumentation": "none",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261215,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.001347803,
+        "task_mean_ms": 1.20055513333,
+        "task_p99_ms": 7.633884,
+        "submit_to_start_mean_ms": 0.0472681752778,
+        "planned_to_end_mean_ms": 1.26610642,
+        "burst_mean_ms": 1.20066773528,
+        "burst_p99_ms": 7.633954,
+        "arrival_lag_mean_ms": 0.0654386847222,
+        "arrival_lag_p99_ms": 0.090055,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 0,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.19588,
+        "process_system_cpu_seconds": 0.015714
+      },
+      "target_sha256": "8c8bd6362a9a5e867e6f2c9f61ae5061e01c177f9bdd97d88cd05b7ba0e20816"
+    },
+    {
+      "case": "observe-counters",
+      "repetition": 0,
+      "seed": 20261214,
+      "metadata": {
+        "schema": 1,
+        "stage": 3,
+        "executor": "original folly::CPUThreadPoolExecutor",
+        "queue": "Folly default",
+        "deployment": "dev",
+        "hostname": "VM-0-13-debian",
+        "kernel": "6.12.95+deb13-amd64",
+        "machine": "x86_64",
+        "pid": 2607997,
+        "affinity": "cluster",
+        "instrumentation": "counters",
+        "same_cpu_union": true,
+        "extra_allowed_cpus": [],
+        "pools": 2,
+        "threads_per_pool": 2,
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "numa_labels": [
+          -1,
+          -1
+        ],
+        "effective_masks": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "arrival": "regular",
+        "arrival_rate": 1200,
+        "duration_seconds": 3,
+        "arrival_limit": 0,
+        "burst_min": 1,
+        "burst_max": 1,
+        "cpu_us": 1000,
+        "jitter": 0.5,
+        "long_prob": 0.02,
+        "long_factor": 8,
+        "estimate_us": 0,
+        "seed": 20261214,
+        "work_mode": "iterations",
+        "iterations_per_us": 512,
+        "max_outstanding": 30000,
+        "max_planned_tasks": 1000000,
+        "sample_ms": 100,
+        "max_samples": 1000000,
+        "fail_task": null,
+        "drain_seconds": 30,
+        "planned_arrivals": 3600,
+        "planned_tasks": 3600,
+        "clock": "CLOCK_MONOTONIC relative ns",
+        "limits": [
+          "Native queue is approximate Folly queue telemetry, not kernel runq",
+          "No numa memory binding or physical cluster discovery",
+          "All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps",
+          "work estimate retains full cost until completion, not remaining CPU"
+        ]
+      },
+      "summary": {
+        "planned_tasks": 3600,
+        "completed_tasks": 3600,
+        "rejected_tasks": 0,
+        "canceled_tasks": 0,
+        "failed_tasks": 0,
+        "complete_bursts": 3600,
+        "conservation_ok": true,
+        "observed_seconds": 3.000293364,
+        "task_mean_ms": 1.28612061389,
+        "task_p99_ms": 9.39266,
+        "submit_to_start_mean_ms": 0.0977689661111,
+        "planned_to_end_mean_ms": 1.36796768611,
+        "burst_mean_ms": 1.28622565139,
+        "burst_p99_ms": 9.392829,
+        "arrival_lag_mean_ms": 0.0817420347222,
+        "arrival_lag_p99_ms": 0.578731,
+        "work_cpu_mean_ms": null,
+        "sample_rows": 62,
+        "sample_rows_dropped": 0,
+        "sampling_truncated": false,
+        "sampling_failed": false,
+        "process_user_cpu_seconds": 4.328639,
+        "process_system_cpu_seconds": 0.016149
+      },
+      "target_sha256": "1452c1b1ff9124f480689a43a93542f46da57b8e06bbff212637cf800820b1ef"
+    }
+  ]
+}

@@ -1,5 +1,9 @@
 // Linux/Folly synthetic DAG benchmark. All timestamps are relative CLOCK_MONOTONIC.
+#ifdef EXECUTOR_DEMO_USE_FOLLY_EXTENSION
 #include <folly/executors/experimental/AffinityExecutor.h>
+#else
+#include <executor_demo/BusinessExecutor.h>
+#endif
 #include <folly/init/Init.h>
 #include <algorithm>
 #include <atomic>
@@ -33,7 +37,13 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef EXECUTOR_DEMO_USE_FOLLY_EXTENSION
 using Executor = folly::experimental::AffinityExecutor;
+constexpr const char* kBackend = "folly_experimental";
+#else
+using Executor = executor_demo::BusinessExecutor;
+constexpr const char* kBackend = "business";
+#endif
 using Clock = std::chrono::steady_clock;
 
 uint64_t clockNs(clockid_t id) {
@@ -112,6 +122,8 @@ std::vector<int> allowedCpus() {
 struct Options {
   std::string output = "results", cpus, numa, capacities;
   std::string affinity = "none", policy = "home", metric = "work", queue = "default", workMode = "cpu";
+  std::string graph = "chains", waveWidths, waveDepths, balanceForks = "all";
+  std::vector<size_t> widths, depths;
   size_t pools = 6, threads = 2, fanoutMin = 20, fanoutMax = 40, chainLength = 2;
   size_t maxInflight = 128, memoryKb = 0;
   uint64_t requests = 0, cpuUs = 1000, joinUs = 100, rpcDelayUs = 5000, seed = 42, wakeUs = 0;
@@ -133,10 +145,16 @@ Usage: executor_demo [--option VALUE ...]
   --queue default|lifo|throttled --wake-us N (default, 0; nonzero only throttled, <=1e6)
   --qps N --duration SECONDS --requests N    Regular open-loop arrivals (12,10,0)
                                requests=0 uses duration; positive count also capped by duration
-  --fanout-min N --fanout-max N --chain-length N  Independent chains followed by one join (20,40,2)
+  --graph chains|waves         chains keeps original independent chains plus one join (chains)
+  --fanout-min N --fanout-max N --chain-length N  chains width range and chain depth (20,40,2)
+  --wave-widths '20,4,8'       Required in waves: branch count in each fork/join wave
+  --wave-depths '1,2,1'        Optional depth per wave; defaults to --chain-length for all waves
+  --balance-forks initial|all  fanout policy: balance initial submissions or every fork (all)
+                               Other policies still evaluate every submission. Each wave has one join.
+                               Total CPU nodes = sum(width * depth) + number of waves.
   --cpu-us N --jitter F         Nominal per-operator CPU microseconds and uniform +/- fraction (1000,.5)
   --long-prob F --long-factor F Heavy-tail probability and multiplier (.02,8)
-  --join-us N                  CPU microseconds of final join (100)
+  --join-us N                  CPU microseconds of every wave join, including final join (100)
   --rpc-prob F --rpc-delay-us N Split operators around timer-driven RPC suspension (0,5000)
   --work-mode cpu|iterations  CPU-time target or fixed work amount across placements (cpu)
   --iterations-per-us N        Fixed-mode loop iterations per nominal work microsecond (64)
@@ -172,6 +190,10 @@ Options parse(int argc, char** argv) {
     else if (key == "--metric") o.metric = val;
     else if (key == "--queue") o.queue = val;
     else if (key == "--work-mode") o.workMode = val;
+    else if (key == "--graph") o.graph = val;
+    else if (key == "--wave-widths") o.waveWidths = val;
+    else if (key == "--wave-depths") o.waveDepths = val;
+    else if (key == "--balance-forks") o.balanceForks = val;
     else if (key == "--pools") o.pools = parseU64(val);
     else if (key == "--threads") o.threads = parseU64(val);
     else if (key == "--fanout-min") o.fanoutMin = parseU64(val);
@@ -215,6 +237,25 @@ Options parse(int argc, char** argv) {
       (o.workMode != "cpu" && o.workMode != "iterations") || !o.iterationsPerUs || o.iterationsPerUs > 1000000 ||
       o.estimateUs > 10000000 || o.crossNumaPenaltyUs < 0 || o.minGainUs < 0 || o.relativeGain < 0 || o.relativeGain >= 1)
     throw std::invalid_argument("configuration outside supported bounds; see --help");
+  if (o.graph != "chains" && o.graph != "waves") throw std::invalid_argument("graph must be chains or waves");
+  if (o.balanceForks != "initial" && o.balanceForks != "all") throw std::invalid_argument("balance-forks must be initial or all");
+  if (o.graph == "chains" && (!o.waveWidths.empty() || !o.waveDepths.empty()))
+    throw std::invalid_argument("wave-widths/depths require graph=waves");
+  if (o.graph == "waves") {
+    if (o.waveWidths.empty()) throw std::invalid_argument("graph=waves requires explicit wave-widths");
+    for (const auto& width : split(o.waveWidths, ',')) o.widths.push_back(parseU64(width));
+    if (o.widths.empty() || o.widths.size() > 1000) throw std::invalid_argument("invalid wave count");
+    if (o.waveDepths.empty()) o.depths.assign(o.widths.size(), o.chainLength);
+    else for (const auto& depth : split(o.waveDepths, ',')) o.depths.push_back(parseU64(depth));
+    if (o.widths.size() != o.depths.size()) throw std::invalid_argument("wave-widths and wave-depths counts differ");
+    uint64_t total = o.widths.size();
+    for (size_t wave = 0; wave < o.widths.size(); ++wave) {
+      if (!o.widths[wave] || o.widths[wave] > 10000 || !o.depths[wave] || o.depths[wave] > 1000)
+        throw std::invalid_argument("wave width/depth outside supported bounds");
+      total += o.widths[wave] * o.depths[wave];
+    }
+    if (total > 100000) throw std::invalid_argument("total CPU nodes must be <= 100000");
+  }
   return o;
 }
 
@@ -306,8 +347,8 @@ struct TaskRecord {
   bool used = false;
   int workerTid = 0;
   uint64_t submit = 0, start = 0, finish = 0, cpuNs = 0, estimate = 0, work = 0;
-  size_t parent = 0, depth = 0;
-  bool isFanout = false;
+  size_t parent = 0, depth = 0, wave = 0;
+  bool isFanout = false, balanceEligible = false, isJoin = false;
   Executor::Decision decision{};
   std::string status;
 };
@@ -323,7 +364,9 @@ struct Request {
   std::atomic<size_t> remaining{0};
   std::atomic<bool> canceled{false}, failed{false};
   std::vector<Node> nodes;
-  TaskRecord join;
+  std::vector<TaskRecord> joins;
+  std::vector<size_t> widths, depths, offsets;
+  size_t operatorCount = 0;
   std::vector<uint64_t> data;
   std::string status;
 };
@@ -385,8 +428,8 @@ class Experiment {
       if (std::filesystem::exists(path(f))) throw std::runtime_error("refusing to overwrite existing run: " + path(f));
     tasks_.open(path("tasks.csv")); requests_.open(path("requests.csv")); pools_.open(path("pools.csv"));
     if (!tasks_ || !requests_ || !pools_) throw std::runtime_error("cannot create output files");
-    tasks_ << "request_id,node_id,stage,home_group,parent_group,chosen_group,submit_ns,start_ns,finish_ns,enqueue_us,cpu_us,wall_us,pending_before,inflight_before,outstanding_before,outstanding_cpu_us_before,queue_before,work_estimate_us,fanout,depth,is_fanout,migrated,cross_numa,preferred_load_us,chosen_load_us,move_reason,work_target_us,worker_tid,status\n";
-    requests_ << "request_id,scheduled_ns,offered_ns,first_start_ns,finish_ns,latency_us,accepted_to_finish_us,admission_lag_us,status,fanout,planned_cpu_us\n";
+    tasks_ << "request_id,node_id,stage,home_group,parent_group,chosen_group,submit_ns,start_ns,finish_ns,enqueue_us,cpu_us,wall_us,pending_before,inflight_before,outstanding_before,outstanding_cpu_us_before,queue_before,work_estimate_us,fanout,depth,is_fanout,migrated,cross_numa,preferred_load_us,chosen_load_us,move_reason,work_target_us,worker_tid,status,wave,kind,balance_eligible,predecessors\n";
+    requests_ << "request_id,scheduled_ns,offered_ns,first_start_ns,finish_ns,latency_us,accepted_to_finish_us,admission_lag_us,status,fanout,planned_cpu_us,operator_nodes,cpu_nodes,waves\n";
     pools_ << "time_ns,group,pending,inflight,outstanding,estimated_outstanding_cpu_us,queue_depth,submitted,completed,rejected,migrated_in,failed,capacity\n";
     executor_ = std::make_unique<Executor>(topo_.config);
     origin_ = clockNs(CLOCK_MONOTONIC);
@@ -440,9 +483,7 @@ class Experiment {
       }
       active_.fetch_add(1, std::memory_order_relaxed);
       ++accepted_;
-      r->remaining.store(r->fanout, std::memory_order_relaxed);
-      for (size_t branch = 0; branch < r->fanout; ++branch)
-        submitNode(r, branch, 0, 0, r->home);
+      startWave(r, 0, r->home);
     }
     admissionEnd_ = now();
     {
@@ -482,8 +523,15 @@ class Experiment {
     r->id = id; r->scheduled = scheduled; r->home = id % options_.pools;
     auto key = mix(options_.seed ^ mix(id));
     r->fanout = options_.fanoutMin + key % (options_.fanoutMax - options_.fanoutMin + 1);
-    if (admitted) r->nodes.resize(r->fanout * options_.chainLength);
-    for (size_t i = 0; i < r->fanout * options_.chainLength; ++i) {
+    r->widths = options_.graph == "waves" ? options_.widths : std::vector<size_t>{r->fanout};
+    r->depths = options_.graph == "waves" ? options_.depths : std::vector<size_t>{options_.chainLength};
+    r->fanout = r->widths[0];
+    for (size_t wave = 0; wave < r->widths.size(); ++wave) {
+      r->offsets.push_back(r->operatorCount);
+      r->operatorCount += r->widths[wave] * r->depths[wave];
+    }
+    if (admitted) { r->nodes.resize(r->operatorCount); r->joins.resize(r->widths.size()); }
+    for (size_t i = 0; i < r->operatorCount; ++i) {
       auto k = mix(key ^ mix(i + 1));
       double work = double(options_.cpuUs) * (1 + options_.jitter * (2 * unit(k) - 1));
       if (unit(k ^ 0xdeadbeefULL) < options_.longProb) work *= options_.longFactor;
@@ -491,7 +539,7 @@ class Experiment {
       if (admitted) { r->nodes[i].workUs = workUs; r->nodes[i].rpc = unit(k ^ 0xa10a10ULL) < options_.rpcProb; }
       r->plannedCpuUs += workUs;
     }
-    r->plannedCpuUs += options_.joinUs;
+    r->plannedCpuUs += options_.joinUs * r->widths.size();
     // Immutable request-local memory lets successors reuse data without adding a data race.
     if (admitted) r->data.resize(options_.memoryKb * 1024 / sizeof(uint64_t));
     for (size_t i = 0; i < r->data.size(); ++i) r->data[i] = mix(key + i);
@@ -521,19 +569,32 @@ class Experiment {
     while ((previous == 0 || start < previous) &&
            !r->firstStart.compare_exchange_weak(previous, start, std::memory_order_relaxed)) {}
   }
-  void submitNode(const std::shared_ptr<Request>& r, size_t branch, size_t depth, int stage, size_t parent) noexcept {
-    if (cancel_.load(std::memory_order_acquire)) { r->canceled.store(true); branchDone(r, parent); return; }
-    const size_t nodeId = branch * options_.chainLength + depth;
+  // The last branch releases a join; that join alone releases the next wave.
+  // remaining's acquire/release chain publishes all predecessor records before logging.
+  // A branch owns exactly one decrement across its CPU stages and optional RPC.
+  // A canceled continuation performs that decrement without scheduling descendants.
+  // A wave cannot reset remaining until the previous wave's last decrement AND
+  // its independently submitted join have completed; no older branch can decrement it.
+  void startWave(const std::shared_ptr<Request>& r, size_t wave, size_t parent) noexcept {
+    r->remaining.store(r->widths[wave], std::memory_order_relaxed);
+    for (size_t branch = 0; branch < r->widths[wave]; ++branch)
+      submitNode(r, wave, branch, 0, 0, parent);
+  }
+  void submitNode(const std::shared_ptr<Request>& r, size_t wave, size_t branch, size_t depth, int stage, size_t parent) noexcept {
+    if (cancel_.load(std::memory_order_acquire)) { r->canceled.store(true); branchDone(r, wave, parent); return; }
+    const size_t nodeId = r->offsets[wave] + branch * r->depths[wave] + depth;
     auto& node = r->nodes[nodeId];
     auto& rec = node.records[stage];
-    rec.used = true; rec.submit = now(); rec.parent = parent; rec.depth = depth; rec.isFanout = depth == 0 && stage == 0;
+    rec.used = true; rec.submit = now(); rec.parent = parent; rec.depth = depth; rec.wave = wave;
+    rec.isFanout = depth == 0 && stage == 0;
+    rec.balanceEligible = rec.isFanout && (wave == 0 || options_.balanceForks == "all");
     rec.work = node.rpc ? (stage == 0 ? node.workUs / 2 : node.workUs - node.workUs / 2) : node.workUs;
     rec.estimate = options_.estimateUs ? options_.estimateUs : rec.work;
     Executor::Hint hint;
-    hint.home = r->home; hint.parent = parent; hint.hasParent = !rec.isFanout;
-    hint.isFanout = rec.isFanout; hint.estimatedCpuUs = rec.estimate;
+    hint.home = r->home; hint.parent = parent; hint.hasParent = !(wave == 0 && rec.isFanout);
+    hint.isFanout = rec.balanceEligible; hint.estimatedCpuUs = rec.estimate;
     try {
-      bool admitted = executor_->add(hint, [this, r, branch, depth, stage, nodeId](const Executor::Decision& decision) {
+      bool admitted = executor_->add(hint, [this, r, wave, branch, depth, stage, nodeId](const Executor::Decision& decision) {
         auto& n = r->nodes[nodeId]; auto& record = n.records[stage];
         record.decision = decision; record.workerTid = workerTid(); record.start = now(); setFirstStart(r, record.start);
         const auto cpuStart = clockNs(CLOCK_THREAD_CPUTIME_ID);
@@ -541,38 +602,41 @@ class Experiment {
         try { ok = cpuWork(record.work, r->data); record.status = ok ? "completed" : "canceled"; }
         catch (...) { record.status = "failed"; r->failed.store(true); }
         record.cpuNs = clockNs(CLOCK_THREAD_CPUTIME_ID) - cpuStart; record.finish = now();
-        if (!ok) { if (record.status == "canceled") r->canceled.store(true); branchDone(r, decision.chosen); return; }
+        if (!ok) { if (record.status == "canceled") r->canceled.store(true); branchDone(r, wave, decision.chosen); return; }
         if (n.rpc && stage == 0) {
           try {
-            timers_.add(std::chrono::microseconds(options_.rpcDelayUs), [this, r, branch, depth, chosen = decision.chosen] {
-              submitNode(r, branch, depth, 1, chosen);
+            timers_.add(std::chrono::microseconds(options_.rpcDelayUs), [this, r, wave, branch, depth, chosen = decision.chosen] {
+              submitNode(r, wave, branch, depth, 1, chosen);
             });
-          } catch (...) { r->failed.store(true); branchDone(r, decision.chosen); }
-        } else if (depth + 1 < options_.chainLength) {
-          submitNode(r, branch, depth + 1, 0, decision.chosen);
-        } else { branchDone(r, decision.chosen); }
+          } catch (...) { r->failed.store(true); branchDone(r, wave, decision.chosen); }
+        } else if (depth + 1 < r->depths[wave]) {
+          submitNode(r, wave, branch, depth + 1, 0, decision.chosen);
+        } else { branchDone(r, wave, decision.chosen); }
       });
-      if (!admitted) { rec.status = "submission_rejected"; rec.finish = now(); r->failed.store(true); branchDone(r, parent); }
-    } catch (...) { rec.status = "failed"; rec.finish = now(); r->failed.store(true); branchDone(r, parent); }
+      if (!admitted) { rec.status = "submission_rejected"; rec.finish = now(); r->failed.store(true); branchDone(r, wave, parent); }
+    } catch (...) { rec.status = "failed"; rec.finish = now(); r->failed.store(true); branchDone(r, wave, parent); }
   }
-  void branchDone(const std::shared_ptr<Request>& r, size_t parent) noexcept {
+  void branchDone(const std::shared_ptr<Request>& r, size_t wave, size_t parent) noexcept {
     if (r->remaining.fetch_sub(1, std::memory_order_acq_rel) != 1) return;
     if (cancel_.load(std::memory_order_acquire)) r->canceled.store(true);
     if (r->canceled.load() || r->failed.load()) { finishRequest(r); return; }
-    auto& rec = r->join;
-    rec.used = true; rec.submit = now(); rec.parent = parent; rec.depth = options_.chainLength; rec.work = options_.joinUs; rec.estimate = options_.estimateUs ? options_.estimateUs : rec.work;
+    auto& rec = r->joins[wave];
+    rec.used = true; rec.isJoin = true; rec.wave = wave; rec.submit = now(); rec.parent = parent;
+    rec.depth = r->depths[wave]; rec.work = options_.joinUs; rec.estimate = options_.estimateUs ? options_.estimateUs : rec.work;
     Executor::Hint hint;
     hint.home = r->home; hint.parent = parent; hint.hasParent = true; hint.isFanout = false; hint.estimatedCpuUs = rec.estimate;
     try {
-      bool admitted = executor_->add(hint, [this, r](const Executor::Decision& decision) {
-        auto& record = r->join; record.decision = decision; record.workerTid = workerTid(); record.start = now(); setFirstStart(r, record.start);
+      bool admitted = executor_->add(hint, [this, r, wave](const Executor::Decision& decision) {
+        auto& record = r->joins[wave]; record.decision = decision; record.workerTid = workerTid(); record.start = now(); setFirstStart(r, record.start);
         auto cpuStart = clockNs(CLOCK_THREAD_CPUTIME_ID);
+        bool ok = false;
         try {
-          bool ok = cpuWork(record.work, r->data); record.status = ok ? "completed" : "canceled";
+          ok = cpuWork(record.work, r->data); record.status = ok ? "completed" : "canceled";
           if (!ok) r->canceled.store(true);
         } catch (...) { record.status = "failed"; r->failed.store(true); }
         record.cpuNs = clockNs(CLOCK_THREAD_CPUTIME_ID) - cpuStart; record.finish = now();
-        finishRequest(r);
+        if (ok && wave + 1 < r->widths.size()) startWave(r, wave + 1, decision.chosen);
+        else finishRequest(r);
       });
       if (!admitted) { rec.status = "submission_rejected"; rec.finish = now(); r->failed.store(true); finishRequest(r); }
     } catch (...) { rec.status = "failed"; rec.finish = now(); r->failed.store(true); finishRequest(r); }
@@ -596,7 +660,7 @@ class Experiment {
     std::string reason = d.chosen == d.preferred ? "preferred" : "load_balance";
     if (options_.policy == "home") reason = "home";
     else if (options_.policy == "borrow" && t.parent != r.home && d.chosen == r.home) reason = "return_home";
-    else if ((options_.policy == "sticky" || options_.policy == "fanout") && !t.isFanout && d.chosen == t.parent) reason = "follow_parent";
+    else if ((options_.policy == "sticky" || options_.policy == "fanout") && !t.balanceEligible && d.chosen == t.parent) reason = "follow_parent";
     tasks_ << r.id << ',' << id << ',' << stage << ',' << r.home << ',' << t.parent << ',' << d.chosen << ','
            << t.submit << ',' << t.start << ',' << t.finish << ',';
     if (t.start) tasks_ << double(t.start - t.submit) / 1000;
@@ -605,7 +669,18 @@ class Experiment {
     tasks_ << ',' << d.chosenPending << ',' << d.chosenInflight << ',' << d.chosenOutstanding << ','
            << d.chosenOutstandingCpuUs << ',' << d.chosenQueueDepth << ',' << t.estimate << ',' << r.fanout << ','
            << t.depth << ',' << t.isFanout << ',' << d.migrated << ',' << d.crossNuma << ','
-           << d.preferredLoadUs << ',' << d.chosenLoadUs << ',' << reason << ',' << t.work << ',' << t.workerTid << ',' << t.status << '\n';
+           << d.preferredLoadUs << ',' << d.chosenLoadUs << ',' << reason << ',' << t.work << ',' << t.workerTid << ',' << t.status
+           << ',' << t.wave << ',' << (t.isJoin ? "join" : "operator") << ',' << t.balanceEligible << ',';
+    // IDs describe graph dependencies; RPC stage 1 also depends on stage 0 of the same ID.
+    if (stage == 1) tasks_ << id;
+    else if (t.isJoin) {
+      for (size_t b = 0; b < r.widths[t.wave]; ++b) {
+        if (b) tasks_ << ';';
+        tasks_ << r.offsets[t.wave] + (b + 1) * r.depths[t.wave] - 1;
+      }
+    } else if (t.depth > 0) tasks_ << id - 1;
+    else if (t.wave > 0) tasks_ << r.operatorCount + t.wave - 1;
+    tasks_ << '\n';
     ++tasksLogged_;
   }
   void loggerLoop() {
@@ -629,12 +704,13 @@ class Experiment {
         } else if (r->status == "censored") { ++censored_; ++seconds_[r->finish / 1000000000ULL].censored; }
         else if (r->status == "failed") { ++failed_; ++seconds_[r->finish / 1000000000ULL].failed; }
         for (size_t i = 0; i < r->nodes.size(); ++i) for (int s = 0; s < 2; ++s) writeTask(*r, i, s, r->nodes[i].records[s]);
-        writeTask(*r, r->nodes.size(), 0, r->join);
+        for (size_t wave = 0; wave < r->joins.size(); ++wave) writeTask(*r, r->operatorCount + wave, 0, r->joins[wave]);
         requests_ << r->id << ',' << r->scheduled << ',' << r->offered << ',' << r->firstStart.load() << ',' << r->finish << ',';
         if (r->status != "rejected") requests_ << double(r->finish - r->scheduled) / 1000;
         requests_ << ',';
         if (r->status != "rejected") requests_ << double(r->finish - r->offered) / 1000;
-        requests_ << ',' << double(r->offered - r->scheduled) / 1000 << ',' << r->status << ',' << r->fanout << ',' << r->plannedCpuUs << '\n';
+        requests_ << ',' << double(r->offered - r->scheduled) / 1000 << ',' << r->status << ',' << r->fanout << ',' << r->plannedCpuUs
+                  << ',' << r->operatorCount << ',' << r->operatorCount + r->widths.size() << ',' << r->widths.size() << '\n';
       } catch (...) { ioFailed_ = true; }
       if (r->status != "rejected") {
         // Synchronize with condition-variable predicate to avoid a missed final notification.
@@ -685,7 +761,8 @@ class Experiment {
     auto temporary = path("metadata.json.tmp");
     std::ofstream out(temporary);
     utsname host{}; uname(&host);
-    out << std::setprecision(16) << "{\n  \"schema_version\": 1, \"phase\": " << json(phase)
+    out << std::setprecision(16) << "{\n  \"schema_version\": 2, \"phase\": " << json(phase)
+        << ", \"backend\": " << json(kBackend)
         << ", \"pid\": " << getpid() << ",\n  \"clock\": \"CLOCK_MONOTONIC\", \"origin_monotonic_ns\": " << origin_
         << ", \"cpu_clock\": \"CLOCK_THREAD_CPUTIME_ID\",\n  \"architecture\": " << json(host.machine)
         << ", \"kernel\": " << json(host.release) << ", \"hostname\": " << json(host.nodename)
@@ -695,6 +772,8 @@ class Experiment {
         << ", \"queue\": " << json(options_.queue) << ", \"wake_us\": " << options_.wakeUs << ", \"seed\": " << options_.seed
         << ", \"qps\": " << options_.qps << ", \"duration\": " << options_.duration << ", \"requests\": " << options_.requests
         << ", \"fanout_min\": " << options_.fanoutMin << ", \"fanout_max\": " << options_.fanoutMax << ", \"chain_length\": " << options_.chainLength
+        << ", \"graph\": " << json(options_.graph) << ", \"wave_widths\": " << json(options_.waveWidths)
+        << ", \"wave_depths\": " << json(options_.waveDepths) << ", \"balance_forks\": " << json(options_.balanceForks)
         << ", \"cpu_us\": " << options_.cpuUs << ", \"jitter\": " << options_.jitter << ", \"long_prob\": " << options_.longProb
         << ", \"long_factor\": " << options_.longFactor << ", \"join_us\": " << options_.joinUs << ", \"rpc_prob\": " << options_.rpcProb
         << ", \"rpc_delay_us\": " << options_.rpcDelayUs << ", \"max_inflight\": " << options_.maxInflight
@@ -717,6 +796,8 @@ class Experiment {
         << "\"Detailed instrumentation and synthetic CPU clocks perturb short tasks; compare against a production control.\","
         << "\"CPU-time mode fixes CPU use and cannot expose locality service-time cost; fixed iterations requires external calibration.\","
         << "\"Read-only request memory is initialized on main thread; no NUMA memory binding or real RPC/cache model.\","
+        << "\"Waves use a complete barrier after independent branch chains; joins inherit the last predecessor group.\","
+        << "\"is_fanout labels wave starts (including width one); balance_eligible controls fanout policy only.\","
         << "\"Admission slots include completed requests waiting for CSV serialization; rejects bound memory.\","
         << "\"seconds.csv uses final completion cohorts; rejected/censored requests are not successful latency observations.\","
         << "\"Default queue selection is pinned Folly build/runtime configuration; queue=lifo or throttled is explicit.\"]\n}\n";
