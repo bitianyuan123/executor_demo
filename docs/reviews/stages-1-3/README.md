@@ -96,6 +96,8 @@ flowchart LR
 
 竖线仅表示三个seed的分位数范围。星号桶每轮不足2000任务，尾样本较少，且同批内任务相关。[原始范围表](data/arm_conditional_ranges.csv)、[SVG矢量图](figures/conditional-affinity.svg)。图中完成从**实际提交**算起，区别于前一张总览的planned口径。
 
+原图左侧是对数轴、右侧是线性轴，不宜直接比较视觉变化幅度。针对“等待增加而完成p99较平”的疑问，另补[同轴16/256线程对照与机制解释](queue-latency-interpretation.md)，包含完成p50，避免将尾分位数的现象泛化为所有任务。
+
 原生queue热读在目标机微基准中约**1.94ns（idle）/3.22ns（busy）**；该结果支持优先使用已有queue信号。它不覆盖跨NUMA高频写竞争或完整监控扰动。若queue低而回调内竞争明显，再检查inflight/outstanding、容量和CPU差分；无需仅为读取负载先改写Folly。C++并发普通整数读写仍是数据竞争；容忍误差可使用relaxed atomic，不等于可以无同步读取可变数据。
 
 ## 是否可以进入 DAG
@@ -127,4 +129,4 @@ python3 -m venv /tmp/stage123-review-plots
 
 绘图脚本优先使用系统Noto CJK字体；没有中文字体时应先安装或调整字体路径。图的输入CSV哈希、绘图库版本与统计口径记录在[provenance.json](figures/provenance.json)。日志归档与提取保留原输出精度；没有逐任务ARM CSV，就不能声称本次重新计算了其分位数、置信区间或任务级回归。
 
-本次完成归档哈希、来源行、重复提取一致性、41轮守恒、分桶样本数、均值分解和相对链接核验，并目视检查两张结果图；详见[核验记录](validation.json)。没有重新启动ARM实验，也没有测试或改动另一工作树中正在开发的DAG代码。
+本次完成归档哈希、来源行、重复提取一致性、41轮守恒、分桶样本数、均值分解和相对链接核验，并目视检查三张结果图；详见[核验记录](validation.json)。没有重新启动ARM实验，也没有测试或改动另一工作树中正在开发的DAG代码。

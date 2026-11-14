@@ -6,5 +6,10 @@
   },
   "matplotlib": "3.11.2",
   "font": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-  "statistics": "means of per-run means; individual per-run p99; min/max ranges, never CI"
+  "statistics": "means of per-run means; individual per-run p99; min/max ranges, never CI",
+  "conditional_range_quantiles": [
+    "p50",
+    "p99"
+  ],
+  "axis_note": "conditional-affinity: wait log, completion linear; queue-latency-same-scale: all time axes linear and shared"
 }
