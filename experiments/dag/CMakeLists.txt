@@ -31,7 +31,7 @@ endif()
 
 if(BUILD_TESTING)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
-  find_package(GTest REQUIRED)
+  include("${DEMO_REPO_ROOT}/cmake/DemoGTest.cmake")
   add_test(NAME demo_functional COMMAND "${Python3_EXECUTABLE}" "${DEMO_REPO_ROOT}/tests/demo_functional.py" "$<TARGET_FILE:executor_demo>")
   add_test(NAME analysis_statistics COMMAND "${Python3_EXECUTABLE}" "${DEMO_REPO_ROOT}/tests/analysis_test.py")
   add_test(NAME graph_analysis COMMAND "${Python3_EXECUTABLE}" "${DEMO_REPO_ROOT}/stages/04-dag/test_graph_analysis.py")

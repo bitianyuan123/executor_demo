@@ -64,6 +64,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     data = json.dumps(capture(), indent=2)
     if args.output:
-        pathlib.Path(args.output).write_text(data + "\n")
+        output = pathlib.Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(data + "\n", encoding="utf-8")
     else:
         print(data)

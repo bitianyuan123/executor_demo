@@ -21,6 +21,8 @@
 - 可选Folly扩展分支：`experiment/grouped-executor-20261114`，固定提交见[锁定文件](dependencies.lock.json)。
 - Linux、C++20、CMake≥3.20、Ninja、Python3；验证环境为Debian13/GCC14。
 
+下列完整依赖命令适用于Debian/Ubuntu。DAG及阶段5的C++测试还需要GoogleTest开发包；RPM系发行版通常使用`gtest-devel`，具体以当前发行版的软件仓库为准。Folly自身关闭测试后编译成功，不代表Demo的测试依赖已经齐备。测试机遇到GTest缺失、拓扑输出目录或`/.build.command`提示时，按[构建排障指南](docs/BUILD_TROUBLESHOOTING.md)继续。
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y build-essential cmake ninja-build git python3 \
@@ -46,13 +48,21 @@ FOLLY_PREFIX=/path/to/folly/install BUILD_JOBS=1 ./scripts/build_stage.sh indepe
 FOLLY_PREFIX=/path/to/folly/install BUILD_JOBS=1 ./scripts/build_stage.sh dag
 ```
 
+也可以复用已安装Folly，继续完成根工程构建和测试：
+
+```bash
+SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
+```
+
+两个构建脚本默认`BUILD_TESTING=ON`，缺少GTest时不会静默跳过测试。可以用`DEMO_GTEST_SOURCE_DIR=/absolute/path/to/googletest`指定已有GoogleTest源码；不会自动联网下载依赖。显式设置`BUILD_TESTING=OFF`只编译可执行文件并跳过测试，不能将其记录为测试通过。完整用法见[构建排障指南](docs/BUILD_TROUBLESHOOTING.md)。
+
 对应产物位于 `build-metrics/metric_cost_bench`、`build-independent/independent_load`、`build-dag/executor_demo`。DAG可执行文件保留旧名以兼容历史命令，metadata明确记录business后端。各目录也可以直接 `cmake -S experiments/<目录> -B <构建目录> -DCMAKE_PREFIX_PATH=...`，不依赖根CMake。
 
 阶段5再将Folly源码切到实验分支，按其独立指南构建 `build-placement/executor_demo` 与 `build-placement/dag_folly`。源码头文件、生成配置和链接库必须来自兼容基线，不可随意混用系统Folly版本。
 
 ## 在测试环境分步执行
 
-先保存 `python3 scripts/topology.py --output results/local/topology.json`，核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
+先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 
 阶段3先固定服务分布扫描负载和线程数，再比较三种亲和；阶段4先固定DAG与home，再改变跨池策略和fork位置。每次只扩展一个主要问题，串行运行、同seed配对、交错重复，保存所有拒绝/取消/未完成任务和发生器落后。每秒p99只作波动观察，正式比较以完整样本和独立重复为主。
 
