@@ -1,0 +1,28 @@
+{
+  "validation_date": "2026-11-14",
+  "checks": {
+    "archived_evidence_matches_manifest_and_attachments": true,
+    "deterministic_extraction_byte_identical": true,
+    "unique_complete_arm_runs": 41,
+    "source_line_and_printed_raw_row_checks": true,
+    "mean_latency_decomposition_tolerance_ms": 0.00101,
+    "figure_inputs_match_provenance": true,
+    "existing_relative_markdown_links": 113,
+    "mermaid_blocks_syntax_manually_reviewed_not_browser_rendered": 13,
+    "png_figures_visually_inspected": 2,
+    "dag_and_folly_working_directories_modified": false,
+    "new_performance_experiments_executed": false,
+    "staged_evidence_bytes_match_manifest": true,
+    "whitespace_check_with_original_crlf": true
+  },
+  "extraction_counts": {
+    "runs": 41,
+    "queue_buckets": 139,
+    "prediction": 30,
+    "contrasts": 7,
+    "conditional_ranges": 54,
+    "metric_reads": 16,
+    "metric_updates": 18,
+    "queue_zero": 9
+  }
+}

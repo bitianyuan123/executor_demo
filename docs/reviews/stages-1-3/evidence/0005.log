@@ -1,0 +1,170 @@
+
+[root@localhost executor_demo]# git pull --ff-only                                                                                                                                                                                   remote: Enumerating objects: 18, done.
+remote: Counting objects: 100% (18/18), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 12 (delta 6), reused 12 (delta 6), pack-reused 0 (from 0)
+Unpacking objects: 100% (12/12), 21.51 KiB | 710.00 KiB/s, done.
+From https://github.com/bitianyuan123/executor_demo
+   1cca4c5..abb3d02  experiment/affinity-load-20261114 -> origin/experiment/affinity-load-20261114
+Updating 1cca4c5..abb3d02
+Fast-forward
+ CMakeLists.txt                          |   2 ++
+ docs/TARGET_PILOT_04_AFFINITY_REVIEW.md | 146 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ docs/TARGET_TESTING.md                  |   2 ++
+ scripts/conditional_latency.py          | 270 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scripts/dag_terminal_report.py          | 255 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/conditional_latency_test.py       | 144 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/dag_terminal_report_test.py       | 195 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 1014 insertions(+)
+ create mode 100644 docs/TARGET_PILOT_04_AFFINITY_REVIEW.md
+ create mode 100644 scripts/conditional_latency.py
+ create mode 100644 scripts/dag_terminal_report.py
+ create mode 100644 tests/conditional_latency_test.py
+ create mode 100644 tests/dag_terminal_report_test.py
+[root@localhost executor_demo]# cd /home/bty/rank_demo/executor_demo
+TARGET_RUN='results/local/arm-pilot-01'
+TARGET_HIGH='results/local/arm-pilot-t256-01'
+
+[root@localhost executor_demo]# git pull --ff-only
+  --output "$TARGET_RUN/reports/s3-burst-conditional" --compact
+
+python3 scripts/conditional_latency.py \
+  --manifest "$TARGET_RUN/s3-threads/manifest.json" \
+  --output "$TARGET_RUN/reports/s3-threads-conditional" --compact
+
+python3 scripts/conditional_latency.py \
+  --manifest "$TARGET_HIGH/s3-deployment/manifest.json" \
+  --output "$TARGET_HIGH/reports/s3-deployment-conditional" --compact
+Already up to date.
+[root@localhost executor_demo]# TARGET_RUN='results/local/arm-pilot-01'
+[root@localhost executor_demo]# TARGET_HIGH='results/local/arm-pilot-t256-01'
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 scripts/conditional_latency.py \
+>   --manifest "$TARGET_RUN/s3-burst/manifest.json" \
+>   --output "$TARGET_RUN/reports/s3-burst-conditional" --compact
+CONDITIONAL_LATENCY window=[10.0, 60.0] recorded/planned=9/9 usable=9 excluded=0
+Native queue is the submitting thread's pre-add Folly snapshot, not kernel runq or a reservation.
+Cohort selection uses planned arrival in [start,end); keep completions after end.
+Each run uses nearest-rank p50/p95/p99. Ranges are min..max of run statistics, not pooled quantiles or confidence intervals.
+Tasks within a burst/time interval are dependent; burst counts are descriptive, not independent sample counts.
+LOW_TAIL means n*0.01<20 in at least one run. This heuristic is not a precision guarantee, even when absent.
+Association within these workload/configuration strata is not a causal curve or a portable queue threshold.
+Do not average per-second p99. Failed/incomplete runs stay visible and are excluded from conditional summaries.
+CASE local config=2928d9b28a69 seeds=[420, 421, 422] affinity=cluster threads/pool=16
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=257.820..260.052/540.696..541.409/572.586..574.930 submitted=357.943..359.758/643.053..646.769/690.571..691.472 planned=358.050..359.878/643.204..646.920/690.684..691.584
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.019..0.020/0.024..0.024/0.030..0.032 submitted=101.477..109.008/143.103..144.795/146.702..148.967 planned=101.534..109.063/143.158..144.849/146.756..149.021 LOW_TAIL
+  q=1-3 runs=3/3 n=[365, 367] bursts=[120, 120] wait=0.026..0.028/0.039..0.040/0.041..0.042 submitted=95.476..101.036/143.203..147.506/148.722..148.953 planned=95.536..101.100/143.266..147.567/148.783..149.032 LOW_TAIL
+  q=4-15 runs=3/3 n=[1549, 1615] bursts=[120, 120] wait=0.086..0.087/53.697..58.353/68.616..68.806 submitted=104.879..108.437/154.179..164.210/197.749..201.096 planned=104.954..108.509/154.241..164.288/197.827..201.174 LOW_TAIL
+  q=16-63 runs=3/3 n=[6106, 6348] bursts=[120, 120] wait=213.484..221.795/356.862..371.699/381.812..397.945 submitted=312.253..322.503/467.933..482.048/502.184..518.334 planned=312.335..322.587/468.034..482.166/502.276..518.463
+  q=64+ runs=3/3 n=[3550, 3860] bursts=[120, 120] wait=469.737..478.676/566.259..568.596/586.557..588.994 submitted=571.334..579.457/679.753..682.532/710.375..711.971 planned=571.433..579.551/679.848..682.675/710.478..712.085
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+CASE smooth config=da9f7ea7fd66 seeds=[420, 421, 422] affinity=cluster threads/pool=16
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[12000, 12000] wait=0.013..0.014/0.017..0.018/0.018..0.019 submitted=99.899..100.813/144.410..145.035/148.511..148.976 planned=99.952..100.867/144.463..145.088/148.564..149.029
+  q=0 runs=3/3 n=[12000, 12000] bursts=[12000, 12000] wait=0.013..0.014/0.017..0.018/0.018..0.019 submitted=99.899..100.813/144.410..145.035/148.511..148.976 planned=99.952..100.867/144.463..145.088/148.564..149.029
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+CASE spread config=878c4f503a60 seeds=[420, 421, 422] affinity=cluster threads/pool=16
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=0.013..0.014/0.020..0.026/57.977..58.377 submitted=102.119..102.757/146.938..147.570/180.121..182.850 planned=102.387..103.049/147.197..147.844/180.648..183.399
+  q=0 runs=3/3 n=[11891, 11917] bursts=[120, 120] wait=0.013..0.014/0.019..0.020/56.547..57.226 submitted=101.742..102.349/146.571..147.013/175.676..176.582 planned=102.068..102.657/146.865..147.332/176.198..177.112
+  q=1-3 runs=3/3 n=[83, 98] bursts=[80, 85] wait=52.432..54.086/64.461..71.312/68.444..85.715 submitted=148.348..168.102/200.684..201.977/210.937..216.590 planned=148.903..168.615/201.202..202.489/211.459..217.121 LOW_TAIL
+  q=4-15 runs=1/3 n=[11, 11] bursts=[3, 3] wait=0.334/68.860/68.860 submitted=129.165/165.736/165.736 planned=129.665/166.263/166.263 LOW_TAIL
+  queue=0 P(wait>1ms)=0.0330502..0.0340022 P(wait>5ms)=0.0330502..0.0334984 event_counts=[393, 405]/[393, 399]
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 scripts/conditional_latency.py \
+>   --manifest "$TARGET_RUN/s3-threads/manifest.json" \
+>   --output "$TARGET_RUN/reports/s3-threads-conditional" --compact
+CONDITIONAL_LATENCY window=[10.0, 60.0] recorded/planned=12/12 usable=12 excluded=0
+Native queue is the submitting thread's pre-add Folly snapshot, not kernel runq or a reservation.
+Cohort selection uses planned arrival in [start,end); keep completions after end.
+Each run uses nearest-rank p50/p95/p99. Ranges are min..max of run statistics, not pooled quantiles or confidence intervals.
+Tasks within a burst/time interval are dependent; burst counts are descriptive, not independent sample counts.
+LOW_TAIL means n*0.01<20 in at least one run. This heuristic is not a precision guarantee, even when absent.
+Association within these workload/configuration strata is not a causal curve or a portable queue threshold.
+Do not average per-second p99. Failed/incomplete runs stay visible and are excluded from conditional summaries.
+FLAGS t256 seed=420: ["generator_or_submission_lag_p99_above_1ms"]
+FLAGS t64 seed=420: ["generator_or_submission_lag_p99_above_1ms"]
+FLAGS t256 seed=421: ["generator_or_submission_lag_p99_above_1ms"]
+FLAGS t64 seed=421: ["generator_or_submission_lag_p99_above_1ms"]
+FLAGS t64 seed=422: ["generator_or_submission_lag_p99_above_1ms"]
+FLAGS t256 seed=422: ["generator_or_submission_lag_p99_above_1ms"]
+CASE t16 config=2928d9b28a69 seeds=[420, 421, 422] affinity=cluster threads/pool=16
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=257.824..260.048/540.680..541.488/572.586..575.042 submitted=357.984..359.710/643.035..646.906/690.660..691.428 planned=358.093..359.795/643.185..647.013/690.779..691.533
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.018..0.018/0.023..0.024/0.029..0.032 submitted=101.467..108.996/143.032..144.819/146.714..149.009 planned=101.524..109.050/143.087..144.873/146.768..149.065 LOW_TAIL
+  q=1-3 runs=3/3 n=[362, 365] bursts=[120, 120] wait=0.026..0.027/0.039..0.041/0.040..0.047 submitted=94.982..101.018/143.216..147.499/148.741..148.956 planned=95.046..101.081/143.276..147.563/148.800..149.026 LOW_TAIL
+  q=4-15 runs=3/3 n=[1553, 1622] bursts=[120, 120] wait=0.083..0.085/53.285..59.415/63.404..69.760 submitted=105.004..107.511/149.435..169.017/192.509..199.379 planned=105.074..107.578/149.503..169.109/192.578..199.457 LOW_TAIL
+  q=16-63 runs=3/3 n=[6091, 6381] bursts=[120, 120] wait=212.532..222.237/356.248..374.182/378.918..401.061 submitted=312.294..323.195/467.292..484.271/499.887..521.508 planned=312.383..323.278/467.372..484.391/499.981..521.634
+  q=64+ runs=3/3 n=[3512, 3874] bursts=[120, 120] wait=469.788..479.694/566.281..566.913/586.863..588.249 submitted=570.888..580.283/679.903..680.852/710.624..711.484 planned=570.995..580.425/680.011..681.005/710.733..711.597
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+CASE t256 config=b5b81d13dce9 seeds=[420, 421, 422] affinity=cluster threads/pool=256
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=81.410..84.178/274.688..280.335/300.234..305.545 submitted=509.185..511.171/637.703..639.911/664.837..666.960 planned=510.089..512.135/639.306..641.369/666.091..668.057
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.019..0.021/0.025..0.026/0.036..0.037 submitted=280.423..336.146/554.596..602.896/588.540..625.399 planned=280.480..336.200/554.650..605.649/588.597..625.455 LOW_TAIL
+  q=1-3 runs=3/3 n=[365, 370] bursts=[120, 120] wait=0.027..0.028/0.040..0.042/0.042..0.047 submitted=262.458..273.568/561.649..570.006/597.567..620.446 planned=262.518..273.632/561.742..570.353/597.643..620.508 LOW_TAIL
+  q=4-15 runs=3/3 n=[1623, 1642] bursts=[120, 120] wait=0.089..0.091/2.905..2.910/3.744..4.594 submitted=308.437..314.147/568.784..576.571/604.716..608.408 planned=308.615..315.608/568.968..576.870/604.853..609.606 LOW_TAIL
+  q=16-63 runs=3/3 n=[6362, 6391] bursts=[120, 120] wait=61.666..61.831/159.821..164.041/179.458..184.958 submitted=488.099..493.828/623.371..624.376/648.225..649.599 planned=489.046..495.139/624.664..625.057/649.955..650.737
+  q=64+ runs=3/3 n=[3482, 3518] bursts=[120, 120] wait=232.486..238.248/297.045..300.189/313.855..316.761 submitted=582.553..585.165/655.222..659.670/675.108..679.934 planned=583.243..586.146/657.059..660.867/675.713..680.808
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+CASE t64 config=ae90e4c5a6b8 seeds=[420, 421, 422] affinity=cluster threads/pool=64
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=82.727..84.123/388.153..391.307/424.337..427.614 submitted=490.032..493.107/636.997..639.538/670.231..672.999 planned=491.068..494.734/638.206..640.153/671.457..673.550
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.019..0.020/0.024..0.026/0.032..0.034 submitted=263.491..276.103/517.310..537.522/569.625..591.407 planned=263.545..276.967/518.521..540.495/569.679..591.463 LOW_TAIL
+  q=1-3 runs=3/3 n=[363, 369] bursts=[120, 120] wait=0.027..0.028/0.040..0.041/0.043..0.046 submitted=232.504..288.393/529.015..541.347/580.062..585.170 planned=232.566..288.708/529.080..542.474/580.128..585.233 LOW_TAIL
+  q=4-15 runs=3/3 n=[1562, 1633] bursts=[120, 120] wait=0.088..0.090/2.878..2.908/2.942..2.968 submitted=278.569..291.907/549.685..552.434/590.486..599.517 planned=279.652..293.306/550.262..553.732/591.084..599.761 LOW_TAIL
+  q=16-63 runs=3/3 n=[6091, 6375] bursts=[120, 120] wait=56.099..61.784/150.759..173.827/173.758..221.401 submitted=452.043..457.971/608.358..610.662/632.600..635.763 planned=452.572..458.773/609.379..611.603/634.284..636.112
+  q=64+ runs=3/3 n=[3506, 3864] bursts=[120, 120] wait=311.038..327.375/416.342..419.108/440.760..447.035 submitted=584.040..592.062/660.158..665.090/686.606..688.853 planned=585.049..592.898/661.681..666.399/687.102..689.107
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+CASE t8 config=33cb5e602ab6 seeds=[420, 421, 422] affinity=cluster threads/pool=8
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=570.518..573.898/1133.206..1137.369/1195.347..1204.690 submitted=670.478..672.688/1234.881..1237.509/1305.133..1311.791 planned=670.569..672.806/1235.005..1237.674/1305.256..1311.969
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.019..0.020/0.022..0.023/0.028..0.031 submitted=101.460..108.941/142.967..144.865/146.645..148.944 planned=101.516..108.996/143.022..144.919/146.702..148.998 LOW_TAIL
+  q=1-3 runs=3/3 n=[366, 370] bursts=[120, 120] wait=0.024..0.026/0.037..0.039/0.039..0.041 submitted=95.394..101.297/143.111..147.522/148.795..148.828 planned=95.470..101.358/143.171..147.584/148.857..148.890 LOW_TAIL
+  q=4-15 runs=3/3 n=[1597, 1713] bursts=[120, 120] wait=84.454..88.466/154.958..172.142/185.029..203.938 submitted=182.656..189.815/275.547..281.169/297.944..313.660 planned=182.723..189.893/275.621..281.245/298.032..313.744 LOW_TAIL
+  q=16-63 runs=3/3 n=[6194, 6434] bursts=[120, 120] wait=489.724..510.810/783.524..816.414/828.179..857.005 submitted=589.440..611.944/884.565..920.668/941.734..973.086 planned=589.541..612.052/884.660..920.802/941.830..973.239
+  q=64+ runs=3/3 n=[3367, 3719] bursts=[120, 120] wait=1004.422..1023.305/1183.281..1191.276/1224.143..1234.267 submitted=1103.745..1123.406/1290.662..1300.437/1337.876..1348.829 planned=1103.866..1123.568/1290.769..1300.609/1337.994..1349.002
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 scripts/conditional_latency.py \
+>   --manifest "$TARGET_HIGH/s3-deployment/manifest.json" \
+>   --output "$TARGET_HIGH/reports/s3-deployment-conditional" --compact
+CONDITIONAL_LATENCY window=[10.0, 60.0] recorded/planned=9/9 usable=9 excluded=0
+Native queue is the submitting thread's pre-add Folly snapshot, not kernel runq or a reservation.
+Cohort selection uses planned arrival in [start,end); keep completions after end.
+Each run uses nearest-rank p50/p95/p99. Ranges are min..max of run statistics, not pooled quantiles or confidence intervals.
+Tasks within a burst/time interval are dependent; burst counts are descriptive, not independent sample counts.
+LOW_TAIL means n*0.01<20 in at least one run. This heuristic is not a precision guarantee, even when absent.
+Association within these workload/configuration strata is not a causal curve or a portable queue threshold.
+Do not average per-second p99. Failed/incomplete runs stay visible and are excluded from conditional summaries.
+FLAGS cluster seed=420: ["generator_or_submission_lag_p99_above_1ms"]
+FLAGS cluster seed=421: ["generator_or_submission_lag_p99_above_1ms"]
+FLAGS cluster seed=422: ["generator_or_submission_lag_p99_above_1ms"]
+CASE cluster config=b5b81d13dce9 seeds=[420, 421, 422] affinity=cluster threads/pool=256
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=81.341..84.144/277.448..279.385/302.784..306.504 submitted=510.434..511.190/637.623..639.867/663.590..667.222 planned=511.249..512.492/638.737..640.804/664.734..668.246
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.020..0.021/0.025..0.028/0.033..0.035 submitted=283.589..300.120/552.441..565.236/581.142..624.703 planned=283.643..300.174/552.497..565.290/585.111..624.760 LOW_TAIL
+  q=1-3 runs=3/3 n=[366, 369] bursts=[120, 120] wait=0.027..0.029/0.040..0.042/0.043..0.049 submitted=259.163..291.965/542.855..569.664/580.924..602.369 planned=259.354..295.242/546.312..572.964/580.988..602.438 LOW_TAIL
+  q=4-15 runs=3/3 n=[1556, 1619] bursts=[120, 120] wait=0.086..0.092/2.872..2.904/2.940..3.018 submitted=305.866..322.713/568.090..570.777/603.284..609.160 planned=305.932..322.780/570.019..572.111/603.352..609.222 LOW_TAIL
+  q=16-63 runs=3/3 n=[6124, 6346] bursts=[120, 120] wait=56.065..61.683/148.608..159.835/167.625..176.667 submitted=485.568..490.636/621.519..622.522/643.763..647.688 planned=486.598..491.673/622.784..624.253/646.309..648.643
+  q=64+ runs=3/3 n=[3549, 3831] bursts=[120, 120] wait=229.364..232.695/297.951..300.791/313.930..316.825 submitted=582.240..583.437/657.045..659.532/676.422..679.841 planned=583.141..584.579/657.609..661.028/677.286..683.074
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+CASE none config=bcdc3faadb9a seeds=[420, 421, 422] affinity=none threads/pool=256
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=0.509..0.528/3.428..3.752/5.912..8.615 submitted=104.602..105.622/149.425..149.795/173.127..174.963 planned=104.693..105.747/149.520..149.887/173.234..175.026
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.018..0.019/0.025..0.026/0.032..0.033 submitted=110.007..115.650/152.725..169.563/170.292..177.937 planned=110.064..115.707/152.780..169.619/170.349..177.992 LOW_TAIL
+  q=1-3 runs=3/3 n=[361, 363] bursts=[120, 120] wait=0.033..0.034/0.049..0.050/0.052..0.055 submitted=101.663..109.161/149.430..162.803/167.434..177.005 planned=101.726..109.222/149.493..162.876/167.496..177.068 LOW_TAIL
+  q=4-15 runs=3/3 n=[1566, 1570] bursts=[120, 120] wait=0.110..0.113/0.174..0.177/0.187..0.193 submitted=103.709..105.312/147.639..148.557/168.807..171.973 planned=103.783..105.378/147.714..148.641/168.872..172.036 LOW_TAIL
+  q=16-63 runs=3/3 n=[6005, 6225] bursts=[120, 120] wait=0.437..0.442/0.687..0.703/0.750..0.856 submitted=102.282..102.804/147.093..147.346/165.156..168.249 planned=102.394..102.893/147.181..147.434/165.258..168.326
+  q=64+ runs=3/3 n=[3726, 3948] bursts=[120, 120] wait=0.908..0.937/4.668..6.998/8.596..13.572 submitted=107.355..110.708/159.197..163.284/176.099..181.262 planned=107.469..110.819/159.299..163.421/176.209..181.350
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+CASE numa config=b52ea50bf990 seeds=[420, 421, 422] affinity=numa threads/pool=256
+  All latency triplets below = p50 / p95 / p99, in ms; each value is a per-run range.
+  q=all runs=3/3 n=[12000, 12000] bursts=[120, 120] wait=3.492..4.528/53.116..53.449/62.005..63.490 submitted=176.634..176.947/244.269..245.164/263.700..264.711 planned=176.732..177.067/244.379..245.270/263.828..264.807
+  q=0 runs=3/3 n=[120, 120] bursts=[120, 120] wait=0.020..0.021/0.025..0.027/0.034..0.040 submitted=145.595..158.133/223.522..226.593/233.809..239.752 planned=145.651..158.194/223.578..226.649/233.865..239.808 LOW_TAIL
+  q=1-3 runs=3/3 n=[361, 363] bursts=[120, 120] wait=0.029..0.030/0.043..0.046/0.045..0.052 submitted=144.420..154.378/227.287..228.570/241.593..245.485 planned=144.481..154.440/227.355..228.635/241.655..245.544 LOW_TAIL
+  q=4-15 runs=3/3 n=[1544, 1554] bursts=[120, 120] wait=0.094..0.095/0.147..0.154/0.161..0.171 submitted=145.783..148.320/222.424..226.828/240.935..245.462 planned=145.850..148.394/222.505..226.891/241.010..245.532 LOW_TAIL
+  q=16-63 runs=3/3 n=[6216, 6255] bursts=[120, 120] wait=2.602..2.834/15.074..16.676/20.079..22.775 submitted=167.947..168.497/236.021..237.171/253.654..254.804 planned=168.028..168.583/236.094..237.294/253.781..254.886
+  q=64+ runs=3/3 n=[3708, 3757] bursts=[119, 120] wait=33.913..36.551/59.664..61.718/67.400..67.546 submitted=198.226..199.702/256.208..258.027/272.067..274.417 planned=198.318..199.816/256.342..258.130/272.172..274.536
+  queue=0 P(wait>1ms)=0 P(wait>5ms)=0 event_counts=[0, 0]/[0, 0]
+[root@localhost executor_demo]# cd /home/bty/rank_demo/executor_demo

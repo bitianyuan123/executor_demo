@@ -1,0 +1,3 @@
+# Preserve attachment bytes, including CRLF, for SHA256 verification.
+*.log -text
+topology.json -text

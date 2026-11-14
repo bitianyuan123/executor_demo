@@ -1,0 +1,10 @@
+source_log,source_line,phase,case,repeat,seed,n,wait_over_1ms,wait_over_5ms,max_wait_ms
+0003.log,128,s3-burst,local,0,420,120,0,0,0.03383
+0003.log,129,s3-burst,spread,0,420,11917,401,399,87.3907
+0003.log,130,s3-burst,smooth,0,420,12000,0,0,0.34366
+0003.log,131,s3-burst,smooth,1,421,12000,0,0,0.3638
+0003.log,132,s3-burst,local,1,421,120,0,0,0.0347
+0003.log,133,s3-burst,spread,1,421,11891,393,393,95.70772
+0003.log,134,s3-burst,spread,2,422,11911,405,399,83.47013
+0003.log,135,s3-burst,local,2,422,120,0,0,0.03401
+0003.log,136,s3-burst,smooth,2,422,12000,0,0,0.33299

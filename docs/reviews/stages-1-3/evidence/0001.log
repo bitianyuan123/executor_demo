@@ -1,0 +1,394 @@
+
+[root@localhost executor_demo]# cd /home/bty/rank_demo/executor_demo
+[root@localhost executor_demo]# git pull --ff-only
+
+# 以下变量仅影响当前shell。后续所有步骤在这个仓库目录执行。
+TARGET_MASK='0-47,192-239'
+TARGET_GROUPS='0-15;16-31;32-47;192-207;208-223;224-239'
+TARGET_NUMA='0,0,0,2,2,2'
+TARGET_RUN='results/local/arm-pilot-01'
+TARGET_INDEP='build/experiments/independent/independent_load'
+TARGET_DAG='build/executor_demo'
+TARGET_METRICS='build/experiments/metrics/metric_cost_bench'
+
+# 增量构建并运行检查，确保记录的源码与产物对应；复用已安装Folly。
+SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
+
+taskset -c "$TARGET_MASK" python3 scripts/topology.py \
+  --output "$TARGET_RUN/topology-before.json"
+git rev-parse HEAD > "$TARGET_RUN/demo-commit.txt"
+git -C ../folly rev-parse HEAD > "$TARGET_RUN/folly-commit.txt"
+ulimit -a > "$TARGET_RUN/shell-limits.txt"
+Already up to date.
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# # 以下变量仅影响当前shell。后续所有步骤在这个仓库目录执行。
+[root@localhost executor_demo]# TARGET_MASK='0-47,192-239'
+[root@localhost executor_demo]# TARGET_GROUPS='0-15;16-31;32-47;192-207;208-223;224-239'
+[root@localhost executor_demo]# TARGET_NUMA='0,0,0,2,2,2'
+[root@localhost executor_demo]# TARGET_RUN='results/local/arm-pilot-01'
+[root@localhost executor_demo]# TARGET_INDEP='build/experiments/independent/independent_load'
+[root@localhost executor_demo]# TARGET_DAG='build/executor_demo'
+[root@localhost executor_demo]# TARGET_METRICS='build/experiments/metrics/metric_cost_bench'
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# # 增量构建并运行检查，确保记录的源码与产物对应；复用已安装Folly。
+[root@localhost executor_demo]# SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
+Reusing installed Folly from /home/bty/rank_demo/executor_demo/../folly/_install
+-- Found folly: /home/bty/rank_demo/folly/_install
+-- Found folly: /home/bty/rank_demo/folly/_install
+-- Found folly: /home/bty/rank_demo/folly/_install
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/bty/rank_demo/executor_demo/build
+ninja: no work to do.
+Internal ctest changing into directory: /home/bty/rank_demo/executor_demo/build
+Test project /home/bty/rank_demo/executor_demo/build
+      Start  1: paired_comparison_statistics
+ 1/12 Test  #1: paired_comparison_statistics .....   Passed    0.08 sec
+      Start  2: topology_capture
+ 2/12 Test  #2: topology_capture .................   Passed    0.04 sec
+      Start  3: target_validation_plan
+ 3/12 Test  #3: target_validation_plan ...........   Passed    0.16 sec
+      Start  4: independent_functional
+ 4/12 Test  #4: independent_functional ...........   Passed    1.24 sec
+      Start  5: independent_analysis
+ 5/12 Test  #5: independent_analysis .............   Passed    0.06 sec
+      Start  6: independent_prediction
+ 6/12 Test  #6: independent_prediction ...........   Passed    0.05 sec
+      Start  7: demo_functional
+ 7/12 Test  #7: demo_functional ..................   Passed    1.39 sec
+      Start  8: analysis_statistics
+ 8/12 Test  #8: analysis_statistics ..............   Passed    0.04 sec
+      Start  9: graph_analysis
+ 9/12 Test  #9: graph_analysis ...................   Passed    0.05 sec
+      Start 10: dag_workload_design
+10/12 Test #10: dag_workload_design ..............   Passed    0.70 sec
+      Start 11: business_executor_test
+11/12 Test #11: business_executor_test ...........   Passed    0.08 sec
+      Start 12: metric_probe_functional
+12/12 Test #12: metric_probe_functional ..........   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Total Test time (real) =   3.95 sec
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# taskset -c "$TARGET_MASK" python3 scripts/topology.py \
+>   --output "$TARGET_RUN/topology-before.json"
+[root@localhost executor_demo]# git rev-parse HEAD > "$TARGET_RUN/demo-commit.txt"
+[root@localhost executor_demo]# git -C ../folly rev-parse HEAD > "$TARGET_RUN/folly-commit.txt"
+[root@localhost executor_demo]# ulimit -a > "$TARGET_RUN/shell-limits.txt"
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 - "$TARGET_RUN/topology-before.json" <<'PY'
+> import json, sys
+> d = json.load(open(sys.argv[1]))
+> print('allowed CPUs:', len(d['allowed_cpus']), 'cgroup:', d['cgroup_version'])
+> for h in d['cgroup_hierarchies']:
+>     print(h['controllers'], h['status'], 'hidden ancestors:', h['hidden_ancestors'])
+>     for a in h['ancestors']:
+>         print({k: v for k, v in a.items() if k in {
+>             'path', 'cpu.cfs_quota_us', 'cpu.cfs_period_us', 'cpu.max', 'cpu.stat',
+>             'cpuset.cpus', 'cpuset.cpus.effective', 'memory.limit_in_bytes',
+>             'memory.max', 'pids.max', 'pids.current'}})
+> PY
+allowed CPUs: 96 cgroup: v1
+['memory'] resolved hidden ancestors: False
+{'path': '/sys/fs/cgroup/memory/system.slice/sshd.service', 'memory.limit_in_bytes': '9223372036854771712'}
+{'path': '/sys/fs/cgroup/memory/system.slice', 'memory.limit_in_bytes': '9223372036854771712'}
+{'path': '/sys/fs/cgroup/memory', 'memory.limit_in_bytes': '9223372036854771712'}
+['pids'] resolved hidden ancestors: False
+{'path': '/sys/fs/cgroup/pids/system.slice/sshd.service', 'pids.max': '3355442', 'pids.current': '152'}
+{'path': '/sys/fs/cgroup/pids/system.slice', 'pids.max': 'max', 'pids.current': '199'}
+{'path': '/sys/fs/cgroup/pids', 'pids.max': None, 'pids.current': None}
+['cpuset'] resolved hidden ancestors: False
+{'path': '/sys/fs/cgroup/cpuset', 'cpuset.cpus': '0-383'}
+['cpu', 'cpuacct'] resolved hidden ancestors: False
+{'path': '/sys/fs/cgroup/cpu,cpuacct', 'cpu.cfs_quota_us': '-1', 'cpu.cfs_period_us': '100000', 'cpu.stat': 'nr_periods 0\nnr_throttled 0\nthrottled_time 0\nnr_bursts 0\nburst_time 0'}
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 scripts/prepare_target_validation.py \
+>   --topology "$TARGET_RUN/topology-before.json" \
+>   --cpus "$TARGET_GROUPS" --numa "$TARGET_NUMA" \
+>   --tier pilot --output "$TARGET_RUN/plan"
+Prepared only: 7 phases, 65 planned runs, 58.15 offered minutes, excluding drain. CPU union: 0-47,192-239. No workload was executed.
+[root@localhost executor_demo]#
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# taskset -c "$TARGET_MASK" python3 experiments/independent/scripts/run_matrix.py \
+>   --binary "$TARGET_INDEP" --config "$TARGET_RUN/plan/s3-smoke.json" \
+>   --output "$TARGET_RUN/s3-smoke"
+cluster-r0: 0
+numa-r0: 0
+none-r0: 0
+results/local/arm-pilot-01/s3-smoke/analysis.md
+[root@localhost executor_demo]# taskset -c 0-15 "$TARGET_METRICS" \
+>   --output "$TARGET_RUN/metrics-t16" --threads 16 \
+>   --samples 40 --batch 50 --operations 10000 --repeats 2 --queue default
+results/local/arm-pilot-01/metrics-t16
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# taskset -c "$TARGET_MASK" python3 experiments/independent/scripts/run_matrix.py \
+>   --binary "$TARGET_INDEP" --config "$TARGET_RUN/plan/s3-calibration.json" \
+>   --output "$TARGET_RUN/s3-calibration"
+r720-r0: 0
+r240-r0: 0
+r480-r0: 0
+r120-r0: 0
+r720-r1: 0
+r120-r1: 0
+r240-r1: 0
+r480-r1: 0
+results/local/arm-pilot-01/s3-calibration/analysis.md
+[root@localhost executor_demo]# cat results/local/arm-pilot-01/s3-calibration/analysis.md
+# 阶段3：独立任务实验分析
+
+每个任务独立。arrival 是一次投递批次；task 是批次中的独立 CPU 任务。下表时延单位为 task，未混用 burst 完成时延。
+
+|运行|部署/亲和|每池线程|arrival/s × burst|完成/拒绝/取消/失败|task 平均 ms|task p99 ms|提交至开始均值 ms|queue→等待 Pearson|
+|---|---|---:|---|---|---:|---:|---:|---:|
+|r720-r0|target/cluster|16|720 × 1–1|21600/0/0/0|100.193|149.072|0.020|0.293|
+|r240-r0|target/cluster|16|240 × 1–1|7200/0/0/0|100.510|148.824|0.013|—|
+|r480-r0|target/cluster|16|480 × 1–1|14400/0/0/0|100.202|148.996|0.012|—|
+|r120-r0|target/cluster|16|120 × 1–1|3600/0/0/0|99.810|148.332|0.013|—|
+|r720-r1|target/cluster|16|720 × 1–1|21600/0/0/0|100.278|148.822|0.018|—|
+|r120-r1|target/cluster|16|120 × 1–1|3600/0/0/0|99.697|149.118|0.012|—|
+|r240-r1|target/cluster|16|240 × 1–1|7200/0/0/0|100.244|148.535|0.012|—|
+|r480-r1|target/cluster|16|480 × 1–1|14400/0/0/0|100.241|148.602|0.012|—|
+
+## 如何解释
+
+1. 先检查拒绝、取消、到达延迟、CPU 配额和时间趋势；持续增长的等待意味着暂态过载，不能称为稳态服务能力。
+2. 优先比较同一随机种子、相同目标工作量的不同线程数/亲和形态；多次运行随机顺序，展示各次结果。
+3. 分别检查 submit→start、callback wall、task 完成时延。线程增加可能减少 Folly 等待而增加回调期间的内核等待。
+4. JSON 含 queue 分桶、同 pool/目标执行时间分层和按计划到达秒分组。队列相关性先看等待，再看端到端；不把随机服务时间混成队列因果效应。
+5. 缺少内核追踪时不把 callback wall−thread CPU 全部归因于内核 runq；也可能有缺页、阻塞或探针影响。
+6. 开发机两分区结果不能预测六 cluster 的性能；不同 affinity 下共享 CPU 的线程池不具备独占容量。
+
+## 每次运行的队列分桶
+
+### r720-r0
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|14398|0.019|100.198|149.076|
+|1-3|2|5.209|69.132|71.720|
+### r240-r0
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|4800|0.013|100.510|148.824|
+### r480-r0
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|9600|0.012|100.202|148.996|
+### r120-r0
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|2400|0.013|99.810|148.332|
+### r720-r1
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|14400|0.018|100.278|148.822|
+### r120-r1
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|2400|0.012|99.697|149.118|
+### r240-r1
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|4800|0.012|100.244|148.535|
+### r480-r1
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|9600|0.012|100.241|148.602|
+[root@localhost executor_demo]# git pull --ff-only
+remote: Enumerating objects: 15, done.
+remote: Counting objects: 100% (15/15), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 9 (delta 6), reused 9 (delta 6), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 7.68 KiB | 3.84 MiB/s, done.
+From https://github.com/bitianyuan123/executor_demo
+   c63cbcc..7e6128b  experiment/affinity-load-20261114 -> origin/experiment/affinity-load-20261114
+Updating c63cbcc..7e6128b
+Fast-forward
+ CMakeLists.txt                |   1 +
+ docs/TARGET_TESTING.md        |  27 +++++++++++++++++++++++++--
+ scripts/terminal_report.py    | 194 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/terminal_report_test.py | 140 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 360 insertions(+), 2 deletions(-)
+ create mode 100644 scripts/terminal_report.py
+ create mode 100644 tests/terminal_report_test.py
+[root@localhost executor_demo]# TARGET_RUN='results/local/arm-pilot-01'
+[root@localhost executor_demo]# taskset -c 0-47,192-239 python3 scripts/topology.py \
+>   --output "$TARGET_RUN/topology-after.json"
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# # ① 环境与资源限额
+# ② 三种亲和性的功能验收
+[root@localhost executor_demo]# python3 scripts/terminal_report.py \
+>   --root "$TARGET_RUN" --section environment
+  --root "$TARGET_RUN" --section runs --phase s3-smoke
+# ③ calibration 前四轮
+python3 scripts/terminal_report.py \
+  --root "$TARGET_RUN" --section runs --phase s3-calibration \
+  --offset 0 --limit 4
+# ④ calibration 后四轮
+python3 scripts/terminal_report.py \
+  --root "$TARGET_RUN" --section runs --phase s3-calibration \
+  --offset 4 --limit 4
+TERMINAL_REPORT v1; existing files only; no workload, no settings changed
+CPU totals cover the whole run incl drain; ? means unavailable. Queue != kernel runq.
+=== ENVIRONMENT (missing/unreadable = unknown, not unlimited) ===
+ENV before: allowed=0-47,192-239 n=96 cgroup=v1 schedstats=0
+  CG memory: resolved hidden_parents=False
+    /sys/fs/cgroup/memory/system.slice/sshd.service memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory/system.slice memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+  CG pids: resolved hidden_parents=False
+    /sys/fs/cgroup/pids/system.slice/sshd.service pids.max=[3355442] pids.current=[152]
+    /sys/fs/cgroup/pids/system.slice pids.max=[max] pids.current=[199]
+    /sys/fs/cgroup/pids pids.max=[?] pids.current=[?]
+  CG cpuset: resolved hidden_parents=False
+    /sys/fs/cgroup/cpuset cpuset.cpus=[0-383] cpuset.effective_cpus=[0-383] cpuset.mems=[0-3]
+  CG cpu,cpuacct: resolved hidden_parents=False
+    /sys/fs/cgroup/cpu,cpuacct cpu.cfs_quota_us=[-1] cpu.cfs_period_us=[100000] cpu.stat=[nr_periods 0 nr_throttled 0 throttled_time 0 nr_bursts 0 burst_time 0]
+ENV after: allowed=0-47,192-239 n=96 cgroup=v1 schedstats=0
+  CG memory: resolved hidden_parents=False
+    /sys/fs/cgroup/memory/system.slice/sshd.service memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory/system.slice memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+  CG pids: resolved hidden_parents=False
+    /sys/fs/cgroup/pids/system.slice/sshd.service pids.max=[3355442] pids.current=[152]
+    /sys/fs/cgroup/pids/system.slice pids.max=[max] pids.current=[199]
+    /sys/fs/cgroup/pids pids.max=[?] pids.current=[?]
+  CG cpuset: resolved hidden_parents=False
+    /sys/fs/cgroup/cpuset cpuset.cpus=[0-383] cpuset.effective_cpus=[0-383] cpuset.mems=[0-3]
+  CG cpu,cpuacct: resolved hidden_parents=False
+    /sys/fs/cgroup/cpu,cpuacct cpu.cfs_quota_us=[-1] cpu.cfs_period_us=[100000] cpu.stat=[nr_periods 0 nr_throttled 0 throttled_time 0 nr_bursts 0 burst_time 0]
+END: inspect flags and raw artifacts; this digest does not certify steady state or paired gains
+[root@localhost executor_demo]# # ② 三种亲和性的功能验收
+[root@localhost executor_demo]# python3 scripts/terminal_report.py \
+>   --root "$TARGET_RUN" --section runs --phase s3-smoke
+TERMINAL_REPORT v1; existing files only; no workload, no settings changed
+CPU totals cover the whole run incl drain; ? means unavailable. Queue != kernel runq.
+=== s3-smoke ===
+MATRIX recorded=3 planned=3 window=[0,3)s binary_sha256=f4efe69dbd41f053324f25b5b8080ddf8afe4950c1357bbbf7a6b4677c7c0fc9
+ATTEMPTS nonzero_or_missing_rc=0; detailed artifact checks cover displayed rows only
+ROWS 1..3 of 3; latency in ms, rates in tasks/s; early/late split the measurement window
+RUN cluster repeat=0 seed=420 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=full same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=20..20 cohort_target_mean_us=1000.000 nominal_offered_cpu_s/s=0.120 (target, not measured capacity)
+  STATUS whole={"completed": 360} cohort={"completed": 360} planned=360 conservation=True
+  LAT planned_mean/p99=1.273/2.194 submitted_mean/p99=1.205/2.117 wait_mean/p99=0.202/0.890 callback_mean=1.003 submit_lag_p99=0.092
+  TREND early->late planned_rate=120.000->120.000 completion_rate=120.000->120.000 cohort_latency=1.280->1.265 queue_sum=0.000->0.000 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=29 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=0.209/0.158 observed_s=2.836 callback_cpu_mean_ms=1.001 FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN numa repeat=0 seed=420 rc=0
+  CONFIG affinity=numa threads/pool=16 instrumentation=full same_union=True masks=0-47;0-47;0-47;192-239;192-239;192-239
+  WORK mode=cpu burst=20..20 cohort_target_mean_us=1000.000 nominal_offered_cpu_s/s=0.120 (target, not measured capacity)
+  STATUS whole={"completed": 360} cohort={"completed": 360} planned=360 conservation=True
+  LAT planned_mean/p99=1.282/2.257 submitted_mean/p99=1.214/2.183 wait_mean/p99=0.211/0.884 callback_mean=1.003 submit_lag_p99=0.089
+  TREND early->late planned_rate=120.000->120.000 completion_rate=120.000->120.000 cohort_latency=1.296->1.268 queue_sum=0.000->0.000 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=29 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=0.200/0.167 observed_s=2.836 callback_cpu_mean_ms=1.001 FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN none repeat=0 seed=420 rc=0
+  CONFIG affinity=none threads/pool=16 instrumentation=full same_union=True masks=0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239
+  WORK mode=cpu burst=20..20 cohort_target_mean_us=1000.000 nominal_offered_cpu_s/s=0.120 (target, not measured capacity)
+  STATUS whole={"completed": 360} cohort={"completed": 360} planned=360 conservation=True
+  LAT planned_mean/p99=1.264/2.180 submitted_mean/p99=1.200/2.110 wait_mean/p99=0.195/0.876 callback_mean=1.004 submit_lag_p99=0.082
+  TREND early->late planned_rate=120.000->120.000 completion_rate=120.000->120.000 cohort_latency=1.274->1.254 queue_sum=0.000->0.000 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=29 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=0.205/0.161 observed_s=2.836 callback_cpu_mean_ms=1.001 FLAGS=["short_window: no_sustainable_capacity_claim"]
+END: inspect flags and raw artifacts; this digest does not certify steady state or paired gains
+[root@localhost executor_demo]# # ③ calibration 前四轮
+[root@localhost executor_demo]# python3 scripts/terminal_report.py \
+>   --root "$TARGET_RUN" --section runs --phase s3-calibration \
+>   --offset 0 --limit 4
+TERMINAL_REPORT v1; existing files only; no workload, no settings changed
+CPU totals cover the whole run incl drain; ? means unavailable. Queue != kernel runq.
+=== s3-calibration ===
+MATRIX recorded=8 planned=8 window=[10,30)s binary_sha256=f4efe69dbd41f053324f25b5b8080ddf8afe4950c1357bbbf7a6b4677c7c0fc9
+ATTEMPTS nonzero_or_missing_rc=0; detailed artifact checks cover displayed rows only
+ROWS 1..4 of 8; latency in ms, rates in tasks/s; early/late split the measurement window
+RUN r720 repeat=0 seed=420 rc=0
+
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=99946.048 nominal_offered_cpu_s/s=71.961 (target, not measured capacity)
+  STATUS whole={"completed": 21600} cohort={"completed": 14400} planned=21600 conservation=True
+  LAT planned_mean/p99=100.256/149.124 submitted_mean/p99=100.193/149.072 wait_mean/p99=0.020/0.021 callback_mean=100.174 submit_lag_p99=0.063
+  TREND early->late planned_rate=720.000->720.000 completion_rate=720.600->720.200 cohort_latency=100.121->100.391 queue_sum=0.790->0.680 successful_unfinished(start/mid/end)=75/69/67 drain_s=0.125
+  SAMPLING window_times=200 queue_slope_tasks/s=-0.003 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=1248.726/911.622 observed_s=30.126 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN r240 repeat=0 seed=420 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=100398.432 nominal_offered_cpu_s/s=24.096 (target, not measured capacity)
+  STATUS whole={"completed": 7200} cohort={"completed": 4800} planned=7200 conservation=True
+  LAT planned_mean/p99=100.566/148.879 submitted_mean/p99=100.510/148.824 wait_mean/p99=0.013/0.019 callback_mean=100.498 submit_lag_p99=0.056
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.400->239.700 cohort_latency=100.433->100.698 queue_sum=0.130->0.120 successful_unfinished(start/mid/end)=27/23/26 drain_s=0.098
+  SAMPLING window_times=200 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=441.615/278.501 observed_s=30.099 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN r480 repeat=0 seed=420 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=100063.333 nominal_offered_cpu_s/s=48.030 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 9600} planned=14400 conservation=True
+  LAT planned_mean/p99=100.255/149.050 submitted_mean/p99=100.202/148.996 wait_mean/p99=0.012/0.019 callback_mean=100.190 submit_lag_p99=0.055
+  TREND early->late planned_rate=480.000->480.000 completion_rate=480.300->480.100 cohort_latency=100.457->100.053 queue_sum=0.740->0.780 successful_unfinished(start/mid/end)=50/47/46 drain_s=0.133
+  SAMPLING window_times=200 queue_slope_tasks/s=0.004 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=861.051/579.171 observed_s=30.134 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN r120 repeat=0 seed=420 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=99705.735 nominal_offered_cpu_s/s=11.965 (target, not measured capacity)
+  STATUS whole={"completed": 3600} cohort={"completed": 2400} planned=3600 conservation=True
+  LAT planned_mean/p99=99.863/148.386 submitted_mean/p99=99.810/148.332 wait_mean/p99=0.013/0.025 callback_mean=99.797 submit_lag_p99=0.055
+  TREND early->late planned_rate=120.000->120.000 completion_rate=119.700->119.900 cohort_latency=97.738->101.988 queue_sum=0.170->0.220 successful_unfinished(start/mid/end)=10/13/14 drain_s=0.123
+  SAMPLING window_times=200 queue_slope_tasks/s=0.006 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=220.275/139.783 observed_s=30.123 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+NOTE: partial display; unshown artifacts have not been checked
+NEXT: --offset 4 --limit 4
+END: inspect flags and raw artifacts; this digest does not certify steady state or paired gains
+[root@localhost executor_demo]# # ④ calibration 后四轮
+[root@localhost executor_demo]# python3 scripts/terminal_report.py \
+>   --root "$TARGET_RUN" --section runs --phase s3-calibration \
+>   --offset 4 --limit 4
+TERMINAL_REPORT v1; existing files only; no workload, no settings changed
+CPU totals cover the whole run incl drain; ? means unavailable. Queue != kernel runq.
+=== s3-calibration ===
+MATRIX recorded=8 planned=8 window=[10,30)s binary_sha256=f4efe69dbd41f053324f25b5b8080ddf8afe4950c1357bbbf7a6b4677c7c0fc9
+ATTEMPTS nonzero_or_missing_rc=0; detailed artifact checks cover displayed rows only
+ROWS 5..8 of 8; latency in ms, rates in tasks/s; early/late split the measurement window
+RUN r720 repeat=1 seed=421 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=100010.923 nominal_offered_cpu_s/s=72.008 (target, not measured capacity)
+  STATUS whole={"completed": 21600} cohort={"completed": 14400} planned=21600 conservation=True
+  LAT planned_mean/p99=100.344/148.899 submitted_mean/p99=100.278/148.822 wait_mean/p99=0.018/0.024 callback_mean=100.261 submit_lag_p99=0.179
+  TREND early->late planned_rate=720.000->720.000 completion_rate=719.900->720.200 cohort_latency=100.493->100.194 queue_sum=0.460->0.520 successful_unfinished(start/mid/end)=71/72/70 drain_s=0.132
+  SAMPLING window_times=200 queue_slope_tasks/s=0.010 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=1263.601/896.760 observed_s=30.132 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN r120 repeat=1 seed=421 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=99592.863 nominal_offered_cpu_s/s=11.951 (target, not measured capacity)
+  STATUS whole={"completed": 3600} cohort={"completed": 2400} planned=3600 conservation=True
+  LAT planned_mean/p99=99.753/149.173 submitted_mean/p99=99.697/149.118 wait_mean/p99=0.012/0.018 callback_mean=99.684 submit_lag_p99=0.057
+  TREND early->late planned_rate=120.000->120.000 completion_rate=120.100->119.900 cohort_latency=99.205->100.301 queue_sum=0.000->0.010 successful_unfinished(start/mid/end)=11/10/11 drain_s=0.122
+  SAMPLING window_times=200 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=221.166/138.893 observed_s=30.122 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN r240 repeat=1 seed=421 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=100132.292 nominal_offered_cpu_s/s=24.032 (target, not measured capacity)
+  STATUS whole={"completed": 7200} cohort={"completed": 4800} planned=7200 conservation=True
+  LAT planned_mean/p99=100.299/148.589 submitted_mean/p99=100.244/148.535 wait_mean/p99=0.012/0.018 callback_mean=100.231 submit_lag_p99=0.057
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.400->240.200 cohort_latency=100.213->100.386 queue_sum=0.120->0.090 successful_unfinished(start/mid/end)=28/24/22 drain_s=0.121
+  SAMPLING window_times=200 queue_slope_tasks/s=-0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=441.459/278.655 observed_s=30.122 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+RUN r480 repeat=1 seed=421 rc=0
+  CONFIG affinity=cluster threads/pool=16 instrumentation=queue same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=1..1 cohort_target_mean_us=100103.349 nominal_offered_cpu_s/s=48.050 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 9600} planned=14400 conservation=True
+  LAT planned_mean/p99=100.295/148.655 submitted_mean/p99=100.241/148.602 wait_mean/p99=0.012/0.020 callback_mean=100.228 submit_lag_p99=0.057
+  TREND early->late planned_rate=480.000->480.000 completion_rate=479.200->480.100 cohort_latency=100.466->100.123 queue_sum=0.360->0.370 successful_unfinished(start/mid/end)=41/49/48 drain_s=0.118
+  SAMPLING window_times=200 queue_slope_tasks/s=-0.001 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=868.999/571.225 observed_s=30.118 callback_cpu_mean_ms=? FLAGS=["short_window: no_sustainable_capacity_claim"]
+NOTE: partial display; unshown artifacts have not been checked
+END: inspect flags and raw artifacts; this digest does not certify steady state or paired gains
+[root@localhost executor_demo]#
+[root@localhost executor_demo]#

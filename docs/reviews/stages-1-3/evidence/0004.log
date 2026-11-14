@@ -1,0 +1,376 @@
+
+[root@localhost executor_demo]# git pull --ff-only
+remote: Enumerating objects: 6, done.
+remote: Counting objects: 100% (6/6), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 4 (delta 2), reused 4 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 6.29 KiB | 6.29 MiB/s, done.
+From https://github.com/bitianyuan123/executor_demo
+   a4e9ffe..1cca4c5  experiment/affinity-load-20261114 -> origin/experiment/affinity-load-20261114
+Updating a4e9ffe..1cca4c5
+Fast-forward
+ docs/TARGET_PILOT_03_THREADS_REVIEW.md | 133 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 133 insertions(+)
+ create mode 100644 docs/TARGET_PILOT_03_THREADS_REVIEW.md
+[root@localhost executor_demo]# cd /home/bty/rank_demo/executor_demo
+[root@localhost executor_demo]# TARGET_HIGH='results/local/arm-pilot-t256-01'
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# taskset -c 0-47,192-239 python3 scripts/topology.py \
+>   --output "$TARGET_HIGH/topology-before.json"
+python3 scripts/prepare_target_validation.py \
+  --topology "$TARGET_HIGH/topology-before.json" \
+  --cpus '0-15;16-31;32-47;192-207;208-223;224-239' \
+  --numa '0,0,0,2,2,2' \
+  --threads 256 --task-rate 240 --cpu-us 100000 \
+  --tier pilot --seed 420 --output "$TARGET_HIGH/plan"
+
+taskset -c 0-47,192-239 python3 experiments/independent/scripts/run_matrix.py \
+  --binary build/experiments/independent/independent_load \
+  --config "$TARGET_HIGH/plan/s3-deployment.json" \
+  --output "$TARGET_HIGH/s3-deployment"
+
+python3 scripts/compare_runs.py \
+  --manifest "$TARGET_HIGH/s3-deployment/manifest.json" \
+  --spec "$TARGET_HIGH/plan/s3-deployment-contrasts.json" \
+  --output "$TARGET_HIGH/reports/s3-deployment-paired"
+
+taskset -c 0-47,192-239 python3 scripts/topology.py \
+  --output "$TARGET_HIGH/topology-after.json"
+
+python3 scripts/terminal_report.py \
+  --root "$TARGET_HIGH" --section environment
+python3 scripts/terminal_report.py \
+  --root "$TARGET_HIGH" --section runs --phase s3-deployment
+cat "$TARGET_HIGH/s3-deployment/analysis.md"
+cat "$TARGET_HIGH/reports/s3-deployment-paired.md"[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 scripts/prepare_target_validation.py \
+>   --topology "$TARGET_HIGH/topology-before.json" \
+>   --cpus '0-15;16-31;32-47;192-207;208-223;224-239' \
+>   --numa '0,0,0,2,2,2' \
+>   --threads 256 --task-rate 240 --cpu-us 100000 \
+>   --tier pilot --seed 420 --output "$TARGET_HIGH/plan"
+
+Prepared only: 7 phases, 65 planned runs, 58.15 offered minutes, excluding drain. CPU union: 0-47,192-239. No workload was executed.
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# taskset -c 0-47,192-239 python3 experiments/independent/scripts/run_matrix.py \
+>   --binary build/experiments/independent/independent_load \
+>   --config "$TARGET_HIGH/plan/s3-deployment.json" \
+>   --output "$TARGET_HIGH/s3-deployment"
+cluster-r0: 0
+numa-r0: 0
+none-r0: 0
+none-r1: 0
+cluster-r1: 0
+numa-r1: 0
+numa-r2: 0
+cluster-r2: 0
+none-r2: 0
+results/local/arm-pilot-t256-01/s3-deployment/analysis.md
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 scripts/compare_runs.py \
+>   --manifest "$TARGET_HIGH/s3-deployment/manifest.json" \
+>   --spec "$TARGET_HIGH/plan/s3-deployment-contrasts.json" \
+>   --output "$TARGET_HIGH/reports/s3-deployment-paired"
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# taskset -c 0-47,192-239 python3 scripts/topology.py \
+>   --output "$TARGET_HIGH/topology-after.json"
+[root@localhost executor_demo]#
+[root@localhost executor_demo]# python3 scripts/terminal_report.py \
+>   --root "$TARGET_HIGH" --section environment
+TERMINAL_REPORT v1; existing files only; no workload, no settings changed
+CPU totals cover the whole run incl drain; ? means unavailable. Queue != kernel runq.
+=== ENVIRONMENT (missing/unreadable = unknown, not unlimited) ===
+ENV before: allowed=0-47,192-239 n=96 cgroup=v1 schedstats=0
+  CG memory: resolved hidden_parents=False
+    /sys/fs/cgroup/memory/system.slice/sshd.service memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory/system.slice memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+  CG pids: resolved hidden_parents=False
+    /sys/fs/cgroup/pids/system.slice/sshd.service pids.max=[3355442] pids.current=[152]
+    /sys/fs/cgroup/pids/system.slice pids.max=[max] pids.current=[199]
+    /sys/fs/cgroup/pids pids.max=[?] pids.current=[?]
+  CG cpuset: resolved hidden_parents=False
+    /sys/fs/cgroup/cpuset cpuset.cpus=[0-383] cpuset.effective_cpus=[0-383] cpuset.mems=[0-3]
+  CG cpu,cpuacct: resolved hidden_parents=False
+    /sys/fs/cgroup/cpu,cpuacct cpu.cfs_quota_us=[-1] cpu.cfs_period_us=[100000] cpu.stat=[nr_periods 0 nr_throttled 0 throttled_time 0 nr_bursts 0 burst_time 0]
+ENV after: allowed=0-47,192-239 n=96 cgroup=v1 schedstats=0
+  CG memory: resolved hidden_parents=False
+    /sys/fs/cgroup/memory/system.slice/sshd.service memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory/system.slice memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+    /sys/fs/cgroup/memory memory.limit_in_bytes=[9223372036854771712] memory.use_hierarchy=[1]
+  CG pids: resolved hidden_parents=False
+    /sys/fs/cgroup/pids/system.slice/sshd.service pids.max=[3355442] pids.current=[149]
+    /sys/fs/cgroup/pids/system.slice pids.max=[max] pids.current=[196]
+    /sys/fs/cgroup/pids pids.max=[?] pids.current=[?]
+  CG cpuset: resolved hidden_parents=False
+    /sys/fs/cgroup/cpuset cpuset.cpus=[0-383] cpuset.effective_cpus=[0-383] cpuset.mems=[0-3]
+  CG cpu,cpuacct: resolved hidden_parents=False
+    /sys/fs/cgroup/cpu,cpuacct cpu.cfs_quota_us=[-1] cpu.cfs_period_us=[100000] cpu.stat=[nr_periods 0 nr_throttled 0 throttled_time 0 nr_bursts 0 burst_time 0]
+END: inspect flags and raw artifacts; this digest does not certify steady state or paired gains
+[root@localhost executor_demo]# python3 scripts/terminal_report.py \
+>   --root "$TARGET_HIGH" --section runs --phase s3-deployment
+TERMINAL_REPORT v1; existing files only; no workload, no settings changed
+CPU totals cover the whole run incl drain; ? means unavailable. Queue != kernel runq.
+=== s3-deployment ===
+MATRIX recorded=9 planned=9 window=[10,60)s binary_sha256=f4efe69dbd41f053324f25b5b8080ddf8afe4950c1357bbbf7a6b4677c7c0fc9
+ATTEMPTS nonzero_or_missing_rc=0; detailed artifact checks cover displayed rows only
+ROWS 1..9 of 9; latency in ms, rates in tasks/s; early/late split the measurement window
+RUN cluster repeat=0 seed=420 rc=0
+  CONFIG affinity=cluster threads/pool=256 instrumentation=full same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=100131.474 nominal_offered_cpu_s/s=24.032 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=473.197/666.227 submitted_mean/p99=472.220/665.489 wait_mean/p99=105.180/302.784 callback_mean=367.040 submit_lag_p99=9.482
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.120->239.960 cohort_latency=474.084->472.310 queue_sum=23.944->23.452 successful_unfinished(start/mid/end)=69/66/67 drain_s=0.249
+  SAMPLING window_times=500 queue_slope_tasks/s=-0.013 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=817.271/622.941 observed_s=60.250 callback_cpu_mean_ms=100.001 FLAGS=["generator_or_submission_lag_p99_above_1ms"]
+RUN numa repeat=0 seed=420 rc=0
+  CONFIG affinity=numa threads/pool=256 instrumentation=full same_union=True masks=0-47;0-47;0-47;192-239;192-239;192-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=100131.474 nominal_offered_cpu_s/s=24.032 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=172.068/264.798 submitted_mean/p99=171.971/264.659 wait_mean/p99=13.459/62.005 callback_mean=158.512 submit_lag_p99=0.164
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.000->240.000 cohort_latency=172.065->172.071 queue_sum=2.012->2.245 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=499 queue_slope_tasks/s=0.011 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=817.386/622.878 observed_s=59.842 callback_cpu_mean_ms=100.001 FLAGS=[]
+RUN none repeat=0 seed=420 rc=0
+  CONFIG affinity=none threads/pool=256 instrumentation=full same_union=True masks=0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=100131.474 nominal_offered_cpu_s/s=24.032 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=104.427/173.234 submitted_mean/p99=104.336/173.127 wait_mean/p99=0.830/5.912 callback_mean=103.506 submit_lag_p99=0.120
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.000->240.000 cohort_latency=105.834->103.019 queue_sum=0.000->0.000 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=498 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=814.746/625.553 observed_s=59.735 callback_cpu_mean_ms=100.001 FLAGS=[]
+RUN none repeat=1 seed=421 rc=0
+  CONFIG affinity=none threads/pool=256 instrumentation=full same_union=True masks=0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=100071.805 nominal_offered_cpu_s/s=24.017 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=105.404/174.416 submitted_mean/p99=105.302/174.354 wait_mean/p99=0.883/6.692 callback_mean=104.419 submit_lag_p99=0.162
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.000->240.000 cohort_latency=107.754->103.054 queue_sum=0.000->0.000 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=498 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=815.359/624.947 observed_s=59.732 callback_cpu_mean_ms=100.001 FLAGS=[]
+RUN cluster repeat=1 seed=421 rc=0
+  CONFIG affinity=cluster threads/pool=256 instrumentation=full same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=100071.805 nominal_offered_cpu_s/s=24.017 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=472.705/668.246 submitted_mean/p99=471.637/667.222 wait_mean/p99=106.528/306.504 callback_mean=365.109 submit_lag_p99=8.630
+  TREND early->late planned_rate=240.000->240.000 completion_rate=239.680->240.160 cohort_latency=472.556->472.853 queue_sum=23.736->24.252 successful_unfinished(start/mid/end)=70/78/74 drain_s=0.232
+  SAMPLING window_times=500 queue_slope_tasks/s=0.022 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=817.823/622.406 observed_s=60.233 callback_cpu_mean_ms=100.001 FLAGS=["generator_or_submission_lag_p99_above_1ms"]
+RUN numa repeat=1 seed=421 rc=0
+  CONFIG affinity=numa threads/pool=256 instrumentation=full same_union=True masks=0-47;0-47;0-47;192-239;192-239;192-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=100071.805 nominal_offered_cpu_s/s=24.017 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=171.979/264.807 submitted_mean/p99=171.882/264.711 wait_mean/p99=13.439/62.579 callback_mean=158.443 submit_lag_p99=0.165
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.000->240.000 cohort_latency=171.682->172.276 queue_sum=2.192->2.068 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=499 queue_slope_tasks/s=0.002 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=813.610/626.659 observed_s=59.835 callback_cpu_mean_ms=100.001 FLAGS=[]
+RUN numa repeat=2 seed=422 rc=0
+  CONFIG affinity=numa threads/pool=256 instrumentation=full same_union=True masks=0-47;0-47;0-47;192-239;192-239;192-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=99828.767 nominal_offered_cpu_s/s=23.959 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=171.343/263.828 submitted_mean/p99=171.243/263.700 wait_mean/p99=13.822/63.490 callback_mean=157.422 submit_lag_p99=0.170
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.000->240.000 cohort_latency=171.479->171.206 queue_sum=2.284->2.337 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=499 queue_slope_tasks/s=0.008 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=813.339/626.921 observed_s=59.842 callback_cpu_mean_ms=100.001 FLAGS=[]
+RUN cluster repeat=2 seed=422 rc=0
+  CONFIG affinity=cluster threads/pool=256 instrumentation=full same_union=True masks=0-15;16-31;32-47;192-207;208-223;224-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=99828.767 nominal_offered_cpu_s/s=23.959 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=470.390/664.734 submitted_mean/p99=469.302/663.590 wait_mean/p99=105.974/302.807 callback_mean=363.328 submit_lag_p99=10.087
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.000->240.080 cohort_latency=471.357->469.424 queue_sum=23.920->23.872 successful_unfinished(start/mid/end)=70/70/68 drain_s=0.227
+  SAMPLING window_times=500 queue_slope_tasks/s=0.010 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=817.187/623.037 observed_s=60.228 callback_cpu_mean_ms=100.001 FLAGS=["generator_or_submission_lag_p99_above_1ms"]
+RUN none repeat=2 seed=422 rc=0
+  CONFIG affinity=none threads/pool=256 instrumentation=full same_union=True masks=0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239;0-47,192-239
+  WORK mode=cpu burst=100..100 cohort_target_mean_us=99828.767 nominal_offered_cpu_s/s=23.959 (target, not measured capacity)
+  STATUS whole={"completed": 14400} cohort={"completed": 12000} planned=14400 conservation=True
+  LAT planned_mean/p99=105.488/175.026 submitted_mean/p99=105.398/174.963 wait_mean/p99=0.973/8.615 callback_mean=104.424 submit_lag_p99=0.119
+  TREND early->late planned_rate=240.000->240.000 completion_rate=240.000->240.000 cohort_latency=108.241->102.736 queue_sum=0.000->0.000 successful_unfinished(start/mid/end)=0/0/0 drain_s=0.000
+  SAMPLING window_times=498 queue_slope_tasks/s=0.000 truncated=False failed=False dropped=0
+  CPU whole_run_user/system_s=808.526/631.772 observed_s=59.760 callback_cpu_mean_ms=100.001 FLAGS=[]
+END: inspect flags and raw artifacts; this digest does not certify steady state or paired gains
+[root@localhost executor_demo]# cat "$TARGET_HIGH/s3-deployment/analysis.md"
+# 阶段3：独立任务实验分析
+
+每个任务独立。arrival 是一次投递批次；task 是批次中的独立 CPU 任务。下表时延单位为 task，未混用 burst 完成时延。
+
+|运行|部署/亲和|每池线程|arrival/s × burst|完成/拒绝/取消/失败|task 平均 ms|task p99 ms|提交至开始均值 ms|queue→等待 Pearson|
+|---|---|---:|---|---|---:|---:|---:|---:|
+|cluster-r0|target/cluster|256|2.4 × 100–100|14400/0/0/0|472.220|665.489|105.180|0.969|
+|numa-r0|target/numa|256|2.4 × 100–100|14400/0/0/0|171.971|264.659|13.459|0.864|
+|none-r0|target/none|256|2.4 × 100–100|14400/0/0/0|104.336|173.127|0.830|0.452|
+|none-r1|target/none|256|2.4 × 100–100|14400/0/0/0|105.302|174.354|0.883|0.581|
+|cluster-r1|target/cluster|256|2.4 × 100–100|14400/0/0/0|471.637|667.222|106.528|0.970|
+|numa-r1|target/numa|256|2.4 × 100–100|14400/0/0/0|171.882|264.711|13.439|0.857|
+|numa-r2|target/numa|256|2.4 × 100–100|14400/0/0/0|171.243|263.700|13.822|0.862|
+|cluster-r2|target/cluster|256|2.4 × 100–100|14400/0/0/0|469.302|663.590|105.974|0.969|
+|none-r2|target/none|256|2.4 × 100–100|14400/0/0/0|105.398|174.963|0.973|0.547|
+
+## 如何解释
+
+1. 先检查拒绝、取消、到达延迟、CPU 配额和时间趋势；持续增长的等待意味着暂态过载，不能称为稳态服务能力。
+2. 优先比较同一随机种子、相同目标工作量的不同线程数/亲和形态；多次运行随机顺序，展示各次结果。
+3. 分别检查 submit→start、callback wall、task 完成时延。线程增加可能减少 Folly 等待而增加回调期间的内核等待。
+4. JSON 含 queue 分桶、同 pool/目标执行时间分层和按计划到达秒分组。队列相关性先看等待，再看端到端；不把随机服务时间混成队列因果效应。
+5. 缺少内核追踪时不把 callback wall−thread CPU 全部归因于内核 runq；也可能有缺页、阻塞或探针影响。
+6. 开发机两分区结果不能预测六 cluster 的性能；不同 affinity 下共享 CPU 的线程池不具备独占容量。
+
+## 每次运行的队列分桶
+
+### cluster-r0
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.019|317.376|624.703|
+|1-3|369|0.027|289.965|592.526|
+|16-63|6124|63.274|462.780|647.688|
+|4-15|1556|0.314|323.366|606.891|
+|64+|3831|228.182|570.174|679.228|
+### numa-r0
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.020|151.978|233.809|
+|1-3|363|0.030|144.620|245.485|
+|16-63|6216|4.336|164.025|253.654|
+|4-15|1544|0.096|147.934|242.804|
+|64+|3757|35.772|198.277|274.417|
+### none-r0
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.020|114.163|174.645|
+|1-3|361|0.034|103.671|177.005|
+|16-63|6005|0.459|102.197|165.156|
+|4-15|1566|0.114|104.128|169.796|
+|64+|3948|1.774|107.435|176.099|
+### none-r1
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.019|113.223|170.292|
+|1-3|362|0.033|108.884|174.830|
+|16-63|6225|0.444|102.381|166.224|
+|4-15|1567|0.112|104.622|168.807|
+|64+|3726|2.052|109.865|177.787|
+### cluster-r1
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.020|302.100|581.142|
+|1-3|366|0.029|308.859|602.369|
+|16-63|6181|66.564|463.838|643.763|
+|4-15|1601|0.387|321.241|603.284|
+|64+|3732|232.120|570.488|679.841|
+### numa-r1
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.019|150.314|239.752|
+|1-3|361|0.030|151.892|241.593|
+|16-63|6226|4.332|163.975|254.658|
+|4-15|1547|0.096|147.964|240.935|
+|64+|3746|35.809|197.519|272.607|
+### numa-r2
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.020|156.562|237.673|
+|1-3|363|0.029|147.557|243.282|
+|16-63|6255|4.359|163.904|254.804|
+|4-15|1554|0.094|144.356|245.462|
+|64+|3708|37.333|197.686|272.067|
+### cluster-r2
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.020|299.811|601.430|
+|1-3|366|0.029|295.268|580.924|
+|16-63|6346|69.635|466.270|646.863|
+|4-15|1619|0.430|315.532|609.160|
+|64+|3549|233.608|568.549|676.422|
+### none-r2
+
+|Folly queue|任务数|等待平均 ms|task 平均 ms|task p99 ms|
+|---|---:|---:|---:|---:|
+|0|120|0.019|114.991|177.937|
+|1-3|363|0.033|104.751|167.434|
+|16-63|6005|0.456|102.934|168.249|
+|4-15|1570|0.112|103.346|171.973|
+|64+|3942|2.219|109.734|181.262|
+[root@localhost executor_demo]# cat "$TARGET_HIGH/reports/s3-deployment-paired.md"
+# 预声明对照与整轮配对分析
+
+差值为 candidate − baseline；负值表示时延降低。区间重采样单位是完整 seed 配对，不是任务或请求。
+
+|对照|有效性|配对数|planned 时延均值差 ms|探索性95%区间|p99区间可报告|
+|---|---|---:|---:|---|---|
+|none-vs-numa|descriptive_only|3|66.690163325|None|否，见样本门槛|
+|none-vs-cluster|descriptive_only|3|366.9910814236111|None|否，见样本门槛|
+
+## 每轮有效性诊断
+
+|轮次|cohort完成数|顶端1%名义样本|前/后半均值ms|drain s|诊断|
+|---|---:|---:|---|---:|---|
+|none seed=420|12000|120.00|[105.8344, 103.0188]|0.0000|无启发式告警；不等于证明稳态|
+|numa seed=420|12000|120.00|[172.0655, 172.071]|0.0000|无启发式告警；不等于证明稳态|
+|none seed=421|12000|120.00|[107.754, 103.0544]|0.0000|无启发式告警；不等于证明稳态|
+|numa seed=421|12000|120.00|[171.6819, 172.2759]|0.0000|无启发式告警；不等于证明稳态|
+|none seed=422|12000|120.00|[108.2409, 102.7357]|0.0000|无启发式告警；不等于证明稳态|
+|numa seed=422|12000|120.00|[171.4786, 171.2064]|0.0000|无启发式告警；不等于证明稳态|
+|cluster seed=420|12000|120.00|[474.0844, 472.3105]|0.2486|generator_or_submission_lag_p99_above_1ms|
+|cluster seed=421|12000|120.00|[472.5565, 472.8526]|0.2321|generator_or_submission_lag_p99_above_1ms|
+|cluster seed=422|12000|120.00|[471.3572, 469.4236]|0.2274|generator_or_submission_lag_p99_above_1ms|
+
+## 解释限制
+
+- Difference is candidate minus baseline; negative latency difference is lower latency.
+- Estimand: equally weighted mean of per-run means or per-run p99 differences, not pooled p99.
+- CI: exploratory percentile bootstrap over independent seed pairs, not task/request rows.
+- At least five pairs enables CI; more repeats and independent batches are needed for small improvements.
+- Tail threshold is a sample sufficiency heuristic, not proof of p99 precision or independent observations.
+- Short windows, queue trends, lag and drain are diagnostics; this tool does not certify stationarity.
+- Multiple contrasts are exploratory without simultaneous inference or a separately confirmed primary contrast.
+- Same nominal CPU budget is not identical useful work in CPU-clock mode; use fixed iterations for locality.
+
+完整配对差值、契约违规、工作量哈希、拒绝/删失、到达/完成率、队列趋势见同名 JSON。
+[root@localhost executor_demo]# cat results/local/arm-pilot-01/metrics-t16/metadata.json
+{"completed":true,"queue":"default","threads":16,"read_p99_is_batch_mean_not_individual_call":true,"sink":1657785696}
+[root@localhost executor_demo]# cat results/local/arm-pilot-01/metrics-t16/reads.csv
+state,threads,metric,samples,batch,mean_ns_per_call,p50_batch_ns_per_call,p99_batch_ns_per_call,min_batch_ns_per_call,max_batch_ns_per_call
+idle,16,loop_baseline,40,50,0.6,0.6,0.8,0.4,0.8
+idle,16,native_queue,40,50,1.94,2,2.2,1.8,2.2
+idle,16,relaxed_one_load,40,50,0.635,0.6,1,0.4,1
+idle,16,relaxed_three_loads,40,50,0.96,1,1.2,0.8,1.2
+idle,16,pending_api,40,50,24.495,24.4,24.6,24.4,24.6
+idle,16,pool_stats_light,40,50,30.345,30.4,30.6,30,30.6
+idle,16,pool_stats,40,50,63.615,63.4,65.4,63,65.4
+idle,16,used_cpu_time,40,10,3948.15,3949,3957,3939,3957
+cpu_busy_with_backlog,16,loop_baseline,40,50,1.275,1.2,2.2,1,2.2
+cpu_busy_with_backlog,16,native_queue,40,50,3.22,3.2,3.8,2.8,3.8
+cpu_busy_with_backlog,16,relaxed_one_load,40,50,1.27,1.2,2,0.8,2
+cpu_busy_with_backlog,16,relaxed_three_loads,40,50,1.825,1.8,2.4,1.4,2.4
+cpu_busy_with_backlog,16,pending_api,40,50,27.5,27.4,28.2,27,28.2
+cpu_busy_with_backlog,16,pool_stats_light,40,50,53.595,53.4,56.6,51,56.6
+cpu_busy_with_backlog,16,pool_stats,40,50,127.175,127.2,130.4,122.8,130.4
+cpu_busy_with_backlog,16,used_cpu_time,40,10,8243.05,8289,8358,6578,8358
+[root@localhost executor_demo]# cat results/local/arm-pilot-01/metrics-t16/updates.csv
+repeat,mode,producers,operations_per_producer,elapsed_ns,aggregate_ns_per_update,final_count
+0,shared_fetch_add,1,10000,66480,6.648,10000
+0,padded_fetch_add,1,10000,59350,5.935,10000
+0,padded_store_every_64,1,10000,13460,1.346,10000
+0,shared_fetch_add,2,10000,176490,8.8245,20000
+0,padded_fetch_add,2,10000,67920,3.396,20000
+0,padded_store_every_64,2,10000,16320,0.816,20000
+0,shared_fetch_add,4,10000,351640,8.791,40000
+0,padded_fetch_add,4,10000,66120,1.653,40000
+0,padded_store_every_64,4,10000,22130,0.55325,40000
+1,shared_fetch_add,1,10000,64160,6.416,10000
+1,padded_fetch_add,1,10000,58950,5.895,10000
+1,padded_store_every_64,1,10000,13720,1.372,10000
+1,shared_fetch_add,2,10000,179320,8.966,20000
+1,padded_fetch_add,2,10000,63570,3.1785,20000
+1,padded_store_every_64,2,10000,16580,0.829,20000
+1,shared_fetch_add,4,10000,345660,8.6415,40000
+1,padded_fetch_add,4,10000,66180,1.6545,40000
+1,padded_store_every_64,4,10000,20480,0.512,40000
+[root@localhost executor_demo]#

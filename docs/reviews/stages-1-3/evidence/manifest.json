@@ -1,0 +1,61 @@
+{
+  "review_base_demo_commit": "88e9f9f",
+  "review_folly_commit": "560e225e85229a3573061f66cab7e9207c98a9b0",
+  "evidence_kind": "User-provided terminal logs and topology; not raw per-task ARM CSV",
+  "files": [
+    {
+      "file": "0001.log",
+      "original_attachment": "/root/.codex/attachments/e1f2cfeb-93c1-42c2-8c95-44657a055c29/0001.log",
+      "original_sha256": "7223dab6257e06805368291205e996cc3f7a44f101e0f914a3092f12e70d4823",
+      "archived_sha256": "7223dab6257e06805368291205e996cc3f7a44f101e0f914a3092f12e70d4823",
+      "archived_bytes": 28196,
+      "archived_lines": 394,
+      "scope": "full attachment, byte-identical"
+    },
+    {
+      "file": "0002.log",
+      "original_attachment": "/root/.codex/attachments/3ed46f12-63a4-4df0-b812-3ea1dac465e9/0002.log",
+      "original_sha256": "c7b8b68b7582f35060583decd7a29a223b85c48e4c6dfb2ad559a3bb96beff42",
+      "archived_sha256": "c7b8b68b7582f35060583decd7a29a223b85c48e4c6dfb2ad559a3bb96beff42",
+      "archived_bytes": 17569,
+      "archived_lines": 251,
+      "scope": "full attachment, byte-identical"
+    },
+    {
+      "file": "0003.log",
+      "original_attachment": "/root/.codex/attachments/b0329cd1-a248-4c7b-90c9-c0b1f34d741a/0003.log",
+      "original_sha256": "b643dc63171091631f0fe40b0499c62d8eb1bb23542c78ee45c31586e3714159",
+      "archived_sha256": "b643dc63171091631f0fe40b0499c62d8eb1bb23542c78ee45c31586e3714159",
+      "archived_bytes": 30188,
+      "archived_lines": 450,
+      "scope": "full attachment, byte-identical"
+    },
+    {
+      "file": "0004.log",
+      "original_attachment": "/root/.codex/attachments/7196c7b0-35cd-4856-b161-1654166cbd0c/0004.log",
+      "original_sha256": "b021029b7d675d5be02b6b8cf7f60198f8308f64cc6f47d95e8217819e382282",
+      "archived_sha256": "b021029b7d675d5be02b6b8cf7f60198f8308f64cc6f47d95e8217819e382282",
+      "archived_bytes": 25313,
+      "archived_lines": 376,
+      "scope": "full attachment, byte-identical"
+    },
+    {
+      "file": "0005.log",
+      "original_attachment": "/root/.codex/attachments/2b26917c-5e23-4084-b70b-4a5d79851549/0005.log",
+      "original_sha256": "dfbd0ec3ce98b5ebd055a1ad7d3a2f7a33aa0147891f8965c5d390d19f5f705e",
+      "archived_sha256": "e366689f25c220d7b56a1630bc80c8ceca4cc40c0018659e29b9b1acd5563e28",
+      "archived_bytes": 21189,
+      "archived_lines": 170,
+      "scope": "byte-identical prefix, original lines 1..170; DAG execution and results excluded"
+    },
+    {
+      "file": "topology.json",
+      "original_attachment": "/root/.codex/attachments/32354bd5-d140-4b09-8504-6390c695f6d3/topology.json",
+      "original_sha256": "539b504575e90092f8a4f4d20758d809b49770bea4e447c66f3da2b5dbde59ce",
+      "archived_sha256": "539b504575e90092f8a4f4d20758d809b49770bea4e447c66f3da2b5dbde59ce",
+      "archived_bytes": 395881,
+      "archived_lines": 16719,
+      "scope": "full attachment, byte-identical"
+    }
+  ]
+}

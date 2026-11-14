@@ -1,0 +1,8 @@
+source_log,source_line,raw,phase,contrast,validity,pairs,planned_mean_delta_ms,ci,p99_interval
+0002.log,222,|time-concentration|descriptive_only|3|2.545737154499998|None|否，见样本门槛|,s3-burst,time-concentration,descriptive_only,3,2.545737154499998,None,否，见样本门槛
+0002.log,223,|pool-concentration|descriptive_only|3|257.7371423322222|None|否，见样本门槛|,s3-burst,pool-concentration,descriptive_only,3,257.7371423322222,None,否，见样本门槛
+0003.log,417,|t8-vs-t16|descriptive_only|3|-312.70747513444445|None|否，见样本门槛|,s3-threads,t8-vs-t16,descriptive_only,3,-312.70747513444445,None,否，见样本门槛
+0003.log,418,|t8-vs-t64|descriptive_only|3|-216.4785598233334|None|否，见样本门槛|,s3-threads,t8-vs-t64,descriptive_only,3,-216.4785598233334,None,否，见样本门槛
+0003.log,419,|t8-vs-t256|descriptive_only|3|-201.92112919944444|None|否，见样本门槛|,s3-threads,t8-vs-t256,descriptive_only,3,-201.92112919944444,None,否，见样本门槛
+0004.log,307,|none-vs-numa|descriptive_only|3|66.690163325|None|否，见样本门槛|,s3-deployment,none-vs-numa,descriptive_only,3,66.690163325,None,否，见样本门槛
+0004.log,308,|none-vs-cluster|descriptive_only|3|366.9910814236111|None|否，见样本门槛|,s3-deployment,none-vs-cluster,descriptive_only,3,366.9910814236111,None,否，见样本门槛

@@ -1,0 +1,10 @@
+{
+  "input_kind": "terminal summaries, no per-task CSV or new measurements",
+  "input_sha256": {
+    "arm_runs.csv": "524eb5c766f60213a065fefc3aa69d988afb26e375c47d8d978da203d99c3def",
+    "arm_conditional_ranges.csv": "4409ece07c849e2b1822e12a448e78c49d9a3766a2292548e44ab657611dd282"
+  },
+  "matplotlib": "3.11.2",
+  "font": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+  "statistics": "means of per-run means; individual per-run p99; min/max ranges, never CI"
+}

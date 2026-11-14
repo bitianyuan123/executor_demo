@@ -1,0 +1,31 @@
+source_log,source_line,raw,phase,case,target,model,folds,held_out_tasks,mae_ms,p95_absolute_error_ms,paired_baseline_mae_ms,mae_reduction_ms
+0003.log,52,|自身 target|3/3|36000|155.5971|280.7510|155.5971|0.0000|,s3-burst,local,wait_ms,自身 target,3/3,36000,155.5971,280.751,155.5971,0.0
+0003.log,53,|queue + 自身 target|3/3|36000|15.0648|41.8446|155.5971|140.5323|,s3-burst,local,wait_ms,queue + 自身 target,3/3,36000,15.0648,41.8446,155.5971,140.5323
+0003.log,54,|pending + 自身 target|3/3|36000|15.0864|41.2557|155.5971|140.5107|,s3-burst,local,wait_ms,pending + 自身 target,3/3,36000,15.0864,41.2557,155.5971,140.5107
+0003.log,55,|queue + inflight + 自身 target|3/3|36000|11.8472|33.6166|155.5971|143.7499|,s3-burst,local,wait_ms,queue + inflight + 自身 target,3/3,36000,11.8472,33.6166,155.5971,143.7499
+0003.log,56,|work + inflight + 自身 target|3/3|36000|7.8767|23.0267|155.5971|147.7203|,s3-burst,local,wait_ms,work + inflight + 自身 target,3/3,36000,7.8767,23.0267,155.5971,147.7203
+0003.log,62,|自身 target|3/3|36000|155.5921|280.7603|155.5921|0.0000|,s3-burst,local,submitted_ms,自身 target,3/3,36000,155.5921,280.7603,155.5921,0.0
+0003.log,63,|queue + 自身 target|3/3|36000|16.8241|42.9745|155.5921|138.7680|,s3-burst,local,submitted_ms,queue + 自身 target,3/3,36000,16.8241,42.9745,155.5921,138.768
+0003.log,64,|pending + 自身 target|3/3|36000|16.9734|44.6155|155.5921|138.6187|,s3-burst,local,submitted_ms,pending + 自身 target,3/3,36000,16.9734,44.6155,155.5921,138.6187
+0003.log,65,|queue + inflight + 自身 target|3/3|36000|13.6456|36.9816|155.5921|141.9465|,s3-burst,local,submitted_ms,queue + inflight + 自身 target,3/3,36000,13.6456,36.9816,155.5921,141.9465
+0003.log,66,|work + inflight + 自身 target|3/3|36000|9.8446|33.8979|155.5921|145.7475|,s3-burst,local,submitted_ms,work + inflight + 自身 target,3/3,36000,9.8446,33.8979,155.5921,145.7475
+0003.log,78,|自身 target|3/3|36000|0.0040|0.0064|0.0040|0.0000|,s3-burst,smooth,wait_ms,自身 target,3/3,36000,0.004,0.0064,0.004,0.0
+0003.log,79,|queue + 自身 target|3/3|36000|0.0040|0.0064|0.0040|0.0000|,s3-burst,smooth,wait_ms,queue + 自身 target,3/3,36000,0.004,0.0064,0.004,0.0
+0003.log,80,|pending + 自身 target|3/3|36000|0.0040|0.0064|0.0040|0.0000|,s3-burst,smooth,wait_ms,pending + 自身 target,3/3,36000,0.004,0.0064,0.004,0.0
+0003.log,81,|queue + inflight + 自身 target|3/3|36000|0.0040|0.0063|0.0040|0.0000|,s3-burst,smooth,wait_ms,queue + inflight + 自身 target,3/3,36000,0.004,0.0063,0.004,0.0
+0003.log,82,|work + inflight + 自身 target|3/3|36000|0.0040|0.0063|0.0040|0.0000|,s3-burst,smooth,wait_ms,work + inflight + 自身 target,3/3,36000,0.004,0.0063,0.004,0.0
+0003.log,88,|自身 target|3/3|36000|0.0285|0.0765|0.0285|0.0000|,s3-burst,smooth,submitted_ms,自身 target,3/3,36000,0.0285,0.0765,0.0285,0.0
+0003.log,89,|queue + 自身 target|3/3|36000|0.0285|0.0765|0.0285|0.0000|,s3-burst,smooth,submitted_ms,queue + 自身 target,3/3,36000,0.0285,0.0765,0.0285,0.0
+0003.log,90,|pending + 自身 target|3/3|36000|0.0285|0.0765|0.0285|0.0000|,s3-burst,smooth,submitted_ms,pending + 自身 target,3/3,36000,0.0285,0.0765,0.0285,0.0
+0003.log,91,|queue + inflight + 自身 target|3/3|36000|0.0285|0.0763|0.0285|0.0000|,s3-burst,smooth,submitted_ms,queue + inflight + 自身 target,3/3,36000,0.0285,0.0763,0.0285,0.0
+0003.log,92,|work + inflight + 自身 target|3/3|36000|0.0285|0.0763|0.0285|0.0000|,s3-burst,smooth,submitted_ms,work + inflight + 自身 target,3/3,36000,0.0285,0.0763,0.0285,0.0
+0003.log,104,|自身 target|3/3|36000|4.2873|2.3160|4.2873|0.0000|,s3-burst,spread,wait_ms,自身 target,3/3,36000,4.2873,2.316,4.2873,0.0
+0003.log,105,|queue + 自身 target|3/3|36000|3.9781|2.0842|4.2873|0.3092|,s3-burst,spread,wait_ms,queue + 自身 target,3/3,36000,3.9781,2.0842,4.2873,0.3092
+0003.log,106,|pending + 自身 target|3/3|36000|3.9716|2.0787|4.2873|0.3157|,s3-burst,spread,wait_ms,pending + 自身 target,3/3,36000,3.9716,2.0787,4.2873,0.3157
+0003.log,107,|queue + inflight + 自身 target|3/3|36000|4.2029|7.3335|4.2873|0.0844|,s3-burst,spread,wait_ms,queue + inflight + 自身 target,3/3,36000,4.2029,7.3335,4.2873,0.0844
+0003.log,108,|work + inflight + 自身 target|3/3|36000|4.4800|8.6355|4.2873|-0.1927|,s3-burst,spread,wait_ms,work + inflight + 自身 target,3/3,36000,4.48,8.6355,4.2873,-0.1927
+0003.log,114,|自身 target|3/3|36000|4.2912|2.3588|4.2912|0.0000|,s3-burst,spread,submitted_ms,自身 target,3/3,36000,4.2912,2.3588,4.2912,0.0
+0003.log,115,|queue + 自身 target|3/3|36000|3.9823|2.1182|4.2912|0.3090|,s3-burst,spread,submitted_ms,queue + 自身 target,3/3,36000,3.9823,2.1182,4.2912,0.309
+0003.log,116,|pending + 自身 target|3/3|36000|3.9757|2.1120|4.2912|0.3155|,s3-burst,spread,submitted_ms,pending + 自身 target,3/3,36000,3.9757,2.112,4.2912,0.3155
+0003.log,117,|queue + inflight + 自身 target|3/3|36000|4.8496|7.3517|4.2912|-0.5583|,s3-burst,spread,submitted_ms,queue + inflight + 自身 target,3/3,36000,4.8496,7.3517,4.2912,-0.5583
+0003.log,118,|work + inflight + 自身 target|3/3|36000|5.1725|8.6455|4.2912|-0.8812|,s3-burst,spread,submitted_ms,work + inflight + 自身 target,3/3,36000,5.1725,8.6455,4.2912,-0.8812
