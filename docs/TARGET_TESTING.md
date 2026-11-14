@@ -2,6 +2,8 @@
 
 本指南基于2026-11-14用户上传的`topology.json`，以及用户确认可以独立使用的`0-47,192-239`。这里提供运行方案；本仓库开发机没有执行这些ARM性能实验。先完成第0～3步并检查结果，再扩展压力和策略，避免一次运行所有矩阵。
 
+当前回传进度已完成calibration、burst、线程扫描和256线程三亲和对照。接下来按[第四批审阅与执行步骤](TARGET_PILOT_04_AFFINITY_REVIEW.md)读取已有CSV的条件p50/p95/p99，并直接运行高线程DAG home基线；无需重复独立任务压测。新`conditional_latency.py`与`dag_terminal_report.py`均为只读Python分析，不需要重编Folly或C++。本文后续的大矩阵和确认阶段保留为按需扩展，当前不要一次全部执行。
+
 ## 0. 固定实际资源与解释口径
 
 附件实际报告2个socket、4个NUMA、24个cluster、192个物理核、384个逻辑CPU；每个cluster为8核×SMT2，其L3共享范围与cluster一致（23296 KiB）。这与最初描述的整机规模不同，因此本轮取一个明确的六cluster子集：
