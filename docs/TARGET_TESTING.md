@@ -251,14 +251,37 @@ python3 scripts/compare_runs.py \
 
 ## 7. 回传结果与本轮验收
 
-第一次建议回传拓扑、smoke、calibration及可选metrics；无需先做完整矩阵。完成这一批后再次采集拓扑，记录限额与累计throttling变化，差值仍应结合是否共享同一cgroup判断：
+第一次建议回传拓扑、smoke、calibration及可选metrics；无需先做完整矩阵。**测试机不能上传文件时，直接复制下面的终端摘要即可。** 当前正在执行的calibration继续运行，结束后再更新脚本和采集；本次摘要工具更新不需要重新编译或重跑实验。完成这一批后再次采集拓扑，记录限额与累计throttling变化，差值仍应结合是否共享同一cgroup判断：
 
 ```bash
+git pull --ff-only
+# 新开终端时重新设置变量；如果前面用了其他目录，请保持一致。
+TARGET_MASK='0-47,192-239'
+TARGET_RUN='results/local/arm-pilot-01'
 taskset -c "$TARGET_MASK" python3 scripts/topology.py \
   --output "$TARGET_RUN/topology-after.json"
-tar -czf /tmp/arm-pilot-01-first.tar.gz -C results/local arm-pilot-01
+
+# 两段可以分别复制发送；只读已有结果，不运行压力。
+python3 scripts/terminal_report.py --root "$TARGET_RUN" --section environment
+python3 scripts/terminal_report.py --root "$TARGET_RUN" --section runs
 ```
+
+默认打印smoke三轮与calibration八轮；请保留所有轮次及FLAGS，不只摘出最快一轮。如果终端复制长度有限，将第二条拆成：
+
+```bash
+python3 scripts/terminal_report.py --root "$TARGET_RUN" --section runs --phase s3-smoke
+python3 scripts/terminal_report.py --root "$TARGET_RUN" --section runs --phase s3-calibration --offset 0 --limit 4
+python3 scripts/terminal_report.py --root "$TARGET_RUN" --section runs --phase s3-calibration --offset 4 --limit 4
+```
+
+`recorded/planned`用于检查整个阶段是否跑完；manifest只记录已经退出的轮次，运行期间还可能遇到暂时的JSON读取错误。失败轮显示退出码和日志路径，其他完整轮继续分析。脚本退出码1表示计划完成情况无法确认、失败或已显示产物有问题，仍应保留输出；退出码0也不认证稳态或通过配对合同。分页仅检查显示轮次的详细产物。
+
+`LAT`使用manifest声明的窗口，保留窗口内计划到达、窗口外才完成的慢任务。`TREND`比较前后半窗口：完成速率按完成时刻计数，时延按计划到达cohort计数；`successful_unfinished`只包括最终成功的任务，有失败时不是全部积压。`SAMPLING`给出Folly队列采样数、斜率与截断情况。`CPU`为整轮含排空的进程CPU秒，不能除以20秒cohort窗口推断容量；queue插桩未采集单回调CPU时，`callback_cpu_mean_ms=?`正常。calibration出现`short_window`也正常，它提醒30秒初筛不能证明可持续容量。
+
+后续先根据这些文本选择稳定压力点，再继续burst与部署对照。有条件传文件时也可打包整个结果目录；终端摘要不替代原始产物，请在测试机保留它们。
 
 保留`plan/`、每阶段manifest、metadata、summary、原始CSV与日志。分析合同失败时保留原始报错，不能放宽合同直至通过。后续每批结果都应能回答：资源是否相同、工作量是否配对、有没有未完成/拒绝、是否稳定、改善落在等待还是服务执行、区间与样本量能支持多大的结论。
 
 本次本地交付验证：上传拓扑成功生成96逻辑CPU/48核的pilot及confirm计划；cgroup采集8个fixture、目标计划14个fixture通过。根工程12组CTest通过。另将新计划缩为开发机两池、1秒投递和小CPU预算，实际完成36轮运行，验证三组独立任务和两组DAG的运行器、配对合同与图依赖分析链路。缩放结果仅证明工具流程可运行，不是ARM性能证据；目标机配额及正式实验仍以现场采集为准。
+
+终端摘要增量验证：新增7项检查覆盖cohort慢任务、失败/缺文件后继续、部分manifest、分页、采样截断及未知配额，并用已有独立任务运行产物验证真实字段兼容；已注册为`terminal_result_report` CTest。
