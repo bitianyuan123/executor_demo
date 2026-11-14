@@ -62,6 +62,8 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
+已上传拓扑的ARM测试机请从[真实环境逐步测试指南](docs/TARGET_TESTING.md)开始：使用已确认的`0-47,192-239`六cluster子集，先做绑定验收和容量初筛；配置生成器只准备计划，不自动运行压力。采集器现支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
+
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 
 阶段3先固定服务分布扫描负载和线程数，再比较三种亲和；阶段4先固定DAG与home，再改变跨池策略和fork位置。每次只扩展一个主要问题，串行运行、同seed配对、交错重复，保存所有拒绝/取消/未完成任务和发生器落后。每秒p99只作波动观察，正式比较以完整样本和独立重复为主。
