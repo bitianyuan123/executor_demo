@@ -142,7 +142,16 @@ python3 experiments/affinity/report.py results/affinity/routing-run-01/seed-* \
 
 目录包含summary.json、requests.csv、trace=1时tasks.csv；报告按计划到达窗口选request，保留窗口外完成值。自动核对到达/工作合同、节点、校验值、拒绝和CSV完整性。只有同seed、同工作合同、同资源/线程/观测口径的唯一home才能成对；不会把不同模型、CPU绑定或threads混成调度收益。
 
-请求级看mean/p95/p99、生成器落后、peak-inflight；算子级看wait、CPU、wall、迁移、跨NUMA。报告的CPU/wall是闭包口径，含内部提交子任务的时间；并不等于纯内存访问内核的CPU耗时。逐任务等待从门面提交到闭包开始，包含用户态队列和出队后未开始闭包的延迟，不能拆解为内核runq时间。需要内核等待归因时另采目标池TID的schedstat/perf，仍按阶段2定义核对。
+请求级看mean/p95/p99、生成器落后、peak-inflight；算子级看wait、CPU、wall、迁移、跨NUMA。报告的CPU/wall是闭包口径，含内部提交子任务的时间；并不等于纯内存访问内核的CPU耗时。逐任务`submitted_ns`在选池、预占和诊断读之后、底层`pool.add`之前，至闭包开始的等待不包含完整L2选池耗时，也不能拆解为内核runq时间。request计划到达→完成与进程CPU保留总体开销；需要内核等待归因时另采目标池TID的schedstat/perf，仍按阶段2定义核对。
+
+用独立只读诊断检查home下的负载关系与时间趋势：
+
+```bash
+python3 experiments/affinity/diagnose.py results/affinity/routing-run-01/seed-* \
+  --warmup-seconds 5 --window-seconds 10 --bin-ms 1000
+```
+
+该工具复用报告的输入审计，输出Q/I/O条件task分位、首波fork记录点跨度和请求积压/lag。它不按每秒p99求总体p99，不将callback并发当成onCPU，也不把排空视为稳态。分桶是投递task采样且目标池已经选定，受选择、批内顺序与任务成本影响；先在home基线解释，再做整轮策略干预。阶段3与v1的`compare_runs.py`不兼容v2 schema；当前v2跨seed仍是逐轮描述性比较，没有自动置信区间。完整承接与边界见[验收覆盖](../../docs/GOALS_AND_COVERAGE.md)。
 
 同seed成对delta是整轮统计量之差，不把请求当独立重复。默认少于1000请求提示尾部样本不足；1000也仅约10个名义尾样本，不是自动可信。初筛240请求/12QPS只看机制、稳定性和数量级；正式p99建议每配置至少数千到上万请求，≥5次交错重复，并检查队列/提交lag是否随时间增长。共享负载下有相关性，不能拿每秒p99平均当总体p99。
 

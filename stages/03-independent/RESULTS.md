@@ -1,5 +1,7 @@
 # 阶段3：独立随机任务的实际验证结果
 
+> 本文保留早期开发机验证及当时进度，以下“尚未在ARM运行”和下一步建议不代表当前状态。用户随后回传的0001～0005已完成目标机阶段3初测与旧DAG home基线，见[第五批ARM审阅](../../docs/TARGET_PILOT_05_DAG_BASELINE_REVIEW.md)。当前可直接按[cluster v2指南](../../docs/REAL_WORKLOAD_MATRIX.md)推进，不需重跑历史步骤。
+
 本阶段只使用原版 Folly CPUThreadPoolExecutor，没有DAG、RPC或跨池路由。开发机实际为4个逻辑CPU、单NUMA、约7.5GiB RAM；划成两个逻辑CPU分区，不是两颗ARM cluster。目标六池/双NUMA三种绑定的矩阵和操作指南已交付，尚未在真实ARM机器运行。
 
 ## 1. 数据范围与有效性

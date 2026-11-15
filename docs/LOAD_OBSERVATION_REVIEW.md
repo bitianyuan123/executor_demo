@@ -65,22 +65,24 @@ cpu样本缺失、过旧、非有限数或runqueue统计不可用时回退O。�
 
 active和outstanding很可能在CPU密集长任务时近似，这正是有意义的简化对照。CPU模型不能保证感知新一轮微突发：当很多worker很快取走工作，Q归零而历史CPU尚未上升，它也可能低估；因此保留O基线，不能因CPU“更底层”就预设更准确。
 
-`tasks.csv`保留选池样本/score、样本窗口、是否评估、回退原因。summary的`score_evaluations`按**携带评分结果的任务**计数，batch chunk内多个任务可共用一次选池；它不是虚函数调用次数。pin-home/home/non-fork跳过评分的任务不进入回退分母。trace=0没有逐任务回退证据，应结合trace=1诊断轮解释，不能据零计数认定没有回退。
+`tasks.csv`保留选池样本/score、样本窗口、是否评估、回退原因。summary的`score_evaluations`按**携带评分结果的任务**计数，batch chunk内多个任务可共用一次选池；它不是虚函数调用次数。pin-home/home/non-fork跳过评分的任务不进入回退分母。trace=0没有逐任务回退证据，应结合trace=1诊断轮解释，不能据零计数认定没有回退。任务等待起点位于选池、预占及诊断计数读取之后、底层提交之前，终点为包装闭包开始；它包含后续提交、排队及调度等待，**不包含完整L2选池成本**，不能用它替代整条`add`路径的开销测量。
 
 ## 4. 已保留的调度开关与未实现的能力
 
-L1仍是RR/颜色哈希确定一次home。L2只决定**新就绪算子**投向哪里，不能抢占或搬运已排队任务。先选当前偏好池；超high后扫描同NUMA候选，满足min-gain才借出；同域没有合适候选且允许跨NUMA时，才加remote罚项搜索远端。此处“空闲”是低score的相对判断，不承诺找到没有任务的池。
+L1仍是RR/颜色哈希确定一次home。L2只决定**新就绪算子**投向哪里，不能抢占或搬运已排队任务。先选当前偏好池；ReturnHome可先按low阈值回home。其余情况下超high后扫描同NUMA候选，满足min-gain才借出；同域没有合适候选且允许跨NUMA时，才加remote罚项搜索远端。此处“空闲”是低score的相对判断，不承诺找到没有任务的池。
 
 | 参数 | 作用及边界 |
 |---|---|
 | `--busy-high / --return-low` | 借出与回home阈值，单位依policy；不是从80峰值直接推导 |
-| `--min-gain` | 只有足够评分改善才迁移，抑制微小差异 |
-| `--cross-numa 0/1 / --cross-numa-penalty` | 同NUMA优先，再按开关和罚项跨域；不承诺自动估计cache/remote内存代价 |
-| `--continuation parent/home` | 跟随实际父位置，或home低负载时回迁 |
+| `--min-gain` | 普通借出候选必须有足够评分改善；不约束ReturnHome回迁 |
+| `--cross-numa 0/1 / --cross-numa-penalty` | 普通借出先同NUMA，再按开关和罚项跨域；ReturnHome遵守跨域开关，但不加该罚项 |
+| `--continuation parent/home` | 跟随实际父位置，或home评分不高于low时回迁；回迁遵守fork/hop/跨域开关，不比较min-gain或remote罚项 |
 | `--balance-at fork/all` | 仅fork批量点，或每次就绪都重新考虑 |
 | `--batch-chunk 1/4/8` | 每次选池预占一组；仍逐任务入队执行，不把任务合成串行大闭包 |
 | `--max-hops` | 沿上下文路径的迁移预算，0禁止借出；不是最短驻留时间 |
 | `--cpu-sample-ms / --cpu-max-age-ms / --cpu-sampling` | 采样频率、陈旧阈值与独立开销对照 |
+
+ReturnHome是单独的亲和策略：即使parent评分为0、home为1，只要low允许且上述限制满足，也可回home。它不要求home比parent更空闲，不用`cross-numa-penalty`证明回迁划算；因此提高min-gain或remote罚项不能替代对回迁策略本身的对照。
 
 当前六cluster子集采用全扫描候选，便于审计；扫描成本随池数增长，扩展至更多cluster需重新测量，而不是假定池数永远为4或6。因此本轮仍未引入P2C或复杂负载树。各并发提交者选择与预占不是事务，仍可能同时选中同池；chunk/保守gain是可测参数，不是严格避免惊群证明。借鉴内核的分层搜索、容量归一和迁移抑制，不照搬内核runqueue或任务抢占机制；LALB面向服务调用/反馈延迟的权重也不能直接当作本地CPU算子可用容量。原有[算法依据与二层设计](../stages/04-dag/TWO_LEVEL_DESIGN.md)继续适用。
 

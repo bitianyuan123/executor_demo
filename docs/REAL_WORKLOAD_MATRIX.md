@@ -6,6 +6,8 @@
 
 研究核心是**单个request内部的大扇出**造成home cluster短时饱和，以及借出计算资源和数据亲和的权衡；请求入口微突发是补充变量，不是替代该核心负载。
 
+目标、实现难点及逐项验证状态集中在[验收覆盖](GOALS_AND_COVERAGE.md)。本指南用于选择下一组对照，不意味着所有负载组合、ARM性能与生产接入均已验证。
+
 ## 1. 新增变量及其准确含义
 
 | 参数 | 作用 | 保持与变化 |
@@ -157,6 +159,21 @@ cat /proc/sys/kernel/sched_schedstats
 report按计划到达选择request cohort，窗口后才完成的请求仍保留；要求全请求有终态。拒绝/失败运行不会成为性能配对。请求mean/p95/p99、该cohort算子CPU/墙钟和等待，与整轮process CPU/request分开显示。
 
 手工收集终端结果时，保留每run的`pool_count/affinity/threads`、`matrix suite/experiment_role`、工作合同及最后的配对说明。报告从实际summary读取池数；仅在直接父目录的metadata和plan能确认归属时显示矩阵角色，否则为`manual_or_unclassified`。手动校准命令没有矩阵元数据是正常情况，不会因此被排除分析；角色标签也不证明CPU分区确为硬件cluster。不同池数/绑定不能配成策略delta，相同资源与工作下cluster-baseline和signals可以配对。
+
+随后使用同一时间窗口边界打印诊断，先检查home，再查看候选策略：
+
+```bash
+python3 experiments/affinity/diagnose.py results/local/v2-cluster-calibration-01 \
+  --bin-ms 1000
+# 上方96请求/12QPS的regular初筛投递约8秒，用投递期内的[1,6)小窗。
+# report也传相同warmup/window；下列目录替换成实际已执行目录。
+python3 experiments/affinity/diagnose.py results/local/v2-cluster-signals-run-01/seed-* \
+  --warmup-seconds 1 --window-seconds 5 --bin-ms 1000
+```
+
+初筛窗口不是稳态证明或正式p99样本设计。正式轮次先增加请求数与运行时长，核对报告中的最后计划到达时间，再预声明测量窗口；例如投递不足8秒时不能用`[5,15)`讨论负载期平均占用，后半段已经是停流后的排空/空窗。若要专门研究排空，可另列该窗口并保留其名称。
+
+条件分位针对Q/I/O与task等待/执行墙钟，按operator记录提交点选样；首波跨度来自计划到达在窗口内的request的选池后提交记录点；时间趋势计入所有跨窗口请求/callback，区分计划到达、实际投递与完成/积压。三个总体不可混加。它们不直接给出request p99因果关系或30ms CPU饱和证据。完整排空只说明有限工作完成，仍需检查负载期间积压和lag是否增长。阶段3条件关系用于筛选信号；v2在目标线程档/图/工作集下重新测关系、冻结阈值做策略干预，之后用留出的seed/邻近压力复验。
 
 callback occupancy由所有与墙钟测量窗口相交的`start_ns..finish_ns`区间重建，输出每池与全局的时间加权均值/峰值，包含同步睡眠和被抢占时间；它和“在提交时采到的inflight平均数”口径不同，也不等于Linux runnable/on-CPU。历史20/80已知是临时配置的单池值；即使确认同样统计定义，也不能要求目标cluster池复现它。应比较事件机制与负载规模，并重新测目标部署的占用。报告的全池峰值来自合并区间，并非各池峰值相加。
 

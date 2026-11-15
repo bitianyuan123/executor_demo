@@ -449,6 +449,51 @@ class PublishedProvider final : public LoadProvider {
   const char* name() const noexcept override { return "test-published"; }
 };
 
+TEST(RequestExecutor, ReturnHomeCanPreferBusierHomeWithoutBorrowGainOrRemotePenalty) {
+  Records records;
+  Gate submitted;
+  auto provider = std::make_shared<PublishedProvider>();
+  for (auto& sample : provider->samples) sample.queueValid = true;
+  provider->samples[0].queueDepth = 100;
+  auto cfg = config(&records);
+  cfg.groups[1].numaNode = 1;
+  cfg.policy = Pool::Policy::QueueSpill;
+  cfg.continuationPolicy = Pool::ContinuationPolicy::ReturnHome;
+  cfg.loadProvider = provider;
+  cfg.allowCrossNuma = true;
+  cfg.busyHigh = 2;
+  cfg.returnLow = 1;
+  cfg.minGain = 10;
+  cfg.crossNumaPenalty = 50;
+  Pool pool(std::move(cfg));
+  auto release = folly::makeGuard([&] { submitted.open(); });
+  ASSERT_TRUE(pool.add(pool.beginRequest(7), [&] {
+    // Wait until the initial add returns and drops its reservation, so the
+    // source's score is exactly zero. Only this callback now writes the sample.
+    submitted.wait();
+    provider->samples[0].queueDepth = 1;
+    EXPECT_TRUE(pool.add([] {}, {9}));
+  }));
+  submitted.open();
+  pool.join();
+  auto rows = records.take();
+  std::sort(rows.begin(), rows.end(), [](const auto& a, const auto& b) { return a.tag < b.tag; });
+  ASSERT_EQ(rows.size(), 2);
+  EXPECT_EQ(rows[0].chosen, 1);
+  EXPECT_EQ(rows[0].reason, Pool::Reason::CrossNumaSpill);
+  EXPECT_DOUBLE_EQ(rows[0].preferredScore, 100);
+  EXPECT_DOUBLE_EQ(rows[0].chosenScore, 50); // Initial borrow pays the penalty.
+  EXPECT_EQ(rows[1].source, 1);
+  EXPECT_EQ(rows[1].home, 0);
+  EXPECT_EQ(rows[1].chosen, 0);
+  EXPECT_EQ(rows[1].reason, Pool::Reason::ReturnHome);
+  EXPECT_TRUE(rows[1].crossNuma);
+  EXPECT_EQ(rows[1].hops, 2);
+  EXPECT_DOUBLE_EQ(rows[1].chosenScore, 1); // No remote penalty on ReturnHome.
+  EXPECT_EQ(pool.snapshots()[0].completed, 1);
+  EXPECT_EQ(pool.snapshots()[1].completed, 1);
+}
+
 TEST(RequestExecutor, ThreeAndSixGroupsRouteToLastGroupUsingNormalizedCapacity) {
   for (size_t groupCount : {size_t(3), size_t(6)}) {
     SCOPED_TRACE(groupCount);

@@ -1,5 +1,7 @@
 # 阶段5：业务版与库版接入验证
 
+> 本文记录早期底层分组器两位置的验证，当时17项/10轮的数字保持原样。后续扩展和当前接口边界见[阶段5指南](README.md)及[总覆盖表](../../docs/GOALS_AND_COVERAGE.md)；不能把该历史记录当成高层RequestExecutor已迁入Folly或已完成生产接入的证据。
+
 业务版只包含已提交的 `executor_demo::BusinessExecutor` 和原版Folly公共头文件；库版额外启用 `folly::experimental::AffinityExecutor`。两者使用同一DAG程序和同一放置/计量算法，仅改变打包位置。
 
 实际通过的检查：

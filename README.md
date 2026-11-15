@@ -7,7 +7,7 @@
 | 1 | [真实业务分析报告](stages/01-business/README.md) | 已知负载、局部突发、容量与未知项 | 核对业务口径和目标机拓扑 |
 | 2 | [Folly分析报告](stages/02-folly/README.md) | 任务队列、唤醒、内核runq、负载获取的成本与覆盖范围 | [读取/维护成本探针](experiments/metrics/README.md) |
 | 3 | [独立任务实验设计与指南](stages/03-independent/README.md) | 排除DAG与迁移后，负载怎样影响任务平均/p99 | `experiments/independent` |
-| 4 | [复杂DAG设计与指南](stages/04-dag/README.md) | 初始大扇出、依赖、多次fork、RPC和亲和策略 | `experiments/dag`，默认业务侧路由 |
+| 4 | [复杂DAG设计与指南](stages/04-dag/README.md) | 初始大扇出、依赖、多次fork、RPC和亲和策略 | `experiments/dag`为v1机制/RPC；`experiments/affinity`为v2总池/固定工作局部性主线 |
 | 5 | [业务侧与Folly扩展的判断、工程和对照](stages/05-placement/README.md) | 同一能力该放在哪里，集成是否等价 | 业务版与可选库版分别构建 |
 
 先看[本次工程复核与阶段验收](stages/README.md)，每一步都定义了输入、产物、可支持的结论和不能跨越的推断。旧版DAG实验数据仍保留在[历史结果](results/validation.md)，不会将它冒充新阶段3的独立任务证据。
@@ -15,6 +15,8 @@
 阶段4现新增独立的[两层调度审查与设计](stages/04-dag/TWO_LEVEL_DESIGN.md)和[透明总池/固定工作量局部性实验v2](experiments/affinity/README.md)：业务不传池编号，支持请求染色、自动后继上下文、登记式RPC续接、fork/all均衡、parent/home策略及真正分支读写依赖。旧DAG和已测基线保留；v2需显式运行 `./scripts/build_stage.sh affinity`，不会改变默认构建和历史实验语义。
 
 **业务改造主线：每个已核实的硬件cluster一个Folly子池，由总池完成请求亲和与算子借出。** 当前选定六cluster子集即六池；池数随部署范围变化。16 QPS、4×128线程、无CPU绑定和单池active 20/80是历史trace的临时采集条件，不决定目标配置。上轮实验入口偏移及修正见[方向复核](docs/CLUSTER_DIRECTION_REVIEW.md)。
+
+当前总览见[总目标、实现难点与验收覆盖](docs/GOALS_AND_COVERAGE.md)：集中区分已实现、已验证和待目标机证据，并说明阶段3条件时延如何接到阶段4策略干预。v2性能摘要用`report.py`，负载分桶、首波扇出与积压趋势用独立的`diagnose.py`；二者不输出生产最优策略或统一的负载→request p99公式。
 
 - [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
 - [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。
