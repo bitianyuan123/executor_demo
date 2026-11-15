@@ -2,7 +2,7 @@
 
 本阶段回答：在给定 CPU 资源、线程数和到达过程下，原版 Folly 的队列观测值在多大程度上解释任务等待和完成时延；补充 pending/inflight/工作量估计是否有价值，额外计量带来多少扰动。
 
-工程是 [`experiments/independent`](../../experiments/independent/README.md)，独立 CMake 项目和 `independent_load` 可执行文件。它只链接原版 `folly::CPUThreadPoolExecutor`，没有 DAG、RPC、迁移、借用池或实验性 `AffinityExecutor`。阶段4、5的策略不会进入本阶段的实验结果。复用的是仓库组织和原版 Folly 安装，不是复杂业务运行路径。
+工程是 [`experiments/independent`](../../experiments/independent/README.md)，独立 CMake 项目和 `independent_load` 可执行文件。它只链接原版 `folly::CPUThreadPoolExecutor`，没有 DAG、RPC 或实验性 `AffinityExecutor`。本页描述默认 home 投递的原始实验；新增的可选阈值投递实验单独见[负载指标与均衡设计](BALANCE_DESIGN.md)、[运行指南](BALANCE_GUIDE.md)，不会混入历史结果。阶段4、5的策略不会进入本阶段的运行路径。
 
 ## 1. 实验单位与时间边界
 

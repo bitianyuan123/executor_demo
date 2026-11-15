@@ -1,4 +1,5 @@
-// Stage 3: original Folly executor, independent jobs, no DAG or routing extension.
+// Stage 3: original Folly executor, independent jobs and business-side admission routing.
+#include "LoadRouting.h"
 #include <folly/executors/CPUThreadPoolExecutor.h>
 #include <folly/executors/thread_factory/ThreadFactory.h>
 #include <folly/init/Init.h>
@@ -95,13 +96,17 @@ struct Opt {
   std::string output = "independent-run", cpus, numa, affinity = "none", deployment = "dev";
   std::string instrumentation = "full", arrival = "regular", workMode = "cpu";
   std::string meanNormalization = "none", burstPlacement = "local";
+  std::string routing = "home", loadMetric = "outstanding", capacities;
+  std::string loadObservation = "off", requestedLoadObservation = "off";
+  double loadThreshold = 1, minImprovement = 0;
+  uint64_t progressUs = 5000, failSubmitTask = std::numeric_limits<uint64_t>::max();
   size_t pools = 2, threads = 2, burstMin = 1, burstMax = 1, maxOutstanding = 10000, maxPlanned = 1000000;
   uint64_t cpuUs = 1000, estimateUs = 0, seed = 42, arrivals = 0, sampleMs = 100, iterationsPerUs = 64;
   size_t maxSamples=1000000; uint64_t failTask=std::numeric_limits<uint64_t>::max();
   double rate = 100, duration = 5, jitter = .5, tailProb = .02, tailFactor = 8, drain = 30, estimateJitter = 0;
 };
 const char* help = R"(Independent original Folly CPUThreadPoolExecutor experiment.
-All options take one value. No AffinityExecutor, graph, RPC or cross-pool routing.
+All options take one value. No AffinityExecutor, graph or RPC; routing happens before add().
 --output DIR                       New result directory
 --deployment dev|target            target requires 6 verified explicit CPU groups/NUMA labels
 --pools N --threads N               Pools and fixed threads per pool (2,2)
@@ -115,9 +120,18 @@ All options take one value. No AffinityExecutor, graph, RPC or cross-pool routin
 --long-prob F --long-factor F       Mixture tail probability and multiplier (.02,8)
 --mean-normalization none|exact    exact rescales finite workload to mean cpu-us (none)
 --work-mode cpu|iterations --iterations-per-us N  CPU target or fixed loop work (cpu,64)
---estimate-us N                    full-mode work estimate, 0=known synthetic target
+--estimate-us N                    Work estimate for full/extra observation, 0=synthetic target
 --estimate-jitter F                Independent multiplicative U(1-F,1+F) estimate error (0)
 --instrumentation none|queue|counters|full  Increasing observation levels (full)
+--routing home|threshold|spread    Keep home, threshold spill, or static task RR (home)
+--load-metric queue|outstanding|work|remaining  Threshold routing metric (outstanding)
+--load-threshold F --min-improvement F  Strict home threshold and required improvement (1,0)
+--capacities 'N,N,...'             Per-pool accounting divisors; default min(threads,mask CPUs)
+--load-observation off|minimal|basic|progress  Extra load snapshots/counters (off)
+                                  minimal observes only load-metric; threshold off becomes basic
+                                  remaining enables progress unless explicit minimal
+--progress-us N                   CPU-us interval for remaining-work publication (5000)
+--fail-submit-task N              Test-only: fail add path after reservation for task N
 --sample-ms N --seed N             Periodic snapshots and deterministic workload (100,42)
 --max-samples N                    Bound periodic sample rows; report truncation (1000000)
 --fail-task N                      Test-only: inject callback failure for task ID N
@@ -144,6 +158,14 @@ Opt parse(int argc, char** argv) {
     else if (k == "--work-mode") o.workMode = v;
     else if (k == "--mean-normalization") o.meanNormalization = v;
     else if (k == "--burst-placement") o.burstPlacement = v;
+    else if (k == "--routing") o.routing = v;
+    else if (k == "--load-metric") o.loadMetric = v;
+    else if (k == "--load-observation") o.requestedLoadObservation = v;
+    else if (k == "--capacities") o.capacities = v;
+    else if (k == "--load-threshold") o.loadThreshold = number(v);
+    else if (k == "--min-improvement") o.minImprovement = number(v);
+    else if (k == "--progress-us") o.progressUs = integer(v);
+    else if (k == "--fail-submit-task") o.failSubmitTask = integer(v);
     else if (k == "--pools") o.pools = integer(v);
     else if (k == "--threads") o.threads = integer(v);
     else if (k == "--burst-min") o.burstMin = integer(v);
@@ -174,7 +196,10 @@ Opt parse(int argc, char** argv) {
   if (!choice(o.deployment,{"dev","target"}) || !choice(o.affinity,{"none","numa","cluster"}) ||
       !choice(o.instrumentation,{"none","queue","counters","full"}) || !choice(o.arrival,{"regular","poisson"}) ||
       !choice(o.workMode,{"cpu","iterations"}) || !choice(o.meanNormalization,{"none","exact"}) ||
-      !choice(o.burstPlacement,{"local","spread"})) throw std::invalid_argument("invalid enum option");
+      !choice(o.burstPlacement,{"local","spread"}) ||
+      !choice(o.routing,{"home","threshold","spread"}) ||
+      !choice(o.loadMetric,{"queue","outstanding","work","remaining"}) ||
+      !choice(o.requestedLoadObservation,{"off","minimal","basic","progress"})) throw std::invalid_argument("invalid enum option");
   if (!o.pools || o.pools > 1024 || !o.threads || o.threads > 10000 || !o.burstMin || o.burstMax < o.burstMin ||
       !o.maxOutstanding || !o.maxPlanned || o.maxPlanned > 10000000 || !o.cpuUs || o.cpuUs > 3600000000ULL ||
       !o.iterationsPerUs || o.iterationsPerUs > 1000000 || o.rate <= 0 || o.rate > 1e7 || o.duration <= 0 ||
@@ -182,6 +207,11 @@ Opt parse(int argc, char** argv) {
       o.tailProb < 0 || o.tailProb > 1 || o.tailFactor < 1 || o.tailFactor > 1000 || !o.sampleMs ||
       o.sampleMs > 60000 || o.maxSamples > 10000000 || o.estimateUs > 3600000000000ULL)
     throw std::invalid_argument("option outside supported bounds");
+  if (o.loadThreshold < 0 || o.minImprovement < 0 || !o.progressUs || o.progressUs > 3600000000ULL)
+    throw std::invalid_argument("invalid load threshold, improvement or progress interval");
+  o.loadObservation = o.requestedLoadObservation;
+  if (o.routing == "threshold" && o.loadObservation == "off") o.loadObservation = "basic";
+  if (o.loadMetric == "remaining" && o.loadObservation != "minimal") o.loadObservation = "progress";
   if(o.estimateJitter<0 || o.estimateJitter>=1) throw std::invalid_argument("estimate-jitter must be in [0,1)");
   if (o.deployment == "target" && (o.pools != 6 || o.cpus.empty() || o.numa.empty()))
     throw std::invalid_argument("target requires pools=6 and explicit cpus/numa");
@@ -245,19 +275,26 @@ class Factory : public folly::ThreadFactory {
   std::vector<int> mask_; std::string name_;
 };
 struct alignas(64) Counters {
-  std::atomic<uint64_t> pending{0}, inflight{0}, work{0};
+  std::atomic<uint64_t> pending{0}, inflight{0}, work{0}, outstanding{0}, remaining{0};
+};
+struct LoadSnapshot {
+  int64_t queue=-1, outstanding=-1, work=-1, remaining=-1, inflight=-1;
 };
 // One record per task. Main owns pre-submit fields, exactly one callback owns the rest.
 // No reader inspects callback fields until all workers have been joined.
 struct Task {
-  size_t id=0, burst=0, pool=0;
+  size_t id=0, burst=0, pool=0, homePool=0, burstIndex=0, burstRemaining=0;
+  LoadSnapshot homeLoad, selectedLoad;
+  double homeScore=-1, selectedScore=-1, capacity=0;
+  int64_t routeNs=-1, routeCandidates=-1;
+  bool spilled=false;
   uint64_t planned=0, submit=0, start=0, end=0, target=0, estimate=0, cpu=0;
   int64_t queue=-1, pending=-1, inflight=-1, work=-1;
   int tid=-1;
   enum State { Planned, Rejected, Completed, Canceled, Deadline, Failed } state=Planned;
 };
 struct Burst { size_t first, count, pool; uint64_t planned, actual=0; };
-struct Sample { uint64_t t; size_t pool; int64_t queue, pending, inflight, work; };
+struct Sample { uint64_t t; size_t pool; int64_t queue, pending, inflight, work, outstanding, remaining; double capacity; };
 std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
   std::mt19937_64 workload(o.seed), arrival(o.seed ^ 0xabcde1234ULL), widths(o.seed ^ 0x491bda22ULL);
   std::uniform_real_distribution<double> unit(0,1);
@@ -273,6 +310,7 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
       auto target = uint64_t(std::max(1., double(o.cpuUs) * (1 + o.jitter*(2*unit(workload)-1)) * (unit(workload)<o.tailProb ? o.tailFactor : 1)));
       Task r; r.id=tasks.size(); r.burst=b;
       r.pool=o.burstPlacement=="local" ? b%o.pools : r.id%o.pools;
+      r.homePool=r.pool; r.burstIndex=j; r.burstRemaining=k-j-1;
       r.planned=when; r.target=target; tasks.push_back(r);
     }
     t = o.arrival == "regular" ? double(b+1)/o.rate : t+interval(arrival);
@@ -306,16 +344,31 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
   }
   return tasks;
 }
-void work(Task& t, const Opt& o, const std::atomic<bool>& cancel, bool cpuRecord) {
+void work(Task& t, const Opt& o, const std::atomic<bool>& cancel, bool cpuRecord,
+          std::atomic<uint64_t>* remainingCounter, uint64_t& unpublished) {
   const auto startCpu=ns(CLOCK_THREAD_CPUTIME_ID);
-  uint64_t x=t.id+1, done=0, finishCpu=startCpu;
+  uint64_t x=t.id+1, done=0, finishCpu=startCpu, nextProgress=o.progressUs;
   const uint64_t maxIterations=t.target*o.iterationsPerUs;
   while (!cancel.load(relaxed)) {
     for (int i=0;i<256;++i) { x ^= x<<13; x ^= x>>7; x ^= x<<17; }
     asm volatile("" : "+r"(x));
     done += 256;
-    if (o.workMode == "cpu") {
+    if (o.workMode == "cpu" || remainingCounter) {
       finishCpu=ns(CLOCK_THREAD_CPUTIME_ID);
+      if (remainingCounter) {
+        const uint64_t consumed=(finishCpu-startCpu)/1000;
+        if (consumed >= nextProgress) {
+          const uint64_t nextRemaining=t.estimate-std::min(t.estimate,consumed);
+          // Each callback subtracts only its own unpublished estimate. Under-
+          // estimates reach zero while work may still be running.
+          const uint64_t decrement=unpublished-nextRemaining;
+          if(decrement)remainingCounter->fetch_sub(decrement,relaxed);
+          unpublished=nextRemaining;
+          nextProgress=consumed+o.progressUs;
+        }
+      }
+    }
+    if (o.workMode == "cpu") {
       if (finishCpu-startCpu >= t.target*1000) break;
     } else if (done >= maxIterations) break;
   }
@@ -336,12 +389,30 @@ const char* stateName(Task::State s) {
     case Task::Canceled:return "canceled"; case Task::Deadline:return "deadline_rejected"; case Task::Failed:return "failed"; default:return "invalid"; }
 }
 int run(const Opt& o) {
-  auto l=layout(o); std::vector<Burst> bursts; auto tasks=makeTasks(o,bursts);
+  auto l=layout(o);
+  std::vector<double> capacities;
+  if (!o.capacities.empty()) {
+    if (o.capacities.back()==',') throw std::invalid_argument("empty capacity");
+    for (const auto& value:split(o.capacities,',')) {
+      double capacity=number(value);
+      if (!(capacity > 0) || capacity > 1e9 || !std::isfinite(double(std::numeric_limits<int64_t>::max())/capacity))
+        throw std::invalid_argument("capacity must be positive, <= 1e9, and permit finite load scores");
+      capacities.push_back(capacity);
+    }
+    if (capacities.size()!=o.pools) throw std::invalid_argument("capacity count differs from pools");
+  } else for (const auto& mask:l.masks) capacities.push_back(double(std::min(o.threads,mask.size())));
+  std::vector<Burst> bursts; auto tasks=makeTasks(o,bursts);
   if(tasks.empty()) throw std::invalid_argument("no planned tasks: increase duration/rate");
   if(std::filesystem::exists(o.output)) throw std::invalid_argument("output directory already exists");
   std::filesystem::create_directories(o.output);
   const auto path=[&](const char* f){return std::filesystem::path(o.output)/f;};
+  const bool observe=o.loadObservation!="off", minimal=o.loadObservation=="minimal";
+  const bool progress=o.loadObservation=="progress"||(minimal&&o.loadMetric=="remaining");
   const bool queue=o.instrumentation!="none", counts=o.instrumentation=="counters"||o.instrumentation=="full", full=o.instrumentation=="full";
+  const bool observeNative=observe&&(!minimal||o.loadMetric=="queue");
+  const bool maintainOutstanding=observe&&(!minimal||o.loadMetric=="outstanding");
+  const bool observeWork=observe&&(!minimal||o.loadMetric=="work");
+  const bool maintainWork=full||observeWork, observeQueue=queue||observeNative;
   std::vector<std::shared_ptr<Factory>> factories;
   std::vector<std::unique_ptr<Pool>> pools;
   std::vector<std::unique_ptr<Counters>> counters;
@@ -362,6 +433,14 @@ int run(const Opt& o) {
   metadata<<"{\n\"schema\":1,\"stage\":3,\"executor\":\"original folly::CPUThreadPoolExecutor\",\"queue\":\"Folly default\",\n"
     <<"\"deployment\":"<<js(o.deployment)<<",\"hostname\":"<<js(host.nodename)<<",\"kernel\":"<<js(host.release)<<",\"machine\":"<<js(host.machine)
     <<",\"pid\":"<<getpid()<<",\"affinity\":"<<js(o.affinity)<<",\"instrumentation\":"<<js(o.instrumentation)
+    <<",\"routing\":"<<js(o.routing)<<",\"load_metric\":"<<js(o.loadMetric)<<",\"load_threshold\":"<<o.loadThreshold
+    <<",\"capacities\":"<<array(capacities)<<",\"capacity_source\":"<<js(o.capacities.empty()?"min(threads,effective_mask_logical_cpus)":"explicit")
+    <<",\"min_improvement\":"<<o.minImprovement<<",\"progress_us\":"<<o.progressUs
+    <<",\"requested_load_observation\":"<<js(o.requestedLoadObservation)<<",\"effective_load_observation\":"<<js(o.loadObservation)
+    <<",\"maintain_outstanding\":"<<(maintainOutstanding?"true":"false")
+    <<",\"maintain_work\":"<<(maintainWork?"true":"false")<<",\"publish_remaining\":"<<(progress?"true":"false")
+    <<",\"load_score_unit\":"<<js(o.loadMetric=="work"||o.loadMetric=="remaining"?"estimated_cpu_ms_per_capacity":"tasks_per_capacity")
+    <<",\"fail_submit_task\":"<<(o.failSubmitTask==std::numeric_limits<uint64_t>::max()?"null":std::to_string(o.failSubmitTask))
     <<",\"same_cpu_union\":"<<(l.sameCpuUnion?"true":"false")<<",\"extra_allowed_cpus\":"<<array(l.extraAllowed)
     <<",\"pools\":"<<o.pools<<",\"threads_per_pool\":"<<o.threads<<",\"allowed_cpus\":"<<array(l.inherited)<<",\"numa_labels\":"<<array(l.nodes)<<",\"effective_masks\":[";
   for(size_t i=0;i<l.masks.size();++i) { if(i)metadata<<','; metadata<<array(l.masks[i]); }
@@ -374,7 +453,7 @@ int run(const Opt& o) {
     <<",\"max_planned_tasks\":"<<o.maxPlanned<<",\"sample_ms\":"<<o.sampleMs<<",\"max_samples\":"<<o.maxSamples<<",\"fail_task\":"<<(o.failTask==std::numeric_limits<uint64_t>::max()?"null":std::to_string(o.failTask))<<",\"drain_seconds\":"<<o.drain
     <<",\"planned_arrivals\":"<<bursts.size()<<",\"planned_tasks\":"<<tasks.size()<<",\"clock\":\"CLOCK_MONOTONIC relative ns\","
     <<"\"limits\":[\"Native queue is approximate Folly queue telemetry, not kernel runq\",\"No numa memory binding or physical cluster discovery\","
-    <<"\"All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps\",\"work estimate retains full cost until completion, not remaining CPU\"]}\n";
+    <<"\"All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps\",\"work estimate retains full cost until completion, not remaining CPU\",\"Capacity is a logical accounting divisor, not physical throughput; overlapping masks share resources\",\"Load snapshots use separate relaxed atomic reads, not one coherent multi-pool transaction\",\"Remaining is a periodically published estimate; underestimation may yield zero before completion\",\"Routing observes only currently submitted tasks, not future burst arrivals; no queued-task migration\",\"Progress observation adds thread CPU clock reads to iterations mode\",\"spilled counts successful add calls whose selected pool differs from home\"]}\n";
   metadata.close();
   std::atomic<uint64_t> outstanding{0}; std::atomic<bool> cancel{false}, stopSample{false};
   std::vector<Sample> samples;
@@ -383,7 +462,7 @@ int run(const Opt& o) {
   rusage usageBegin{},usageEnd{}; getrusage(RUSAGE_SELF,&usageBegin);
   uint64_t epoch=ns()+20000000ULL, deadline=epoch+uint64_t((o.duration+o.drain)*1e9);
   std::thread sampler;
-  if(queue) sampler=std::thread([&] {
+  if(queue||observe) sampler=std::thread([&] {
     try {
     uint64_t next=epoch;
     while(!stopSample.load(relaxed)) {
@@ -397,36 +476,76 @@ int run(const Opt& o) {
       for(size_t i=0;i<o.pools;++i) {
         auto& c=*counters[i];
         if(samples.size()<o.maxSamples) {
-          samples.push_back({t,i,int64_t(pools[i]->getTaskQueueSize()),counts?int64_t(c.pending.load(relaxed)):-1,
-            counts?int64_t(c.inflight.load(relaxed)):-1,full?int64_t(c.work.load(relaxed)):-1});
+          samples.push_back({t,i,observeQueue?int64_t(pools[i]->getTaskQueueSize()):-1,counts?int64_t(c.pending.load(relaxed)):-1,
+            counts?int64_t(c.inflight.load(relaxed)):-1,maintainWork?int64_t(c.work.load(relaxed)):-1,
+            maintainOutstanding?int64_t(c.outstanding.load(relaxed)):-1,progress?int64_t(c.remaining.load(relaxed)):-1,capacities[i]});
         } else ++samplesDropped;
       }
       next+=o.sampleMs*1000000ULL;
     }
     } catch(...) { samplingFailed=true; }
   });
+  std::vector<LoadSnapshot> snapshots(o.pools);
+  const auto readLoad=[&](size_t pool) {
+    auto& c=*counters[pool];
+    snapshots[pool]={observeNative?int64_t(pools[pool]->getTaskQueueSize()):-1,
+      maintainOutstanding?int64_t(c.outstanding.load(relaxed)):-1,
+      observeWork?int64_t(c.work.load(relaxed)):-1,progress?int64_t(c.remaining.load(relaxed)):-1,
+      counts&&!minimal?int64_t(c.inflight.load(relaxed)):-1};
+    const auto& s=snapshots[pool];
+    double value=o.loadMetric=="queue" ? s.queue : o.loadMetric=="outstanding" ? s.outstanding :
+      o.loadMetric=="work" ? s.work : s.remaining;
+    return independent::normalizedScore(value,capacities[pool],o.loadMetric=="work"||o.loadMetric=="remaining");
+  };
   for(auto& b:bursts) {
     until(epoch+b.planned); b.actual=ns()-epoch;
     for(size_t j=0;j<b.count;++j) {
-      auto& t=tasks[b.first+j]; auto& c=*counters[t.pool]; auto& pool=*pools[t.pool];
+      auto& t=tasks[b.first+j];
       t.submit=ns()-epoch;
-      // Observation is before admission of this job; each subsequent burst job sees earlier submissions.
-      if(queue)t.queue=pool.getTaskQueueSize();
-      if(counts){t.pending=c.pending.load(relaxed);t.inflight=c.inflight.load(relaxed);}
-      if(full)t.work=c.work.load(relaxed);
+      // Routing observes the state before this task's reservation. There is one
+      // producer; future burst tasks are not inspected by the admission policy.
+      if(observe) {
+        const auto routeBegin=ns();
+        if(o.routing=="threshold") {
+          const auto decision=independent::chooseThreshold(t.homePool,o.pools,o.loadThreshold,
+            o.minImprovement,t.id%o.pools,readLoad);
+          t.pool=decision.pool; t.homeScore=decision.homeScore;
+          t.selectedScore=decision.selectedScore; t.routeCandidates=decision.candidates;
+        } else {
+          t.homeScore=readLoad(t.homePool); t.routeCandidates=1;
+          if(o.routing=="spread")t.pool=t.id%o.pools;
+          if(t.pool==t.homePool)t.selectedScore=t.homeScore;
+          else {t.selectedScore=readLoad(t.pool);++t.routeCandidates;}
+        }
+        t.routeNs=ns()-routeBegin;
+        t.homeLoad=snapshots[t.homePool]; t.selectedLoad=snapshots[t.pool];
+      } else if(o.routing=="spread")t.pool=t.id%o.pools;
+      t.capacity=capacities[t.pool];
+      auto& c=*counters[t.pool]; auto& pool=*pools[t.pool];
+      // Historical columns continue to describe the actual selected pool.
+      if(observeQueue)t.queue=observeNative?t.selectedLoad.queue:int64_t(pool.getTaskQueueSize());
+      if(counts){t.pending=c.pending.load(relaxed);t.inflight=observe&&!minimal?t.selectedLoad.inflight:int64_t(c.inflight.load(relaxed));}
+      if(maintainWork)t.work=observeWork?t.selectedLoad.work:int64_t(c.work.load(relaxed));
       if(ns()>=deadline) {t.state=Task::Deadline;continue;}
       if(outstanding.fetch_add(1,relaxed)>=o.maxOutstanding) {outstanding.fetch_sub(1,relaxed);t.state=Task::Rejected;continue;}
+      // Reserve on the target before add(): a worker may begin immediately.
+      if(maintainOutstanding)c.outstanding.fetch_add(1,relaxed);
       if(counts)c.pending.fetch_add(1,relaxed);
-      if(full)c.work.fetch_add(t.estimate,relaxed);
+      if(maintainWork)c.work.fetch_add(t.estimate,relaxed);
+      if(progress)c.remaining.fetch_add(t.estimate,relaxed);
       try {
+        if(t.id==o.failSubmitTask)throw std::runtime_error("injected submit failure");
         pool.add([&, p=&t, cp=&c] {
           bool entered=false;
+          uint64_t unpublished=p->estimate;
           auto cleanup=folly::makeGuard([&] {
-            if(full)cp->work.fetch_sub(p->estimate,relaxed);
+            if(progress)cp->remaining.fetch_sub(unpublished,relaxed);
+            if(maintainWork)cp->work.fetch_sub(p->estimate,relaxed);
             if(counts) {
               if(entered)cp->inflight.fetch_sub(1,relaxed);
               else cp->pending.fetch_sub(1,relaxed);
             }
+            if(maintainOutstanding)cp->outstanding.fetch_sub(1,relaxed);
             outstanding.fetch_sub(1,std::memory_order_release);
           });
           try {
@@ -434,7 +553,7 @@ int run(const Opt& o) {
             if(counts){cp->inflight.fetch_add(1,relaxed);cp->pending.fetch_sub(1,relaxed);entered=true;}
             if(full)p->tid=int(syscall(SYS_gettid));
             if(p->id==o.failTask)throw std::runtime_error("injected callback failure");
-            work(*p,o,cancel,full);
+            work(*p,o,cancel,full,progress?&cp->remaining:nullptr,unpublished);
             p->end=ns()-epoch;
           } catch(...) {
             p->state=Task::Failed;
@@ -442,9 +561,12 @@ int run(const Opt& o) {
             try {p->end=ns()-epoch;}catch(...){p->end=p->start;}
           }
         });
+        t.spilled=t.pool!=t.homePool;
       } catch(...) {
-        if(full)c.work.fetch_sub(t.estimate,relaxed);
+        if(progress)c.remaining.fetch_sub(t.estimate,relaxed);
+        if(maintainWork)c.work.fetch_sub(t.estimate,relaxed);
         if(counts)c.pending.fetch_sub(1,relaxed);
+        if(maintainOutstanding)c.outstanding.fetch_sub(1,relaxed);
         outstanding.fetch_sub(1,relaxed);t.state=Task::Rejected;
       }
     }
@@ -458,12 +580,18 @@ int run(const Opt& o) {
   for(auto& p:pools)p->join();
   getrusage(RUSAGE_SELF,&usageEnd);
   auto tvSeconds=[](const timeval& tv){return double(tv.tv_sec)+double(tv.tv_usec)/1e6;};
-  uint64_t completed=0,rejected=0,canceled=0,failed=0;
-  std::vector<double> latency,wait,plannedLatency,cpuTime,burstLatency,arrivalLag;
+  uint64_t completed=0,rejected=0,canceled=0,failed=0,spilled=0;
+  std::vector<double> latency,wait,plannedLatency,cpuTime,burstLatency,arrivalLag,routeCosts;
   std::map<uint64_t,std::vector<double>> seconds;
-  std::ofstream csv(path("tasks.csv")); csv<<"task,burst,pool,status,target_cpu_us,estimate_us,planned_ns,submit_ns,start_ns,end_ns,native_queue,pending,inflight,work_estimate_us,thread_cpu_ns,worker_tid\n";
+  std::ofstream csv(path("tasks.csv")); csv<<std::setprecision(16)<<"task,burst,pool,status,target_cpu_us,estimate_us,planned_ns,submit_ns,start_ns,end_ns,native_queue,pending,inflight,work_estimate_us,thread_cpu_ns,worker_tid,home_pool,home_native_queue,home_outstanding,home_work_estimate_us,home_remaining_work_us,selected_native_queue,selected_outstanding,selected_work_estimate_us,selected_remaining_work_us,home_score,selected_score,route_ns,route_candidates,spilled,burst_index,burst_remaining,capacity,home_inflight,selected_inflight\n";
   for(const auto& t:tasks) {
-    csv<<t.id<<','<<t.burst<<','<<t.pool<<','<<stateName(t.state)<<','<<t.target<<','<<t.estimate<<','<<t.planned<<','<<t.submit<<','<<t.start<<','<<t.end<<','<<t.queue<<','<<t.pending<<','<<t.inflight<<','<<t.work<<','<<(full?int64_t(t.cpu):-1)<<','<<t.tid<<'\n';
+    csv<<t.id<<','<<t.burst<<','<<t.pool<<','<<stateName(t.state)<<','<<t.target<<','<<t.estimate<<','<<t.planned<<','<<t.submit<<','<<t.start<<','<<t.end<<','<<t.queue<<','<<t.pending<<','<<t.inflight<<','<<t.work<<','<<(full?int64_t(t.cpu):-1)<<','<<t.tid
+      <<','<<t.homePool<<','<<t.homeLoad.queue<<','<<t.homeLoad.outstanding<<','<<t.homeLoad.work<<','<<t.homeLoad.remaining
+      <<','<<t.selectedLoad.queue<<','<<t.selectedLoad.outstanding<<','<<t.selectedLoad.work<<','<<t.selectedLoad.remaining
+      <<','<<t.homeScore<<','<<t.selectedScore<<','<<t.routeNs<<','<<t.routeCandidates<<','<<int(t.spilled)
+      <<','<<t.burstIndex<<','<<t.burstRemaining<<','<<t.capacity<<','<<t.homeLoad.inflight<<','<<t.selectedLoad.inflight<<'\n';
+    if(t.spilled)++spilled;
+    if(t.routeNs>=0)routeCosts.push_back(double(t.routeNs));
     if(t.state==Task::Completed) {
       ++completed;double elapsed=double(t.end-t.submit)/1e6; latency.push_back(elapsed);wait.push_back(double(t.start-t.submit)/1e6);
       plannedLatency.push_back(double(t.end-t.planned)/1e6);seconds[t.end/1000000000ULL].push_back(elapsed);
@@ -480,20 +608,32 @@ int run(const Opt& o) {
   }
   std::ofstream sc(path("seconds.csv"));sc<<"completion_second,completed_tasks,task_mean_ms,task_p99_ms\n";
   for(uint64_t s=0;s<=finish/1000000000ULL;++s){auto& v=seconds[s];sc<<s<<','<<v.size()<<','<<(v.empty()?"":stat(v))<<','<<(v.empty()?"":stat(v,true))<<'\n';}
-  std::ofstream pc(path("pools.csv"));pc<<"time_ns,pool,native_queue,pending,inflight,work_estimate_us\n";
-  for(const auto& s:samples)pc<<s.t<<','<<s.pool<<','<<s.queue<<','<<s.pending<<','<<s.inflight<<','<<s.work<<'\n';
+  std::ofstream pc(path("pools.csv"));pc<<std::setprecision(16)<<"time_ns,pool,native_queue,pending,inflight,work_estimate_us,outstanding,remaining_work_us,capacity\n";
+  for(const auto& s:samples)pc<<s.t<<','<<s.pool<<','<<s.queue<<','<<s.pending<<','<<s.inflight<<','<<s.work<<','<<s.outstanding<<','<<s.remaining<<','<<s.capacity<<'\n';
   bc.close();sc.close();pc.close();
   if(!csv||!bc||!sc||!pc||!metadata||!workers)throw std::runtime_error("output write failed");
-  bool balanced=true;for(const auto& c:counters)if(c->pending.load()||c->inflight.load()||c->work.load())balanced=false;
+  bool balanced=outstanding.load()==0;
+  for(const auto& c:counters)if(c->pending.load()||c->inflight.load()||c->work.load()||c->outstanding.load()||c->remaining.load())balanced=false;
   std::ofstream summary(path("summary.json"));summary<<std::setprecision(12)<<"{\"planned_tasks\":"<<tasks.size()<<",\"completed_tasks\":"<<completed
     <<",\"rejected_tasks\":"<<rejected<<",\"canceled_tasks\":"<<canceled<<",\"failed_tasks\":"<<failed<<",\"complete_bursts\":"<<burstLatency.size()
+    <<",\"spilled_tasks\":"<<spilled<<",\"route_ns_mean\":"<<stat(routeCosts)<<",\"route_ns_p99\":"<<stat(routeCosts,true)
+    <<",\"final_outstanding\":"<<outstanding.load()<<",\"counters_balanced\":"<<(balanced?"true":"false")
     <<",\"conservation_ok\":"<<(completed+rejected+canceled+failed==tasks.size()&&balanced?"true":"false")<<",\"observed_seconds\":"<<double(finish)/1e9
     <<",\"task_mean_ms\":"<<stat(latency)<<",\"task_p99_ms\":"<<stat(latency,true)<<",\"submit_to_start_mean_ms\":"<<stat(wait)
     <<",\"planned_to_end_mean_ms\":"<<stat(plannedLatency)<<",\"burst_mean_ms\":"<<stat(burstLatency)<<",\"burst_p99_ms\":"<<stat(burstLatency,true)
     <<",\"arrival_lag_mean_ms\":"<<stat(arrivalLag)<<",\"arrival_lag_p99_ms\":"<<stat(arrivalLag,true)<<",\"work_cpu_mean_ms\":"<<stat(cpuTime)
     <<",\"sample_rows\":"<<samples.size()<<",\"sample_rows_dropped\":"<<samplesDropped<<",\"sampling_truncated\":"<<(samplesDropped?"true":"false")<<",\"sampling_failed\":"<<(samplingFailed?"true":"false")
     <<",\"process_user_cpu_seconds\":"<<tvSeconds(usageEnd.ru_utime)-tvSeconds(usageBegin.ru_utime)
-    <<",\"process_system_cpu_seconds\":"<<tvSeconds(usageEnd.ru_stime)-tvSeconds(usageBegin.ru_stime)<<"}\n";
+    <<",\"process_system_cpu_seconds\":"<<tvSeconds(usageEnd.ru_stime)-tvSeconds(usageBegin.ru_stime)
+    <<",\"final_pool_counters\":[";
+  for(size_t i=0;i<counters.size();++i) {
+    if(i)summary<<',';
+    const auto& c=*counters[i];
+    summary<<"{\"pool\":"<<i<<",\"pending\":"<<c.pending.load()<<",\"inflight\":"<<c.inflight.load()
+      <<",\"work_estimate_us\":"<<c.work.load()<<",\"outstanding\":"<<c.outstanding.load()
+      <<",\"remaining_work_us\":"<<c.remaining.load()<<'}';
+  }
+  summary<<"]}\n";
   summary.close();if(!summary)throw std::runtime_error("summary write failed");
   std::cout<<"tasks="<<tasks.size()<<" completed="<<completed<<" rejected="<<rejected<<" canceled="<<canceled<<" failed="<<failed<<" mean_ms="<<stat(latency)<<" p99_ms="<<stat(latency,true)<<'\n';
   return balanced&&!failed&&!samplingFailed?0:2;

@@ -1,6 +1,8 @@
 # 独立任务负载实验：工程与运行指南
 
-这个项目只使用原版 Folly CPUThreadPoolExecutor。每次 arrival 提交一个或多个独立 CPU 任务；没有 DAG、RPC、跨池均衡或阶段5扩展。先阅读[阶段3设计与分析方案](../../stages/03-independent/README.md)。
+这个项目只使用原版 Folly CPUThreadPoolExecutor。每次 arrival 提交一个或多个独立 CPU 任务；默认保留原来的 home 池投递，没有 DAG、RPC 或阶段5扩展。先阅读[阶段3设计与分析方案](../../stages/03-independent/README.md)。
+
+新增的阶段3负载均衡实验通过显式 `--routing threshold` 启用，在提交时选择其他原生线程池。指标选择、阈值冻结、留出验证及低开销模式见[设计](../../stages/03-independent/BALANCE_DESIGN.md)和[分步运行指南](../../stages/03-independent/BALANCE_GUIDE.md)。旧命令仍使用原行为。
 
 ## 编译与功能测试
 
@@ -14,7 +16,7 @@ ctest --test-dir build-independent --output-on-failure
 build-independent/independent_load --help
 ```
 
-独立项目包含三组CTest：12个黑盒测试方法覆盖原版执行器、计数守恒、四档插桩、确定性任务预算、绑定/RR、拒绝、取消、故障清理、采样截断和非法输入；11个分析/设计测试覆盖p99、相关系数、缺失数据和矩阵生成；8个整轮留出预测测试检查训练/测试隔离与缺测处理。它们验证功能，不验证性能优劣。
+独立项目包含七组CTest：原有功能、分析和整轮留出预测测试，以及阈值选池、实际线程池计数生命周期、负载均衡统计和矩阵生成测试。覆盖缺测、守恒、拒绝/取消/异常、预算配对、训练隔离和计划恢复；它们验证功能，不验证性能优劣。
 
 ## 开发机分步运行
 
