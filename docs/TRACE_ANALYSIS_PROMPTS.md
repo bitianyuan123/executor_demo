@@ -2,6 +2,8 @@
 
 以下两段分别用于主分析和独立审计。替换绝对路径、PID 和采集事实后使用；未知项明确写“未知”。两者均只允许在本地读取原始数据，通过本地程序生成有界摘要，不将大文件塞进上下文或上传外部服务。执行步骤与参数见 [TRACE_WORKFLOW.md](TRACE_WORKFLOW.md)，指标实现见 [TRACE_ANALYZER.md](TRACE_ANALYZER.md)。
 
+模板中的四池配置仅描述已有历史采集。目标实验是在所选 CPU 全集中每个已确认硬件 cluster 对应一个池；当前独立子集为六个 cluster。分析新 trace 时，应填写其实际部署和映射，不沿用历史四池数据。历史分析可与目标实验并行推进。
+
 ## GLM5.2：主分析
 
 ```text
@@ -13,9 +15,12 @@
 - 本次采集 TID→pool CSV：<替换；没有则写“缺失”>
 - 采集元数据目录：<替换；没有则写“缺失”>
 - 输出目录：<替换>
-- 本次业务事实：4 个 Folly executor 池，每池配置 128 线程，16 QPS，未绑 CPU。
+- 历史采集条件：4 个 Folly executor 池，每池配置 128 线程，16 QPS，未绑 CPU；这是临时历史配置，不是目标部署。
 - 待验证观察：“单池平均 20、峰值 80”；目前未确定它是 onCPU、runnable、Folly active 还是某窗口不同线程数。
 - 预期采集约 10 秒；以文件实际时间戳和质量证据为准，不假定完整。
+- 目标实验：所选 CPU 全集中每个已确认硬件 cluster 一池；当前独立子集含六个 cluster，因此目标为六池。新采集需保存真实 pool→cluster、TID→pool→NUMA 关系和 CPU 列表。
+
+历史 trace 按真实四池映射和结果分析，不把它重分为六池，不要求历史未绑核配置拥有 cluster 绑定。历史仅为负载时序/调度机制参考；不能从单池20/80直接推出目标cluster池阈值，也不能强制等待历史分析完毕才开展目标实验。
 
 先阅读仓库 docs/TRACE_WORKFLOW.md、docs/TRACE_ANALYZER.md，以及相关本地脚本接口。不要读取整个 trace 到模型上下文；最多查看少量头部/格式样例，随后用 scripts/analyze_sched_trace.py 逐行统计。禁止全量 read()/readlines()/DataFrame、未经上限约束的事件列表，以及默认把整个大 trace 导入内存数据库。运行成本和存储上限也要报告。
 
@@ -51,9 +56,9 @@
 2. 每池CPU时间、需求、两类等待和删失，1/5/10/30ms微突发表。
 3. “平均20、峰值80”能否被某个明确定义指标复现；无法确认时并列列出口径，不能猜。
 4. 有限的相关性和滞后结果，以及最明显的反例或不一致。
-5. 下一步最少补采项：真实池映射、完整事件覆盖、业务/Folly标记等，按影响结论程度排序。
+5. 下一步围绕每硬件cluster一池的目标实验：登记实际pool→cluster、TID→pool→NUMA关系和CPU范围，对齐业务/Folly标记，测量该配置的负载与等待关系；将历史缺口单列为解释限制，不把补齐旧trace设为目标实验的前置门槛。
 
-严格禁止：由线程wakeup推出新request/算子数；把onCPU unique当同时运行数；把缺失CPU当idle；把observed demand当完整runq或Folly队列；把trace等待p99叫业务request p99；无request起止marker时计算request p99；仅凭cache亲和推断cache miss或策略收益；用本次单段相关性声称负载均衡有因果收益。
+严格禁止：由线程wakeup推出新request/算子数；把onCPU unique当同时运行数；把缺失CPU当idle；把observed demand当完整runq或Folly队列；把trace等待p99叫业务request p99；无request起止marker时计算request p99；仅凭cache亲和推断cache miss或策略收益；用本次单段相关性声称负载均衡有因果收益；将历史四池重映射为六池；把历史未绑核单池20/80当成目标cluster池的繁忙阈值。
 ```
 
 ## deepseekv4flash：独立审计
@@ -67,7 +72,10 @@
 - TID→pool CSV、采集元数据目录：<路径或缺失>
 - 主分析报告/JSON：<绝对路径>
 - 独立输出目录：<绝对路径>
-- 业务背景：4池×128线程、16QPS、未绑CPU；“单池均20峰80”指标口径待核实，不能将背景当已测证据。
+- 历史采集背景：4池×128线程、16QPS、未绑CPU；“单池均20峰80”指标口径待核实，不能将背景当已测证据，也不能将此临时配置当目标部署。
+- 目标部署：所选CPU全集中每个已确认硬件cluster一池，当前独立子集为六cluster/六池；新采集需真实pool→cluster、TID→pool→NUMA关系及CPU列表。
+
+保留历史四池映射与分析结果，不将它重映射为六池。历史没有cluster绑定不构成拒绝分析的理由；它只提供负载时序/机制参考，不能直接提供目标cluster池阈值。旧trace审计与目标实验可并行推进。
 
 先读 docs/TRACE_WORKFLOW.md 和 docs/TRACE_ANALYZER.md，查看脚本对应处理分支，不只看说明文字。对原始文件只读取少量格式样例，随后逐行流式分析。建立独立的输出文件；不覆盖主报告。不要分配随事件数线性增长的数组或DataFrame。
 
@@ -82,6 +90,7 @@
 8. Pearson窗口相关性是否有有效n、缺值处理、正负lag定义；all full windows与activity windows是否分开，后者按任一指标非零筛选是否产生选择偏差；是否用与事件同源的unique制造结构性相关；是否把相关性当调度因果或阈值最优；是否忽略共同负载/扇出驱动、序列自相关及删失。
 9. Perfetto若使用，先看stats、stored_generic_ftrace_events和mapping_lifetimes，再比sched_slice/thread_state；ftrace_event仅generic行，专用解析器可能已消费未留行的事件，缺行不能判未导入。v59.1标准名称样例的waking100.000、wakeup100.0001、switch-in100.002、out100.005得到R2ms/Running3ms，generic却仅两条switch；本工具successful-wakeup起算1.9ms与Perfetto waking起算2ms是不同口径。带空格名且仅wakeup无waking的另一例未得到R，不能据此外推全部文本支持情况。用已知闭合fixture、导入后状态/边界和对应源码核实；无R行不能证明无runnable等待。两个工具用相同绝对纳秒边界，禁止各用各的首事件零点。缺process映射时--pid可能错误排空数据。
 10. 业务QPS不能从sched事件恢复；没有request起止marker就无request p99。16QPS×10秒不证明160个完整请求。不能由内核调度trace直接得到Folly排队、cache miss、图关键路径或负载均衡收益。
+11. 是否把历史四个未绑核池与目标每硬件cluster一池混为一谈：禁止四映射六、禁止由历史单池20/80推出cluster池阈值；检查新采集的实际pool→cluster、TID→pool→NUMA关系，但不要要求历史trace补出未曾存在的绑定。
 
 请独立运行仓库流式分析器，并对高风险定义做有界复核。若实现本身有问题，给出可重现的少量行/时间戳和具体计算差异，不擅自修改原始数据或“修正”结果凑一致。
 
@@ -90,7 +99,7 @@
 - 按影响排序的发现表：主报告说法 / 本地证据 / 正确口径 / 对结论影响。
 - 至少一组独立重算的关键计数、onCPU与等待结果，附绝对范围、匹配样本数和删失；若映射缺失则只给候选/全局，绝不生成假四池表。
 - 哪些“均20峰80”解释已被证实、被否定、仍无法判断；不要强行得出唯一解释。
-- 最少补充证据和可执行下一步，不重复泛泛清单。
+- 最少补充证据和可执行下一步应指向每硬件cluster一池的目标实验，历史缺口保留为限制，不强制等待旧trace补齐才能推进目标实验。
 
 如主分析没有问题也要说明审计覆盖范围；不能说“完全正确”而不说明未采集事件和未知边界。报告只引用可验证证据，不编造数值、CPU布局、池映射或业务时延。
 ```

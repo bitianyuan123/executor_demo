@@ -2,7 +2,7 @@
 
 这是独立、可选的阶段4工程。保留 `experiments/dag`、此前ARM日志和原有命令；v1适合固定CPU预算下研究排队、图依赖和模拟RPC，v2专门检验“借用并行资源的收益能否覆盖数据迁移的代价”。详细审查、算法依据及试验顺序见 [两层调度设计](../../stages/04-dag/TWO_LEVEL_DESIGN.md)。
 
-新增的四池128线程、入口微突发与CPU信号实验请先看[真实负载矩阵](../../docs/REAL_WORKLOAD_MATRIX.md)及[观测/算法复核](../../docs/LOAD_OBSERVATION_REVIEW.md)。两者补充本文：`active/cpu`策略、burst请求到达、同步阻塞反例、none模式独立软件池数，以及可注册`LoadProvider/LoadScorer`。CPU采样不是实时微突发探测器；默认不启用，仅cpu策略或显式`--cpu-sampling 1`开启。
+**主线为每硬件cluster一池**：当前选定六cluster即六池，分区来自已核实拓扑。最新[cluster负载矩阵](../../docs/REAL_WORKLOAD_MATRIX.md)和[观测/算法复核](../../docs/LOAD_OBSERVATION_REVIEW.md)补充`active/cpu`、入口burst、同步阻塞及可注册`LoadProvider/LoadScorer`。四池128线程只属于历史trace与可选重放，none模式的独立软件池数不改变目标设计。CPU采样默认关闭，仅cpu策略或显式`--cpu-sampling 1`开启。
 
 ## 接口与实现边界
 
@@ -120,7 +120,7 @@ python3 experiments/affinity/report.py results/affinity/routing-run-01/seed-* \
 | suite | 对照 | 阶段目的 |
 |---|---|---|
 | deployment | 固定home，none/numa/cluster | 验证同CPU全集下限制并行资源的代价 |
-| threads | 固定home，8/16/64/256线程/池 | 明确线程过配如何把等待转移到内核；仅目标机跑 |
+| threads | 固定home，8/16/64/128/256线程/池 | 明确线程过配如何把等待转移到内核；仅目标机跑 |
 | routing | home/queue/outstanding/work | 同图、同工作量、同资源下比较指标盲区；默认constant成本下work是退化基线 |
 | follow | home；all/fork × parent/home | 二次就绪是否重平衡、链是否回迁 |
 | granularity | home；chunk 1/4/8 | 单次决策成本、峰值并行度、预占误差 |

@@ -1,8 +1,8 @@
 # ARM测试机：按已确认CPU集合分步验证
 
-## 新增四池真实调度轨迹与阶段4路线
+## 阶段4主线：每硬件cluster一池
 
-最新输入为16 QPS、4×128线程、无CPU绑定，单池active约20/80且定义待核。原始trace留在目标机，先按[轨迹工作流](TRACE_WORKFLOW.md)打印摘要；需要模型辅助时用[分析/审计提示词](TRACE_ANALYSIS_PROMPTS.md)。新的[四池微突发实验](REAL_WORKLOAD_MATRIX.md)与本文六池亲和实验是两条对照路线，不把池数和CPU绑定同时改变后的差值归因于单个因素。负载信号选择和成本见[复核报告](LOAD_OBSERVATION_REVIEW.md)。
+业务改造目标为每个硬件cluster一个Folly子池，当前已确认的六cluster子集对应六池。按[cluster主实验](REAL_WORKLOAD_MATRIX.md)继续校准扇出、线程过配和二层均衡。16 QPS、4×128、无CPU绑定及单池active约20/80属于旧trace采集条件；按[轨迹工作流](TRACE_WORKFLOW.md)或[模型提示词](TRACE_ANALYSIS_PROMPTS.md)分析其机制即可，不必先跑四池矩阵，也不把它的阈值搬到cluster池。纠偏依据见[方向复核](CLUSTER_DIRECTION_REVIEW.md)，指标成本见[观测报告](LOAD_OBSERVATION_REVIEW.md)。
 
 本指南基于2026-11-14用户上传的`topology.json`，以及用户确认可以独立使用的`0-47,192-239`。这里提供运行方案；本仓库开发机没有执行这些ARM性能实验。先完成第0～3步并检查结果，再扩展压力和策略，避免一次运行所有矩阵。
 

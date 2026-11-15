@@ -1,6 +1,6 @@
-# 四池过配场景：负载观测与两层调度复核
+# cluster池过配场景：负载观测与两层调度复核
 
-本轮依据：16 QPS、4个CPU池、每池约128线程、只有request→池亲和，没有池→CPU亲和；**单池**“活跃”均值约20、峰值约80，活跃定义仍待核实。不能把这组数据当作“绑定16个逻辑CPU后仍有相同运行行为”的事实，也不能将四个池各自的峰值直接相加。轨迹尚未在本地取得，以下是工程设计与待验证假设，不是生产性能结论。
+目标为每硬件cluster一个Folly子池，当前选定六cluster对应六池；负载观测和算法按实际池数复用。已有轨迹的临时采集条件为16 QPS、4个CPU池、每池约128线程、只有request→池亲和，没有池→CPU亲和；**单池**“活跃”均值约20、峰值约80，活跃定义仍待核实。不能把这组数据当作“绑定16个逻辑CPU后仍有相同运行行为”的事实，也不能将四个池各自的峰值直接相加。轨迹尚未在本地取得，以下是工程设计与待验证假设，不是生产性能结论。历史四池不决定实验主线，修订见[方向复核](CLUSTER_DIRECTION_REVIEW.md)。
 
 ## 1. 先统一名词，再判断哪些信息足够
 
@@ -82,18 +82,18 @@ L1仍是RR/颜色哈希确定一次home。L2只决定**新就绪算子**投向�
 | `--max-hops` | 沿上下文路径的迁移预算，0禁止借出；不是最短驻留时间 |
 | `--cpu-sample-ms / --cpu-max-age-ms / --cpu-sampling` | 采样频率、陈旧阈值与独立开销对照 |
 
-4～6个池全扫描成本有限且容易审计，所以未先加入P2C或复杂负载树。各并发提交者选择与预占不是事务，仍可能同时选中同池；chunk/保守gain是可测参数，不是严格避免惊群证明。借鉴内核的分层搜索、容量归一和迁移抑制，不照搬内核runqueue或任务抢占机制；LALB面向服务调用/反馈延迟的权重也不能直接当作本地CPU算子可用容量。原有[算法依据与二层设计](../stages/04-dag/TWO_LEVEL_DESIGN.md)继续适用。
+当前六cluster子集采用全扫描候选，便于审计；扫描成本随池数增长，扩展至更多cluster需重新测量，而不是假定池数永远为4或6。因此本轮仍未引入P2C或复杂负载树。各并发提交者选择与预占不是事务，仍可能同时选中同池；chunk/保守gain是可测参数，不是严格避免惊群证明。借鉴内核的分层搜索、容量归一和迁移抑制，不照搬内核runqueue或任务抢占机制；LALB面向服务调用/反馈延迟的权重也不能直接当作本地CPU算子可用容量。原有[算法依据与二层设计](../stages/04-dag/TWO_LEVEL_DESIGN.md)继续适用。
 
-none模式所有池共享同一CPU集合，NUMA标签为未知；逻辑home不意味着物理缓存/内存归属。同NUMA优先只有固定cluster/numa部署时才有稳定意义。4池共享96逻辑CPU时，默认每池C=24的名义份额（再受线程数/scale限制），不是每池独占24 CPU，更不是测得物理吞吐。六cluster与四池none需要分实验路线，不能合成单变量对照。
+none模式所有池共享同一CPU集合，NUMA标签为未知；逻辑home不意味着物理缓存/内存归属。同NUMA优先只有固定cluster/numa部署时才有稳定意义。4池共享96逻辑CPU时，默认每池C=24的名义份额（再受线程数/scale限制），不是每池独占24 CPU，更不是测得物理吞吐。目标六cluster池使用本分区容量；none/numa控制组保持六池及相同线程数。四池none仅为可选历史重放，不能混入单变量亲和或策略对照。
 
 ## 5. 负载覆盖、测试顺序与第五阶段
 
-[真实负载矩阵](REAL_WORKLOAD_MATRIX.md)给出可直接运行的命令，扩充了regular/Poisson/微突发、request与task异质性、4×128 none、六池绑定、同步阻塞反例。原有v1保留异步RPC；v2保留request只读、branch真实读写依赖、mixed足迹、初始fork和后续fork/链。当前是参数化波次图，不是生产任意DAG回放；没有请求标记的调度轨迹不能自动还原20～400算子的图形或请求p99。
+[cluster负载矩阵](REAL_WORKLOAD_MATRIX.md)给出主线命令：每cluster一池下校准单request扇出，扫描线程过配、QPS、regular/Poisson/入口微突发与request/task异质性，并保留同步阻塞反例。原有v1保留异步RPC；v2保留request只读、branch真实读写依赖、mixed足迹、初始fork和后续fork/链。当前是参数化波次图，不是生产任意DAG回放；没有请求标记的调度轨迹不能自动还原20～400算子的图形或请求p99。
 
 按顺序验证：
 
-1. 轨迹质量和active定义；输出1/5/10/30ms的每池事件/CPU/等待，确认四池映射。
-2. home固定路由下校准CPU/请求、初始尖峰和请求重叠，再冻结迭代/访存工作；分别看Q、I、O，避免改策略同时改需求。
+1. 目标部署核对真实cluster分区、每池CPU mask与NUMA；旧trace的四池映射与active定义可并行核实，不作为cluster实验的前置条件。
+2. 每cluster一池、home固定路由下校准CPU/请求、初始尖峰和请求重叠，再冻结迭代/访存工作；分别看Q、I、O，避免改策略同时改需求。
 3. 相同工作和到达轨迹比较queue/active/O/cpu/work，检查确实发生决策、迁移以及CPU信息有效覆盖。低压力下都无借出不能判算法等价。
 4. 对候选策略单变量扫线程数、QPS、扇出形状、足迹、NUMA、parent/home、fork/all、chunk与阈值，找收益转折点。工作量不同的形状对照明确标注，不自动混为等需求。
 5. 追踪、采样、observer与总池封装分别评估扰动；正式p99使用足够请求、多个交错seed/整轮重复及完整排空，不用每秒p99的平均。
@@ -106,8 +106,9 @@ none模式所有池共享同一CPU集合，NUMA标签为未知；逻辑home不�
 BUILD_JOBS=1 ./scripts/build_stage.sh affinity
 build-affinity/observation_cost_bench --threads 16 --iterations 2000 --scans 10
 build-affinity/observation_cost_bench --threads 128 --iterations 2000 --scans 10
-# 总线程数为512的后台扫描另测；先确认目标机资源足够。
-build-affinity/observation_cost_bench --threads 512 --iterations 2000 --scans 10
+# 六cluster各128线程时共768 TID；下例仅探测同数量TID扫描成本。
+# 单池探针不等同于六个绑核池；实际分组采样成本仍用home采样0/1测。
+build-affinity/observation_cost_bench --threads 768 --iterations 2000 --scans 10
 ```
 
 该探针输出native queue、stats扫描、注册observer的缓存读取/评分、后台采样缓存读取和proc全扫描。是空闲线程、热缓存、批量平均；p99列是批平均的p99，不是每次读取p99。不能据其数值推导高并发跨NUMA的RMW开销。后台全扫描CPU毫秒/实际采样周期毫秒约为占用一个逻辑CPU的份额，需同worker数量在目标ARM实测。

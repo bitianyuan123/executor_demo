@@ -12,6 +12,12 @@ import subprocess
 import sys
 
 
+SUITES = ("routing", "signals", "arrival", "cluster-baseline", "real-baseline",
+          "legacy-four-pool-replay", "blocking", "follow", "granularity",
+          "deployment", "threads", "overhead")
+HISTORICAL_SUITES = ("real-baseline", "legacy-four-pool-replay")
+
+
 def cases(suite):
     if suite == "routing":
         return [("home", {"policy": "home"}), ("queue", {"policy": "queue"}),
@@ -19,9 +25,9 @@ def cases(suite):
     if suite == "signals":
         return [(policy, {"policy": policy})
                 for policy in ("home", "queue", "active", "outstanding", "cpu", "work")]
-    if suite in ("arrival", "real-baseline"):
+    if suite in ("arrival", "cluster-baseline", *HISTORICAL_SUITES):
         deployment = ({"pool-count": "4", "threads": "128", "affinity": "none", "qps": "16"}
-                      if suite == "real-baseline" else {})
+                      if suite in HISTORICAL_SUITES else {})
         return [(name, {**deployment, "policy": "home", **arrival}) for name, arrival in (
             ("regular", {"arrival": "regular"}), ("poisson", {"arrival": "poisson"}),
             ("burst4", {"arrival": "burst", "burst-size": "4", "burst-spacing-us": "100"}),
@@ -44,7 +50,7 @@ def cases(suite):
                 for affinity in ("none", "numa", "cluster")]
     if suite == "threads":
         return [(f"threads-{n}", {"policy": "home", "threads": str(n)})
-                for n in (8, 16, 64, 256)]
+                for n in (8, 16, 64, 128, 256)]
     if suite == "overhead":
         return [(f"{policy}-trace{trace}", {"policy": policy, "trace": str(trace)})
                 for policy in ("home", "outstanding") for trace in (0, 1)]
@@ -55,7 +61,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", default="build-affinity/affinity_demo")
     parser.add_argument("--output", required=True)
-    parser.add_argument("--suite", choices=["routing", "signals", "arrival", "real-baseline", "blocking", "follow", "granularity", "deployment", "threads", "overhead"], default="routing")
+    parser.add_argument("--suite", choices=SUITES, default="routing")
     parser.add_argument("--seeds", default="101,102,103")
     parser.add_argument("--timeout-seconds", type=float, default=900)
     parser.add_argument("--run", action="store_true", help="without this flag only write a plan")
@@ -70,6 +76,23 @@ def main():
         base[key] = value
     if "--output" in base or "--seed" in base:
         parser.error("output and seed are managed by the matrix")
+    if args.suite == "cluster-baseline":
+        if base.get("--affinity") != "cluster":
+            parser.error("cluster-baseline requires explicit --base-args --affinity cluster; affinity is not silently overridden")
+        partitions = base.get("--cpus", "").split(";")
+        if not all(partition.strip() for partition in partitions):
+            parser.error("cluster-baseline requires explicit nonempty --cpus hardware-cluster partitions without empty segments")
+        try:
+            pool_count = int(base.get("--pool-count", "0"))
+        except ValueError:
+            parser.error("cluster-baseline pool-count must be omitted or 0")
+        if pool_count != 0:
+            parser.error("cluster-baseline pool-count must be omitted or 0; one pool is derived from each --cpus partition")
+    if args.suite == "real-baseline":
+        print("WARNING: real-baseline is deprecated and is only a historical capture replay "
+              "(4 pools, 128 threads, affinity=none, 16 QPS), not the one-pool-per-cluster target. "
+              "Use legacy-four-pool-replay for that replay or cluster-baseline for the target.",
+              file=sys.stderr)
     seeds = [int(x) for x in args.seeds.split(",")]
     if not seeds or len(set(seeds)) != len(seeds) or any(x < 0 for x in seeds):
         parser.error("seeds must be distinct nonnegative integers")
@@ -93,6 +116,11 @@ def main():
                "include/executor_demo/LoadPolicy.h", "include/executor_demo/LinuxSchedstatLoadProvider.h",
                "../dag/include/executor_demo/BusinessExecutor.h"]
     metadata = {"schema": "affinity-v2-matrix", "binary": str(pathlib.Path(args.binary).resolve()),
+                "suite": args.suite,
+                "experiment_role": ("target_cluster_baseline" if args.suite == "cluster-baseline"
+                                    else "historical_capture_replay" if args.suite in HISTORICAL_SUITES
+                                    else "controlled_comparison"),
+                "research_target": "one_pool_per_cluster",
                 "binary_sha256": digest(pathlib.Path(args.binary)),
                 "sources_sha256": {name: digest(source_root / name) for name in sources},
                 "machine": platform.machine(), "kernel": platform.release(),

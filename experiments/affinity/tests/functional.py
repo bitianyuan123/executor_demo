@@ -13,6 +13,7 @@ import tempfile
 
 
 REPORT = Path(__file__).resolve().parents[1] / 'report.py'
+MATRIX = REPORT.with_name('run_matrix.py')
 spec = importlib.util.spec_from_file_location('affinity_report', REPORT)
 report = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(report)
@@ -23,7 +24,121 @@ def check(condition, message):
         raise AssertionError(message)
 
 
+def check_matrix_plans():
+    """Inspect commands/metadata only; fake CPU partitions never reach a binary."""
+    matrix_spec = importlib.util.spec_from_file_location('affinity_matrix', MATRIX)
+    matrix = importlib.util.module_from_spec(matrix_spec)
+    matrix_spec.loader.exec_module(matrix)
+    historical = ('real-baseline', 'legacy-four-pool-replay')
+    generic = ('routing', 'signals', 'arrival', 'blocking', 'follow', 'granularity',
+               'deployment', 'threads', 'overhead')
+    check(matrix.cases(historical[0]) == matrix.cases(historical[1]),
+          'historical replay aliases have different workloads')
+    check({case['threads'] for _, case in matrix.cases('threads')} ==
+          {'8', '16', '64', '128', '256'}, 'thread sweep removed a case or omitted 128')
+    check({case['policy'] for _, case in matrix.cases('signals')} ==
+          {'home', 'queue', 'active', 'outstanding', 'cpu', 'work'}, 'signal comparison incomplete')
+    for suite in (*generic, 'cluster-baseline'):
+        check(all('pool-count' not in change for _, change in matrix.cases(suite)),
+              f'{suite} injects a pool count instead of using caller partitions')
+
+    with tempfile.TemporaryDirectory(prefix='affinity-matrix-plans-') as temporary:
+        root = Path(temporary)
+        serial = 0
+
+        def plan(suite, base, success=True):
+            nonlocal serial
+            serial += 1
+            output = root / f'{serial}-{suite}'
+            command = [sys.executable, str(MATRIX), '--suite', suite, '--output', str(output),
+                       '--seeds', '101', '--base-args']
+            command.extend(part for pair in base.items() for part in pair)
+            process = subprocess.run(command, text=True, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE, timeout=10)
+            if not success:
+                check(process.returncode != 0, f'{suite}: invalid target plan accepted')
+                check(not (output / 'plan.json').exists(), 'invalid target left a runnable plan')
+                return None
+            check(process.returncode == 0, f'{suite}: plan failed: {process.stderr}')
+            metadata = json.loads((output / 'metadata.json').read_text())
+            entries = json.loads((output / 'plan.json').read_text())
+            options = {entry['case']: dict(zip(entry['command'][1::2], entry['command'][2::2]))
+                       for entry in entries}
+            role = ('target_cluster_baseline' if suite == 'cluster-baseline'
+                    else 'historical_capture_replay' if suite in historical
+                    else 'controlled_comparison')
+            check(metadata['suite'] == suite and metadata['experiment_role'] == role,
+                  f'{suite}: experiment role metadata does not describe the plan')
+            check(metadata['research_target'] == 'one_pool_per_cluster',
+                  f'{suite}: research target metadata missing')
+            return options, process.stderr
+
+        base = {'--cpus': '0;1;2;3;4;5', '--affinity': 'cluster',
+                '--threads': '17', '--qps': '23'}
+        for suite in generic:
+            options, _ = plan(suite, base)
+            for case in options.values():
+                check('--pool-count' not in case and case['--cpus'] == base['--cpus'],
+                      f'{suite}: generic plan changed resource partitions or injected four pools')
+                check(case['--qps'] == '23', f'{suite}: generic plan replaced caller QPS')
+                if suite != 'threads':
+                    check(case['--threads'] == '17', f'{suite}: generic plan replaced caller thread count')
+
+        for partitions, threads, qps, explicit_zero in (
+                ('0;1', '17', '23', False), ('0;1;2;3;4;5', '17', '23', True),
+                ('0;1;2', '128', '16', False)):
+            target = {**base, '--cpus': partitions, '--threads': threads, '--qps': qps}
+            if explicit_zero:
+                target['--pool-count'] = '0'
+            options, diagnostics = plan('cluster-baseline', target)
+            check(not diagnostics, f'target baseline unexpectedly warned: {diagnostics}')
+            check(set(options) == {'regular', 'poisson', 'burst4', 'burst8'},
+                  'target baseline arrival coverage changed')
+            for case in options.values():
+                check(case['--policy'] == 'home' and case['--affinity'] == 'cluster',
+                      'target baseline lost cluster home placement')
+                check(case['--cpus'] == partitions and case.get('--pool-count', '0') == '0',
+                      'target baseline no longer derives pool count from partitions')
+                check(case['--threads'] == threads and case['--qps'] == qps,
+                      'target baseline replaced explicitly chosen threads/QPS')
+
+        for affinity in (None, 'none', 'numa'):
+            target = dict(base)
+            if affinity is None:
+                del target['--affinity']
+            else:
+                target['--affinity'] = affinity
+            plan('cluster-baseline', target, success=False)
+        for count in ('1', '4', '6', '-1', 'invalid'):
+            plan('cluster-baseline', {**base, '--pool-count': count}, success=False)
+        for partitions in (None, '', ' ', ';0', '0;', '0;;1', '0; ;1'):
+            target = dict(base)
+            if partitions is None:
+                del target['--cpus']
+            else:
+                target['--cpus'] = partitions
+            plan('cluster-baseline', target, success=False)
+
+        alias_plans = []
+        for suite in historical:
+            options, diagnostics = plan(suite, base)
+            for case in options.values():
+                check((case['--pool-count'], case['--threads'], case['--affinity'], case['--qps']) ==
+                      ('4', '128', 'none', '16'), f'{suite}: historical deployment changed')
+                check(case['--cpus'] == base['--cpus'], f'{suite}: historical replay changed CPU union')
+                del case['--output']
+            if suite == 'real-baseline':
+                check('deprecated' in diagnostics and 'historical capture replay' in diagnostics
+                      and 'cluster-baseline' in diagnostics, 'old ambiguous alias lacks deprecation guidance')
+            else:
+                check('deprecated' not in diagnostics, 'explicit historical alias was deprecated')
+            alias_plans.append(options)
+        check(alias_plans[0] == alias_plans[1], 'historical aliases produce different commands')
+    print('affinity matrix: target cluster baseline, historical aliases, generic resource contracts and metadata passed')
+
+
 def main(binary):
+    check_matrix_plans()
     cpus = sorted(os.sched_getaffinity(0))[:2]
     if len(cpus) < 2:
         print('affinity functional: skipped, requires two allowed logical CPUs')
@@ -186,15 +301,6 @@ def main(binary):
               and 'CPU sampling differs from home' in cpu_report.stdout,
               f'CPU/blocking report missing evidence: {cpu_report.stderr}')
 
-        matrix_spec = importlib.util.spec_from_file_location('affinity_matrix', REPORT.with_name('run_matrix.py'))
-        matrix = importlib.util.module_from_spec(matrix_spec)
-        matrix_spec.loader.exec_module(matrix)
-        real_cases = matrix.cases('real-baseline')
-        check(len(real_cases) == 4 and all(case['pool-count'] == '4' and case['threads'] == '128'
-              and case['affinity'] == 'none' and case['qps'] == '16' for _, case in real_cases),
-              'real-baseline does not preserve real deployment settings')
-        check({case['policy'] for _, case in matrix.cases('signals')} ==
-              {'home', 'queue', 'active', 'outstanding', 'cpu', 'work'}, 'signal comparison incomplete')
         # Simultaneous per-pool peaks need not coincide: global peak is rebuilt,
         # never obtained by adding individual maxima.
         occupancy = report.callback_occupancy([
@@ -220,5 +326,8 @@ def main(binary):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        raise SystemExit('usage: functional.py AFFINITY_DEMO_BINARY')
-    main(sys.argv[1])
+        raise SystemExit('usage: functional.py AFFINITY_DEMO_BINARY | --matrix-only')
+    if sys.argv[1] == '--matrix-only':
+        check_matrix_plans()
+    else:
+        main(sys.argv[1])

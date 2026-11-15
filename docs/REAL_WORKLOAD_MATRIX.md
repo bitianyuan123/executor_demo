@@ -1,6 +1,10 @@
-# 阶段4 v2：真实入口微突发、四池与负载信号对照
+# 阶段4 v2：每硬件cluster一池的负载与两层均衡实验
 
-本轮新增事实是16 QPS、4个池、每池128线程、worker没有细粒度CPU亲和，request按轮询选择home；观察到**单池**active均值约20、峰值约80。单池范围已明确，但active是Folly callback inflight还是OS runnable、采样与时间窗口定义仍待核对。因此实验把20/80作为诊断参照，没有直接写成阈值，也没有声称现有合成负载已经校准为真实业务。同窗单池均值可以相加，全局峰值不能直接写成4×80；none部署单池可竞争整个CPU并集，不能套用绑定16CPU的容量限制。
+**改造目标：所选CPU范围内，每个已核实的硬件cluster对应一个Folly子池；业务只持有RequestExecutor总池。** 当前独立实验范围有6个cluster，因此创建6池。池数随实际选定cluster数变化，不能固定成4，也不能将6写成所有部署的常数。
+
+4池×128线程、16 QPS、未绑CPU、单池active均20/峰80，仅是已有调度轨迹的临时采集条件。它帮助研究唤醒、等待、任务突发与指标定义，不是目标部署，也不要求先完成四池压测才能进入cluster实验。20/80的定义仍待核，不能直接成为cluster池的阈值。上轮把四池列为“真实部署路线”的偏移已纠正，审查依据见[方向复核](CLUSTER_DIRECTION_REVIEW.md)。
+
+研究核心是**单个request内部的大扇出**造成home cluster短时饱和，以及借出计算资源和数据亲和的权衡；请求入口微突发是补充变量，不是替代该核心负载。
 
 ## 1. 新增变量及其准确含义
 
@@ -36,20 +40,21 @@ burst的计划时间为：
 
 “100ms算子”需要先确定是线程CPU时间还是不含排队的墙钟。16 QPS × 80算子 × 0.1 CPU秒会要求128 CPU秒/秒，已超过独立实验96逻辑CPU的CPU时间上限；这不证明真实业务过载，因为真实算子数分布、100ms口径及executor占比尚不完整。不要用sleep 100ms补足合成算子时长，也不要把96个SMT线程直接当96个物理核吞吐。
 
-## 3. 四池none与六cluster是不同实验问题
+## 3. 主线、对照与历史配置
 
-真实四池基线可沿用已验证的六个硬件partition，指定`--pool-count 4 --affinity none`。四个池都得到完全相同的96 CPU并集；发生器和辅助线程也在该并集。输入partition只用于描述经过验证的CPU全集，不会偷偷限制某池到一个partition。
+| 实验角色 | 池数与CPU范围 | 用途 |
+|---|---|---|
+| 主线 | 每个选定硬件cluster一池；当前6池绑定6个cluster | 校准扇出瓶颈、线程过配、L2指标及数据亲和 |
+| 亲和控制组 | 保持相同6池、每池线程数、同96CPU并集；none/numa/cluster | 单独识别绑定范围的影响；none/numa允许池间共享CPU |
+| 历史重放，可选 | 明确指定4池×128、none、16 QPS | 复查旧采集形态，不参与目标策略排名，不设为必跑步骤 |
 
-none显式pool-count下的初始capacity按`CPU并集大小 / 软件池数 × capacity-scale`分摊，并受线程数上限约束。这个值只是评分的名义共享份额，**不是每池拥有独占CPU，也不是测得的有效计算能力**。
+目标模式下容量按本cluster CPU数和capacity-scale配置，并受worker数上限约束。线程数128不意味着128CPU容量；8物理核/16逻辑CPU也不意味着SMT吞吐恰好翻倍。none的CPU并集/池数只是共享资源的名义份额，不可替代cluster的局部容量。
 
-六池cluster与四池none之间同时改变软件池数、线程总数、CPU共享方式，不能作为单变量亲和收益。建议分两条路线：
+当前程序`--affinity cluster`会绑定输入分区，检查CPU可用、不重叠、每分区同NUMA，**没有自动识别或核验物理cluster边界**。必须把已核实的topology中每个硬件cluster的CPU列表作为一个分号分区。开发机默认前两个CPU的人工分区只用于功能测试，不能当真实cluster结果。下例使用已确认的六cluster子集，真实NUMA为0和2。
 
-1. 真实部署路线：4池×128线程、none、固定96CPU，只比较到达方式、评分信号、spill/continuation。
-2. 硬件分组路线：6池、相同96CPU，固定每池线程数，在none/numa/cluster间比较。复用已有stage3/4资料，但不混入四池基线做自动配对。
+## 4. 按每cluster一池分步推进
 
-## 4. 先做低压力入口校验，再增加到达/算子压力
-
-以下命令适用于用户已隔离的CPU集合。每条matrix默认只写计划；加`--run`才执行。新输出目录不能复用。先编译：
+先更新工程。每条matrix缺少`--run`时只输出计划；确认负载后才在同命令中加`--run`并使用新output。已有新总池二进制不需因本次矩阵/文档纠偏而重编C++；首次使用仍按下列构建入口。
 
 ```bash
 cd /home/bty/rank_demo/executor_demo
@@ -58,55 +63,78 @@ BUILD_JOBS=1 ./scripts/build_stage.sh affinity
 PARTITIONS='0-15;16-31;32-47;192-207;208-223;224-239'
 ```
 
-第一步是真实四池设置下的入口形状校验。1000000是迭代工作单位，不代表固定微秒。先一个seed、每例96请求；四例各约6秒计划投递时间，排空另计：
+### 4.1 cluster home校准：先突出单request内部扇出
+
+固定6池、每池16线程、cluster绑定，低QPS逐级调固定工作，使CPU/request与初始扇出需求到合理量级。`iterations`是工作次数，不代表固定微秒。12请求用于功能和量级判断，不能用于p99结论。
 
 ```bash
-python3 experiments/affinity/run_matrix.py \
-  --binary build-affinity/affinity_demo --suite real-baseline --seeds 420 \
-  --output results/local/v2-real-entry-01 --run --base-args \
-  --cpus "$PARTITIONS" --requests 96 --max-inflight 128 --memory-mb 512 \
-  --widths 20,4 --depths 1,2 --model none --accesses 0 --iterations 1000000
-
-python3 experiments/affinity/report.py results/local/v2-real-entry-01/seed-*/
+build-affinity/affinity_demo --cpus "$PARTITIONS" \
+  --affinity cluster --threads 16 --policy home --requests 12 --qps 1 \
+  --arrival regular --widths 20,4 --depths 1,2 \
+  --model none --accesses 0 --iterations 1000000 \
+  --max-inflight 32 --memory-mb 512 \
+  --output results/local/v2-cluster-calibration-01
+python3 experiments/affinity/report.py results/local/v2-cluster-calibration-01
 ```
 
-`real-baseline`明确设置4池/128线程/none/16QPS，只改变regular、poisson、4请求微突发、8请求微突发。不要将不同arrival hash的运行称为同轨迹配对。先查看实际CPU/request、CPU与墙钟差、请求重叠、每池callback occupancy、提交滞后、拒绝与工作总量。
+用选定工作参数再增加初始宽度至80、400，分别记录总工作增量；固定每算子工作而增加宽度是容量压力试验。若单独研究“等总工作但更尖峰”，先用none模型、无抖动，比较单波`widths/depths=20/20、80/5、400/1`，三者均400算子；链深与关键路径也随之改变，不能称为只改硬件并发。不同图形不自动配对，每种图形内部再比较home/借出。
 
-如果负载太轻，保持16 QPS，按2倍增加iterations；如果后续要研究数据亲和，改为branch-rw/mixed后重新测CPU成本。每次只改变一个维度。没有业务CPU/请求预算和active口径前，不为追求“刚好80active”任意调整一组参数。
+观测16CPU忙约30ms是校准参照，不是要求每个合成请求都强行达到的值。不能用sleep补齐CPU时间，也不为拟合历史active=80而任意调整参数。多request阶段再扫QPS，例如6/12/16；出现持续积压或拒绝就先退回解释容量。
 
-第二步在选定负载、同一burst到达序列下比较六个信号策略。完全相同的request、4个请求一批、RR四池会产生近似对称负载；即便算法正确，也可能没有明显可借用的低负载池。因此这个筛选加入可重复的**合成request异质性**（25%抖动，约1/8请求为4倍工作），各策略保持同一逐request工作，不把这个分布声称为生产事实。先用constant estimate，避免work策略拿到精确先验而获得不公平解释：
+### 4.2 冻结工作量后，增加入口到达形态
+
+`cluster-baseline`明确强制home/cluster；要求显式`--affinity cluster`和`--cpus`，池数由分区导出，`--pool-count`仅允许省略或0。线程数/QPS完全来自调用者，不强制128或16。四例比较regular、Poisson、burst4和burst8，后两者是合成压力形态，不是因临时四池而选择的目标池数。
 
 ```bash
 python3 experiments/affinity/run_matrix.py \
-  --binary build-affinity/affinity_demo --suite signals --seeds 420,421,422 \
-  --output results/local/v2-real-signals-01 --run --base-args \
-  --cpus "$PARTITIONS" --pool-count 4 --threads 128 --affinity none \
-  --qps 16 --arrival burst --burst-size 4 --burst-spacing-us 100 \
+  --suite cluster-baseline --seeds 420 \
+  --output results/local/v2-cluster-entry-plan-01 --base-args \
+  --cpus "$PARTITIONS" --affinity cluster --threads 16 --qps 12 \
   --requests 96 --max-inflight 128 --memory-mb 512 \
-  --widths 20,4 --depths 1,2 --model none --accesses 0 --iterations 1000000 \
+  --widths 20,4 --depths 1,2 --model none --accesses 0 --iterations 1000000
+```
+
+将iterations替换成4.1冻结的值；QPS也是显式实验变量。不同到达序列不做同轨迹策略配对。实际运行后打印`python3 experiments/affinity/report.py <运行目录>/seed-*`；96请求的p99接近最大值，只能初筛。
+
+### 4.3 先比较线程数和信号，再决定借出策略
+
+保持cluster绑定。`threads`套件按8/16/64/128/256线程/池扫描home，回答等待在哪一层；128是过配变量的一档，不是生产推荐值。固定一个线程档，再跑`signals`比较home/queue/active/outstanding/cpu/work。正式策略比较不应同时修改线程数。
+
+```bash
+python3 experiments/affinity/run_matrix.py \
+  --suite threads --seeds 420 \
+  --output results/local/v2-cluster-threads-plan-01 --base-args \
+  --cpus "$PARTITIONS" --affinity cluster --qps 12 \
+  --requests 96 --max-inflight 128 --memory-mb 512 \
+  --arrival regular --widths 80,4 --depths 1,2 \
+  --model none --accesses 0 --iterations 1000000
+
+python3 experiments/affinity/run_matrix.py \
+  --suite signals --seeds 420,421,422 \
+  --output results/local/v2-cluster-signals-plan-01 --base-args \
+  --cpus "$PARTITIONS" --affinity cluster --threads 128 --qps 12 \
+  --cross-numa 0 --arrival regular \
+  --requests 96 --max-inflight 128 --memory-mb 512 \
+  --widths 80,4 --depths 1,2 --model none --accesses 0 --iterations 1000000 \
   --jitter-percent 25 --long-every 8 --long-factor 4 \
   --work-scale-scope request --estimate-mode constant
-
-python3 experiments/affinity/report.py results/local/v2-real-signals-01/seed-*/
 ```
 
-这仍是筛选窗口，不是p99验收；96请求的p99接近最大值。筛出候选后增加请求数、预热窗口、独立seed，报告每轮p99与配对差异，而不是将所有任务混成一个巨大样本。已有低压力下p99接近的策略不能被宣布等价；先核验决策实际发生、有效CPU样本覆盖以及请求是否重叠。
+第二例有意在过配档检验Q盲区，随后以16线程重复同一组策略。加入可重复的request异质性，避免所有cluster同一时刻负载相同、没有可借资源；它是控制变量，不声称真实分布如此。长尾提高平均工作，先重新核验稳定性，再冻结同一逐request工作比较策略。
 
-第三步同步阻塞反例只用于检验信号含义，不代表RPC：
+### 4.4 数据亲和与局部借出是主线的必要验收
 
-```bash
-python3 experiments/affinity/run_matrix.py \
-  --binary build-affinity/affinity_demo --suite blocking --seeds 420 \
-  --output results/local/v2-blocking-01 --run --base-args \
-  --cpus "$PARTITIONS" --pool-count 4 --threads 128 --affinity none \
-  --qps 16 --arrival burst --burst-size 4 --burst-spacing-us 100 \
-  --requests 32 --max-inflight 128 --memory-mb 512 \
-  --widths 20,4 --depths 1,2 --model none --accesses 0 --iterations 10000
+none只是机制基线，不能据此确定生产迁移策略。使用branch-rw或mixed、实际分支读写依赖，重新校准并冻结访存/计算工作后：
 
-python3 experiments/affinity/report.py results/local/v2-blocking-01/seed-*/
-```
+1. `routing/signals`：home与同NUMA借出，固定`--cross-numa 0`；记录请求尾时延、算子等待、CPU/request、执行墙钟和迁移比例。
+2. `follow`：parent/home × fork/all；固定一个评分策略，比较链的数据复用和回迁。现成suite使用outstanding，其余评分用相同负载的直接命令。
+3. `granularity`：chunk1/4/8，观察一次扇出集中投递和预占成本；每个算子仍独立入队。
+4. 单独开启`--cross-numa 1`并扫描罚项/min-gain/hop；只在同NUMA资源不足时解释远端收益，不能把none下的逻辑池迁移当物理NUMA迁移。
+5. 固定6池/每池线程数，用`deployment`对比none/numa/cluster；检查同CPU并集和同工作合同，不能把4池none插入该单变量对照。
 
-该suite保持计算/访问量，比较0%与50%算子同步sleep 10ms，以及home/active/outstanding/cpu。不同阻塞合同不自动配对。active和outstanding可能因睡眠而高；CPU使用可能低，但空闲worker数量仍影响能否接新任务。CPU混合指标也不是同步阻塞场景的完美调度器。
+数据大小、最大驻留请求和每请求分支数共同决定足迹；参见[亲和工程指南](../experiments/affinity/README.md)。无拒绝、稳定排空、足够请求与多轮交错重复后，再讨论p99改善幅度和策略拐点。
+
+同步阻塞反例继续用`blocking`，但同样传入上面的六分区与`--affinity cluster`，固定线程档。该套件比较0%/50%算子同步sleep10ms与home/active/outstanding/cpu；它检验“callback很多不一定CPU很忙”，不模拟异步RPC。详细追踪、后台采样开销另以overhead或home采样0/1成对验证。
 
 ## 5. CPU采样的证据与限制
 
@@ -124,6 +152,10 @@ cat /proc/sys/kernel/sched_schedstats
 
 report按计划到达选择request cohort，窗口后才完成的请求仍保留；要求全请求有终态。拒绝/失败运行不会成为性能配对。请求mean/p95/p99、该cohort算子CPU/墙钟和等待，与整轮process CPU/request分开显示。
 
-callback occupancy由所有与墙钟测量窗口相交的`start_ns..finish_ns`区间重建，输出每池与全局的时间加权均值/峰值，包含同步睡眠和被抢占时间；它和“在提交时采到的inflight平均数”口径不同，也不等于Linux runnable/on-CPU。真实20/80已知是单池值，只有再确认同样统计定义及时间窗口后才能比较。报告的全池峰值来自合并区间，并非各池峰值相加。
+callback occupancy由所有与墙钟测量窗口相交的`start_ns..finish_ns`区间重建，输出每池与全局的时间加权均值/峰值，包含同步睡眠和被抢占时间；它和“在提交时采到的inflight平均数”口径不同，也不等于Linux runnable/on-CPU。历史20/80已知是临时配置的单池值；即使确认同样统计定义，也不能要求目标cluster池复现它。应比较事件机制与负载规模，并重新测目标部署的占用。报告的全池峰值来自合并区间，并非各池峰值相加。
 
-下一阶段再研究branch数据亲和、返回home/跟随parent、仅fork/全部就绪点、迁移预算和chunk。先固定本轮负载与评分，避免同时改请求到达、工作量、数据模型、池数和算法后无法解释收益。
+## 7. 历史四池重放仅按需保留
+
+`--suite legacy-four-pool-replay`保留原四池/128线程/none/16QPS的到达形态对照，角色元数据标为`historical_capture_replay`。旧名`real-baseline`保持相同行为但输出弃用说明，避免让历史命令悄悄变成另一种实验。它不属于目标cluster矩阵的必跑项；是否重放由分析旧轨迹的具体问题决定。
+
+即使重放，也必须单独保存CPU全集和负载合同：历史未绑核采集的实际allowed CPUs未确认，不能声称在96CPU子集上已精确复现原运行。已有四池数据保留原标签，不重命名、不拼入六池策略收益，不把历史单池active阈值迁移到cluster池。

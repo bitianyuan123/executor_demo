@@ -2,7 +2,9 @@
 
 目标是用本地工具回答：池内是否有毫秒级唤醒突发、实际获得多少 CPU 时间、可观察的 runnable 等待如何变化。原始大文件留在机器上，只打印短报告人工收集。详细指标定义和限制见 [TRACE_ANALYZER.md](TRACE_ANALYZER.md)，给模型的执行提示见 [TRACE_ANALYSIS_PROMPTS.md](TRACE_ANALYSIS_PROMPTS.md)。
 
-本次待核实的业务描述是 **4 个池 × 128 个线程、16 QPS、未绑 CPU、单池“平均 20、峰值 80”**。“20/80”到底是瞬时 running、running+runnable、某窗口出现过的不同线程，还是 Folly active，需要先确定；不能混用这些口径。也不能把此前六池实验的 CPU 0–47、192–239 自动当成本次采集范围。
+已有历史 trace 的采集条件是 **4 个池 × 128 个线程、16 QPS、未绑 CPU、单池“平均 20、峰值 80”**；四池是当时的临时配置，不是目标部署。“20/80”到底是瞬时 running、running+runnable、某窗口出现过的不同线程，还是 Folly active，需要先确定；不能混用这些口径。历史映射和分析结果按当时实际四池保留，不把四池重映射成六池，也不把目标实验的 CPU 0–47、192–239 自动当成历史采集范围。
+
+后续实验主线是：**在所选 CPU 全集中，每个已确认的硬件 cluster 对应一个池**；当前独立实验子集包含六个 cluster，因此该子集目标为六池。新实验需记录实际 pool→cluster、TID→pool→NUMA 关系及 CPU 列表。历史未绑核 trace 仅用于认识负载时序和调度机制，不要求它补出并不存在的 cluster 绑定，也不能由历史单池“20/80”推出目标 cluster 池的繁忙阈值。目标实验可以独立推进，无须等待旧 trace 分析全部完成。
 
 ## 1. 已有 `cat trace` 导出的 trace.log：先看质量和线程候选
 
@@ -38,7 +40,7 @@ python3 scripts/executor_tid_map.py --pid "$TRACE_PID" \
   | tee "$TRACE_OUT/live-thread-names.txt"
 ```
 
-只有确认名称确实编码池编号后，才输入四条真实正则。这里不预设 `executor0` 等名称，也不按 TID 连续范围分池。名称截断后无法区分池时，必须从业务注册信息取得映射。
+只有确认名称确实编码池编号后，才输入四条真实正则。下面四条规则对应历史四池配置；目标 cluster 实验应按其实际池数登记全部线程，不能照搬四条规则或复用历史 CSV。这里不预设 `executor0` 等名称，也不按 TID 连续范围分池。名称截断后无法区分池时，必须从业务注册信息取得映射。
 
 ```bash
 read -r -p '真实 pool0 线程名正则: ' POOL0_RE
@@ -89,7 +91,9 @@ cat "$TRACE_OUT/trace-cmd-report.stderr"
 
 ## 4. 新采集：独立实例、全 CPU、保存质量证据
 
-这是需要在测试机手工运行的采集方案，仓库工具本身不会启动采集。未绑 CPU 的线程和唤醒它们的线程可能在任何允许的 CPU 上；优先全 CPU 采五类事件，不仅采业务“当前所在”的 CPU。事件头 `[CPU]` 是记录发生处，`target_cpu` 才是唤醒目标；只覆盖目标 CPU 仍可能丢失外部 waker 的事件。[内核事件定义](https://github.com/torvalds/linux/blob/v6.6/include/trace/events/sched.h)
+这是需要在测试机手工运行的采集方案，仓库工具本身不会启动采集。未绑 CPU 的线程和唤醒它们的线程可能在任何允许的 CPU 上；优先全 CPU 采五类事件，不仅采业务“当前所在”的 CPU。目标 cluster 部署同样需要考虑 cluster 外的唤醒方。事件头 `[CPU]` 是记录发生处，`target_cpu` 才是唤醒目标；只覆盖目标 CPU 仍可能丢失外部 waker 的事件。[内核事件定义](https://github.com/torvalds/linux/blob/v6.6/include/trace/events/sched.h)
+
+采集目标 cluster 实验时，除下方通用元数据，还应从本次实际配置保存每个池对应的硬件 cluster、NUMA、允许 CPU 列表以及本次 TID→pool 映射；当前选定子集应覆盖已确认的六个 cluster。不能仅凭池编号或线程名推断硬件关系。历史四池 trace 不具备 cluster 绑定是其真实采集条件，不是必须先修复才能分析的错误。
 
 以下在有 tracefs 权限的 Bash 中执行，沿用前面的 `TRACE_PID`、`POOL_ARGS`。先确认 PID/正则，选用新的输出目录。`-B` 位于所有 `-e` 前；`-M -1` 在该实例启用全 CPU，`-M` 的其他数值是十六进制，不能直接传 `0-383`。`-k` 保留采后状态以便审计，随后代码显式关闭该实例事件。[trace-cmd record 手册](https://www.trace-cmd.org/Documentation/trace-cmd/trace-cmd-record.1.html)
 
@@ -232,4 +236,4 @@ cat "$TRACE_OUT/perfetto.csv"
 
 相关性分清 all full windows 与 activity windows：前者纳入完整窗口中的零活动期，后者只选比较双方至少一个非零的窗口，会引入选择偏差。两组 n 与 r 应并列解读。waking→unique_oncpu、waking→onCPU、unique_oncpu→onCPU 和 wakeup→onCPU 可帮助区分唤醒事件、轮流运行的线程数量和实际 CPU 时间，但共享时间窗、共同扇出来源仍会造成相关性。
 
-当前证据可决定是否需要进一步观测“突发后 CPU 等待是否增大”。要把它变成负载均衡收益结论，需要同资源、同业务负载、重复且顺序交错的策略对比，并对齐 Folly 排队/active、request 开始/结束和必要硬件指标。没有 request marker 就不计算 request p99；16 QPS × 10 秒至多只是期望请求规模的粗略参考，不是成功完成的样本数证明。
+历史证据可帮助观察“突发后 CPU 等待是否增大”，为目标实验设计提供时序和机制参考。负载均衡收益和繁忙阈值应在每硬件 cluster 一池的目标配置上，用同资源、同业务负载、重复且顺序交错的策略对比来确定，并对齐 Folly 排队/active、request 开始/结束和必要硬件指标。不能将历史四个未绑核池的单池“20/80”换算为六个 cluster 池的阈值；池容量、竞争范围与亲和条件已经改变。旧 trace 分析与目标 cluster 实验可并行推进，不将补齐历史证据作为后续实验的前置门槛。没有 request marker 就不计算 request p99；历史 16 QPS × 10 秒至多只是期望请求规模的粗略参考，不是成功完成的样本数证明。
