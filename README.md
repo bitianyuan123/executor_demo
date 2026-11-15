@@ -14,6 +14,13 @@
 
 阶段4现新增独立的[两层调度审查与设计](stages/04-dag/TWO_LEVEL_DESIGN.md)和[透明总池/固定工作量局部性实验v2](experiments/affinity/README.md)：业务不传池编号，支持请求染色、自动后继上下文、登记式RPC续接、fork/all均衡、parent/home策略及真正分支读写依赖。旧DAG和已测基线保留；v2需显式运行 `./scripts/build_stage.sh affinity`，不会改变默认构建和历史实验语义。
 
+针对新增的**16 QPS、4×128线程、无CPU绑定、单池active均值20/峰值80（定义待核）**，本轮交付：
+
+- [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
+- [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。
+- [四池微突发实验矩阵](docs/REAL_WORKLOAD_MATRIX.md)：真实部署路线与六cluster路线分开；增加同步阻塞反例，保留NUMA/后继/批量策略。
+- [本轮实际验证](results/review/TRACE_LOAD_VALIDATION.md)：本地功能和读成本，不冒充ARM真实负载结论。
+
 再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
 
 ## 获取与依赖

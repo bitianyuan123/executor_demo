@@ -2,6 +2,7 @@
 #include <folly/portability/GTest.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <future>
@@ -401,6 +402,168 @@ TEST(RequestExecutor, ForkOnlyFollowsBorrowedParentUntilNextFork) {
   EXPECT_EQ(rows[2].reason, Pool::Reason::NonFork);
   EXPECT_EQ(rows[3].chosen, 0);
   EXPECT_EQ(rows[3].reason, Pool::Reason::ReturnHome);
+}
+
+class PublishedProvider final : public LoadProvider {
+ public:
+  std::array<LoadSample, 2> samples;
+  LoadSample read(size_t group) const noexcept override {
+    return group < samples.size() ? samples[group] : LoadSample{};
+  }
+  const char* name() const noexcept override { return "test-published"; }
+};
+
+class SquaredQueueScorer final : public LoadScorer {
+ public:
+  LoadInputs needs() const noexcept override { return LoadInputs::QueueOnly; }
+  const char* name() const noexcept override { return "test-squared-queue"; }
+  const char* units() const noexcept override { return "squared_tasks_per_capacity"; }
+  LoadScore score(const LoadSample& sample, const ScoreContext& context) const noexcept override {
+    const auto tasks = double(sample.queueDepth) + double(context.reservedTasks);
+    return {tasks * tasks / sample.capacity, false, LoadFallback::None};
+  }
+};
+
+TEST(RequestExecutor, RegisteredScorerAndPublishedProviderKeepRoutingSeparate) {
+  Records records;
+  auto provider = std::make_shared<PublishedProvider>();
+  for (size_t i = 0; i < provider->samples.size(); ++i) {
+    provider->samples[i].queueValid = true;
+    provider->samples[i].queueDepth = i == 0 ? 10 : 1;
+    provider->samples[i].capacity = 999; // Config remains authoritative.
+  }
+  auto cfg = config(&records);
+  cfg.policy = Pool::Policy::QueueSpill;
+  cfg.loadScorer = std::make_shared<SquaredQueueScorer>();
+  cfg.loadProvider = provider;
+  Pool pool(std::move(cfg));
+  EXPECT_STREQ(pool.loadScorerName(), "test-squared-queue");
+  EXPECT_DOUBLE_EQ(pool.readLoadSample(0).capacity, 1);
+  ASSERT_TRUE(pool.add(pool.beginRequest(7), [] {}));
+  pool.join();
+  const auto rows = records.take();
+  ASSERT_EQ(rows.size(), 1);
+  EXPECT_EQ(rows[0].chosen, 1);
+  EXPECT_DOUBLE_EQ(rows[0].preferredScore, 100);
+  EXPECT_DOUBLE_EQ(rows[0].chosenScore, 1);
+  EXPECT_TRUE(rows[0].scoreEvaluated);
+  EXPECT_FALSE(rows[0].scoreFallback);
+}
+
+TEST(RequestExecutor, ActivePolicyObservesBlockedCallbacksWithoutCallingThemCpuRunning) {
+  Records records;
+  Gate gate;
+  auto cfg = config(&records);
+  cfg.policy = Pool::Policy::ActiveSpill;
+  cfg.busyHigh = cfg.returnLow = 0;
+  Pool pool(std::move(cfg));
+  auto release = folly::makeGuard([&] { gate.open(); });
+  auto request = pool.beginRequest(0);
+  std::promise<void> started, finished;
+  auto ready = started.get_future(), done = finished.get_future();
+  ASSERT_TRUE(pool.add(request, [&] { started.set_value(); gate.wait(); }));
+  ASSERT_EQ(ready.wait_for(3s), std::future_status::ready);
+  const auto load = pool.readLoadSample(0);
+  EXPECT_EQ(load.queueDepth, 0);
+  EXPECT_EQ(load.callbackInflight, 1);
+  EXPECT_FALSE(load.cpuValid); // Inflight by itself provides no CPU measurement.
+  ASSERT_TRUE(pool.add(request, [&] { finished.set_value(); }, {9, 1000, false, false}));
+  EXPECT_EQ(done.wait_for(3s), std::future_status::ready);
+  gate.open(); pool.join();
+  for (const auto& row : records.take()) if (row.tag == 9) {
+    EXPECT_EQ(row.chosen, 1);
+    EXPECT_DOUBLE_EQ(row.preferredScore, 1);
+    EXPECT_FALSE(row.cpuValid);
+  }
+}
+
+TEST(RequestExecutor, StaleCpuProviderFallsBackToLiveNativeOutstanding) {
+  Records records;
+  Gate gate;
+  auto provider = std::make_shared<PublishedProvider>();
+  for (auto& sample : provider->samples) {
+    sample.cpuValid = sample.runqueueValid = true;
+    sample.sampledAtNs = 1; sample.sampleWindowNs = 1;
+    sample.outstandingValid = true;
+    sample.outstanding = 0; // Must not replace live O in CPU fallback.
+  }
+  auto cfg = config(&records);
+  cfg.policy = Pool::Policy::CpuSpill;
+  cfg.loadProvider = provider;
+  cfg.busyHigh = cfg.returnLow = 0;
+  Pool pool(std::move(cfg));
+  auto release = folly::makeGuard([&] { gate.open(); });
+  auto request = pool.beginRequest(0);
+  std::promise<void> started, finished;
+  auto ready = started.get_future(), done = finished.get_future();
+  ASSERT_TRUE(pool.add(request, [&] { started.set_value(); gate.wait(); }));
+  ASSERT_EQ(ready.wait_for(3s), std::future_status::ready);
+  ASSERT_TRUE(pool.add(request, [&] { finished.set_value(); }, {9, 1000, false, false}));
+  EXPECT_EQ(done.wait_for(3s), std::future_status::ready);
+  gate.open(); pool.join();
+  for (const auto& row : records.take()) if (row.tag == 9) {
+    EXPECT_EQ(row.chosen, 1);
+    EXPECT_TRUE(row.scoreFallback);
+    EXPECT_EQ(row.scoreFallbackReason, LoadFallback::StaleCpu);
+  }
+}
+
+TEST(RequestExecutor, CpuProviderWithFreshRunqueueDemandRoutesEvenWhenNativeQueueIsEmpty) {
+  Records records;
+  auto provider = std::make_shared<PublishedProvider>();
+  const auto timestamp = uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::steady_clock::now().time_since_epoch()).count());
+  for (auto& sample : provider->samples) {
+    sample.cpuValid = sample.runqueueValid = true;
+    sample.sampledAtNs = timestamp; sample.sampleWindowNs = 1000000;
+  }
+  provider->samples[0].sampledCpuCores = 1;
+  provider->samples[0].sampledRunqueueWaitCores = 4;
+  auto cfg = config(&records);
+  cfg.policy = Pool::Policy::CpuSpill;
+  cfg.loadProvider = provider;
+  cfg.cpuMaxAgeNs = 10000000000ULL;
+  Pool pool(std::move(cfg));
+  ASSERT_TRUE(pool.add(pool.beginRequest(0), [] {}));
+  pool.join();
+  const auto rows = records.take();
+  ASSERT_EQ(rows.size(), 1);
+  EXPECT_EQ(rows[0].chosen, 1);
+  EXPECT_DOUBLE_EQ(rows[0].preferredScore, 5);
+  EXPECT_FALSE(rows[0].scoreFallback);
+}
+
+TEST(RequestExecutor, CpuStrategyUsesConfiguredWorkerLimitForBlockedPool) {
+  Records records;
+  Gate gate;
+  auto provider = std::make_shared<PublishedProvider>();
+  const auto timestamp = uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::steady_clock::now().time_since_epoch()).count());
+  for (auto& sample : provider->samples) {
+    sample.cpuValid = sample.runqueueValid = true;
+    sample.sampledAtNs = timestamp; sample.sampleWindowNs = 1000000;
+  }
+  auto cfg = config(&records);
+  cfg.policy = Pool::Policy::CpuSpill;
+  cfg.loadProvider = provider;
+  cfg.cpuMaxAgeNs = 10000000000ULL;
+  cfg.busyHigh = cfg.returnLow = 0;
+  Pool pool(std::move(cfg));
+  auto release = folly::makeGuard([&] { gate.open(); });
+  auto request = pool.beginRequest(0);
+  std::promise<void> started, finished;
+  auto ready = started.get_future(), done = finished.get_future();
+  ASSERT_TRUE(pool.add(request, [&] { started.set_value(); gate.wait(); }));
+  ASSERT_EQ(ready.wait_for(3s), std::future_status::ready);
+  EXPECT_EQ(pool.readLoadSample(0).workerCount, 1);
+  ASSERT_TRUE(pool.add(request, [&] { finished.set_value(); }, {9, 1000, false, false}));
+  EXPECT_EQ(done.wait_for(3s), std::future_status::ready);
+  gate.open(); pool.join();
+  for (const auto& row : records.take()) if (row.tag == 9) {
+    EXPECT_EQ(row.chosen, 1);
+    EXPECT_TRUE(row.scoreFallback);
+    EXPECT_EQ(row.scoreFallbackReason, LoadFallback::WorkerSaturated);
+  }
 }
 
 } // namespace

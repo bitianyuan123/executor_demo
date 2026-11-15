@@ -1,6 +1,7 @@
 #pragma once
 
 #include <executor_demo/BusinessExecutor.h>
+#include <executor_demo/LoadPolicy.h>
 #include <folly/io/async/Request.h>
 
 #include <atomic>
@@ -36,7 +37,7 @@ class RequestExecutor {
 
  public:
   enum class HomePolicy { RoundRobin, ColorHash };
-  enum class Policy { Home, QueueSpill, OutstandingSpill, WorkSpill };
+  enum class Policy { Home, QueueSpill, OutstandingSpill, WorkSpill, ActiveSpill, CpuSpill };
   enum class ContinuationPolicy { FollowParent, ReturnHome };
   enum class Reason {
     Home, BelowBusyThreshold, ReturnHome, LocalSpill, CrossNumaSpill,
@@ -55,6 +56,13 @@ class RequestExecutor {
     double preferredScore{0}, chosenScore{0};
     uint64_t submittedNs{0}, startNs{0}, finishNs{0};
     uint64_t queueBefore{0}, outstandingBefore{0};
+    uint64_t callbackInflightBefore{0};
+    double sampledCpuCores{0}, sampledRunqueueWaitCores{0};
+    uint64_t sampledRunnable{0}, sampledAtNs{0}, sampleWindowNs{0};
+    bool cpuValid{false}, runqueueValid{false}, runnableValid{false};
+    bool scoreEvaluated{false};
+    bool scoreFallback{false};
+    LoadFallback scoreFallbackReason{LoadFallback::None};
     bool migrated{false}, crossNuma{false}, failed{false};
     Reason reason{Reason::Home};
   };
@@ -71,6 +79,12 @@ class RequestExecutor {
     bool balanceOnlyAtFork{false}; // Non-fork continuations follow their source.
     size_t maxHops{4}, batchChunk{1}, maxOutstanding{0};
     BusinessExecutor::QueueKind queueKind{BusinessExecutor::QueueKind::Default};
+    // A scorer changes the metric, not candidate search or Home routing. A
+    // custom scorer is used with any non-Home policy. Its units must match the
+    // configured thresholds. Provider read() must only return published data.
+    std::shared_ptr<const LoadScorer> loadScorer;
+    std::shared_ptr<const LoadProvider> loadProvider;
+    uint64_t cpuMaxAgeNs{100000000};
     Observer observer;
   };
 
@@ -130,6 +144,8 @@ class RequestExecutor {
 
   explicit RequestExecutor(Config config)
       : config_(validate(std::move(config))), pool_(poolConfig(config_)),
+        scorer_(makeScorer(config_)),
+        nativeProvider_(std::make_unique<NativeLoadProvider>(pool_, config_.groups, scorer_->needs())),
         identity_(std::make_shared<Identity>()) {
     reservations_.reserve(config_.groups.size());
     for (size_t i = 0; i < config_.groups.size(); ++i)
@@ -183,6 +199,36 @@ class RequestExecutor {
   std::vector<BusinessExecutor::Snapshot> snapshots() const { return pool_.snapshots(); }
   uint64_t observerFailures() const noexcept { return observerFailures_.load(std::memory_order_relaxed); }
   bool acceptingRequests() const noexcept { return state_.load() == State::Open; }
+  const char* loadScorerName() const noexcept { return scorer_->name(); }
+  const char* loadScoreUnits() const noexcept { return scorer_->units(); }
+
+  // Current native counters are always available as defaults. An optional
+  // provider can override explicitly valid fields, and can publish only OS
+  // samples without knowing Folly internals. Capacity remains the configured
+  // capacity; providers cannot silently change the normalization.
+  LoadSample readLoadSample(size_t group) const noexcept {
+    auto result = nativeProvider_->read(group);
+    if (config_.loadProvider) {
+      const auto external = config_.loadProvider->read(group);
+      if (external.queueValid) { result.queueDepth = external.queueDepth; result.queueValid = true; }
+      // Sampled policies fall back to this executor's live outstanding count,
+      // never to an older external estimate of the same counter.
+      if (external.outstandingValid && scorer_->needs() != LoadInputs::SampledCpu) {
+        result.outstanding = external.outstanding; result.outstandingValid = true;
+      }
+      if (external.callbackInflightValid) { result.callbackInflight = external.callbackInflight; result.callbackInflightValid = true; }
+      if (external.workValid) { result.estimatedOutstandingCpuUs = external.estimatedOutstandingCpuUs; result.workValid = true; }
+      result.sampledCpuCores = external.sampledCpuCores;
+      result.sampledRunqueueWaitCores = external.sampledRunqueueWaitCores;
+      result.sampledRunnable = external.sampledRunnable;
+      result.sampledAtNs = external.sampledAtNs;
+      result.sampleWindowNs = external.sampleWindowNs;
+      result.cpuValid = external.cpuValid;
+      result.runqueueValid = external.runqueueValid;
+      result.runnableValid = external.runnableValid;
+    }
+    return result;
+  }
 
   // Stop new requests/external root submissions, drain accepted callbacks and
   // registered RPC continuations, then join the underlying pools. A captured
@@ -206,14 +252,47 @@ class RequestExecutor {
   struct InstalledContext { RequestExecutor* owner; Context context; };
   inline static thread_local InstalledContext* current_{nullptr};
   struct alignas(64) ReservationCount { std::atomic<uint64_t> tasks{0}, work{0}; };
+  class NativeLoadProvider final : public LoadProvider {
+   public:
+    NativeLoadProvider(const BusinessExecutor& pool,
+                       const std::vector<BusinessExecutor::GroupConfig>& groups,
+                       LoadInputs inputs) : pool_(pool), groups_(groups), inputs_(inputs) {}
+    const char* name() const noexcept override { return "folly-pool-counters"; }
+    LoadSample read(size_t group) const noexcept override {
+      LoadSample sample;
+      if (group >= groups_.size()) { sample.capacity = 0; return sample; }
+      sample.capacity = groups_[group].capacity;
+      sample.workerCount = groups_[group].threads;
+      sample.queueValid = true;
+      if (inputs_ == LoadInputs::QueueOnly) {
+        sample.queueDepth = pool_.readQueueDepth(group);
+      } else {
+        const auto counters = pool_.readLoad(group);
+        sample.queueDepth = counters.queueDepth;
+        sample.outstanding = counters.outstanding;
+        sample.callbackInflight = counters.inflight;
+        sample.estimatedOutstandingCpuUs = counters.estimatedOutstandingCpuUs;
+        sample.outstandingValid = sample.callbackInflightValid = sample.workValid = true;
+      }
+      return sample;
+    }
+   private:
+    const BusinessExecutor& pool_;
+    const std::vector<BusinessExecutor::GroupConfig>& groups_;
+    const LoadInputs inputs_;
+  };
+  struct ScoredLoad { LoadScore result; LoadSample sample; };
   struct Selection {
     size_t chosen{0};
     double preferredScore{0}, chosenScore{0};
     Reason reason{Reason::Home};
+    LoadScore preferredResult{}, chosenResult{};
+    LoadSample sample;
+    bool evaluated{false};
   };
 
   static Config validate(Config config) {
-    if (config.groups.empty() || !config.batchChunk ||
+    if (config.groups.empty() || !config.batchChunk || !config.cpuMaxAgeNs ||
         !std::isfinite(config.busyHigh) || config.busyHigh < 0 ||
         !std::isfinite(config.returnLow) || config.returnLow < 0 || config.returnLow > config.busyHigh ||
         !std::isfinite(config.minGain) || config.minGain < 0 ||
@@ -226,6 +305,16 @@ class RequestExecutor {
     // Unknown NUMA labels are a single unknown domain, not evidence of locality.
     // Cross-NUMA experiments must supply actual labels in their group config.
     return config;
+  }
+  static std::shared_ptr<const LoadScorer> makeScorer(const Config& config) {
+    if (config.loadScorer) return config.loadScorer;
+    switch (config.policy) {
+      case Policy::QueueSpill: return std::make_shared<QueueLoadScorer>();
+      case Policy::WorkSpill: return std::make_shared<WorkLoadScorer>();
+      case Policy::ActiveSpill: return std::make_shared<ActiveLoadScorer>();
+      case Policy::CpuSpill: return std::make_shared<CpuHybridLoadScorer>(config.cpuMaxAgeNs);
+      default: return std::make_shared<OutstandingLoadScorer>();
+    }
   }
   static BusinessExecutor::Config poolConfig(const Config& config) {
     BusinessExecutor::Config result;
@@ -267,63 +356,79 @@ class RequestExecutor {
     const auto x = config_.groups[a].numaNode, y = config_.groups[b].numaNode;
     return x >= 0 && y >= 0 && x != y;
   }
-  double score(size_t group) const {
+  ScoredLoad evaluate(size_t group) const {
     const auto& reserved = *reservations_[group];
-    double value;
-    if (config_.policy == Policy::QueueSpill) {
-      value = double(pool_.readQueueDepth(group)) + reserved.tasks.load(std::memory_order_relaxed);
-    } else {
-      const auto load = pool_.readLoad(group);
-      value = config_.policy == Policy::WorkSpill
-          ? double(load.estimatedOutstandingCpuUs) + reserved.work.load(std::memory_order_relaxed)
-          : double(load.outstanding) + reserved.tasks.load(std::memory_order_relaxed);
+    auto sample = readLoadSample(group);
+    ScoreContext context{reserved.tasks.load(std::memory_order_relaxed),
+                         reserved.work.load(std::memory_order_relaxed),
+                         scorer_->needs() == LoadInputs::SampledCpu ? now() : 0};
+    auto result = scorer_->score(sample, context);
+    // A registered policy may fail its contract. Never turn NaN/negative into
+    // an idle destination. Infinity explicitly means unknown/unusable load.
+    if (std::isnan(result.value) || result.value < 0)
+      result = load_policy_detail::invalid(LoadFallback::InvalidScore);
+    return {result, sample};
+  }
+  static Selection selection(size_t preferred, const ScoredLoad& load, Reason reason) {
+    Selection result;
+    result.chosen = preferred;
+    result.preferredScore = result.chosenScore = load.result.value;
+    result.reason = reason;
+    result.preferredResult = result.chosenResult = load.result;
+    result.sample = load.sample;
+    result.evaluated = true;
+    return result;
+  }
+  // Candidate search is independent of metric calculation. Keep the existing
+  // full scan for six groups; adding P2C here would need its own paired study.
+  void searchDomain(size_t preferred, bool remote, Selection& result) const {
+    for (size_t candidate = 0; candidate < config_.groups.size(); ++candidate) {
+      if (candidate == preferred || crossNuma(preferred, candidate) != remote) continue;
+      const auto load = evaluate(candidate);
+      const auto candidateScore = load.result.value + (remote ? config_.crossNumaPenalty : 0);
+      if (candidateScore < result.chosenScore &&
+          result.preferredScore - candidateScore > config_.minGain) {
+        result.chosen = candidate;
+        result.chosenScore = candidateScore;
+        result.chosenResult = load.result;
+        result.sample = load.sample;
+        result.reason = remote ? Reason::CrossNumaSpill : Reason::LocalSpill;
+      }
     }
-    return value / config_.groups[group].capacity;
   }
   Selection choose(const Context& context, const TaskOptions& options) const {
     const auto home = context.request->home;
-    if (options.pinHome || config_.policy == Policy::Home)
-      return {home, 0, 0, options.pinHome ? Reason::PinnedHome : Reason::Home};
+    if (options.pinHome || config_.policy == Policy::Home) {
+      Selection result; result.chosen = home;
+      result.reason = options.pinHome ? Reason::PinnedHome : Reason::Home;
+      return result;
+    }
     size_t preferred = context.hasParent ? context.source : home;
-    // Fork-only mode suppresses both borrowing and ReturnHome on ordinary
-    // continuations. ReturnHome is reconsidered at the next explicit fork.
-    if (config_.balanceOnlyAtFork && !options.isFork)
-      return {preferred, 0, 0, Reason::NonFork};
-    auto preferredScore = score(preferred);
+    // Fork-only suppresses both borrowing and ReturnHome on ordinary children.
+    if (config_.balanceOnlyAtFork && !options.isFork) {
+      Selection result; result.chosen = preferred; result.reason = Reason::NonFork;
+      return result;
+    }
+    auto preferredLoad = evaluate(preferred);
     if (context.hops >= config_.maxHops)
-      return {preferred, preferredScore, preferredScore, Reason::HopBudget};
+      return selection(preferred, preferredLoad, Reason::HopBudget);
     Reason reason = Reason::BelowBusyThreshold;
-    // ReturnHome is a deliberate affinity policy: below the low watermark it
-    // returns even if the current source is idle. This is not a measured cache
-    // benefit. Migration hop and NUMA restrictions still apply.
+    // ReturnHome is an affinity policy, not evidence of measured cache gains.
     if (config_.continuationPolicy == ContinuationPolicy::ReturnHome &&
         preferred != home && (!crossNuma(preferred, home) || config_.allowCrossNuma)) {
-      const auto homeScore = score(home);
-      if (homeScore <= config_.returnLow) {
+      const auto homeLoad = evaluate(home);
+      if (homeLoad.result.value <= config_.returnLow) {
         preferred = home;
-        preferredScore = homeScore;
+        preferredLoad = homeLoad;
         reason = Reason::ReturnHome;
       }
     }
-    Selection result{preferred, preferredScore, preferredScore, reason};
-    if (preferredScore <= config_.busyHigh) return result;
+    auto result = selection(preferred, preferredLoad, reason);
+    if (result.preferredScore <= config_.busyHigh) return result;
     result.reason = Reason::InsufficientGain;
-    // Search the local NUMA domain first; a qualifying local gain takes
-    // precedence over a potentially larger remote gain. Six groups need no
-    // elaborate tree or shared decision mutex.
-    for (int pass = 0; pass < (config_.allowCrossNuma ? 2 : 1); ++pass) {
-      for (size_t candidate = 0; candidate < config_.groups.size(); ++candidate) {
-        if (candidate == preferred || crossNuma(preferred, candidate) != bool(pass)) continue;
-        auto candidateScore = score(candidate) + (pass ? config_.crossNumaPenalty : 0);
-        if (candidateScore < result.chosenScore &&
-            preferredScore - candidateScore > config_.minGain) {
-          result.chosen = candidate;
-          result.chosenScore = candidateScore;
-          result.reason = pass ? Reason::CrossNumaSpill : Reason::LocalSpill;
-        }
-      }
-      if (result.chosen != preferred) break;
-    }
+    searchDomain(preferred, false, result);
+    if (result.chosen == preferred && config_.allowCrossNuma)
+      searchDomain(preferred, true, result);
     return result;
   }
 
@@ -403,6 +508,19 @@ class RequestExecutor {
       observation.reason = selected.reason;
       observation.queueBefore = before.queueDepth;
       observation.outstandingBefore = before.outstanding;
+      observation.callbackInflightBefore = before.inflight;
+      observation.sampledCpuCores = selected.sample.sampledCpuCores;
+      observation.sampledRunqueueWaitCores = selected.sample.sampledRunqueueWaitCores;
+      observation.sampledRunnable = selected.sample.sampledRunnable;
+      observation.sampledAtNs = selected.sample.sampledAtNs;
+      observation.sampleWindowNs = selected.sample.sampleWindowNs;
+      observation.cpuValid = selected.sample.cpuValid;
+      observation.runqueueValid = selected.sample.runqueueValid;
+      observation.runnableValid = selected.sample.runnableValid;
+      observation.scoreEvaluated = selected.evaluated;
+      observation.scoreFallback = selected.preferredResult.fallback || selected.chosenResult.fallback;
+      observation.scoreFallbackReason = selected.preferredResult.fallback
+          ? selected.preferredResult.reason : selected.chosenResult.reason;
       observation.submittedNs = now();
     }
     context.hops += context.source != selected.chosen;
@@ -444,6 +562,8 @@ class RequestExecutor {
 
   const Config config_;
   BusinessExecutor pool_;
+  std::shared_ptr<const LoadScorer> scorer_;
+  std::unique_ptr<const NativeLoadProvider> nativeProvider_;
   std::shared_ptr<Identity> identity_;
   std::vector<std::unique_ptr<ReservationCount>> reservations_;
   std::atomic<uint64_t> sequence_{0}, operations_{0}, activeWork_{0}, observerFailures_{0};

@@ -6,6 +6,8 @@
 
 前置报告：[阶段 1：真实业务分析](../01-business/README.md)。负载读取与计数写入的独立实测工程：[指标成本微基准](../../experiments/metrics/README.md)，结果见 [RESULTS](../../experiments/metrics/RESULTS.md)。本报告不预设 ARM 上每次调用耗时多少 ns。
 
+针对新确认的4×128线程、单池active均值20/峰值80（定义待核），追加[负载观测复核与生产适配器](../../docs/LOAD_OBSERVATION_REVIEW.md)及[调度轨迹工作流](../../docs/TRACE_WORKFLOW.md)。保留Q基线，同时比较O/I和后台CPU/runqueue信号；不把“active与CPU相关”当作所有负载成立的先验。
+
 ## 1. 必须分开的三个队列/状态集合
 
 | 对象 | 管理者 | 其中是什么 | 何时离开 | 是否等于另一项 |

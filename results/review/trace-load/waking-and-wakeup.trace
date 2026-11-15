@@ -1,0 +1,5 @@
+# tracer: nop
+ producer-900 ( 900) [000] d..2 100.000000000: sched_waking: comm=worker-0 pid=10 prio=120 target_cpu=000
+ producer-900 ( 900) [000] d..2 100.000100000: sched_wakeup: comm=worker-0 pid=10 prio=120 target_cpu=000
+ swapper/0-0 ( 0) [000] d..2 100.002000000: sched_switch: prev_comm=swapper/0 prev_pid=0 prev_prio=120 prev_state=R ==> next_comm=worker-0 next_pid=10 next_prio=120
+ worker-0-10 ( 900) [000] d..2 100.005000000: sched_switch: prev_comm=worker-0 prev_pid=10 prev_prio=120 prev_state=S ==> next_comm=swapper/0 next_pid=0 next_prio=120

@@ -16,6 +16,20 @@ def cases(suite):
     if suite == "routing":
         return [("home", {"policy": "home"}), ("queue", {"policy": "queue"}),
                 ("outstanding", {"policy": "outstanding"}), ("work", {"policy": "work"})]
+    if suite == "signals":
+        return [(policy, {"policy": policy})
+                for policy in ("home", "queue", "active", "outstanding", "cpu", "work")]
+    if suite in ("arrival", "real-baseline"):
+        deployment = ({"pool-count": "4", "threads": "128", "affinity": "none", "qps": "16"}
+                      if suite == "real-baseline" else {})
+        return [(name, {**deployment, "policy": "home", **arrival}) for name, arrival in (
+            ("regular", {"arrival": "regular"}), ("poisson", {"arrival": "poisson"}),
+            ("burst4", {"arrival": "burst", "burst-size": "4", "burst-spacing-us": "100"}),
+            ("burst8", {"arrival": "burst", "burst-size": "8", "burst-spacing-us": "100"}))]
+    if suite == "blocking":
+        return [(f"{policy}-block{percent}", {"policy": policy, "sync-block-percent": str(percent),
+                                               "sync-block-us": "10000" if percent else "0"})
+                for percent in (0, 50) for policy in ("home", "active", "outstanding", "cpu")]
     if suite == "follow":
         return [("home", {"policy": "home"})] + [
             (f"{when}-{continuation}", {"policy": "outstanding", "balance-at": when,
@@ -41,7 +55,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", default="build-affinity/affinity_demo")
     parser.add_argument("--output", required=True)
-    parser.add_argument("--suite", choices=["routing", "follow", "granularity", "deployment", "threads", "overhead"], default="routing")
+    parser.add_argument("--suite", choices=["routing", "signals", "arrival", "real-baseline", "blocking", "follow", "granularity", "deployment", "threads", "overhead"], default="routing")
     parser.add_argument("--seeds", default="101,102,103")
     parser.add_argument("--timeout-seconds", type=float, default=900)
     parser.add_argument("--run", action="store_true", help="without this flag only write a plan")
@@ -76,6 +90,7 @@ def main():
     source_root = pathlib.Path(__file__).resolve().parent
     sources = ["main.cpp", "include/executor_demo/RequestExecutor.h",
                "include/executor_demo/LocalityWorkload.h",
+               "include/executor_demo/LoadPolicy.h", "include/executor_demo/LinuxSchedstatLoadProvider.h",
                "../dag/include/executor_demo/BusinessExecutor.h"]
     metadata = {"schema": "affinity-v2-matrix", "binary": str(pathlib.Path(args.binary).resolve()),
                 "binary_sha256": digest(pathlib.Path(args.binary)),
@@ -94,7 +109,7 @@ def main():
             options = dict(base)
             # A work score uses CPU-us/capacity, while count scores use tasks/
             # capacity. Leave policy defaults in effect for the routing sweep.
-            if args.suite == "routing" and ("--busy-high" in base or "--return-low" in base or "--min-gain" in base):
+            if args.suite in ("routing", "signals", "blocking") and ("--busy-high" in base or "--return-low" in base or "--min-gain" in base):
                 parser.error("routing suite uses policy-specific threshold defaults; tune thresholds in separate single-policy runs")
             options.update({"--" + key: str(value) for key, value in changes.items()})
             options.update({"--seed": str(seed), "--output": str(directory)})
@@ -118,7 +133,9 @@ def main():
                 return result.returncode
             summary = json.loads((directory / "summary.json").read_text())
             print(f"  completed={summary['completed']} mean_ms={summary['request_mean_ms']:.3f} "
-                  f"p99_ms={summary['request_p99_ms']:.3f} migrations={summary['migrations']}", flush=True)
+                  f"p99_ms={summary['request_p99_ms']:.3f} migrations={summary['migrations']} "
+                  f"request_peak={summary['peak_inflight']} process_cpu_s={summary['process_cpu_s']:.6f} "
+                  f"arrival_hash={summary['arrival_hash']} fixed_iterations={summary.get('planned_total_iterations', 'unknown')}", flush=True)
     if args.run:
         print("Report: " + shlex.join([sys.executable, str(pathlib.Path(__file__).with_name("report.py"))] + [p["directory"] for p in plan]))
     return 0

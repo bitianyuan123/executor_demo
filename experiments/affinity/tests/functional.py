@@ -55,6 +55,7 @@ def main(binary):
 
         variants = [('home', {}), ('queue', {'policy': 'queue'}),
                     ('outstanding', {'policy': 'outstanding'}), ('work', {'policy': 'work'}),
+                    ('active', {'policy': 'active'}), ('cpu', {'policy': 'cpu'}),
                     ('return-home', {'policy': 'outstanding', 'continuation': 'home'}),
                     ('chunk-two', {'policy': 'outstanding', 'batch-chunk': '2'}),
                     ('no-trace', {'trace': '0'}), ('unbound', {'affinity': 'none'}),
@@ -113,6 +114,48 @@ def main(binary):
         task_work = lambda item: sorted((row['request'], row['tag'], row['iterations'], row['read_words'], row['write_words'], row['checksum']) for row in item['tasks'])
         check(task_work(heterogeneous) == task_work(heterogeneous_work), 'request-scaled policy changed actual work')
 
+        # A batch arrives at b/qps intervals, independently of callback completion.
+        burst = execute('burst-home', {'arrival': 'burst', 'burst-size': '4', 'burst-spacing-us': '0'})
+        burst_other = execute('burst-outstanding', {'arrival': 'burst', 'burst-size': '4',
+                                                  'burst-spacing-us': '0', 'policy': 'outstanding'})
+        microburst = execute('microburst', {'arrival': 'burst', 'burst-size': '4', 'burst-spacing-us': '100'})
+        for run, spacing in ((burst, 0), (burst_other, 0), (microburst, 100000)):
+            actual = [row['scheduled_ns'] - run['summary']['origin_ns'] for row in run['requests']]
+            expected = [(request // 4) * 80000000 + (request % 4) * spacing for request in range(8)]
+            check(actual == expected, 'burst request schedule is not conserved')
+            check(run['summary']['fixed_work_signature'] == baseline['summary']['fixed_work_signature'], 'arrival changed fixed work contract')
+            check(task_work(run) == task_work(baseline), 'arrival changed actual work/checksums')
+            check(run['summary']['arrival_hash'] != baseline['summary']['arrival_hash'], 'burst was mislabeled as regular arrival')
+        for field in signatures:
+            check(burst['summary'][field] == burst_other['summary'][field], f'burst policy changed {field}')
+        check(burst['pairing_key'] != baseline['pairing_key'], 'different arrival schedules became timing pairs')
+
+        # Retain callbacks while they sleep: CPU work/checksums stay fixed while
+        # callback wall time includes the blocking interval. This is not an RPC.
+        blocked_options = {'requests': '4', 'qps': '1000', 'widths': '4', 'depths': '1',
+                           'iterations': '10', 'accesses': '0', 'jitter-percent': '0',
+                           'long-every': '0', 'sync-block-percent': '100', 'sync-block-us': '10000'}
+        blocked = [execute(f'blocked-{policy}', {**blocked_options, 'policy': policy})
+                   for policy in ('home', 'active', 'cpu')]
+        for run in blocked:
+            check(run['summary']['planned_blocked_operators'] == 16, 'planned blocked operators changed')
+            check(run['summary']['planned_sync_block_us'] == 160000, 'planned synchronous blocking changed')
+            check(run['metrics']['sync_block_wall_ms'] >= 160, 'sleep time was not retained in callback wall time')
+            check(run['metrics']['operator_cpu_wall_ratio'] < .5, 'blocking counterexample did not distinguish CPU from callback activity')
+            check(task_work(run) == task_work(blocked[0]), 'blocking policy changed computational work')
+            check(run['callback_occupancy'] is not None, 'callback occupancy not reconstructed')
+            all_pools = run['callback_occupancy'][-1]
+            check(all_pools['peak'] >= 2 and all_pools['mean'] > 0, 'blocking callback occupancy missing')
+        for run in (results[5], blocked[2]):
+            check(run['summary']['cpu_sampling'], 'cpu policy did not enable sampling')
+            check(run['summary']['cpu_sampler']['scans'] >= 1, 'CPU sampler did not run')
+            check(run['summary']['score_fallbacks'] <= run['summary']['score_evaluations'], 'fallback denominator includes unscored tasks')
+
+        four_pools = execute('four-pools-none', {'affinity': 'none', 'pool-count': '4'})
+        check(len(four_pools['summary']['groups']) == 4, 'pool-count did not decouple pools from partitions')
+        check(all(group['cpus'] == cpus for group in four_pools['summary']['groups']), 'none changed the CPU union')
+        check(task_work(four_pools) == task_work(baseline), 'pool count changed computational work')
+
         # A parent occupies the sole admission slot while submitting its fork.
         # Rejection must terminate the request and pool rather than lose a join.
         rejected = execute('reject', {'requests': '2', 'qps': '100', 'max-outstanding': '1'}, success=False)
@@ -122,6 +165,10 @@ def main(binary):
         execute('invalid', {'depths': '0,2'}, success=False)
         execute('invalid-memory', {'branch-kb': '1048576'}, success=False)
         execute('invalid-estimate', {'estimate-mode': 'request-scale', 'work-scale-scope': 'task'}, success=False)
+        execute('invalid-burst', {'arrival': 'burst', 'burst-size': '4', 'burst-spacing-us': '30000'}, success=False)
+        execute('invalid-block', {'sync-block-percent': '50', 'sync-block-us': '0'}, success=False)
+        execute('invalid-pool-count', {'affinity': 'cluster', 'pool-count': '4'}, success=False)
+        execute('invalid-cpu-disabled', {'policy': 'cpu', 'cpu-sampling': '0'}, success=False)
 
         # The analysis retains a request whose finish lies beyond the arrival window.
         window = report.load_run(baseline['path'], 0, .000000001)
@@ -131,6 +178,30 @@ def main(binary):
                                  str(results[2]['path'])], text=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, timeout=10)
         check(output.returncode == 0 and 'delta mean/p95/p99' in output.stdout, f'paired report failed: {output.stderr}')
+        cpu_report = subprocess.run([sys.executable, str(REPORT), str(blocked[0]['path']),
+                                     str(blocked[2]['path'])], text=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, timeout=10)
+        check(cpu_report.returncode == 0 and 'fallbacks/evaluated' in cpu_report.stdout
+              and 'synchronous callback blocking' in cpu_report.stdout
+              and 'CPU sampling differs from home' in cpu_report.stdout,
+              f'CPU/blocking report missing evidence: {cpu_report.stderr}')
+
+        matrix_spec = importlib.util.spec_from_file_location('affinity_matrix', REPORT.with_name('run_matrix.py'))
+        matrix = importlib.util.module_from_spec(matrix_spec)
+        matrix_spec.loader.exec_module(matrix)
+        real_cases = matrix.cases('real-baseline')
+        check(len(real_cases) == 4 and all(case['pool-count'] == '4' and case['threads'] == '128'
+              and case['affinity'] == 'none' and case['qps'] == '16' for _, case in real_cases),
+              'real-baseline does not preserve real deployment settings')
+        check({case['policy'] for _, case in matrix.cases('signals')} ==
+              {'home', 'queue', 'active', 'outstanding', 'cpu', 'work'}, 'signal comparison incomplete')
+        # Simultaneous per-pool peaks need not coincide: global peak is rebuilt,
+        # never obtained by adding individual maxima.
+        occupancy = report.callback_occupancy([
+            {'chosen': 0, 'start_ns': 0, 'finish_ns': 5},
+            {'chosen': 1, 'start_ns': 5, 'finish_ns': 10}], 2, 0, 10)
+        check(occupancy[-1]['peak'] == 1 and occupancy[-1]['mean'] == 1,
+              'global callback occupancy incorrectly sums disjoint peaks')
 
         corrupted = root / 'corrupted'
         shutil.copytree(baseline['path'], corrupted)
@@ -144,7 +215,7 @@ def main(binary):
             pass
         else:
             raise AssertionError('truncated trace silently accepted')
-        print('affinity functional: 13 complete runs, rejection/invalid input, work/checksum conservation, windows and report checks passed')
+        print('affinity functional: 22 complete runs, burst schedules, blocking counterexample, rejection/invalid input, work/checksum conservation and report checks passed')
 
 
 if __name__ == '__main__':

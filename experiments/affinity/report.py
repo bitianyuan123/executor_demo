@@ -57,6 +57,34 @@ def mean(values):
     return statistics.fmean(values) if values else None
 
 
+def callback_occupancy(tasks, group_count, start, end):
+    """Observed callback intervals, including synchronous sleep/preemption.
+
+    All tasks overlapping the wall-clock window participate, independently of
+    the request-arrival cohort. This is not Linux runnable or on-CPU occupancy.
+    """
+    if end <= start:
+        return None
+    events = [[] for _ in range(group_count + 1)]
+    area = [0] * len(events)
+    for task in tasks:
+        left, right = max(start, task['start_ns']), min(end, task['finish_ns'])
+        if right <= left:
+            continue
+        for group in (task['chosen'], group_count):
+            events[group].extend(((left, 1), (right, -1)))
+            area[group] += right - left
+    result = []
+    for group, points in enumerate(events):
+        active = peak = 0
+        for _, delta in sorted(points):
+            active += delta
+            peak = max(peak, active)
+        result.append({'group': group if group < group_count else 'all',
+                       'mean': area[group] / (end - start), 'peak': peak})
+    return result
+
+
 def load_run(path, warmup_seconds=0.0, window_seconds=None):
     """Return audited data; do not silently discard failed or late completions."""
     path = Path(path)
@@ -106,6 +134,12 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
             checksum = mix(checksum ^ row['checksum'])
     if str(arrival_hash) != str(summary['arrival_hash']) or str(checksum) != str(summary['checksum']):
         raise ValueError(f'{path}: arrival/checksum audit mismatch')
+    if summary.get('arrival') == 'burst':
+        require_fields(summary, ('burst_size', 'burst_spacing_us', 'work_contract'), str(path))
+        if int(summary['burst_size']) < 1 or int(summary['burst_spacing_us']) < 0:
+            raise ValueError(f'{path}: invalid burst contract')
+        if summary['work_contract'].get('arrival') != 'burst':
+            raise ValueError(f'{path}: burst arrival contract missing')
 
     widths, depths = summary['widths'], summary['depths']
     if not widths or len(widths) != len(depths) or any(int(x) <= 0 for x in widths + depths):
@@ -127,11 +161,27 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                   'submitted_ns', 'start_ns', 'finish_ns', 'cpu_ns', 'iterations',
                   'read_words', 'write_words', 'checksum')
         tasks = read_csv(path / 'tasks.csv', fields)
+        if summary.get('sync_block_percent', 0):
+            for row in tasks:
+                require_fields(row, ('sync_block_target_us', 'sync_block_wall_ns'), str(path / 'tasks.csv'))
+        if 'score_evaluations' in summary:
+            for row in tasks:
+                require_fields(row, ('score_evaluated', 'score_fallback', 'score_fallback_reason',
+                                     'sampled_at_ns', 'sample_window_ns', 'cpu_valid', 'runqueue_valid'), str(path / 'tasks.csv'))
         seen = set()
         for row in tasks:
             for field in fields:
                 if field != 'kind':
                     row[field] = integer(row[field], field)
+            row['sync_block_target_us'] = integer(row.get('sync_block_target_us', 0), 'sync_block_target_us')
+            row['sync_block_wall_ns'] = integer(row.get('sync_block_wall_ns', 0), 'sync_block_wall_ns')
+            for field in ('callback_inflight_before', 'score_evaluated', 'score_fallback', 'sampled_at_ns',
+                          'sample_window_ns', 'cpu_valid', 'runqueue_valid', 'runnable_valid'):
+                row[field] = integer(row.get(field, 0), field)
+            for field in ('sampled_cpu_cores', 'sampled_runqueue_wait_cores'):
+                row[field] = float(row.get(field, 0))
+                if not math.isfinite(row[field]) or row[field] < 0:
+                    raise ValueError(f'{path}: invalid sampled load')
             key = row['request'], row['tag']
             if key in seen or row['request'] >= len(requests) or row['tag'] >= expected_nodes:
                 raise ValueError(f'{path}: duplicate/invalid task identity')
@@ -151,6 +201,22 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                 raise ValueError(f'{path}: completed request missing tasks')
         if sum(row['migrated'] for row in tasks) != int(summary['migrations']) or sum(row['cross_numa'] for row in tasks) != int(summary['cross_numa']):
             raise ValueError(f'{path}: migration counter mismatch')
+        if 'score_fallbacks' in summary and sum(row['score_fallback'] for row in tasks) != int(summary['score_fallbacks']):
+            raise ValueError(f'{path}: score fallback counter mismatch')
+        if 'score_evaluations' in summary and sum(row['score_evaluated'] for row in tasks) != int(summary['score_evaluations']):
+            raise ValueError(f'{path}: score evaluation counter mismatch')
+        if completed == len(requests) and 'planned_total_iterations' in summary:
+            operators_all = [row for row in tasks if row['kind'] == 'operator']
+            if sum(row['iterations'] for row in operators_all) != int(summary['planned_total_iterations']):
+                raise ValueError(f'{path}: fixed compute work is not conserved')
+            planes = {'none': 0, 'request-ro': 1, 'branch-rw': 1, 'mixed': 2}[summary['model']]
+            accesses = int(summary['planned_total_accesses'])
+            if sum(row['read_words'] for row in operators_all) != accesses * planes:
+                raise ValueError(f'{path}: fixed read work is not conserved')
+            if sum(row['write_words'] for row in operators_all) != (accesses if summary['model'] in ('branch-rw', 'mixed') else 0):
+                raise ValueError(f'{path}: fixed write work is not conserved')
+            if sum(row['sync_block_target_us'] for row in operators_all) != int(summary.get('planned_sync_block_us', 0)):
+                raise ValueError(f'{path}: planned synchronous blocking is not conserved')
     elif int(summary['observed_tasks']) != 0:
         raise ValueError(f'{path}: trace disabled but observed_tasks is nonzero')
 
@@ -180,14 +246,20 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                  'home_policy': summary['options'].get('home-policy', 'rr')}
     pairing_key = (summary['seed'], summary['work_signature'], str(summary['arrival_hash']),
                    summary['model'], json.dumps(resources, sort_keys=True))
+    occupancy_end = end if end is not None else max((row['finish_ns'] for row in tasks), default=start)
     return {'path': path, 'summary': summary, 'requests': requests, 'tasks': tasks,
             'cohort': cohort, 'completed_cohort': complete_cohort, 'pairing_key': pairing_key,
+            'callback_occupancy': callback_occupancy(tasks, len(summary['groups']), start, occupancy_end) if summary['trace'] else None,
             'metrics': {'n': len(complete_cohort), 'offered': len(cohort),
                         'mean_ms': mean(latencies), 'p50_ms': quantile(latencies, .50),
                         'p95_ms': quantile(latencies, .95), 'p99_ms': quantile(latencies, .99),
                         'wait_p99_ms': quantile(waits, .99), 'operator_cpu_mean_ms': mean(cpu),
                         'operator_wall_mean_ms': mean(wall),
                         'operator_cpu_per_request_ms': sum(cpu) / len(ids) if cpu and ids else None,
+                        'operator_cpu_wall_ratio': sum(cpu) / sum(wall) if wall and sum(wall) > 0 else None,
+                        'sync_block_target_ms': sum(row['sync_block_target_us'] for row in operators) / 1000,
+                        'sync_block_wall_ms': sum(row['sync_block_wall_ns'] for row in operators) / 1e6,
+                        'blocked_operators': sum(row['sync_block_target_us'] != 0 for row in operators),
                         'tasks': len(cohort_tasks), 'migrations': sum(row['migrated'] for row in cohort_tasks),
                         'cross_numa': sum(row['cross_numa'] for row in cohort_tasks)},
             'valid_for_comparison': completed == len(requests) and bool(cohort)}
@@ -241,6 +313,39 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
         print(f'  WHOLE RUN (not cohort): process CPU s={float(summary["process_cpu_s"]):.6f}, '
               f'process CPU/completed-request ms={format_value(whole_cpu_per_request)}, '
               f'peak_inflight={summary["peak_inflight"]}, submission lag p99 ms={format_value(whole_lag)}')
+        arrival = summary.get('arrival', summary.get('work_contract', {}).get('arrival', 'unknown'))
+        burst_description = (f'{summary.get("burst_size", "-")}/{summary.get("burst_spacing_us", "-")}'
+                             if arrival == 'burst' else 'not applicable')
+        print(f'  arrival={arrival}, burst size/spacing us={burst_description}, '
+              f'whole planned iterations/accesses={summary.get("planned_total_iterations", "unknown")}/{summary.get("planned_total_accesses", "unknown")}, '
+              f'per-request mean={summary.get("planned_iterations_per_request", "unknown")}/{summary.get("planned_accesses_per_request", "unknown")}')
+        if summary.get('fixed_work_signature'):
+            fixed_digest = hashlib.sha256(summary['fixed_work_signature'].encode()).hexdigest()[:16]
+            print(f'  fixed_work_sha256_prefix={fixed_digest}; equal fixed work does not imply equal arrival schedules or equal CPU service time.')
+        if summary.get('sync_block_percent', 0) and summary['trace']:
+            print(f'  COHORT synchronous callback blocking: operators={metric["blocked_operators"]}, '
+                  f'target/wall sum ms={metric["sync_block_target_ms"]:.3f}/{metric["sync_block_wall_ms"]:.3f}, '
+                  f'operator CPU/wall ratio={format_value(metric["operator_cpu_wall_ratio"])}; '
+                  'controlled sleep retains a callback/thread, is not asynchronous RPC or evidence of kernel runnable count.')
+        elif summary.get('sync_block_percent', 0):
+            print('  Synchronous callback blocking configured; trace=0 has no measured per-operator blocking/occupancy data.')
+        if run['callback_occupancy'] is not None:
+            occupancy = ', '.join(f'{item["group"]}:mean={item["mean"]:.3f}/peak={item["peak"]}'
+                                  for item in run['callback_occupancy'])
+            print(f'  WALL-WINDOW callback occupancy (all overlapping tasks, includes sleeping/preempted): {occupancy}; not kernel runnable/on-CPU.')
+        if summary.get('cpu_sampling'):
+            print(f'  CPU sampling enabled: interval/max-age ms={summary.get("cpu_sample_ms")}/{summary.get("cpu_max_age_ms")}, '
+                  f'whole-run sampler={json.dumps(summary.get("cpu_sampler", {}), sort_keys=True, separators=(",", ":"))}, '
+                  f'fallbacks/evaluated={summary.get("score_fallbacks", "unknown")}/{summary.get("score_evaluations", "unknown")}, '
+                  f'cpu-scored-without-fallback={summary.get("cpu_scored_without_fallback", "unknown")}, '
+                  f'reasons={json.dumps(summary.get("score_fallback_reasons", {}), sort_keys=True, separators=(",", ":"))}')
+            if not summary.get('cpu_sampler', {}).get('runqueue_accounting_enabled', False):
+                print('  Runqueue accounting unavailable: CPU policy falls back to outstanding; this is not evidence that a CPU signal improved routing.')
+            print('  Pinned/home/non-fork callbacks without score evaluation are excluded from the fallback denominator; published validity alone does not prove freshness.')
+            if not summary['trace']:
+                print('  trace=0: no task-level score/fallback evidence was collected; zero counters do not establish zero fallback.')
+        scorer_suffix = ' (configured but unused: home bypasses L2 scoring)' if summary['policy'] == 'home' else ''
+        print(f'  load scorer/units={summary.get("load_scorer", "legacy")}/{summary.get("load_score_units", "unknown")}{scorer_suffix}')
         if summary['peak_inflight'] <= 1:
             print(f'  {run["path"].name}: no overlapping requests observed; this run cannot establish multi-request contention behavior.')
 
@@ -255,12 +360,14 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
             print(f'  {run["path"].name}: not paired ({len(homes)} eligible home runs; need exactly one).')
             continue
         home = homes[0]
+        if run['summary'].get('cpu_sampling', False) != home['summary'].get('cpu_sampling', False):
+            print(f'  {run["path"].name}: CPU sampling differs from home; its measured overhead is included in this whole-policy comparison. Use sampling=1 on both for an overhead-controlled rerun.')
         first, second = run['completed_cohort'], home['completed_cohort']
         contract = lambda rows: [(row['request'], row['checksum']) for row in rows]
         if contract(first) != contract(second):
             raise ValueError(f'{run["path"]}: cohort request IDs/checksums differ from matched home')
         if run['summary']['trace']:
-            task_contract = lambda item: sorted((row['request'], row['tag'], row['iterations'], row['read_words'], row['write_words'], row['checksum']) for row in item['tasks'])
+            task_contract = lambda item: sorted((row['request'], row['tag'], row['iterations'], row['read_words'], row['write_words'], row['checksum'], row['sync_block_target_us']) for row in item['tasks'])
             if task_contract(run) != task_contract(home):
                 raise ValueError(f'{run["path"]}: actual task work/checksums differ from matched home')
         deltas = {key: run['metrics'][key] - home['metrics'][key] for key in ('mean_ms', 'p95_ms', 'p99_ms')}

@@ -2,6 +2,8 @@
 
 这是独立、可选的阶段4工程。保留 `experiments/dag`、此前ARM日志和原有命令；v1适合固定CPU预算下研究排队、图依赖和模拟RPC，v2专门检验“借用并行资源的收益能否覆盖数据迁移的代价”。详细审查、算法依据及试验顺序见 [两层调度设计](../../stages/04-dag/TWO_LEVEL_DESIGN.md)。
 
+新增的四池128线程、入口微突发与CPU信号实验请先看[真实负载矩阵](../../docs/REAL_WORKLOAD_MATRIX.md)及[观测/算法复核](../../docs/LOAD_OBSERVATION_REVIEW.md)。两者补充本文：`active/cpu`策略、burst请求到达、同步阻塞反例、none模式独立软件池数，以及可注册`LoadProvider/LoadScorer`。CPU采样不是实时微突发探测器；默认不启用，仅cpu策略或显式`--cpu-sampling 1`开启。
+
 ## 接口与实现边界
 
 业务只持有一个 `RequestExecutor`，不创建六个Folly池、不传home/parent/chosen编号：
@@ -26,7 +28,7 @@ executor.join(); // 关闭新root，排空已登记的任务和continuation
 两层逻辑：
 
 1. L1：RR或颜色哈希固定请求home。没有实现LALB、反馈式L1，也没有假定L1与L2应共享评分。
-2. L2：`home/queue/outstanding/work`。先查偏好池；超过高阈值后先搜索同NUMA、有足够收益的候选，找不到才按配置考虑远端。无队列偷取、不抢占已运行算子。
+2. L2：`home/queue/active/outstanding/work/cpu`。先查偏好池；超过高阈值后先搜索同NUMA、有足够收益的候选，找不到才按配置考虑远端。无队列偷取、不抢占已运行算子。
 3. `continuation=parent`沿实际父池；`home`在home低于低阈值时回迁。这是策略开关，不是已测得的缓存收益模型。join沿最后完成分支的上下文；不是多父数据归属最优化。
 4. `balance-at=fork`只在batch做L2；普通链后继保持source，下一次fork才重新评估回home/借出。`all`在每次就绪时评估。
 5. chunk预占待提交任务，降低一次批量提交过程中反复把任务投向同一空池的偏差；每个任务仍独立执行。并发选池与预占不是事务，可能短暂同选或重复计量；没有完全避免惊群。

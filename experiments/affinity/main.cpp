@@ -2,6 +2,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <executor_demo/LinuxSchedstatLoadProvider.h>
 #include <executor_demo/LocalityWorkload.h>
 #include <executor_demo/RequestExecutor.h>
 #include <filesystem>
@@ -21,6 +22,7 @@
 
 using Pool = executor_demo::RequestExecutor;
 using Work = executor_demo::LocalityWorkload;
+using CpuSampler = executor_demo::LinuxSchedstatLoadProvider;
 using Clock = std::chrono::steady_clock;
 static uint64_t ns() {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -98,6 +100,9 @@ static int nodeOf(int cpu) {
 struct Config {
   std::map<std::string, std::string> args;
   size_t requests = 24, maxInflight = 16, threads = 2, memoryMiB = 256;
+  size_t poolCount = 0, burstSize = 4, syncBlockPercent = 0;
+  uint64_t burstSpacingUs = 0, syncBlockUs = 0;
+  uint64_t cpuSampleMs = 50, cpuMaxAgeMs = 150;
   uint64_t seed = 1, iterations = 10000, accesses = 1000, estimateUs = 1000;
   double qps = 12;
   size_t jitter = 0, longEvery = 0, longFactor = 8;
@@ -106,7 +111,7 @@ struct Config {
               arrival = "regular", affinity = "cluster",
               output = "results/affinity-smoke", balanceAt = "all",
               scaleScope = "task", estimateMode = "constant";
-  bool trace = true, pageSample = false;
+  bool trace = true, pageSample = false, cpuSampling = false;
   Work::Config work;
   Pool::Config pool;
   std::vector<std::vector<int>> partitions;
@@ -115,6 +120,7 @@ struct Config {
 static Config parse(int argc, char **argv) {
   Config c;
   std::set<std::string> keys = {"cpus",
+                                "pool-count",
                                 "affinity",
                                 "threads",
                                 "capacity-scale",
@@ -122,6 +128,13 @@ static Config parse(int argc, char **argv) {
                                 "max-inflight",
                                 "qps",
                                 "arrival",
+                                "burst-size",
+                                "burst-spacing-us",
+                                "sync-block-percent",
+                                "sync-block-us",
+                                "cpu-sampling",
+                                "cpu-sample-ms",
+                                "cpu-max-age-ms",
                                 "seed",
                                 "widths",
                                 "depths",
@@ -189,6 +202,11 @@ static Config parse(int argc, char **argv) {
     return bool(n);
   };
   c.requests = u("requests", c.requests);
+  c.poolCount = u("pool-count", 0);
+  c.burstSize = u("burst-size", c.burstSize);
+  c.burstSpacingUs = u("burst-spacing-us", 0);
+  c.syncBlockPercent = u("sync-block-percent", 0);
+  c.syncBlockUs = u("sync-block-us", 0);
   c.maxInflight = u("max-inflight", c.maxInflight);
   c.threads = u("threads", c.threads);
   c.memoryMiB = u("memory-mb", c.memoryMiB);
@@ -211,6 +229,14 @@ static Config parse(int argc, char **argv) {
   c.depths = numbers(s("depths", "2,2"));
   c.model = s("model", c.model);
   c.policy = s("policy", c.policy);
+  c.cpuSampling = b("cpu-sampling", c.policy == "cpu");
+  c.cpuSampleMs = u("cpu-sample-ms", 50);
+  c.cpuMaxAgeMs = u("cpu-max-age-ms", 150);
+  if (!c.cpuSampleMs || c.cpuSampleMs > 10000 || !c.cpuMaxAgeMs ||
+      c.cpuMaxAgeMs > 60000 || (c.policy == "cpu" && !c.cpuSampling))
+    throw std::invalid_argument(
+        "invalid CPU sampling configuration; cpu policy requires sampling");
+  c.pool.cpuMaxAgeNs = c.cpuMaxAgeMs * 1000000;
   c.continuation = s("continuation", c.continuation);
   c.arrival = s("arrival", c.arrival);
   c.affinity = s("affinity", c.affinity);
@@ -225,6 +251,12 @@ static Config parse(int argc, char **argv) {
       c.widths.empty() || c.widths.size() != c.depths.size() ||
       c.widths.size() > 16)
     throw std::invalid_argument("configuration outside experiment bounds");
+  if (c.poolCount > 64 || !c.burstSize || c.burstSize > 100000 ||
+      c.burstSpacingUs > 1000000000 || c.syncBlockPercent > 100 ||
+      c.syncBlockUs > 10000000 ||
+      ((c.syncBlockPercent != 0) != (c.syncBlockUs != 0)))
+    throw std::invalid_argument(
+        "invalid pool/burst/synchronous-blocking configuration");
   c.nodes = 1;
   for (size_t i = 0; i < c.widths.size(); ++i) {
     if (!c.widths[i] || c.widths[i] > 4000 || !c.depths[i] ||
@@ -237,8 +269,12 @@ static Config parse(int argc, char **argv) {
       c.iterations > 1000000000000ULL / c.longFactor ||
       c.accesses > 1000000000000ULL / c.longFactor)
     throw std::invalid_argument("work/trace size exceeds experiment bound");
-  if (c.arrival != "regular" && c.arrival != "poisson")
-    throw std::invalid_argument("arrival must be regular or poisson");
+  if (c.arrival != "regular" && c.arrival != "poisson" && c.arrival != "burst")
+    throw std::invalid_argument("arrival must be regular, poisson, or burst");
+  if (c.arrival == "burst" &&
+      static_cast<long double>(c.burstSize - 1) * c.burstSpacingUs >
+          static_cast<long double>(c.burstSize) * 1000000 / c.qps)
+    throw std::invalid_argument("burst spacing exceeds its batch period");
   if (c.model == "none")
     c.work.model = Work::Model::None;
   else if (c.model == "request-ro")
@@ -282,6 +318,12 @@ static Config parse(int argc, char **argv) {
       c.partitions.push_back(cpuList(group));
   if (c.partitions.empty() || c.partitions.size() > 64)
     throw std::invalid_argument("invalid group count");
+  const bool explicitPoolCount = c.poolCount != 0;
+  if (!c.poolCount)
+    c.poolCount = c.partitions.size();
+  if (c.affinity != "none" && c.poolCount != c.partitions.size())
+    throw std::invalid_argument(
+        "different pool-count and partition count requires affinity=none");
   std::set<int> seen;
   std::vector<int> nodes;
   for (auto &cpus : c.partitions) {
@@ -307,11 +349,14 @@ static Config parse(int argc, char **argv) {
   double scale = d("capacity-scale", 1);
   if (scale <= 0 || scale > 1)
     throw std::invalid_argument("capacity-scale must be in (0,1]");
-  for (size_t i = 0; i < c.partitions.size(); ++i) {
+  for (size_t i = 0; i < c.poolCount; ++i) {
     executor_demo::BusinessExecutor::GroupConfig g;
     g.threads = c.threads;
-    g.numaNode = nodes[i];
-    g.capacity = std::min<double>(c.threads, c.partitions[i].size() * scale);
+    g.numaNode = c.affinity == "none" ? -1 : nodes[i];
+    g.capacity = std::min<double>(
+        c.threads, c.affinity == "none" && explicitPoolCount
+                       ? double(seen.size()) * scale / c.poolCount
+                       : c.partitions[i].size() * scale);
     if (c.affinity == "cluster")
       g.cpus = c.partitions[i];
     else if (c.affinity == "numa") {
@@ -334,6 +379,10 @@ static Config parse(int argc, char **argv) {
     c.pool.policy = Pool::Policy::OutstandingSpill;
   else if (c.policy == "work")
     c.pool.policy = Pool::Policy::WorkSpill;
+  else if (c.policy == "active")
+    c.pool.policy = Pool::Policy::ActiveSpill;
+  else if (c.policy == "cpu")
+    c.pool.policy = Pool::Policy::CpuSpill;
   else
     throw std::invalid_argument("invalid policy");
   if (c.continuation == "parent")
@@ -365,6 +414,7 @@ static Config parse(int argc, char **argv) {
 struct TaskRow {
   Pool::Observation observation;
   uint64_t cpu = 0, iterations = 0, reads = 0, writes = 0, checksum = 0;
+  uint64_t syncBlockUs = 0, syncBlockWallNs = 0;
   bool observed = false;
 };
 struct RequestRow {
@@ -398,16 +448,36 @@ public:
         row.observation = observation;
         row.observed = true;
       };
+    if (c_.cpuSampling) {
+      CpuSampler::Config samplerConfig;
+      samplerConfig.interval = std::chrono::milliseconds(c_.cpuSampleMs);
+      sampler_ =
+          std::make_shared<CpuSampler>(samplerConfig, c_.pool.groups.size());
+      c_.pool.loadProvider = sampler_;
+    }
     pool_ = std::make_unique<Pool>(c_.pool);
+    if (sampler_) {
+      std::vector<std::vector<pid_t>> threadGroups;
+      for (const auto &snapshot : pool_->snapshots())
+        threadGroups.emplace_back(snapshot.workerTids.begin(),
+                                  snapshot.workerTids.end());
+      sampler_->setThreadGroups(threadGroups);
+    }
   }
   void run() {
     processStart_ = processCpuNs();
+    if (sampler_)
+      sampler_->start();
     std::mt19937_64 rng(c_.seed);
     std::exponential_distribution<double> gap(c_.qps);
     origin_ = ns() + 10000000;
     uint64_t offset = 0;
     for (size_t id = 0; id < c_.requests; ++id) {
-      if (id)
+      if (c_.arrival == "burst")
+        offset = uint64_t(static_cast<long double>(id / c_.burstSize) *
+                          c_.burstSize * 1000000000 / c_.qps) +
+                 (id % c_.burstSize) * c_.burstSpacingUs * 1000;
+      else if (id)
         offset = c_.arrival == "regular" ? uint64_t(double(id) * 1e9 / c_.qps)
                                          : offset + uint64_t(gap(rng) * 1e9);
       auto &row = requests_[id];
@@ -452,6 +522,8 @@ public:
       }
     }
     pool_->join();
+    if (sampler_)
+      sampler_->stop();
     end_ = ns();
     processCpu_ = processCpuNs() - processStart_;
     if (active_ != 0 || pool_->observerFailures() != 0)
@@ -486,6 +558,12 @@ private:
     return c_.estimateMode == "request-scale"
                ? std::max<uint64_t>(1, scaledWork(c_.estimateUs, request, 1))
                : c_.estimateUs;
+  }
+  uint64_t syncBlockUs(size_t request, size_t tag) const {
+    return mix(c_.seed ^ mix(request) ^ mix(tag) ^ 0xb10c51eeULL) % 100 <
+                   c_.syncBlockPercent
+               ? c_.syncBlockUs
+               : 0;
   }
   template <class F>
   void guarded(const std::shared_ptr<RequestState> &state, size_t tag,
@@ -529,6 +607,19 @@ private:
         row.reads = result.readWords;
         row.writes = result.writtenWords;
         row.checksum = result.checksum;
+      }
+      // Controlled synchronous blocking counterexample. This deliberately
+      // retains the executor callback/thread; it does not model asynchronous
+      // RPC.
+      const auto blockingUs = syncBlockUs(state->id, tag);
+      if (blockingUs) {
+        const auto blockStart = c_.trace ? ns() : 0;
+        std::this_thread::sleep_for(std::chrono::microseconds(blockingUs));
+        if (c_.trace) {
+          auto &row = tasks_[state->id * c_.nodes + tag];
+          row.syncBlockUs = blockingUs;
+          row.syncBlockWallNs = ns() - blockStart;
+        }
       }
       if (depth + 1 < c_.depths[wave]) {
         Pool::TaskOptions options;
@@ -601,6 +692,26 @@ private:
     summary["balance_at"] = c_.balanceAt;
     summary["max_inflight"] = c_.maxInflight;
     summary["memory_mb"] = c_.memoryMiB;
+    summary["pool_count"] = c_.poolCount;
+    summary["arrival"] = c_.arrival;
+    summary["burst_size"] = c_.burstSize;
+    summary["burst_spacing_us"] = c_.burstSpacingUs;
+    summary["sync_block_percent"] = c_.syncBlockPercent;
+    summary["sync_block_us"] = c_.syncBlockUs;
+    summary["cpu_sampling"] = c_.cpuSampling;
+    summary["cpu_sample_ms"] = c_.cpuSampleMs;
+    summary["cpu_max_age_ms"] = c_.cpuMaxAgeMs;
+    summary["load_scorer"] = pool_->loadScorerName();
+    summary["load_score_units"] = pool_->loadScoreUnits();
+    const auto samplerStats =
+        sampler_ ? sampler_->stats() : CpuSampler::Stats{};
+    summary["cpu_sampler"] = folly::dynamic::object(
+        "scans", samplerStats.scans)("failed_groups",
+                                     samplerStats.failedGroups)(
+        "scan_cpu_s", double(samplerStats.totalScanCpuNs) / 1e9)(
+        "scan_wall_s", double(samplerStats.totalScanWallNs) / 1e9)(
+        "max_scan_wall_ms", double(samplerStats.maxScanWallNs) / 1e6)(
+        "runqueue_accounting_enabled", samplerStats.runqueueAccountingEnabled);
     summary["widths"] = folly::dynamic::array;
     summary["depths"] = folly::dynamic::array;
     for (auto x : c_.widths)
@@ -624,8 +735,42 @@ private:
             "long_factor", c_.longFactor)("shared_bytes", c_.work.sharedBytes)(
             "branch_bytes", c_.work.branchBytes);
     contract["work_scale_scope"] = c_.scaleScope;
+    contract["sync_block_percent"] = c_.syncBlockPercent;
+    contract["sync_block_us"] = c_.syncBlockUs;
+    if (c_.arrival == "burst") {
+      contract["burst_size"] = c_.burstSize;
+      contract["burst_spacing_us"] = c_.burstSpacingUs;
+    }
     summary["work_signature"] = folly::toJson(contract);
     summary["work_contract"] = contract;
+    // This narrower contract establishes fixed computational work equality
+    // across arrival/blocking counterexamples; it is not an arrival-pair key.
+    auto fixedWorkContract = contract;
+    for (auto key : {"arrival", "qps", "burst_size", "burst_spacing_us",
+                     "sync_block_percent", "sync_block_us"})
+      fixedWorkContract.erase(key);
+    summary["fixed_work_signature"] = folly::toJson(fixedWorkContract);
+    uint64_t plannedIterations = 0, plannedAccesses = 0, plannedBlockUs = 0;
+    size_t plannedBlockedOperators = 0;
+    for (size_t id = 0; id < c_.requests; ++id)
+      for (size_t wave = 0; wave < c_.widths.size(); ++wave)
+        for (size_t depth = 0; depth < c_.depths[wave]; ++depth)
+          for (size_t branch = 0; branch < c_.widths[wave]; ++branch) {
+            auto tag = taskId(wave, branch, depth);
+            plannedIterations += scaledWork(c_.iterations, id, tag);
+            plannedAccesses += scaledWork(c_.accesses, id, tag);
+            auto block = syncBlockUs(id, tag);
+            plannedBlockUs += block;
+            plannedBlockedOperators += block != 0;
+          }
+    summary["planned_total_iterations"] = plannedIterations;
+    summary["planned_total_accesses"] = plannedAccesses;
+    summary["planned_iterations_per_request"] =
+        double(plannedIterations) / c_.requests;
+    summary["planned_accesses_per_request"] =
+        double(plannedAccesses) / c_.requests;
+    summary["planned_blocked_operators"] = plannedBlockedOperators;
+    summary["planned_sync_block_us"] = plannedBlockUs;
     summary["routing"] = folly::dynamic::object("busy_high", c_.pool.busyHigh)(
         "return_low", c_.pool.returnLow)("min_gain", c_.pool.minGain)(
         "cross_numa_penalty", c_.pool.crossNumaPenalty)("cross_numa",
@@ -649,6 +794,10 @@ private:
     std::vector<double> latencies, waits, services;
     size_t completed = 0, failed = 0, observed = 0, migrations = 0, cross = 0;
     uint64_t checksum = 0, totalCpu = 0;
+    uint64_t observedBlockUs = 0, observedBlockWallNs = 0;
+    size_t scoreFallbacks = 0;
+    size_t scoreEvaluations = 0, cpuScoredWithoutFallback = 0;
+    std::map<std::string, size_t> scoreFallbackReasons;
     std::ofstream req(c_.output + "/requests.csv");
     req << "request,scheduled_ns,submitted_ns,finished_ns,status,concurrent,"
            "checksum\n";
@@ -672,7 +821,14 @@ private:
       trace << "request,tag,kind,home,source,chosen,hops,reason,migrated,cross_"
                "numa,queue_before,outstanding_before,preferred_score,chosen_"
                "score,submitted_ns,start_ns,finish_ns,cpu_ns,iterations,read_"
-               "words,write_words,checksum\n";
+               "words,write_words,checksum,sync_block_target_us,sync_block_"
+               "wall_ns,"
+               "callback_inflight_before,sampled_cpu_cores,sampled_runqueue_"
+               "wait_cores,"
+               "sampled_runnable,sampled_at_ns,sample_window_ns,cpu_valid,"
+               "runqueue_valid,"
+               "runnable_valid,score_evaluated,score_fallback,score_fallback_"
+               "reason\n";
       for (size_t i = 0; i < tasks_.size(); ++i) {
         auto &row = tasks_[i];
         if (!row.observed)
@@ -682,6 +838,16 @@ private:
         migrations += o.migrated;
         cross += o.crossNuma;
         totalCpu += row.cpu;
+        observedBlockUs += row.syncBlockUs;
+        observedBlockWallNs += row.syncBlockWallNs;
+        scoreEvaluations += o.scoreEvaluated;
+        cpuScoredWithoutFallback +=
+            c_.policy == "cpu" && o.scoreEvaluated && !o.scoreFallback;
+        if (o.scoreFallback) {
+          ++scoreFallbacks;
+          ++scoreFallbackReasons[executor_demo::loadFallbackName(
+              o.scoreFallbackReason)];
+        }
         waits.push_back(double(o.startNs - o.submittedNs) / 1e6);
         services.push_back(double(o.finishNs - o.startNs) / 1e6);
         bool isJoin = false;
@@ -695,7 +861,14 @@ private:
               << o.preferredScore << ',' << o.chosenScore << ','
               << o.submittedNs << ',' << o.startNs << ',' << o.finishNs << ','
               << row.cpu << ',' << row.iterations << ',' << row.reads << ','
-              << row.writes << ',' << row.checksum << '\n';
+              << row.writes << ',' << row.checksum << ',' << row.syncBlockUs
+              << ',' << row.syncBlockWallNs << ',' << o.callbackInflightBefore
+              << ',' << o.sampledCpuCores << ',' << o.sampledRunqueueWaitCores
+              << ',' << o.sampledRunnable << ',' << o.sampledAtNs << ','
+              << o.sampleWindowNs << ',' << o.cpuValid << ',' << o.runqueueValid
+              << ',' << o.runnableValid << ',' << o.scoreEvaluated << ','
+              << o.scoreFallback << ','
+              << executor_demo::loadFallbackName(o.scoreFallbackReason) << '\n';
       }
       trace.flush();
       if (!trace)
@@ -718,6 +891,14 @@ private:
     summary["task_wait_p99_ms"] = quantile(waits, .99);
     summary["task_wall_p99_ms"] = quantile(services, .99);
     summary["observed_task_cpu_s"] = double(totalCpu) / 1e9;
+    summary["observed_sync_block_target_us"] = observedBlockUs;
+    summary["observed_sync_block_wall_s"] = double(observedBlockWallNs) / 1e9;
+    summary["score_fallbacks"] = scoreFallbacks;
+    summary["score_evaluations"] = scoreEvaluations;
+    summary["cpu_scored_without_fallback"] = cpuScoredWithoutFallback;
+    summary["score_fallback_reasons"] = folly::dynamic::object;
+    for (const auto &[reason, count] : scoreFallbackReasons)
+      summary["score_fallback_reasons"][reason] = count;
     std::ofstream out(c_.output + "/summary.json");
     out << folly::toPrettyJson(summary) << '\n';
     req.flush();
@@ -736,6 +917,7 @@ private:
   Work::PageSample pages_;
   uint64_t origin_ = 0, end_ = 0, arrivalHash_ = 0, processStart_ = 0,
            processCpu_ = 0;
+  std::shared_ptr<CpuSampler> sampler_;
   // Destroy/drain the executor before the state used by outstanding callbacks.
   std::unique_ptr<Pool> pool_;
 };

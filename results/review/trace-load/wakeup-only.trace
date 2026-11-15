@@ -1,0 +1,4 @@
+# tracer: nop
+ sender name-900 ( 900) [000] d..2 100.000000000: sched_wakeup: comm=worker one pid=10 prio=120 target_cpu=000
+ sender name-900 ( 900) [000] d..2 100.002000000: sched_switch: prev_comm=worker one prev_pid=0 prev_prio=120 prev_state=S ==> next_comm=worker one next_pid=10 next_prio=120
+ sender name-900 ( 900) [000] d..2 100.005000000: sched_switch: prev_comm=worker one prev_pid=10 prev_prio=120 prev_state=S ==> next_comm=worker one next_pid=0 next_prio=120
