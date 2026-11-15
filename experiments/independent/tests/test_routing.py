@@ -86,6 +86,21 @@ class Routing(unittest.TestCase):
             self.assertEqual(int(row['route_candidates']), 1)
             self.assertAlmostEqual(float(row['home_score']), int(row['home_outstanding']) / float(row['capacity']))
 
+    def test_fractional_capacities_round_trip(self):
+        capacities = [1.2345678901234567, 0.9876543210987654]
+        meta, _, rows, samples = self.run_case(**{
+            'load-observation': 'minimal', 'instrumentation': 'none',
+            'load-metric': 'outstanding', 'routing': 'threshold',
+            'capacities': ','.join(map(repr, capacities))})
+        self.assertEqual(meta['capacities'], capacities)
+        for row in rows:
+            home, selected = int(row['home_pool']), int(row['pool'])
+            self.assertEqual(float(row['capacity']), capacities[selected])
+            self.assertEqual(float(row['home_score']), int(row['home_outstanding']) / capacities[home])
+            self.assertEqual(float(row['selected_score']), int(row['selected_outstanding']) / capacities[selected])
+        for sample in samples:
+            self.assertEqual(float(sample['capacity']), capacities[int(sample['pool'])])
+
     def test_policy_changes_only_assignment(self):
         cases = []
         for routing in ('home', 'threshold', 'spread'):

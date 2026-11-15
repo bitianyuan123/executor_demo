@@ -88,7 +88,7 @@ std::string js(const std::string& s) {
   return o + '"';
 }
 template<class T> std::string array(const std::vector<T>& xs) {
-  std::ostringstream o; o << '[';
+  std::ostringstream o; o << std::setprecision(std::numeric_limits<double>::max_digits10) << '[';
   for (size_t i = 0; i < xs.size(); ++i) { if (i) o << ','; o << xs[i]; }
   o << ']'; return o.str();
 }
@@ -429,7 +429,7 @@ int run(const Opt& o) {
   }
   workers.close();
   utsname host{}; uname(&host);
-  std::ofstream metadata(path("metadata.json")); metadata<<std::setprecision(16);
+  std::ofstream metadata(path("metadata.json")); metadata<<std::setprecision(std::numeric_limits<double>::max_digits10);
   metadata<<"{\n\"schema\":1,\"stage\":3,\"executor\":\"original folly::CPUThreadPoolExecutor\",\"queue\":\"Folly default\",\n"
     <<"\"deployment\":"<<js(o.deployment)<<",\"hostname\":"<<js(host.nodename)<<",\"kernel\":"<<js(host.release)<<",\"machine\":"<<js(host.machine)
     <<",\"pid\":"<<getpid()<<",\"affinity\":"<<js(o.affinity)<<",\"instrumentation\":"<<js(o.instrumentation)
@@ -583,7 +583,7 @@ int run(const Opt& o) {
   uint64_t completed=0,rejected=0,canceled=0,failed=0,spilled=0;
   std::vector<double> latency,wait,plannedLatency,cpuTime,burstLatency,arrivalLag,routeCosts;
   std::map<uint64_t,std::vector<double>> seconds;
-  std::ofstream csv(path("tasks.csv")); csv<<std::setprecision(16)<<"task,burst,pool,status,target_cpu_us,estimate_us,planned_ns,submit_ns,start_ns,end_ns,native_queue,pending,inflight,work_estimate_us,thread_cpu_ns,worker_tid,home_pool,home_native_queue,home_outstanding,home_work_estimate_us,home_remaining_work_us,selected_native_queue,selected_outstanding,selected_work_estimate_us,selected_remaining_work_us,home_score,selected_score,route_ns,route_candidates,spilled,burst_index,burst_remaining,capacity,home_inflight,selected_inflight\n";
+  std::ofstream csv(path("tasks.csv")); csv<<std::setprecision(std::numeric_limits<double>::max_digits10)<<"task,burst,pool,status,target_cpu_us,estimate_us,planned_ns,submit_ns,start_ns,end_ns,native_queue,pending,inflight,work_estimate_us,thread_cpu_ns,worker_tid,home_pool,home_native_queue,home_outstanding,home_work_estimate_us,home_remaining_work_us,selected_native_queue,selected_outstanding,selected_work_estimate_us,selected_remaining_work_us,home_score,selected_score,route_ns,route_candidates,spilled,burst_index,burst_remaining,capacity,home_inflight,selected_inflight\n";
   for(const auto& t:tasks) {
     csv<<t.id<<','<<t.burst<<','<<t.pool<<','<<stateName(t.state)<<','<<t.target<<','<<t.estimate<<','<<t.planned<<','<<t.submit<<','<<t.start<<','<<t.end<<','<<t.queue<<','<<t.pending<<','<<t.inflight<<','<<t.work<<','<<(full?int64_t(t.cpu):-1)<<','<<t.tid
       <<','<<t.homePool<<','<<t.homeLoad.queue<<','<<t.homeLoad.outstanding<<','<<t.homeLoad.work<<','<<t.homeLoad.remaining
@@ -608,7 +608,7 @@ int run(const Opt& o) {
   }
   std::ofstream sc(path("seconds.csv"));sc<<"completion_second,completed_tasks,task_mean_ms,task_p99_ms\n";
   for(uint64_t s=0;s<=finish/1000000000ULL;++s){auto& v=seconds[s];sc<<s<<','<<v.size()<<','<<(v.empty()?"":stat(v))<<','<<(v.empty()?"":stat(v,true))<<'\n';}
-  std::ofstream pc(path("pools.csv"));pc<<std::setprecision(16)<<"time_ns,pool,native_queue,pending,inflight,work_estimate_us,outstanding,remaining_work_us,capacity\n";
+  std::ofstream pc(path("pools.csv"));pc<<std::setprecision(std::numeric_limits<double>::max_digits10)<<"time_ns,pool,native_queue,pending,inflight,work_estimate_us,outstanding,remaining_work_us,capacity\n";
   for(const auto& s:samples)pc<<s.t<<','<<s.pool<<','<<s.queue<<','<<s.pending<<','<<s.inflight<<','<<s.work<<','<<s.outstanding<<','<<s.remaining<<','<<s.capacity<<'\n';
   bc.close();sc.close();pc.close();
   if(!csv||!bc||!sc||!pc||!metadata||!workers)throw std::runtime_error("output write failed");
