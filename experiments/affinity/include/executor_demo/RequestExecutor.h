@@ -379,8 +379,8 @@ class RequestExecutor {
     result.evaluated = true;
     return result;
   }
-  // Candidate search is independent of metric calculation. Keep the existing
-  // full scan for six groups; adding P2C here would need its own paired study.
+  // Candidate search is independent of metric calculation and scans the
+  // configured groups; adding P2C here would need its own paired study.
   void searchDomain(size_t preferred, bool remote, Selection& result) const {
     for (size_t candidate = 0; candidate < config_.groups.size(); ++candidate) {
       if (candidate == preferred || crossNuma(preferred, candidate) != remote) continue;

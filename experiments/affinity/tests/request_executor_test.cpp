@@ -2,7 +2,6 @@
 #include <folly/portability/GTest.h>
 
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <future>
@@ -32,9 +31,9 @@ struct Records {
   std::vector<Pool::Observation> rows;
 };
 
-Pool::Config config(Records* records = nullptr) {
+Pool::Config config(Records* records = nullptr, size_t groupCount = 2) {
   Pool::Config result;
-  result.groups.resize(2);
+  result.groups.resize(groupCount);
   for (auto& group : result.groups) { group.threads = 1; group.capacity = 1; group.numaNode = 0; }
   if (records) result.observer = [records](const auto& row) { records->add(row); };
   return result;
@@ -92,6 +91,42 @@ TEST(RequestExecutor, ColorHashIsStableWithoutAdvancingRoundRobinState) {
     (void)inserted;
   }
   EXPECT_EQ(home.size(), 3);
+}
+
+TEST(RequestExecutor, ThreeAndSixGroupsReachEveryHomeAndKeepChildrenThere) {
+  for (size_t groupCount : {size_t(3), size_t(6)}) {
+    SCOPED_TRACE(groupCount);
+    Records records;
+    // Logical groups deliberately share the caller's CPU mask: this checks the
+    // facade contract on small hosts, not hardware cluster/cache behavior.
+    Pool pool(config(&records, groupCount));
+    std::atomic<size_t> children{0};
+    for (size_t request = 0; request < 2 * groupCount; ++request) {
+      ASSERT_TRUE(pool.add(pool.beginRequest(1000 + request), [&] {
+        EXPECT_TRUE(pool.add([&] { ++children; }, {1}));
+      }));
+    }
+    pool.join();
+    EXPECT_EQ(children, 2 * groupCount);
+    const auto rows = records.take();
+    ASSERT_EQ(rows.size(), 4 * groupCount);
+    std::vector<size_t> observed(groupCount);
+    for (const auto& row : rows) {
+      const auto expected = (row.color - 1000) % groupCount;
+      EXPECT_EQ(row.home, expected);
+      EXPECT_EQ(row.chosen, expected);
+      ASSERT_LT(row.chosen, groupCount);
+      ++observed[row.chosen];
+    }
+    const auto snapshots = pool.snapshots();
+    ASSERT_EQ(snapshots.size(), groupCount);
+    for (size_t group = 0; group < groupCount; ++group) {
+      EXPECT_EQ(observed[group], 4);
+      EXPECT_EQ(snapshots[group].submitted, 4);
+      EXPECT_EQ(snapshots[group].completed, 4);
+      EXPECT_EQ(snapshots[group].outstanding, 0);
+    }
+  }
 }
 
 TEST(RequestExecutor, RegisteredRpcRestoresContextAndCompletesDuringDrain) {
@@ -406,12 +441,97 @@ TEST(RequestExecutor, ForkOnlyFollowsBorrowedParentUntilNextFork) {
 
 class PublishedProvider final : public LoadProvider {
  public:
-  std::array<LoadSample, 2> samples;
+  explicit PublishedProvider(size_t groups = 2) : samples(groups) {}
+  std::vector<LoadSample> samples;
   LoadSample read(size_t group) const noexcept override {
     return group < samples.size() ? samples[group] : LoadSample{};
   }
   const char* name() const noexcept override { return "test-published"; }
 };
+
+TEST(RequestExecutor, ThreeAndSixGroupsRouteToLastGroupUsingNormalizedCapacity) {
+  for (size_t groupCount : {size_t(3), size_t(6)}) {
+    SCOPED_TRACE(groupCount);
+    Records records;
+    auto cfg = config(&records, groupCount);
+    auto provider = std::make_shared<PublishedProvider>(groupCount);
+    cfg.policy = Pool::Policy::QueueSpill;
+    cfg.loadProvider = provider;
+    for (size_t group = 0; group < groupCount; ++group) {
+      auto& sample = provider->samples[group];
+      sample.queueValid = true;
+      sample.queueDepth = group == 0 ? 8 : group == groupCount - 1 ? 4 : 3;
+      sample.capacity = 999; // Configured capacity must remain authoritative.
+      cfg.groups[group].capacity = group == 0 || group == groupCount - 1 ? 1 : 0.5;
+    }
+    // The last group has MORE queued tasks than intermediate candidates, but
+    // less normalized pressure: 4/1 < 3/0.5 < home 8/1. Snapshots verify the
+    // actual callback was submitted there, not merely a reported decision.
+    Pool pool(std::move(cfg));
+    ASSERT_TRUE(pool.add(pool.beginRequest(7), [] {}));
+    pool.join();
+    const auto rows = records.take();
+    ASSERT_EQ(rows.size(), 1);
+    EXPECT_EQ(rows[0].home, 0);
+    EXPECT_EQ(rows[0].chosen, groupCount - 1);
+    EXPECT_EQ(rows[0].reason, Pool::Reason::LocalSpill);
+    EXPECT_DOUBLE_EQ(rows[0].preferredScore, 8);
+    EXPECT_DOUBLE_EQ(rows[0].chosenScore, 4);
+    const auto snapshots = pool.snapshots();
+    ASSERT_EQ(snapshots.size(), groupCount);
+    for (size_t group = 0; group < groupCount; ++group)
+      EXPECT_EQ(snapshots[group].completed, group == groupCount - 1 ? 1 : 0);
+  }
+}
+
+TEST(RequestExecutor, ThreeAndSixGroupsPreferLocalDomainBeforeRemoteFallback) {
+  struct Scenario {
+    uint64_t localQueue;
+    bool allowRemote;
+    Pool::Reason reason;
+  };
+  for (size_t groupCount : {size_t(3), size_t(6)}) {
+    for (const auto scenario : {
+             Scenario{2, true, Pool::Reason::LocalSpill},
+             Scenario{8, true, Pool::Reason::CrossNumaSpill},
+             Scenario{8, false, Pool::Reason::InsufficientGain}}) {
+      SCOPED_TRACE(::testing::Message() << "groups=" << groupCount
+                   << " local_queue=" << scenario.localQueue
+                   << " allow_remote=" << scenario.allowRemote);
+      Records records;
+      auto cfg = config(&records, groupCount);
+      auto provider = std::make_shared<PublishedProvider>(groupCount);
+      cfg.policy = Pool::Policy::QueueSpill;
+      cfg.loadProvider = provider;
+      cfg.allowCrossNuma = scenario.allowRemote;
+      for (size_t group = 0; group < groupCount; ++group) {
+        // Noncontiguous labels and a local candidate at the final index guard
+        // against assumptions about group order or clusters per NUMA node.
+        cfg.groups[group].numaNode = group == 0 || group == groupCount - 1 ? 10 : 27;
+        provider->samples[group].queueValid = true;
+        provider->samples[group].queueDepth =
+            group == 0 ? 8 : group == groupCount - 1 ? scenario.localQueue : 0;
+      }
+      const auto expected = scenario.localQueue < 8 ? groupCount - 1
+                            : scenario.allowRemote ? size_t(1) : size_t(0);
+      Pool pool(std::move(cfg));
+      ASSERT_TRUE(pool.add(pool.beginRequest(17), [] {}));
+      pool.join();
+      const auto rows = records.take();
+      ASSERT_EQ(rows.size(), 1);
+      EXPECT_EQ(rows[0].home, 0);
+      EXPECT_EQ(rows[0].chosen, expected);
+      EXPECT_EQ(rows[0].reason, scenario.reason);
+      EXPECT_EQ(rows[0].crossNuma, expected == 1);
+      EXPECT_DOUBLE_EQ(rows[0].preferredScore, 8);
+      EXPECT_DOUBLE_EQ(rows[0].chosenScore, expected == 0 ? 8 : expected == 1 ? 0 : 2);
+      const auto snapshots = pool.snapshots();
+      ASSERT_EQ(snapshots.size(), groupCount);
+      for (size_t group = 0; group < groupCount; ++group)
+        EXPECT_EQ(snapshots[group].completed, group == expected ? 1 : 0);
+    }
+  }
+}
 
 class SquaredQueueScorer final : public LoadScorer {
  public:

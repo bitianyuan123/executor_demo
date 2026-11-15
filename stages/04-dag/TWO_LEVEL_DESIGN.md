@@ -1,6 +1,6 @@
 # 第四阶段 v2：请求亲和与算子溢出的两层调度
 
-本轮工作的目标是验证：在图开始时高度扇出、后续仍有并行且存在数据复用的条件下，如何用一个总池封装保留数据亲和，同时在局部资源不足时借用其他池。业务创建请求上下文并提交就绪任务，不管理六个 Folly 池，也不自行选择池编号。
+本轮工作的目标是验证：在图开始时高度扇出、后续仍有并行且存在数据复用的条件下，如何用一个总池封装保留数据亲和，同时在局部资源不足时借用其他池。业务创建请求上下文并提交就绪任务，不管理各个 Folly 子池，也不自行选择池编号。
 
 池的物理边界按用户确认的改造方向固定为**一个硬件cluster一个池**，六池仅是当前选定六cluster子集的实例。4池无CPU绑定属于旧trace的临时配置，不是另一条生产改造路线；主实验安排与纠偏见[cluster矩阵](../../docs/REAL_WORKLOAD_MATRIX.md)及[方向复核](../../docs/CLUSTER_DIRECTION_REVIEW.md)。
 
@@ -95,10 +95,12 @@ B\operatorname{pageRound}(S_{branch})+B\operatorname{sizeof}(BranchState)
 | 策略 | 当前评分 | 读取及维护 | 局限 |
 |---|---|---|---|
 | QueueSpill | `(Folly queue guess + 未入队预占数) / C` | `readQueueDepth()`读原有队列；另读预占计数 | 看不到已被领取的任务和运行中的callback |
+| ActiveSpill | `(Q + callback inflight + 未入队预占数) / C` | 原生Q和已有callback计数；可注册stock Folly observer适配器 | inflight包含抢占与同步阻塞，不是kernel runnable |
 | OutstandingSpill | `(outstanding + 未入队预占数) / C` | `readLoad()`读现有relaxed计数和队列；任务完成释放outstanding | 长短任务等权；RPC睡眠/阻塞可能被当作CPU压力 |
 | WorkSpill | `(估计未完成CPU微秒 + 预占CPU微秒) / C` | 读取已有工作量计数；每任务提供估计 | 估计保留到完成而不扣除已执行部分；估计误差和长尾会影响选择 |
+| CpuSpill | `max(Q+预占数, 历史CPU等价数+历史runq等待等价数, 可选runnable快照) / C` | 后台按TID采样，热路径只读已发布缓存 | 慢反馈会遗漏短突发；当前proc实现不提供瞬时runnable，缺失/过期回退outstanding |
 
-前两者单位是每容量的任务数，第三者是每容量的估计CPU微秒。**它们都不是已校准的精确等待时长。** `busyHigh`、`returnLow`、`minGain`、`crossNumaPenalty`跟随当前评分单位，不能把Q策略的阈值原封不动交给Work策略。
+Q/active/outstanding使用计数除以容量，work使用估计CPU微秒除以容量；cpu混合当前队列与历史平均需求。**它们都不是已校准的精确等待时长，也不能假定数值相同就有相同预测能力。** `busyHigh`、`returnLow`、`minGain`、`crossNumaPenalty`跟随当前评分单位，不能把Q策略的阈值原封不动交给Work策略。可替换的`LoadProvider/LoadScorer`、有效性回退与计量成本详见[观测复核](../../docs/LOAD_OBSERVATION_REVIEW.md)。
 
 当前驱动明确区分实际工作变动和调度器已知的信息：
 
@@ -123,7 +125,7 @@ B\operatorname{pageRound}(S_{branch})+B\operatorname{sizeof}(BranchState)
 
 ## 5. 二级策略：先保留亲和，再判断溢出
 
-当前门面提供 `Home / QueueSpill / OutstandingSpill / WorkSpill`；Home是必要的基线。一级提供RoundRobin和ColorHash，尚未实现LALB式完成反馈。先固定一级RR，单独评价二级，避免两个控制器同时变化。
+当前门面提供 `Home / QueueSpill / ActiveSpill / OutstandingSpill / WorkSpill / CpuSpill`；Home是必要的基线。一级提供RoundRobin和ColorHash，尚未实现LALB式完成反馈。先固定一级RR，单独评价二级，避免两个控制器同时变化。
 
 `Config.balanceOnlyAtFork`控制决策发生的位置。开启时，仅 `TaskOptions.isFork` 标识的提交可借池或考虑回home，普通后继继续沿实际source执行；`addBatch`自动将各成员标记为fork。当前驱动将每一波的分支启动作为fork，因此这表示“各波扇出时决策”，不等于“仅request最开始那一次扇出”。若要专门研究仅初始扇出，应另设明确定义的模式，不能把现有fork模式误读为initial-only。单任务 `add`也可显式标记fork，但业务图运行时应统一负责此语义。
 
@@ -171,7 +173,7 @@ oneTBB在本地较深任务执行和偷取其他线程较早任务之间平衡�
 | A 功能 | 开发机小CPU范围、少request、小足迹 | 四种数据模型、单/批提交、continuation及拒绝路径 | checksum及依赖一致、无丢任务/重复执行、join能正确结束；不能评价ARM性能 |
 | B 固定工作校准 | home、低负载、目标机实际CPU范围 | 计算迭代/访问次数、足迹、线程数 | 获得服务CPU、墙钟、有效吞吐和容量估计；保存工作清单，不对每种策略重新校准工作量 |
 | C 压力与部署 | home、同一工作清单 | 无绑定/NUMA/cluster；低负载至接近饱和；扇出与重叠 | 建立无均衡基线，找到局部瓶颈、全局饱和和内存瓶颈；配对资源必须相同 |
-| D 二级算法 | 一级RR、cluster、固定线程数/足迹/延续方式 | home/Q/outstanding/work；相应单位的阈值 | 量化何处值得借池、何种信号漏报；检查真实触发和采样成本 |
+| D 二级算法 | 一级RR、cluster、固定线程数/足迹/延续方式 | home/Q/active/outstanding/cpu/work；相应单位的阈值 | 量化何处值得借池、何种信号漏报；检查真实触发、CPU样本有效性和观测成本 |
 | E 局部性及粒度 | D筛出的少数参数 | None/RO/BranchRW/Mixed；足迹；all/fork决策；chunk；FollowParent/ReturnHome | 找等待收益超过数据位置代价的拐点，排除仅靠减少工作量的假收益 |
 | F NUMA与压力稳健性 | 优选的两三种策略 | 禁止/允许跨NUMA、远端惩罚、长尾/偏斜/重叠突发 | 判断何时值得跨NUMA及何时策略开始振荡或过载 |
 | G 一级及库集成 | 已验证二级配置 | RR/ColorHash；之后才考虑反馈候选；stage5等价实现 | 分清一级分配、二级救济及实现安放位置各自贡献 |

@@ -4,11 +4,11 @@
 
 业务改造目标为每个硬件cluster一个Folly子池，当前已确认的六cluster子集对应六池。按[cluster主实验](REAL_WORKLOAD_MATRIX.md)继续校准扇出、线程过配和二层均衡。16 QPS、4×128、无CPU绑定及单池active约20/80属于旧trace采集条件；按[轨迹工作流](TRACE_WORKFLOW.md)或[模型提示词](TRACE_ANALYSIS_PROMPTS.md)分析其机制即可，不必先跑四池矩阵，也不把它的阈值搬到cluster池。纠偏依据见[方向复核](CLUSTER_DIRECTION_REVIEW.md)，指标成本见[观测报告](LOAD_OBSERVATION_REVIEW.md)。
 
-本指南基于2026-11-14用户上传的`topology.json`，以及用户确认可以独立使用的`0-47,192-239`。这里提供运行方案；本仓库开发机没有执行这些ARM性能实验。先完成第0～3步并检查结果，再扩展压力和策略，避免一次运行所有矩阵。
+本指南基于2026-11-14用户上传的`topology.json`，以及用户确认可以独立使用的`0-47,192-239`。这里提供运行方案；本仓库开发机没有执行这些ARM性能实验。第0～3步供首次资源验收及阶段3初筛使用；当前用户已有相应结果，无需重跑，可直接按顶部cluster主实验进入v2固定工作校准。资源或配额变化时重新核对相应项，避免一次运行所有矩阵。
 
-当前回传进度已完成独立任务条件p50/p95/p99及256线程DAG home基线。按[第五批审阅与执行步骤](TARGET_PILOT_05_DAG_BASELINE_REVIEW.md)进入`s4-routing`五策略对照；无需重复前面阶段。`conditional_latency.py`与`dag_terminal_report.py`均为只读Python分析，新增路由终端统计不需要重编Folly或C++。本文后续的大矩阵和确认阶段保留为按需扩展，当前不要一次全部执行。
+历史回传已完成独立任务条件p50/p95/p99及256线程DAG home基线。[第五批审阅与执行步骤](TARGET_PILOT_05_DAG_BASELINE_REVIEW.md)保留当时建议的`s4-routing`五策略对照；它仍可按需用于旧DAG路由机制研究，不是当前v2主线的必跑步骤。`conditional_latency.py`与`dag_terminal_report.py`均为只读Python分析，新增路由终端统计不需要重编Folly或C++。本文后续旧矩阵和确认阶段保留为按需扩展，当前不要一次全部执行。
 
-针对随后明确的“透明总池、二层均衡、子图真实数据亲和”目标，新增[阶段4 v2独立工程及校准步骤](../experiments/affinity/README.md)。下一次这类研究先编译`affinity`并做低负载固定工作校准；上段`s4-routing`仍可用于旧DAG路由控制实验，但不替代v2的缓存/回迁验证。此前0001～0005结果继续有效，无需重跑阶段3。
+针对“透明总池、二层均衡、子图真实数据亲和”目标，使用[阶段4 v2独立工程及校准步骤](../experiments/affinity/README.md)。首次使用v2先编译`affinity`，低负载校准单request扇出后保持regular到达，推进线程数、L2策略和分支读写链的亲和对照；入口request burst作为后续可选稳健性变量。旧`s4-routing`不替代v2的缓存/回迁验证。此前0001～0005结果继续有效，无需重跑阶段3，也无需等待旧trace分析完成。
 
 ## 0. 固定实际资源与解释口径
 

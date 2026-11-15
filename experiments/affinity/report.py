@@ -6,6 +6,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import statistics
 import sys
@@ -83,6 +84,49 @@ def callback_occupancy(tasks, group_count, start, end):
         result.append({'group': group if group < group_count else 'all',
                        'mean': area[group] / (end - start), 'peak': peak})
     return result
+
+
+def matrix_context(path):
+    """Read declared experiment labels only from this run's parent matrix.
+
+    A nearby metadata file alone is not evidence of membership. The matching
+    plan must name this exact run. Relative plan paths are checked against the
+    absolute run suffix, independently of the report caller's working directory.
+    These labels do not certify physical cluster boundaries or affect pairing.
+    """
+    unclassified = {'suite': 'unknown', 'experiment_role': 'manual_or_unclassified',
+                    'research_target': 'unspecified', 'source': 'no_parent_matrix'}
+    absolute = path.resolve()
+    metadata_path, plan_path = absolute.parent / 'metadata.json', absolute.parent / 'plan.json'
+    if not metadata_path.is_file() or not plan_path.is_file():
+        return unclassified
+    try:
+        metadata = json.loads(metadata_path.read_text())
+        plan = json.loads(plan_path.read_text())
+    except (OSError, ValueError):
+        return {**unclassified, 'source': 'unreadable_parent_matrix'}
+    if not isinstance(metadata, dict) or metadata.get('schema') != 'affinity-v2-matrix' or not isinstance(plan, list):
+        return {**unclassified, 'source': 'unrecognized_parent_matrix'}
+    matches = []
+    for entry in plan:
+        if not isinstance(entry, dict) or not isinstance(entry.get('directory'), str) or not entry['directory']:
+            continue
+        declared = Path(os.path.normpath(entry['directory']))
+        if declared.is_absolute():
+            matched = declared.resolve() == absolute
+        else:
+            parts = declared.parts
+            matched = bool(parts) and '..' not in parts and absolute.parts[-len(parts):] == parts
+        if matched:
+            matches.append(entry)
+    if not matches:
+        return {**unclassified, 'source': 'not_listed_in_parent_matrix'}
+    if len(matches) != 1:
+        raise ValueError(f'{path}: duplicate run entries in parent matrix plan')
+    labels = ('suite', 'experiment_role', 'research_target')
+    if any(not isinstance(metadata.get(key), str) or not metadata[key] for key in labels):
+        return {**unclassified, 'source': 'parent_matrix_missing_role_labels'}
+    return {**{key: metadata[key] for key in labels}, 'source': str(metadata_path)}
 
 
 def load_run(path, warmup_seconds=0.0, window_seconds=None):
@@ -248,6 +292,7 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                    summary['model'], json.dumps(resources, sort_keys=True))
     occupancy_end = end if end is not None else max((row['finish_ns'] for row in tasks), default=start)
     return {'path': path, 'summary': summary, 'requests': requests, 'tasks': tasks,
+            'matrix_context': matrix_context(path),
             'cohort': cohort, 'completed_cohort': complete_cohort, 'pairing_key': pairing_key,
             'callback_occupancy': callback_occupancy(tasks, len(summary['groups']), start, occupancy_end) if summary['trace'] else None,
             'metrics': {'n': len(complete_cohort), 'offered': len(cohort),
@@ -274,6 +319,7 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
     print(f'Window: warmup={warmup_seconds:g}s, length={window_seconds if window_seconds is not None else "all remaining arrivals"}; nearest-rank quantiles.')
     print('Per-run descriptive statistics; no confidence interval or claim of independent tail samples.')
     print('Operator CPU/wall values cover the operator callback, including its successor submission; they are not a hardware stall decomposition.')
+    print('Matrix roles are declared experiment provenance, not certification of physical cluster boundaries.')
     printed_resources = set()
     for run in runs:
         summary = run['summary']
@@ -300,9 +346,12 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
             flags.append('trace=0: task metrics unavailable; instrumentation differs from trace=1')
         if flags:
             print(f'  {run["path"].name}: ' + '; '.join(flags))
-        print(f'  seed={summary["seed"]}, affinity={summary["affinity"]}, threads/pool={summary["threads_per_pool"]}, '
+        print(f'  seed={summary["seed"]}, pool_count={len(summary["groups"])}, affinity={summary["affinity"]}, threads/pool={summary["threads_per_pool"]}, '
               f'whole completed/rejected-or-failed={summary["completed"]}/{summary["failed_or_rejected"]}, '
               f'operator CPU/request ms={format_value(metric["operator_cpu_per_request_ms"])}')
+        context = run['matrix_context']
+        print(f'  matrix suite={context["suite"]}, experiment_role={context["experiment_role"]}, '
+              f'research_target={context["research_target"]}, provenance={context["source"]}')
         signature = hashlib.sha256(summary['work_signature'].encode()).hexdigest()[:16]
         print(f'  work_signature_sha256_prefix={signature}, arrival_hash={summary["arrival_hash"]}, '
               f'checksum={summary["checksum"]}, pages={json.dumps(summary.get("pages", {}), sort_keys=True, separators=(",", ":"))}')

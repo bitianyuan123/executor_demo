@@ -2,7 +2,9 @@
 """Small deterministic end-to-end checks; not a performance benchmark."""
 
 import csv
+import contextlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -300,6 +302,73 @@ def main(binary):
               and 'synchronous callback blocking' in cpu_report.stdout
               and 'CPU sampling differs from home' in cpu_report.stdout,
               f'CPU/blocking report missing evidence: {cpu_report.stderr}')
+
+        # Same checksums and CPU union cannot turn a different pool layout into
+        # a matched policy baseline. Reuse completed runs; no extra workload.
+        unbound = next(run for run in results if run['path'].name == 'unbound')
+        check(baseline['pairing_key'] != unbound['pairing_key'], 'different affinity became a timing pair')
+        check(baseline['pairing_key'] != four_pools['pairing_key'], 'four unbound pools became a cluster timing pair')
+        check(unbound['pairing_key'] != four_pools['pairing_key'], 'different pool counts with the same CPU union became a timing pair')
+
+        def rendered(*runs):
+            stream = io.StringIO()
+            with contextlib.redirect_stdout(stream):
+                report.print_report(runs, 1000, 0, None)
+            return stream.getvalue()
+
+        resource_report = rendered(four_pools, results[2])
+        check('not paired (0 eligible home runs' in resource_report,
+              'different-resource home was used for a latency delta')
+        check('pool_count=4, affinity=none' in resource_report
+              and 'pool_count=2, affinity=cluster' in resource_report,
+              'terminal excerpt hides actual pool count or affinity')
+        check('experiment_role=manual_or_unclassified' in resource_report,
+              'standalone runs were implicitly classified as a matrix')
+
+        # These are metadata fixtures around already verified runs, not new
+        # hardware experiments. Role labels must remain separate from resources.
+        def classified_copy(source, suite, role, relative_plan=False):
+            parent = root / 'role-fixtures' / suite
+            directory = parent / source['path'].name
+            shutil.copytree(source['path'], directory)
+            metadata = {'schema': 'affinity-v2-matrix', 'suite': suite,
+                        'experiment_role': role, 'research_target': 'one_pool_per_cluster'}
+            (parent / 'metadata.json').write_text(json.dumps(metadata))
+            declared = directory.relative_to(root) if relative_plan else directory
+            (parent / 'plan.json').write_text(json.dumps([{'directory': str(declared)}]))
+            return report.load_run(directory)
+
+        target = classified_copy(baseline, 'cluster-baseline', 'target_cluster_baseline', True)
+        candidate = classified_copy(results[2], 'signals', 'controlled_comparison')
+        historical = classified_copy(four_pools, 'legacy-four-pool-replay', 'historical_capture_replay')
+        check(target['pairing_key'] == candidate['pairing_key'],
+              'different declared experiment roles blocked an otherwise valid policy pair')
+        role_report = rendered(target, candidate, historical)
+        for label in ('suite=cluster-baseline, experiment_role=target_cluster_baseline',
+                      'suite=signals, experiment_role=controlled_comparison',
+                      'suite=legacy-four-pool-replay, experiment_role=historical_capture_replay',
+                      'research_target=one_pool_per_cluster', 'delta mean/p95/p99'):
+            check(label in role_report, f'matrix provenance/report missing {label}')
+        check(target['matrix_context']['experiment_role'] == 'target_cluster_baseline',
+              'relative plan membership depended on report caller working directory')
+
+        metadata_path = target['path'].parent / 'metadata.json'
+        old_metadata = json.loads(metadata_path.read_text())
+        del old_metadata['experiment_role']
+        metadata_path.write_text(json.dumps(old_metadata))
+        check(report.load_run(target['path'])['matrix_context']['experiment_role'] == 'manual_or_unclassified',
+              'old matrix without role labels was implicitly classified')
+        # A different directory with the same basename is not membership, and
+        # metadata elsewhere in an ancestor tree is not inherited either.
+        (root / 'metadata.json').write_text(json.dumps({
+            'schema': 'affinity-v2-matrix', 'suite': 'cluster-baseline',
+            'experiment_role': 'target_cluster_baseline', 'research_target': 'one_pool_per_cluster'}))
+        (root / 'plan.json').write_text(json.dumps([{'directory': str(root / 'other' / baseline['path'].name)}]))
+        unrelated = report.load_run(baseline['path'])
+        check(unrelated['matrix_context']['experiment_role'] == 'manual_or_unclassified',
+              'unrelated parent plan was treated as run provenance')
+        check(report.matrix_context(root / 'nested' / 'home')['experiment_role'] == 'manual_or_unclassified',
+              'unrelated ancestor metadata was inherited')
 
         # Simultaneous per-pool peaks need not coincide: global peak is rebuilt,
         # never obtained by adding individual maxima.

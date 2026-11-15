@@ -6,7 +6,7 @@
 
 ## 接口与实现边界
 
-业务只持有一个 `RequestExecutor`，不创建六个Folly池、不传home/parent/chosen编号：
+业务只持有一个 `RequestExecutor`，不创建各个Folly子池、不传home/parent/chosen编号：
 
 ```cpp
 auto request = executor.beginRequest(requestId); // RR或ColorHash，只决定一次home

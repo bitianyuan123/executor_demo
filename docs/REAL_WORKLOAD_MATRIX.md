@@ -81,7 +81,9 @@ python3 experiments/affinity/report.py results/local/v2-cluster-calibration-01
 
 观测16CPU忙约30ms是校准参照，不是要求每个合成请求都强行达到的值。不能用sleep补齐CPU时间，也不为拟合历史active=80而任意调整参数。多request阶段再扫QPS，例如6/12/16；出现持续积压或拒绝就先退回解释容量。
 
-### 4.2 冻结工作量后，增加入口到达形态
+### 4.2 可选补充：冻结工作量后改变入口到达形态
+
+主线可以从4.1直接进入4.3与4.4：先保持regular到达、固定单request图，验证线程过配、L2借出和数据亲和。下方入口burst对照不是必跑前置步骤，可在核心对照完成后用于检查到达形态稳健性；不能用多request同时到达代替单request内部大扇出。
 
 `cluster-baseline`明确强制home/cluster；要求显式`--affinity cluster`和`--cpus`，池数由分区导出，`--pool-count`仅允许省略或0。线程数/QPS完全来自调用者，不强制128或16。四例比较regular、Poisson、burst4和burst8，后两者是合成压力形态，不是因临时四池而选择的目标池数。
 
@@ -124,7 +126,9 @@ python3 experiments/affinity/run_matrix.py \
 
 ### 4.4 数据亲和与局部借出是主线的必要验收
 
-none只是机制基线，不能据此确定生产迁移策略。使用branch-rw或mixed、实际分支读写依赖，重新校准并冻结访存/计算工作后：
+none只是机制基线，不能据此确定生产迁移策略。使用branch-rw或mixed时，重点研究的扇出分支必须有`depth>=2`，使后继确实读取并修改前驱的数据。不能仅把4.3的`--model none`改成branch-rw：其`widths=80,4 / depths=1,2`中，初始80条分支都没有普通后继，不足以充分检验这批迁移分支的parent/home取舍。
+
+可从[亲和工程指南的分支链校准与routing示例](../experiments/affinity/README.md)中的`widths=20,10 / depths=2,2`开始，再扩大初始宽度。改变深度、模型、足迹或访问次数后，重新校准并冻结整份图和访存/计算工作清单；每种策略使用相同清单。depth=1与depth=2的原始数值不能作为同工作量策略配对。完成这一步后：
 
 1. `routing/signals`：home与同NUMA借出，固定`--cross-numa 0`；记录请求尾时延、算子等待、CPU/request、执行墙钟和迁移比例。
 2. `follow`：parent/home × fork/all；固定一个评分策略，比较链的数据复用和回迁。现成suite使用outstanding，其余评分用相同负载的直接命令。
@@ -151,6 +155,8 @@ cat /proc/sys/kernel/sched_schedstats
 ## 6. 终端结果如何解读
 
 report按计划到达选择request cohort，窗口后才完成的请求仍保留；要求全请求有终态。拒绝/失败运行不会成为性能配对。请求mean/p95/p99、该cohort算子CPU/墙钟和等待，与整轮process CPU/request分开显示。
+
+手工收集终端结果时，保留每run的`pool_count/affinity/threads`、`matrix suite/experiment_role`、工作合同及最后的配对说明。报告从实际summary读取池数；仅在直接父目录的metadata和plan能确认归属时显示矩阵角色，否则为`manual_or_unclassified`。手动校准命令没有矩阵元数据是正常情况，不会因此被排除分析；角色标签也不证明CPU分区确为硬件cluster。不同池数/绑定不能配成策略delta，相同资源与工作下cluster-baseline和signals可以配对。
 
 callback occupancy由所有与墙钟测量窗口相交的`start_ns..finish_ns`区间重建，输出每池与全局的时间加权均值/峰值，包含同步睡眠和被抢占时间；它和“在提交时采到的inflight平均数”口径不同，也不等于Linux runnable/on-CPU。历史20/80已知是临时配置的单池值；即使确认同样统计定义，也不能要求目标cluster池复现它。应比较事件机制与负载规模，并重新测目标部署的占用。报告的全池峰值来自合并区间，并非各池峰值相加。
 
