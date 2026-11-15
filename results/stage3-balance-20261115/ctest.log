@@ -1,0 +1,149 @@
+Start testing: Nov 15 09:23 CST
+----------------------------------------------------------
+1/7 Testing: independent_functional
+1/7 Test: independent_functional
+Command: "/usr/bin/python3" "/root/rank_demo/stage3_balance/experiments/independent/tests/test_functional.py" "/root/rank_demo/stage3_balance/build-independent/independent_load"
+Directory: /root/rank_demo/stage3_balance/build-independent
+"independent_functional" start time: Nov 15 09:23 CST
+Output:
+----------------------------------------------------------
+............
+----------------------------------------------------------------------
+Ran 12 tests in 0.851s
+
+OK
+<end of output>
+Test time =   0.90 sec
+----------------------------------------------------------
+Test Passed.
+"independent_functional" end time: Nov 15 09:23 CST
+"independent_functional" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/7 Testing: independent_analysis
+2/7 Test: independent_analysis
+Command: "/usr/bin/python3" "/root/rank_demo/stage3_balance/experiments/independent/tests/test_analysis.py"
+Directory: /root/rank_demo/stage3_balance/build-independent
+"independent_analysis" start time: Nov 15 09:23 CST
+Output:
+----------------------------------------------------------
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.010s
+
+OK
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"independent_analysis" end time: Nov 15 09:23 CST
+"independent_analysis" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/7 Testing: independent_prediction
+3/7 Test: independent_prediction
+Command: "/usr/bin/python3" "/root/rank_demo/stage3_balance/experiments/independent/../../stages/03-independent/test_predict.py"
+Directory: /root/rank_demo/stage3_balance/build-independent
+"independent_prediction" start time: Nov 15 09:23 CST
+Output:
+----------------------------------------------------------
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+OK
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"independent_prediction" end time: Nov 15 09:23 CST
+"independent_prediction" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/7 Testing: independent_routing_core
+4/7 Test: independent_routing_core
+Command: "/root/rank_demo/stage3_balance/build-independent/independent_routing_core_test"
+Directory: /root/rank_demo/stage3_balance/build-independent
+"independent_routing_core" start time: Nov 15 09:23 CST
+Output:
+----------------------------------------------------------
+routing core: deterministic threshold, fallback, rotation and units passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"independent_routing_core" end time: Nov 15 09:23 CST
+"independent_routing_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/7 Testing: independent_routing
+5/7 Test: independent_routing
+Command: "/usr/bin/python3" "/root/rank_demo/stage3_balance/experiments/independent/tests/test_routing.py" "/root/rank_demo/stage3_balance/build-independent/independent_load"
+Directory: /root/rank_demo/stage3_balance/build-independent
+"independent_routing" start time: Nov 15 09:23 CST
+Output:
+----------------------------------------------------------
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 1.395s
+
+OK
+<end of output>
+Test time =   1.44 sec
+----------------------------------------------------------
+Test Passed.
+"independent_routing" end time: Nov 15 09:23 CST
+"independent_routing" time elapsed: 00:00:01
+----------------------------------------------------------
+
+6/7 Testing: independent_balance_analysis
+6/7 Test: independent_balance_analysis
+Command: "/usr/bin/python3" "/root/rank_demo/stage3_balance/experiments/independent/../../tests/test_balance_analysis.py"
+Directory: /root/rank_demo/stage3_balance/build-independent
+"independent_balance_analysis" start time: Nov 15 09:23 CST
+Output:
+----------------------------------------------------------
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 0.051s
+
+OK
+runs=2 invalid_runs=0 excluded=0 quality_groups=0
+case split seed valid completed/planned planned_mean_ms planned_p99_ms W_mean_ms X_mean_ms spill
+home tune 1 True 20/20 6.096 101.001 5.095 1.000 0.000
+threshold tune 1 True 20/20 3.596 51.001 2.595 1.000 1.000
+PAIRED: case split valid_pairs invalid_pairs planned_mean_delta_ms planned_p99_delta_ms status
+threshold tune 1 0 -2.500 -50.000 descriptive_only
+OBSERVER_COST: case pairs CPU_per_completed_delta_ms planned_mean_delta_ms planned_p99_delta_ms
+QUALITY: config metric target folds mean_MAE_ms p99_pinball_ms p99_coverage MAE_reduction_vs_budget_ms
+No automatic winning metric/threshold. Positive correlation alone is insufficient; see held-out error, tail coverage, validity and cost.
+/tmp/tmp4cocoo11/analysis/report.md
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"independent_balance_analysis" end time: Nov 15 09:23 CST
+"independent_balance_analysis" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/7 Testing: independent_balance_matrix
+7/7 Test: independent_balance_matrix
+Command: "/usr/bin/python3" "/root/rank_demo/stage3_balance/experiments/independent/../../tests/test_balance_matrix.py"
+Directory: /root/rank_demo/stage3_balance/build-independent
+"independent_balance_matrix" start time: Nov 15 09:23 CST
+Output:
+----------------------------------------------------------
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.250s
+
+OK
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"independent_balance_matrix" end time: Nov 15 09:23 CST
+"independent_balance_matrix" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 15 09:23 CST

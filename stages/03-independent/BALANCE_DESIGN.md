@@ -39,6 +39,10 @@
 
 成本实验分两步：固定迭代下对比home/off与home/minimal/basic/progress，测观测总成本；再以相同minimal指标和插桩，对比home与threshold，测完整策略收益。`progress-us`控制共享计数的发布频率，不控制CPU时钟读取频率。元数据记录实际维护的计数器，避免把四种minimal模式当作相同成本。
 
+在`instrumentation=none, observation=minimal`下，每读取一个候选池：queue调用一次原生接口，其余指标各一次relaxed load。每个成功接纳任务额外的共享RMW分别是queue=0、N=2、work=2、remaining=2+k（k为非零进度扣减次数）；原有全局准入计数的两次RMW另计。threshold未触发读1池，触发读M池。固定Folly默认队列的`ThrottledLifoSem::valueGuess()`使用默认seq_cst load，不能笼统称所有读取都是relaxed。这些是软件操作次数，不是硬件耗时结论；ARM实现、缓存一致性和同池竞争均影响实际成本。
+
+每池计数对象按64字节对齐；同池原子仍共享缓存行，在缓存行大于64字节的机器上也不保证完全隔离。每任务还有路由计时与记录，且观测模式启用周期采样，所以`route_ns`不能直接解释为单次atomic load成本。新增记录字段扩大了任务数组；默认home/off保证旧功能和字段语义，不承诺新旧二进制性能逐位一致。
+
 ## 3. 最简单的负载均衡
 
 每个arrival仍轮询确定home池，local突发中的task共享home。策略只决定新就绪任务的投递目标，不移动已排队任务或正在运行的线程。

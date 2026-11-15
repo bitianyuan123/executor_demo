@@ -204,7 +204,7 @@ def generate(args):
     base = {'deployment': 'target' if target else 'dev', 'pools': pools, 'cpus': group_string,
             'numa': node_string, 'affinity': 'cluster', 'duration': duration, 'cpu-us': budget,
             'jitter': .5, 'long-prob': 0, 'long-factor': 8, 'mean-normalization': 'exact',
-            'arrival': 'regular', 'burst-placement': 'local', 'work-mode': 'cpu',
+            'arrival': args.arrival, 'burst-placement': 'local', 'work-mode': 'cpu',
             'estimate-us': budget, 'estimate-jitter': 0, 'instrumentation': 'full',
             'load-observation': args.observation, 'progress-us': args.progress_us if args.progress_us is not None else (5000 if target else 500),
             'routing': 'home', 'load-metric': 'queue', 'load-threshold': 0, 'min-improvement': 0,
@@ -578,6 +578,8 @@ def parser():
     plan.add_argument('--thresholds', help='same numeric grid for selected metric(s); units must be interpreted per metric')
     plan.add_argument('--cpus'); plan.add_argument('--numa'); plan.add_argument('--capacities')
     plan.add_argument('--threads'); plan.add_argument('--task-rate', type=float)
+    plan.add_argument('--arrival', choices=['regular', 'poisson'], default='regular',
+                      help='base arrival process; the arrival family explicitly uses poisson')
     plan.add_argument('--cpu-us', type=int); plan.add_argument('--duration', type=float); plan.add_argument('--warmup', type=float)
     plan.add_argument('--repeats', type=int); plan.add_argument('--seeds')
     plan.add_argument('--progress-us', type=int, help='CPU-us publication interval: target5000/dev500 by default')

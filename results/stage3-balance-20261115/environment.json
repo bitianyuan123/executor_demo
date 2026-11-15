@@ -1,0 +1,43 @@
+{
+  "uname": [
+    "Linux",
+    "VM-0-13-debian",
+    "6.12.95+deb13-amd64",
+    "#1 SMP PREEMPT_DYNAMIC Debian 6.12.95-1 (2026-07-04)",
+    "x86_64",
+    ""
+  ],
+  "cpu_count": 4,
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "experiment_cpus": [
+    0,
+    1
+  ],
+  "nice": 10,
+  "shared_development_host": true,
+  "memory_info": [
+    "MemTotal:        7812408 kB",
+    "MemFree:          780700 kB",
+    "MemAvailable:    5056360 kB"
+  ],
+  "cpu.stat": "usage_usec 82220292000\nuser_usec 50265584000\nsystem_usec 31954708000\nnice_usec 31576000\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+  "compiler": "c++ (Debian 14.2.0-19) 14.2.0",
+  "baseline_commit": "b0b411a902c69d75d503cd377fef1ae68b7df7a8",
+  "performance_cpp_source_commit": "7227e2d",
+  "performance_binary_sha256": "ee790967c923dfc9f191aee4bc544b4aa65210b7c945c669998c6e2e26915159",
+  "frozen_folly_prefix_manifest_sha256": "9d38520ec41c608121e4acb2342a31f771769c0a60d08b2357b2d17ae13abe4f",
+  "clock_note": "CLOCK_MONOTONIC task timestamps and CLOCK_THREAD_CPUTIME_ID CPU budgets",
+  "performance_limits": [
+    "shared VM, not CPU-exclusive",
+    "nice 10",
+    "only 2 allowed logical CPUs, one per artificial pool",
+    "short runs; per-run p99 has low tail sample counts",
+    "fixed-budget synthetic CPU work, no production locality or RPC"
+  ],
+  "functional_binary_after_precision_fix_sha256": "9c2f608830e0ab9c3283f6359499209bbd3065386c3d1c8d6f448f05a340ad00"
+}

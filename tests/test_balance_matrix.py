@@ -83,6 +83,19 @@ class MatrixTests(unittest.TestCase):
         for group in groups:
             self.assertEqual(1, sum(c['options']['routing'] == 'home' for c in plan['cases'] if c['comparison_group'] == group))
 
+    def test_poisson_smooth_keeps_paired_workload(self):
+        plan = M.generate(self.args('--phase', 'tune', '--families', 'negative',
+                                    '--arrival', 'poisson', '--metrics', 'outstanding'))
+        smooth = [c for c in plan['cases'] if '-smooth-' in c['name']]
+        self.assertTrue(smooth)
+        for case in smooth:
+            options = dict(plan['base'], **case['options'])
+            self.assertEqual('poisson', options['arrival'])
+            self.assertEqual(1, options['burst-min'])
+        for threads in {c['options']['threads'] for c in smooth}:
+            self.assertEqual(1, len({c['pair_workload_sha256'] for c in smooth
+                                    if c['options']['threads'] == threads}))
+
     def test_validation_rejects_leaking_edit(self):
         plan = M.generate(self.args())
         plan['split_seeds']['tune'] = plan['seeds']

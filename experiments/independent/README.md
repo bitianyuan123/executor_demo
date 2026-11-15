@@ -4,6 +4,8 @@
 
 新增的阶段3负载均衡实验通过显式 `--routing threshold` 启用，在提交时选择其他原生线程池。指标选择、阈值冻结、留出验证及低开销模式见[设计](../../stages/03-independent/BALANCE_DESIGN.md)和[分步运行指南](../../stages/03-independent/BALANCE_GUIDE.md)。旧命令仍使用原行为。
 
+开发机169轮验证与原始数据见[结果报告](../../stages/03-independent/BALANCE_RESULTS.md)。这些短测不代表ARM性能结论。
+
 ## 编译与功能测试
 
 需要 Linux、支持C++20的编译器、CMake、Python3，以及已安装的原版 Folly（本仓库验证基线 `v2026.10.26.00`）。不需要包含 `AffinityExecutor.h` 的源码路径。以下命令从仓库根目录执行，安装目录按实际环境替换：
