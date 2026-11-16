@@ -1,0 +1,121 @@
+[root@localhost executor_demo-stage3-balance]# git pull --ff-only
+remote: Enumerating objects: 27, done.
+remote: Counting objects: 100% (27/27), done.
+remote: Compressing objects: 100% (15/15), done.
+remote: Total 27 (delta 12), reused 27 (delta 12), pack-reused 0 (from 0)
+Unpacking objects: 100% (27/27), 61.46 KiB | 5.59 MiB/s, done.
+From https://github.com/bitianyuan123/executor_demo
+   3dca779..e81addf  experiment/stage3-load-balance-20261115 -> origin/experiment/stage3-load-balance-20261115
+You are not currently on a branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+[root@localhost executor_demo-stage3-balance]# git pull origin experiment/stage3-load-balance-20261115
+From https://github.com/bitianyuan123/executor_demo
+ * branch            experiment/stage3-load-balance-20261115 -> FETCH_HEAD
+Updating 3dca779..e81addf
+Fast-forward
+ experiments/independent/scripts/analyze_balance.py           |  170 ++++-
+ experiments/independent/scripts/balance_matrix.py            |  237 ++++--
+ results/stage3-arm-3001/3001.log                             | 1268 ++++++++++++++++++++++++++++++++
+ results/stage3-arm-3001/README.md                            |   29 +
+ results/stage3-arm-3001/cases.csv                            |   37 +
+ results/stage3-arm-3001/extract_terminal.py                  |  147 ++++
+ results/stage3-arm-3001/quality.csv                          |  289 ++++++++
+ results/stage3-arm-3001/runs.csv                             |  129 ++++
+ results/stage3-arm-3001/source.sha256                        |    1 +
+ results/stage3-arm-3001/subsequent_hostname_confirmation.txt |   17 +
+ results/stage3-arm-3001/summary.json                         | 5536 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ stages/03-independent/ARM_3001_CLOSEOUT.md                   |  113 +++
+ stages/03-independent/ARM_3001_REVIEW.md                     |  129 ++++
+ stages/03-independent/BALANCE_DESIGN.md                      |    2 +
+ stages/03-independent/BALANCE_GUIDE.md                       |   26 +-
+ tests/test_balance_analysis.py                               |  125 ++++
+ tests/test_balance_matrix.py                                 |  120 ++-
+ 17 files changed, 8267 insertions(+), 108 deletions(-)
+ create mode 100644 results/stage3-arm-3001/3001.log
+ create mode 100644 results/stage3-arm-3001/README.md
+ create mode 100644 results/stage3-arm-3001/cases.csv
+ create mode 100644 results/stage3-arm-3001/extract_terminal.py
+ create mode 100644 results/stage3-arm-3001/quality.csv
+ create mode 100644 results/stage3-arm-3001/runs.csv
+ create mode 100644 results/stage3-arm-3001/source.sha256
+ create mode 100644 results/stage3-arm-3001/subsequent_hostname_confirmation.txt
+ create mode 100644 results/stage3-arm-3001/summary.json
+ create mode 100644 stages/03-independent/ARM_3001_CLOSEOUT.md
+ create mode 100644 stages/03-independent/ARM_3001_REVIEW.md
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/analyze_balance.py \
+  --manifest results/balance-arm/evaluate/manifest.json \
+  --hostname-alias localhost.localdomain=localhost \
+  --hostname-alias-reason '3001: same isolated ARM host; only hostname changed, resource and workload configs identical' \
+  --output results/balance-arm/evaluate-alias-analysis \
+  > results/balance-arm/evaluate-alias-analysis.stdout.log
+[root@localhost executor_demo-stage3-balance]# python3 - <<'PY'
+import json
+r=json.load(open('results/balance-arm/evaluate-alias-analysis/report.json'))
+print('runs',len(r['runs']),'invalid',sum(not x['valid'] for x in r['runs']),
+      'excluded',len(r['excluded_entries']))
+for x in r['comparisons']:
+    print(x['case'],'config',x['config_id'],'pairs',x['n_pairs'],
+          'invalid',x['n_invalid'],'mean_delta_ms',x['planned_mean_delta_ms'],
+          'p99_delta_ms',x['planned_p99_delta_ms'],
+          'p99_delta_CI95',x['planned_latency_ms_p99_delta_ci95'],x['status'])
+for x in r['pairs']:
+    if not x['valid']:
+        print('INVALID',x['case'],x['seed'],x['reasons'])
+PY
+runs 56 invalid 0 excluded 0
+main-t16-local-outstanding-h2 config b4e75135d0d7 pairs 7 invalid 0 mean_delta_ms -242.40293470964284 p99_delta_ms -424.42206757142856 p99_delta_CI95 [-425.7989541428571, -423.2313752857143] paired_seed_bootstrap
+main-t16-local-queue-h2 config b4e75135d0d7 pairs 7 invalid 0 mean_delta_ms -210.41539116892858 p99_delta_ms -322.76890357142855 p99_delta_CI95 [-323.9572262857143, -321.4773012857143] paired_seed_bootstrap
+main-t16-local-spread-policy config b4e75135d0d7 pairs 7 invalid 0 mean_delta_ms -257.3220018889286 p99_delta_ms -510.74344057142855 p99_delta_CI95 [-512.1963438571428, -509.16769014285717] paired_seed_bootstrap
+main-t256-local-outstanding-h2 config 590ac4e7825a pairs 7 invalid 0 mean_delta_ms -345.38069893059526 p99_delta_ms -421.770849 p99_delta_CI95 [-423.3401575714285, -420.10589114285716] paired_seed_bootstrap
+main-t256-local-queue-h2 config 590ac4e7825a pairs 7 invalid 0 mean_delta_ms -298.7131291083333 p99_delta_ms -321.68584685714285 p99_delta_CI95 [-322.9603652857143, -320.47729585714285] paired_seed_bootstrap
+main-t256-local-spread-policy config 590ac4e7825a pairs 7 invalid 0 mean_delta_ms -366.15496231702383 p99_delta_ms -503.30027714285717 p99_delta_CI95 [-504.7527687142857, -501.5221635714286] paired_seed_bootstrap
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/balance_matrix.py dry-run \
+  --config results/balance-arm/minimal.json \
+  --only-case main-t256-local-home \
+  --only-case main-t256-local-outstanding-h2 \
+  --only-case main-t256-local-spread-policy \
+  --only-seeds 32000,32001,32002
+split=evaluate; cases=10; seeds=[32000, 32001, 32002, 32003, 32004, 32005, 32006]; runs=70
+offered hours=1.167, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+selected runs=9/70; selected offered hours=0.150/1.167 full plan, excluding drain/startup
+{"case": "main-t256-local-outstanding-h2", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 2.0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "threshold", "sample-ms": 100, "seed": 32000, "threads": 256, "work-mode": "cpu"}, "seed": 32000}
+{"case": "main-t256-local-spread-policy", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "spread", "sample-ms": 100, "seed": 32000, "threads": 256, "work-mode": "cpu"}, "seed": 32000}
+{"case": "main-t256-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 32000, "threads": 256, "work-mode": "cpu"}, "seed": 32000}
+{"case": "main-t256-local-outstanding-h2", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 2.0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "threshold", "sample-ms": 100, "seed": 32001, "threads": 256, "work-mode": "cpu"}, "seed": 32001}
+{"case": "main-t256-local-spread-policy", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "spread", "sample-ms": 100, "seed": 32001, "threads": 256, "work-mode": "cpu"}, "seed": 32001}
+{"case": "main-t256-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 32001, "threads": 256, "work-mode": "cpu"}, "seed": 32001}
+{"case": "main-t256-local-outstanding-h2", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 2.0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "threshold", "sample-ms": 100, "seed": 32002, "threads": 256, "work-mode": "cpu"}, "seed": 32002}
+{"case": "main-t256-local-spread-policy", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "spread", "sample-ms": 100, "seed": 32002, "threads": 256, "work-mode": "cpu"}, "seed": 32002}
+{"case": "main-t256-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "none", "jitter": 0.5, "load-metric": "outstanding", "load-observation": "minimal", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 32002, "threads": 256, "work-mode": "cpu"}, "seed": 32002}
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+  --config results/balance-arm/minimal.json \
+  --output results/balance-arm/minimal \
+  --binary build-independent-balance/independent_load --resume \
+  --only-case main-t256-local-home \
+  --only-case main-t256-local-outstanding-h2 \
+  --only-case main-t256-local-spread-policy \
+  --only-seeds 32000,32001,32002
+split=evaluate; cases=10; seeds=[32000, 32001, 32002, 32003, 32004, 32005, 32006]; runs=70
+offered hours=1.167, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+selected runs=9/70; selected offered hours=0.150/1.167 full plan, excluding drain/startup
+retained selected successes=6; remaining selected runs=3
+main-t256-local-outstanding-h2-s32000: retained completed result
+main-t256-local-spread-policy-s32000: retained completed result
+main-t256-local-home-s32000: retained completed result
+main-t256-local-outstanding-h2-s32001: retained completed result
+main-t256-local-spread-policy-s32001: retained completed result
+main-t256-local-home-s32001: retained completed result
+main-t256-local-outstanding-h2-s32002: completed, 60.03s
+main-t256-local-spread-policy-s32002: completed, 59.94s
+main-t256-local-home-s32002: completed, 60.49s
+selected successful=9/9; whole matrix successful=22/70; matrix_complete=false
+manifest=/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/minimal/manifest.json
