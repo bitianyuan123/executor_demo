@@ -8,6 +8,7 @@ import io
 import json
 import os
 from pathlib import Path
+import random
 import shutil
 import subprocess
 import sys
@@ -48,18 +49,23 @@ def check_matrix_plans():
         root = Path(temporary)
         serial = 0
 
-        def plan(suite, base, success=True):
+        def plan(suite, base, success=True, case_filter=None, seeds='101'):
             nonlocal serial
             serial += 1
             output = root / f'{serial}-{suite}'
             command = [sys.executable, str(MATRIX), '--suite', suite, '--output', str(output),
-                       '--seeds', '101', '--base-args']
+                       '--seeds', seeds]
+            if case_filter is not None:
+                command.extend(['--cases', case_filter])
+            command.append('--base-args')
             command.extend(part for pair in base.items() for part in pair)
             process = subprocess.run(command, text=True, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, timeout=10)
             if not success:
                 check(process.returncode != 0, f'{suite}: invalid target plan accepted')
                 check(not (output / 'plan.json').exists(), 'invalid target left a runnable plan')
+                if case_filter is not None:
+                    check(not output.exists(), 'invalid case filter created an output directory')
                 return None
             check(process.returncode == 0, f'{suite}: plan failed: {process.stderr}')
             metadata = json.loads((output / 'metadata.json').read_text())
@@ -73,6 +79,17 @@ def check_matrix_plans():
                   f'{suite}: experiment role metadata does not describe the plan')
             check(metadata['research_target'] == 'one_pool_per_cluster',
                   f'{suite}: research target metadata missing')
+            selected = [name for name, _ in matrix.cases(suite)
+                        if case_filter is None or name in {part.strip() for part in case_filter.split(',')}]
+            check(metadata['selected_cases'] == selected,
+                  f'{suite}: selected-case metadata differs from the intended cases')
+            expected_order = []
+            for seed in map(int, seeds.split(',')):
+                order = list(selected)
+                random.Random(seed).shuffle(order)
+                expected_order.extend((seed, name) for name in order)
+            check([(entry['seed'], entry['case']) for entry in entries] == expected_order,
+                  f'{suite}: cases must be selected before each seed is shuffled')
             return options, process.stderr
 
         base = {'--cpus': '0;1;2;3;4;5', '--affinity': 'cluster',
@@ -85,6 +102,16 @@ def check_matrix_plans():
                 check(case['--qps'] == '23', f'{suite}: generic plan replaced caller QPS')
                 if suite != 'threads':
                     check(case['--threads'] == '17', f'{suite}: generic plan replaced caller thread count')
+
+        options, _ = plan('routing', base, case_filter='outstanding, home', seeds='420,421,422')
+        check(set(options) == {'home', 'outstanding'}, 'case filter added or lost a selected policy')
+        check(all(case['--policy'] == name for name, case in options.items()),
+              'case filter changed the selected policy configuration')
+        options, _ = plan('signals', base, case_filter='cpu')
+        check(set(options) == {'cpu'}, 'single-case filter did not select its suite case')
+        for invalid in ('', ' ', ',', 'home,', ',home', 'home,,outstanding',
+                        'home,home', 'home, home', 'cpu', 'home,unknown'):
+            plan('routing', base, success=False, case_filter=invalid)
 
         for partitions, threads, qps, explicit_zero in (
                 ('0;1', '17', '23', False), ('0;1;2;3;4;5', '17', '23', True),
@@ -136,7 +163,8 @@ def check_matrix_plans():
                 check('deprecated' not in diagnostics, 'explicit historical alias was deprecated')
             alias_plans.append(options)
         check(alias_plans[0] == alias_plans[1], 'historical aliases produce different commands')
-    print('affinity matrix: target cluster baseline, historical aliases, generic resource contracts and metadata passed')
+    print('affinity matrix: target cluster baseline, historical aliases, case selection/shuffle, '
+          'generic resource contracts and metadata passed')
 
 
 def main(binary):

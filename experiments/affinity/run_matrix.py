@@ -62,11 +62,23 @@ def main():
     parser.add_argument("--binary", default="build-affinity/affinity_demo")
     parser.add_argument("--output", required=True)
     parser.add_argument("--suite", choices=SUITES, default="routing")
+    parser.add_argument("--cases", help="comma-separated case names from the selected suite; default: all cases")
     parser.add_argument("--seeds", default="101,102,103")
     parser.add_argument("--timeout-seconds", type=float, default=900)
     parser.add_argument("--run", action="store_true", help="without this flag only write a plan")
     parser.add_argument("--base-args", nargs=argparse.REMAINDER, default=[])
     args = parser.parse_args()
+    selected = cases(args.suite)
+    if args.cases is not None:
+        requested = [name.strip() for name in args.cases.split(",")]
+        if not all(requested) or len(set(requested)) != len(requested):
+            parser.error("cases must be distinct nonempty case names")
+        available = {name for name, _ in selected}
+        unknown = set(requested) - available
+        if unknown:
+            parser.error(f"unknown cases for {args.suite}: {', '.join(sorted(unknown))}; "
+                         f"available: {', '.join(name for name, _ in selected)}")
+        selected = [(name, changes) for name, changes in selected if name in requested]
     if len(args.base_args) % 2:
         parser.error("base-args must be --key value pairs")
     base = {}
@@ -117,6 +129,7 @@ def main():
                "../dag/include/executor_demo/BusinessExecutor.h"]
     metadata = {"schema": "affinity-v2-matrix", "binary": str(pathlib.Path(args.binary).resolve()),
                 "suite": args.suite,
+                "selected_cases": [name for name, _ in selected],
                 "experiment_role": ("target_cluster_baseline" if args.suite == "cluster-baseline"
                                     else "historical_capture_replay" if args.suite in HISTORICAL_SUITES
                                     else "controlled_comparison"),
@@ -130,7 +143,7 @@ def main():
     (root / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     plan = []
     for seed in seeds:
-        order = cases(args.suite)
+        order = list(selected)
         random.Random(seed).shuffle(order)
         for case, changes in order:
             directory = root / f"seed-{seed}-{case}"
