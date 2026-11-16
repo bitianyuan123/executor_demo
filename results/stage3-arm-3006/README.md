@@ -15,4 +15,6 @@
 |initial_spans.csv|初始80项实际投递跨度|
 |extraction.json|源哈希、重复打印数、证据范围|
 
-`python3 results/stage3-arm-3006/extract_terminal.py`可以从随附日志重新生成这些表；它不启动实验。原始逐任务CSV、逐波CSV和trace尚未传回，因此本地只复核终端证据、提取一致性和算术，没有重新计算真实逐任务p99，也没有确认83个碎峰的内部形态。
+`python3 results/stage3-arm-3006/extract_terminal.py`可以从随附日志重新生成这些表；它不启动实验。原始逐任务CSV、逐波CSV和trace尚未传回，因此本地只复核终端证据、提取一致性和算术，没有重新计算真实逐任务p99；仅凭原3006.log不能确认83个碎峰的内部形态。
+
+后续用户已执行离线检查并粘贴完整摘要，转录为[inspection-terminal.txt](inspection-terminal.txt)：83/600与原结果一致；598个有高位的波全部在13ms内结束，另2个未达到90%；20–30ms和后段背景高位量均为0。此文件是聊天文本转录（统一换行、去掉终端提示符），并非测试机原文件的逐字节副本。本地未获取inspection.json或逐波数据，不能声称已独立重算600波；测试机续跑会验证当地的inspection与原home身份。原3006.log及提取表保持不变。

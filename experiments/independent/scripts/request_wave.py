@@ -616,6 +616,103 @@ def home_waveform_gate(plan, curves):
             'home_request_waveform': shape}
 
 
+def reviewed_short_peak(plan, inspection_path, root, manifest, binary_sha):
+    """Narrow post-result review of existing evidence, never a strict pass.
+
+    Bind to immutable home artifacts rather than the top-level manifest digest:
+    that manifest legitimately changes when source_only starts or completes.
+    """
+    def require(condition, message):
+        if not condition:
+            raise ValueError('short-peak review rejected: ' + message + '; no new workload launched')
+
+    require(plan.get('profile') == 'short-peak' and trace_config(plan)['enabled'] and
+            trace_config(plan)['bin_ms'] == 1, 'requires the frozen traced 1ms short-peak profile')
+    inspection_path = Path(inspection_path).resolve()
+    evidence = json.loads(inspection_path.read_text())
+    evidence_sha = file_digest(inspection_path)
+    require(evidence.get('schema_version') == 1 and
+            evidence.get('kind') == 'diagnostic_only_no_acceptance_override' and
+            evidence.get('status') == 'ok' and evidence.get('issues') == [] and
+            evidence.get('strict_result_unchanged') is True, 'inspection is not complete and valid')
+    require(evidence.get('plan_sha256') == plan['plan_sha256'] and
+            Path(evidence.get('plan', '')).resolve() == root / 'plan.json' and
+            Path(evidence.get('manifest', '')).resolve() == root / 'run_manifest.json',
+            'inspection plan or manifest identity differs')
+    require(evidence.get('bin_ms') == 1 and evidence.get('high_pct') == 90 and
+            evidence.get('anchor') == 'actual_first_initial_submit' and
+            evidence.get('window_ms') == [0, 30] and evidence.get('late_window_ms') == [20, 30],
+            'inspection measurement definition differs')
+    require(evidence.get('trace_validation') == {'status': 'ok', 'issues': []},
+            'inspection trace validation is incomplete')
+    gate = manifest.get('home_waveform_gate', {})
+    reason = ['fragmented_onset_fraction_exceeds_10pct']
+    shape = evidence.get('strict_original_recomputed', {})
+    require(gate.get('status') == 'failed' and gate.get('passed') is False and
+            gate.get('comparison_allowed') is False and gate.get('reasons') == reason and
+            shape.get('status') == 'failed' and shape.get('passed') is False and
+            shape.get('reasons') == reason and gate.get('home_request_waveform') == shape,
+            'only the unchanged fragmentation-only strict failure is reviewable')
+    count = evidence.get('fragment_count_check', {})
+    n = evidence.get('requests', 0)
+    require(type(n) is int and n >= plan['waveform_acceptance']['minimum_complete_requests'] and
+            evidence.get('unavailable_requests') == 0 and shape.get('requests') == n and
+            shape.get('complete_requests') == n and count.get('matches') is True and
+            count.get('complete') == n and count.get('strict_complete') == n and
+            type(count.get('fragmented')) is int and 0 < count['fragmented'] <= n and
+            count.get('inspection_fraction') == count['fragmented'] / n and
+            count.get('strict_fraction') == count['fragmented'] / n and
+            shape.get('sensitivity', {}).get('90', {}).get('fragmented_fraction') == count['fragmented'] / n,
+            'request coverage or fragmentation count differs')
+    group = evidence.get('groups', {}).get('all_complete', {})
+    metrics = group.get('metrics', {})
+    last = metrics.get('last_high_end_ms', {})
+    late = metrics.get('late_20_30_high_ms', {})
+    require(group.get('n') == n and group.get('touches_30ms_boundary') == 0 and
+            group.get('categories', {}).get('high_after_20ms') == 0 and
+            isinstance(last.get('n'), int) and last['n'] >= .9 * n and
+            isinstance(last.get('max'), (int, float)) and 0 < last['max'] <= 20 and
+            late.get('n') == n and late.get('max') == 0,
+            'short envelope is missing, censored, or extends after 20ms')
+    background = evidence.get('background_90pct_original', {})
+    require(all(background.get(key, {}).get('n') == n and
+                background.get(key, {}).get('max') == 0 and
+                background.get(key) == shape.get('sensitivity', {}).get('90', {}).get(key)
+                for key in ('background_high_fraction', 'background_longest_high_ms')),
+            'background is missing or contains high occupancy')
+    checks = evidence.get('saved_checks', [])
+    require(len(checks) == 3 and all(check.get('matches') is True for check in checks) and
+            {check.get('source') for check in checks[:2]} ==
+            {'manifest.home_waveform_gate', 'cpu-curves/summary.json'}, 'saved strict checks differ')
+    waveform_path = root / 'cpu-curves/home/request_waveform.csv'
+    require(Path(checks[2].get('source', '')).resolve() == waveform_path and
+            checks[2].get('rows') == n and checks[2].get('sha256') == file_digest(waveform_path),
+            'saved per-request waveform evidence changed')
+    homes = [entry for entry in manifest.get('runs', []) if entry.get('policy') == 'home']
+    require(len(homes) == 1, 'requires one existing completed home; home will not be launched')
+    directory = root / 'runs/home'
+    expected = {'plan_sha256': plan['plan_sha256'], 'binary_sha256': binary_sha,
+                'policy': 'home', 'options': dict(plan['base'], **plan['policies']['home']),
+                'cpu_trace_enabled': True}
+    home = completed_run(directory, expected)
+    require(home is not None and home == homes[0], 'saved home identity differs or is missing')
+    require(evidence.get('trace_sha256') == home['artifact_sha256']['cpu_trace.txt'],
+            'inspection trace hash differs from the verified home trace')
+    home_identity = digest({key: home[key] for key in
+                            ('plan_sha256', 'binary_sha256', 'options', 'artifact_sha256')})
+    review = {'status': 'accepted_posthoc',
+              'reason': 'Explicit post-result review: all observed >=90% segments end within 20ms; no late or background high occupancy. Fragmentation-only strict failure remains failed.',
+              'inspection_path': str(inspection_path), 'inspection_sha256': evidence_sha,
+              'plan_sha256': plan['plan_sha256'], 'home_identity_sha256': home_identity,
+              'home_trace_sha256': evidence['trace_sha256'],
+              'requests': n, 'fragmented_requests': count['fragmented'],
+              'last_high_end_max_ms': last['max'], 'late_20_30_high_max_ms': late['max'],
+              'background_high_fraction_max': background['background_high_fraction']['max']}
+    prior = manifest.get('home_waveform_review')
+    require(prior is None or prior == review, 'previous review evidence hash or home identity differs')
+    return review
+
+
 def execute(args):
     plan_path = args.plan.resolve()
     plan = json.loads(plan_path.read_text())
@@ -633,6 +730,9 @@ def execute(args):
         if os.sched_getaffinity(0) != set(observer):
             raise ValueError('observer CPU affinity was not applied exactly; no workload launched')
     calibration = args.command == 'calibrate'
+    review_path = getattr(args, 'reviewed_short_peak_inspection', None)
+    if review_path is not None and (calibration or getattr(args, 'only', None)):
+        raise ValueError('reviewed continuation requires run without --only; it reuses home and continues source_only')
     order = ['home'] if calibration else plan['policy_order']
     selection = ['home'] if getattr(args, 'only', None) == 'home' else order
     root = plan_path.parent
@@ -650,6 +750,13 @@ def execute(args):
             raise ValueError('existing top-level manifest contains unexpected or duplicate policies')
         # Preserve already completed policies when the user requests just home.
         manifest['runs'] = previous_runs
+        for key in ('home_waveform_gate', 'home_waveform_review'):
+            if key in previous:
+                manifest[key] = previous[key]
+    reviewed = review_path is not None
+    if reviewed:
+        manifest['home_waveform_review'] = reviewed_short_peak(plan, review_path, root, manifest, binary_sha)
+        print('POST-RESULT REVIEW accepted_posthoc: reuse verified home; short envelope accepted for this comparison only. Original strict gate remains failed; comparison_allowed=False. This is a documented deviation, not a strict pass.', flush=True)
     analyzed_after_last_run = False
     for policy in selection:
         directory = root / ('calibration' if calibration else 'runs') / policy
@@ -665,15 +772,20 @@ def execute(args):
         if run['status'] != 'completed':
             raise RuntimeError(f"{policy} failed; {directory / 'manifest.json'}; {'; '.join(run['errors'])}")
         if plan.get('profile') == 'short-peak' and policy == 'home':
-            curves = analyze_saved(plan, plan_path, manifest_path, root, calibration)
-            analyzed_after_last_run = True
-            gate = home_waveform_gate(plan, curves)
+            if reviewed:
+                # The inspector already recomputed and matched the saved strict
+                # result; reusing it preserves that verdict byte-for-byte.
+                gate = manifest['home_waveform_gate']
+            else:
+                curves = analyze_saved(plan, plan_path, manifest_path, root, calibration)
+                analyzed_after_last_run = True
+                gate = home_waveform_gate(plan, curves)
             manifest['home_waveform_gate'] = gate
             atomic_json(manifest_path, manifest)
             print(f"Home waveform gate: {gate['status']}; measured_shape_passed={gate['passed']}; comparison_allowed={gate['comparison_allowed']}", flush=True)
             if gate['status'] == 'functional_only':
                 print('Development functional exercise only; these runs do not validate the short-peak waveform or production performance.', flush=True)
-            if not gate['comparison_allowed'] and not calibration and selection != ['home']:
+            if not gate['comparison_allowed'] and not reviewed and not calibration and selection != ['home']:
                 raise RuntimeError('home waveform did not pass; source_only was not launched. Inspect saved analysis and cpu-curves. If changing workload, freeze a new plan for both policies; no automatic retuning.')
     print(f'Saved manifest: {manifest_path}')
     print('Above latency includes warmup. Use analyze_request_wave.py for request-cohort latency and selected-CPU observation.')
@@ -715,6 +827,8 @@ def parser():
         execute_parser.add_argument('--binary', type=Path, default=Path('build/experiments/independent/independent_load'))
         if name == 'run':
             execute_parser.add_argument('--only', choices=('home',), help='run/reuse the ordinary home baseline only; a later run resumes the same plan')
+            execute_parser.add_argument('--reviewed-short-peak-inspection', type=Path,
+                help='explicit post-result review of an existing home inspection.json; only fragmentation-only failure with short envelopes is reviewable; strict verdict remains failed')
     return p
 
 

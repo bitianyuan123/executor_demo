@@ -146,6 +146,25 @@ class RequestWaveAnalysis(unittest.TestCase):
         self.assertEqual(zero_q['n'], 2)
         self.assertEqual(zero_q['S_p99_ms'], 200.)
 
+    def test_review_label_keeps_failed_strict_verdict_and_numeric_comparison_separate(self):
+        before = a.analyze(self.plan)
+        gate = {'status': 'failed', 'passed': False, 'comparison_allowed': False,
+                'reasons': ['fragmented_onset_fraction_exceeds_10pct']}
+        review = {'status': 'accepted_posthoc', 'reason': 'reviewed short envelope',
+                  'inspection_sha256': 'evidence-id'}
+        modify_json(self.root/'run_manifest.json', lambda manifest:
+            manifest.update(home_waveform_gate=gate, home_waveform_review=review))
+        report = a.analyze(self.plan)
+        self.assertTrue(report['comparison_valid'])
+        self.assertEqual(report['comparisons'], before['comparisons'])
+        self.assertEqual(report['home_waveform_gate'], gate)
+        self.assertEqual(report['home_waveform_review'], review)
+        output = a.render(report)
+        self.assertIn('HOME WAVEFORM GATE', output)
+        self.assertIn('"passed": false', output)
+        self.assertIn('accepted_posthoc', output)
+        self.assertIn('not a predeclared strict pass', output)
+
     def test_cpu_uses_union_weighted_full_intervals_and_excludes_warmup_overlap(self):
         cpu = a.analyze(self.plan)['runs'][0]['cpu_arrival_window']['union']
         self.assertEqual(cpu['intervals'], 2)

@@ -1,14 +1,24 @@
 # 阶段3修订：短CPU峰值与持续背景负载
 
-**3006已完成home，本轮先执行离线检查，不再执行下方的计划生成、编译或发压步骤。** [3006报告](ARM_3006_SHORT_PEAK_REPORT.md)记录了约10ms短峰及随后约50%背景，也保留碎峰比例13.833%导致的原严格验收失败。更新脚本后只需：
+**3006的离线复核已完成，可以复用home，仅补source_only一次。** [完整分析与复核依据](ARM_3006_SHORT_PEAK_REPORT.md)：598波存在≥90%高位，全部最晚13ms结束；另2波未达到该阈值，20–30ms及后段高位max均为0。原碎峰83/600仍使严格判据失败；本次单独记录事后短包络复核，不篡改为严格通过。
+
+测试机只更新Python脚本，保留原计划与二进制，不需重编译：
 
 ```bash
 git pull --ff-only origin experiment/stage3-load-balance-20261115
-python3 experiments/independent/scripts/inspect_short_peak.py \
-  --plan results/short-peak-arm/plan.json
+python3 experiments/independent/scripts/request_wave.py run \
+  --plan results/short-peak-arm/plan.json \
+  --binary build-independent/independent_load \
+  --reviewed-short-peak-inspection results/short-peak-arm/short-peak-inspection/inspection.json
+cat results/short-peak-arm/analysis/report.txt
+cat results/short-peak-arm/cpu-curves/report.txt
 ```
 
-脚本打印约50行摘要，并写入独立`short-peak-inspection`目录；检查83个碎峰是否主要在20ms内，或存在较晚第二个峰。它不会修改原计划、原分析结果和放行状态，也不会启动负载。保留终端输出供复核。以下为首次执行时的冻结设计与操作记录。
+正常会显示`SKIP home`，只新运行source_only一次。新参数读取已经生成的inspection，校验身份和完整覆盖，保留原严格失败，并单独记录`accepted_posthoc`；它不是任意跳过失败的开关。CPU不进入均衡决策，原N/C>0.8和其他参数保持不变。贴回两份终端报告后，分initial/steady/全部检查等待、完成时延、分流及CPU，先形成结论，不增加其他矩阵。
+
+保留原`inspection.json`，不需重做离线检查；复核记录绑定其内容指纹。同一续跑命令可复用已经完成的策略，不增加重复实验。
+
+以下为首次执行时的冻结设计与历史操作记录；已有3006数据时不要重新生成plan或重跑home。
 
 真实业务的新信息是CPU冲高约5–20ms，而3005的home持续高占用约175–185ms。用户已说明5–20ms是粗略观察，尚未确定高占用阈值。**旧结果保留为长峰场景证据，不能据其76%的任务p99收益推荐真实业务参数。** 本轮先检查负载形状，再比较策略，不新增亲和性/线程数/阈值矩阵。
 

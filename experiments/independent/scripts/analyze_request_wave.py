@@ -483,6 +483,7 @@ def analyze(plan_path, manifest_path=None):
               'analysis_only': analysis_only, 'profile': plan.get('profile', 'legacy'),
               'functional_only': manifest.get('functional_only') is True,
               'home_waveform_gate': manifest.get('home_waveform_gate'),
+              'home_waveform_review': manifest.get('home_waveform_review'),
               'cohort': {'selection': 'request_planned_ns in [warmup_seconds, request_end_seconds); all tasks and drain completions retained',
                          'warmup_seconds': window[0], 'request_end_seconds': window[1]},
               'latency_definitions_ms': {'S': 'end-submit', 'W': 'start-submit', 'X': 'end-start',
@@ -496,6 +497,7 @@ def analyze(plan_path, manifest_path=None):
               'buckets': buckets,
               'notes': [
                   'One run per policy: descriptive observed differences, no confidence intervals or significance claims.',
+                  'comparison_valid checks workload/resource comparability, not the strict home waveform verdict. Any post-result waveform review is reported separately and never changes that verdict.',
                   'Admission N/Q are read before this task reservation; each observation is paired with that same task latency.',
                   'N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.',
                   'Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.',
@@ -531,6 +533,10 @@ def render(report):
     gate = report.get('home_waveform_gate')
     if gate is not None:
         lines.insert(1, 'HOME WAVEFORM GATE '+json.dumps({key: gate.get(key) for key in ('status', 'passed', 'comparison_allowed', 'reasons')}, sort_keys=True))
+    review = report.get('home_waveform_review')
+    if review is not None:
+        lines.insert(2, 'HOME WAVEFORM REVIEW '+json.dumps(review, sort_keys=True))
+        lines.insert(3, 'POST-RESULT REVIEW: comparison uses a reviewed short-envelope deviation; original strict waveform result is unchanged. This is not a predeclared strict pass.')
     for run in report['runs']:
         cohort, decisions = run.get('cohort', {}), run.get('decisions', {})
         values = [run['policy'], run['valid'], cohort.get('n'), cohort.get('requests'),

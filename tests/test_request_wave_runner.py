@@ -141,6 +141,174 @@ class RequestWaveRunnerTests(unittest.TestCase):
             self.assertTrue(manifest['analysis_only'])
             self.assertFalse(manifest['home_waveform_gate']['passed'])
 
+    def reviewed_fixture(self, root):
+        plan = self.make_arm_short_plan(root, '--cpu-trace')
+        binary = root / 'binary'
+        binary.write_text('placeholder')
+        binary.chmod(0o755)
+        run = self.saved_policy(plan, root, binary, 'home')
+        background = {'n': 600, 'median': 0., 'p90': 0., 'max': 0.}
+        shape = {'status': 'failed', 'passed': False,
+                 'reasons': ['fragmented_onset_fraction_exceeds_10pct'],
+                 'requests': 600, 'complete_requests': 600,
+                 'sensitivity': {'90': {'fragmented_fraction': 83 / 600,
+                    'background_high_fraction': background,
+                    'background_longest_high_ms': background}}}
+        gate = M.home_waveform_gate(plan, {'runs': [dict(policy='home', status='ok', request_waveform=shape)]})
+        manifest = {'schema_version': 1, 'family': 'request-wave',
+                    'plan_sha256': plan['plan_sha256'], 'binary_sha256': M.file_digest(binary),
+                    'binary': str(binary), 'policy_order': plan['policy_order'],
+                    'calibration': False, 'runs': [run], 'home_waveform_gate': gate}
+        waveform = root / 'cpu-curves/home/request_waveform.csv'
+        waveform.parent.mkdir(parents=True)
+        waveform.write_text('original saved per-request evidence')
+        evidence = {'schema_version': 1, 'kind': 'diagnostic_only_no_acceptance_override',
+                    'status': 'ok', 'issues': [], 'strict_result_unchanged': True,
+                    'plan': str(root / 'plan.json'), 'manifest': str(root / 'run_manifest.json'),
+                    'plan_sha256': plan['plan_sha256'], 'manifest_sha256': 'transient-original-manifest',
+                    'trace_sha256': run['artifact_sha256']['cpu_trace.txt'],
+                    'bin_ms': 1., 'high_pct': 90., 'window_ms': [0., 30.],
+                    'late_window_ms': [20., 30.], 'anchor': 'actual_first_initial_submit',
+                    'trace_validation': {'status': 'ok', 'issues': []},
+                    'strict_original_recomputed': shape,
+                    'requests': 600, 'unavailable_requests': 0,
+                    'fragment_count_check': {'complete': 600, 'fragmented': 83,
+                        'strict_complete': 600, 'matches': True,
+                        'inspection_fraction': 83 / 600, 'strict_fraction': 83 / 600},
+                    'groups': {'all_complete': {'n': 600, 'touches_30ms_boundary': 0,
+                        'categories': {'high_after_20ms': 0}, 'metrics': {
+                            'last_high_end_ms': {'n': 598, 'max': 13.},
+                            'late_20_30_high_ms': {'n': 600, 'max': 0.}}}},
+                    'background_90pct_original': {'background_high_fraction': background,
+                                                 'background_longest_high_ms': background},
+                    'saved_checks': [{'source': 'manifest.home_waveform_gate', 'matches': True},
+                        {'source': 'cpu-curves/summary.json', 'matches': True},
+                        {'source': str(waveform), 'matches': True, 'rows': 600,
+                         'sha256': M.file_digest(waveform)}]}
+        inspection = root / 'inspection.json'
+        M.atomic_json(root / 'run_manifest.json', manifest)
+        M.atomic_json(inspection, evidence)
+        argv = ['run', '--plan', str(root / 'plan.json'), '--binary', str(binary)]
+        return plan, binary, inspection, evidence, manifest, argv
+
+    def saved_policy(self, plan, root, binary, policy):
+        path = root / 'runs' / policy
+        path.mkdir(parents=True)
+        artifacts = ['data/tasks.csv', 'data/summary.json', 'data/metadata.json',
+                     'cpu_samples.csv', 'stdout.log', 'cpu_trace.txt', 'cpu_trace_status.json']
+        for filename in artifacts:
+            target = path / filename
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(policy + ':' + filename)
+        run = {'plan_sha256': plan['plan_sha256'], 'binary_sha256': M.file_digest(binary),
+               'policy': policy, 'options': dict(plan['base'], **plan['policies'][policy]),
+               'status': 'completed', 'cpu_trace': {'status': 'ok'},
+               'cpu_observation': {'status': 'ok'}, 'path': str(path),
+               'artifact_sha256': {name: M.file_digest(path / name) for name in artifacts}}
+        M.atomic_json(path / 'manifest.json', run)
+        return run
+
+    def test_reviewed_continuation_reuses_home_and_preserves_strict_verdict(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            plan, binary, inspection, evidence, before, argv = self.reviewed_fixture(root)
+            plan_bytes = (root / 'plan.json').read_bytes()
+            args = M.parser().parse_args(argv + ['--reviewed-short-peak-inspection', str(inspection)])
+            original_execute = M.execute_one
+            new_work = []
+            def execute(_plan, _binary, sha, path, policy, calibration):
+                if not path.exists():
+                    new_work.append(policy)
+                    self.saved_policy(_plan, root, _binary, policy)
+                return original_execute(_plan, _binary, sha, path, policy, calibration)
+            output = io.StringIO()
+            with mock.patch.object(M, 'validate_resources'), \
+                    mock.patch.object(M, 'execute_one', side_effect=execute), \
+                    mock.patch.object(M, 'analyze_saved'), \
+                    mock.patch.object(M.subprocess, 'Popen') as process, contextlib.redirect_stdout(output):
+                M.execute(args)
+                first = json.loads((root / 'run_manifest.json').read_text())
+                # A changed top manifest is expected after source_only; stable
+                # home identities allow a later verified resume without reruns.
+                M.execute(args)
+                final = json.loads((root / 'run_manifest.json').read_text())
+            process.assert_not_called()
+            self.assertEqual(['source_only'], new_work)
+            self.assertIn('SKIP home', output.getvalue())
+            self.assertIn('POST-RESULT REVIEW accepted_posthoc', output.getvalue())
+            self.assertEqual(before['home_waveform_gate'], final['home_waveform_gate'])
+            self.assertEqual('accepted_posthoc', final['home_waveform_review']['status'])
+            self.assertEqual(M.file_digest(inspection), final['home_waveform_review']['inspection_sha256'])
+            self.assertEqual(first['home_waveform_review'], final['home_waveform_review'])
+            self.assertEqual(plan_bytes, (root / 'plan.json').read_bytes())
+            self.assertEqual(['home', 'source_only'], [run['policy'] for run in final['runs']])
+            # Historical review metadata must not become implicit permission.
+            curves = {'runs': [dict(policy='home', status='ok',
+                                   request_waveform=before['home_waveform_gate']['home_request_waveform'])]}
+            with mock.patch.object(M, 'validate_resources'), \
+                    mock.patch.object(M, 'analyze_saved', return_value=curves), \
+                    mock.patch.object(M.subprocess, 'Popen') as process, contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaisesRegex(RuntimeError, 'source_only was not launched'):
+                    M.execute(M.parser().parse_args(argv))
+            process.assert_not_called()
+            self.assertEqual(final['home_waveform_review'],
+                             json.loads((root / 'run_manifest.json').read_text())['home_waveform_review'])
+
+    def test_review_rejects_changed_or_incomplete_evidence_before_any_run(self):
+        cases = ['late', 'background', 'trace_hash', 'plan_hash', 'coverage',
+                 'count', 'saved_check', 'unrelated_failure', 'missing_home',
+                 'missing_evidence', 'changed_artifact', 'changed_review_hash', 'waveform_hash']
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                plan, binary, inspection, evidence, manifest, argv = self.reviewed_fixture(root)
+                if case == 'late':
+                    evidence['groups']['all_complete']['metrics']['last_high_end_ms']['max'] = 21.
+                elif case == 'background':
+                    evidence['background_90pct_original']['background_high_fraction']['max'] = .1
+                elif case == 'trace_hash':
+                    evidence['trace_sha256'] = 'wrong'
+                elif case == 'plan_hash':
+                    evidence['plan_sha256'] = 'wrong'
+                elif case == 'coverage':
+                    evidence['unavailable_requests'] = 1
+                elif case == 'count':
+                    evidence['fragment_count_check']['fragmented'] += 1
+                elif case == 'saved_check':
+                    evidence['saved_checks'][0]['matches'] = False
+                elif case == 'unrelated_failure':
+                    evidence['strict_original_recomputed']['reasons'].append('union_mean_outside_45_55pct')
+                    manifest['home_waveform_gate']['reasons'].append('union_mean_outside_45_55pct')
+                elif case == 'missing_home':
+                    (root / 'runs/home/manifest.json').unlink()
+                elif case == 'changed_artifact':
+                    (root / 'runs/home/data/tasks.csv').write_text('changed')
+                elif case == 'changed_review_hash':
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        manifest['home_waveform_review'] = M.reviewed_short_peak(
+                            plan, inspection, root, manifest, M.file_digest(binary))
+                    evidence['new_note'] = 'changed after original review'
+                elif case == 'waveform_hash':
+                    (root / 'cpu-curves/home/request_waveform.csv').write_text('changed')
+                M.atomic_json(inspection, evidence)
+                if case == 'missing_evidence':
+                    inspection.unlink()
+                M.atomic_json(root / 'run_manifest.json', manifest)
+                original_manifest = (root / 'run_manifest.json').read_bytes()
+                original_plan = (root / 'plan.json').read_bytes()
+                args = M.parser().parse_args(argv + ['--reviewed-short-peak-inspection', str(inspection)])
+                with mock.patch.object(M, 'validate_resources'), \
+                        mock.patch.object(M, 'execute_one') as execute, \
+                        mock.patch.object(M, 'analyze_saved') as analyze, \
+                        mock.patch.object(M.subprocess, 'Popen') as process, contextlib.redirect_stdout(io.StringIO()):
+                    with self.assertRaises((ValueError, OSError)):
+                        M.execute(args)
+                execute.assert_not_called()
+                analyze.assert_not_called()
+                process.assert_not_called()
+                self.assertEqual(original_manifest, (root / 'run_manifest.json').read_bytes())
+                self.assertEqual(original_plan, (root / 'plan.json').read_bytes())
+
     def test_only_home_keeps_plan_order_and_resumes_remaining_policy(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

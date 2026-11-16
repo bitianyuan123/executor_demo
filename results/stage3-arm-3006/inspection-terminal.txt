@@ -1,0 +1,49 @@
+SHORT-PEAK OFFLINE INSPECTION — diagnostic only; no workload launched
+status=ok; issues=none
+Same actual first-submit anchor, 1ms bins, >=90%; inspect [0,30)ms; late=[20,30)ms.
+ORIGINAL STRICT status=failed; passed=False; reasons=fragmented_onset_fraction_exceeds_10pct
+Original strict acceptance is unchanged; this report does not authorize source_only.
+SAVED CHECK manifest.home_waveform_gate: matches=True
+SAVED CHECK cpu-curves/summary.json: matches=True
+SAVED CHECK /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/cpu-curves/home/request_waveform.csv: matches=True
+FRAGMENT COUNT 83/600; matches_strict=True
+REQUEST COVERAGE total=600; unavailable=0
+group,metric,n,median,p90,p99,max
+CATEGORIES all_complete {"high_after_20ms": 0, "no_high_segment": 2, "single_within_20ms": 513, "split_within_20ms": 85}; touches30=0; split_with_all_gaps_le1ms=46
+all_complete,initial_submit_span_ms,600,0.986,3.469,8.880,10.698
+all_complete,segment_count,600,1.000,2.000,3.000,5.000
+all_complete,envelope_ms,598,9.000,10.000,12.000,13.000
+all_complete,last_high_end_ms,598,9.000,10.000,12.000,13.000
+all_complete,total_high_ms,600,8.000,10.000,11.000,12.000
+all_complete,late_20_30_high_ms,600,0.000,0.000,0.000,0.000
+all_complete,max_gap_ms,85,1.000,4.000,5.000,5.000
+all_complete,strict_extra_onset_high_ms,600,0.000,5.000,8.000,9.000
+CATEGORIES fragmented {"high_after_20ms": 0, "no_high_segment": 0, "single_within_20ms": 1, "split_within_20ms": 82}; touches30=0; split_with_all_gaps_le1ms=46
+fragmented,initial_submit_span_ms,83,4.032,7.682,10.698,10.698
+fragmented,segment_count,83,2.000,3.000,5.000,5.000
+fragmented,envelope_ms,83,9.000,11.000,13.000,13.000
+fragmented,last_high_end_ms,83,10.000,11.000,13.000,13.000
+fragmented,total_high_ms,83,8.000,9.000,11.000,11.000
+fragmented,late_20_30_high_ms,83,0.000,0.000,0.000,0.000
+fragmented,max_gap_ms,82,1.000,4.000,5.000,5.000
+fragmented,strict_extra_onset_high_ms,83,6.000,8.000,9.000,9.000
+CATEGORIES not_fragmented {"high_after_20ms": 0, "no_high_segment": 2, "single_within_20ms": 512, "split_within_20ms": 3}; touches30=0; split_with_all_gaps_le1ms=0
+not_fragmented,initial_submit_span_ms,517,0.985,1.725,4.921,10.226
+not_fragmented,segment_count,517,1.000,1.000,1.000,3.000
+not_fragmented,envelope_ms,515,9.000,10.000,11.000,12.000
+not_fragmented,last_high_end_ms,515,9.000,10.000,11.000,12.000
+not_fragmented,total_high_ms,517,9.000,10.000,11.000,12.000
+not_fragmented,late_20_30_high_ms,517,0.000,0.000,0.000,0.000
+not_fragmented,max_gap_ms,3,4.000,4.000,4.000,4.000
+not_fragmented,strict_extra_onset_high_ms,517,0.000,0.000,0.000,2.000
+WORST FRAGMENTED (latest end first; maximum five): burst,home,submit_span_ms,last_end_ms,envelope_ms,late_high_ms,max_gap_ms,segments_ms
+567,3,5.205,13.000,13.000,0.000,3.000,[[0.0,1.0],[3.0,4.0],[7.0,13.0]]
+247,1,0.984,13.000,7.000,0.000,NA,[[6.0,13.0]]
+647,5,3.193,12.000,12.000,0.000,1.000,[[0.0,3.0],[4.0,12.0]]
+653,5,4.916,12.000,12.000,0.000,2.000,[[0.0,1.0],[3.0,4.0],[5.0,12.0]]
+485,5,5.040,12.000,12.000,0.000,2.000,[[0.0,1.0],[2.0,3.0],[4.0,5.0],[7.0,12.0]]
+ORIGINAL BACKGROUND {"background_high_fraction": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}, "background_longest_high_ms": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}}
+Envelope ends at the last observed high bin; touching30 is censored, not evidence of recovery.
+All/non-fragmented/fragmented counts retain unknown coverage as unavailable, never as zero.
+Submission-span differences and one-ms gaps are descriptive; causes are unproven.
+Artifacts: results/short-peak-arm/short-peak-inspection/report.txt, inspection.json, waves.csv
