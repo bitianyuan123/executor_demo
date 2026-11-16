@@ -1,0 +1,95 @@
+REQUEST-WAVE DESCRIPTIVE REPORT
+HOME WAVEFORM GATE {"comparison_allowed": true, "passed": false, "reasons": ["No high-resolution CPU trace: waveform unvalidated; /proc/stat cannot establish a 5-20ms peak."], "status": "functional_only"}
+FUNCTIONAL_ONLY: development exercise without high-resolution trace. Home 5-20ms waveform is unvalidated; numeric comparisons are not production-performance evidence.
+INPUT request_rate=12/s; arrival=regular; seed=52000; duration=3s
+INPUT initial_tasks=80..80 over 1ms; steady_tasks=80 over 166.66666666666666ms; CPU_budget=133us; jitter=0.5; long_prob=0; normalization=exact
+PHASE CPU BUDGET initial=133us; steady=1950us; profile=short-peak; 0 means inherit CPU_budget; resolved nominal and actual cohort target means are printed below
+RESOURCES pools=2; workers_per_pool=16; affinity=cluster; C=[2.0, 2.0]; NUMA=[0, 0]; pool_CPUs=[[0, 1], [2, 3]]
+OBSERVATION instrumentation=full; load=basic; CPU_sample_ms=100; order=['home', 'source_only']; policies={"home": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "home"}, "source_only": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "threshold"}}
+request cohort: [0.5, 3.0) seconds; retain entire requests and drain
+S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)
+comparison_valid=true
+comparison_issues=
+
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,4800,30,2.597,8.463,2.819,8.747,56.716,6.146,0.000,0.000,0.000,NA
+PHASE TARGET CPU home: {"initial": {"configured": 133, "resolved_nominal": 133, "target_mean": 132.92708333333334}, "steady": {"configured": 1950, "resolved_nominal": 1950, "target_mean": 1952.9}}
+source_only,True,4800,30,2.148,13.234,2.625,15.476,56.735,6.415,0.275,0.566,0.000,0.000
+PHASE TARGET CPU source_only: {"initial": {"configured": 133, "resolved_nominal": 133, "target_mean": 132.92708333333334}, "steady": {"configured": 1950, "resolved_nominal": 1950, "target_mean": 1952.9}}
+
+baseline,policy,S_mean_change_pct,S_p99_change_pct,L_mean_change_pct,L_p99_change_pct (negative=lower latency)
+home,source_only,-17.277,56.377,-6.871,76.919
+
+CPU ARRIVAL WINDOW
+policy,scope,execution_pct,execution_sample_peak_pct,iowait_pct,steal_pct,covered_seconds,intervals,status
+home,union,56.716,70.732,0.000,0.000,2.412,24,ok
+home,pool0,56.863,70.588,0.000,0.000,2.412,24,ok
+home,pool1,56.566,75.000,0.000,0.000,2.412,24,ok
+source_only,union,56.735,75.000,0.000,0.000,2.420,24,ok
+source_only,pool0,56.566,76.471,0.000,0.000,2.420,24,ok
+source_only,pool1,56.907,75.000,0.000,0.000,2.420,24,ok
+
+INITIAL TASK SUBMISSION SPAN (per request, last submit minus first submit)
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,30,1.323,2.896,0.988,0,0.000
+source_only,30,1.821,4.783,0.988,0,0.000
+
+DECOMPOSITION (p99 components are not additive)
+policy,phase,n,requests,S_mean,W_mean,X_mean,L_mean,D_mean,S_p99,W_p99,X_p99,L_p99,D_p99
+home,all,4800,30,2.597,1.336,1.260,2.819,0.222,8.463,5.396,5.841,8.747,2.008
+home,initial,2400,30,2.837,2.509,0.328,3.182,0.345,8.351,5.828,5.577,8.517,2.064
+home,steady,2400,30,2.356,0.164,2.192,2.455,0.099,9.064,4.568,5.997,9.119,1.129
+source_only,all,4800,30,2.148,0.826,1.322,2.625,0.477,13.234,9.816,8.443,15.476,3.974
+source_only,initial,2400,30,1.536,1.314,0.222,2.192,0.656,10.489,10.166,2.894,11.016,3.895
+source_only,steady,2400,30,2.760,0.337,2.423,3.058,0.298,17.531,7.888,14.720,20.179,5.103
+
+HOME ADMISSION BUCKETS
+phase,metric,lower_inclusive,upper_exclusive,n,requests,S_mean_ms,S_p99_ms,W_mean_ms,X_mean_ms,L_mean_ms,D_mean_ms,tail_quality
+all,N/C,0.000,0.500,1181,30,2.164,5.299,0.025,2.140,2.266,0.101,DESCRIPTIVE
+all,N/C,0.500,0.800,1021,30,2.055,5.878,0.049,2.006,2.141,0.086,DESCRIPTIVE
+all,N/C,0.800,1.000,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+all,N/C,1.000,2.000,197,30,1.565,6.316,0.199,1.365,1.751,0.186,LOW_TAIL
+all,N/C,2.000,4.000,177,30,1.328,7.388,0.531,0.798,1.611,0.282,LOW_TAIL
+all,N/C,4.000,NA,2224,30,3.267,9.723,2.788,0.478,3.614,0.348,DESCRIPTIVE
+all,Q/C,0.000,0.500,2357,30,2.132,5.878,0.044,2.088,2.230,0.098,DESCRIPTIVE
+all,Q/C,0.500,0.800,65,30,0.860,7.388,0.300,0.559,1.079,0.219,LOW_TAIL
+all,Q/C,0.800,1.000,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+all,Q/C,1.000,2.000,79,30,0.673,5.727,0.464,0.209,0.957,0.284,LOW_TAIL
+all,Q/C,2.000,4.000,147,30,0.969,5.596,0.719,0.250,1.307,0.338,LOW_TAIL
+all,Q/C,4.000,NA,2152,30,3.339,9.742,2.856,0.483,3.687,0.348,DESCRIPTIVE
+initial,N/C,0.000,0.500,3,3,0.389,0.538,0.241,0.148,0.825,0.435,LOW_TAIL
+initial,N/C,0.500,0.800,41,29,0.868,7.702,0.148,0.720,1.109,0.241,LOW_TAIL
+initial,N/C,0.800,1.000,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+initial,N/C,1.000,2.000,85,30,0.449,4.280,0.263,0.185,0.703,0.254,LOW_TAIL
+initial,N/C,2.000,4.000,135,30,0.713,1.919,0.558,0.154,1.043,0.330,LOW_TAIL
+initial,N/C,4.000,NA,2136,30,3.108,8.427,2.770,0.338,3.460,0.352,DESCRIPTIVE
+initial,Q/C,0.000,0.500,58,30,0.752,7.702,0.130,0.623,1.063,0.311,LOW_TAIL
+initial,Q/C,0.500,0.800,54,30,0.360,1.334,0.229,0.130,0.569,0.210,LOW_TAIL
+initial,Q/C,0.800,1.000,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+initial,Q/C,1.000,2.000,77,30,0.580,1.584,0.433,0.147,0.869,0.289,LOW_TAIL
+initial,Q/C,2.000,4.000,142,30,0.835,1.919,0.689,0.146,1.183,0.347,LOW_TAIL
+initial,Q/C,4.000,NA,2069,30,3.181,8.427,2.837,0.344,3.533,0.352,DESCRIPTIVE
+steady,N/C,0.000,0.500,1178,30,2.169,5.299,0.024,2.145,2.269,0.100,DESCRIPTIVE
+steady,N/C,0.500,0.800,980,30,2.105,5.697,0.045,2.060,2.184,0.079,LOW_TAIL
+steady,N/C,0.800,1.000,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+steady,N/C,1.000,2.000,112,29,2.412,6.316,0.151,2.261,2.546,0.134,LOW_TAIL
+steady,N/C,2.000,4.000,42,29,3.307,7.927,0.442,2.865,3.435,0.128,LOW_TAIL
+steady,N/C,4.000,NA,88,30,7.135,13.456,3.238,3.897,7.375,0.239,LOW_TAIL
+steady,Q/C,0.000,0.500,2299,30,2.167,5.741,0.042,2.125,2.260,0.093,DESCRIPTIVE
+steady,Q/C,0.500,0.800,11,9,3.315,7.388,0.649,2.666,3.579,0.264,LOW_TAIL
+steady,Q/C,0.800,1.000,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+steady,Q/C,1.000,2.000,2,2,4.263,5.727,1.645,2.617,4.332,0.069,LOW_TAIL
+steady,Q/C,2.000,4.000,5,5,4.777,7.228,1.569,3.208,4.843,0.066,LOW_TAIL
+steady,Q/C,4.000,NA,83,30,7.277,13.456,3.338,3.939,7.527,0.250,LOW_TAIL
+
+NOTES
+One run per policy: descriptive observed differences, no confidence intervals or significance claims.
+Admission N/Q are read before this task reservation; each observation is paired with that same task latency.
+N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.
+Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.
+S=W+X and L=D+S per task and for means; p99 values cannot be added.
+No completion-window filtering and no averaging of per-second or per-bucket p99.
+CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.
+CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.
+Tasks execute independently (no DAG), but their timings are statistically correlated through shared request release/home and CPU competition. LOW_TAIL means fewer than 1000 tasks (fewer than about 10 nominal tail observations); larger samples remain descriptive.
+Source-trigger fractions count actual routing decisions; home does not run threshold decisions, so its trigger fraction is zero by construction.

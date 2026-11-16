@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Request-wave release/accounting contracts, not performance assertions."""
 import csv
+from fractions import Fraction
 import json
 from pathlib import Path
 import subprocess
@@ -120,10 +121,97 @@ class RequestWave(unittest.TestCase):
         self.assertEqual(len(tasks), 12)
         self.assertEqual(meta['planned_steady_cpu_us'], 0)
 
+    def test_phase_budgets_conserve_separate_means_and_release_order(self):
+        _, _, legacy, _ = self.run_case()
+        meta, _, tasks, _ = self.run_case(**{'initial-cpu-us': 20, 'steady-cpu-us': 500})
+        self.assertEqual(meta['initial_cpu_us'], 20)
+        self.assertEqual(meta['steady_cpu_us'], 500)
+        self.assertEqual(meta['resolved_initial_cpu_us'], 20)
+        self.assertEqual(meta['resolved_steady_cpu_us'], 500)
+        self.assertEqual(meta['mean_normalization_scope'], 'per_phase')
+        self.assertEqual(meta['estimate_source'], 'phase_nominal_mean')
+        for phase, budget in [('initial', 20), ('steady', 500)]:
+            cohort = [t for t in tasks if t['phase'] == phase]
+            self.assertEqual(sum(int(t['target_cpu_us']) for t in cohort), len(cohort) * budget)
+            self.assertEqual(meta['planned_' + phase + '_cpu_us'], len(cohort) * budget)
+            self.assertTrue(all(int(t['estimate_us']) == budget for t in cohort))
+            self.assertGreater(len({t['target_cpu_us'] for t in cohort}), 1)
+        keys = ('task', 'burst', 'planned_ns', 'request_planned_ns', 'phase', 'home_pool')
+        self.assertEqual([[t[k] for k in keys] for t in tasks],
+                         [[t[k] for k in keys] for t in legacy])
+        ordered = sorted(tasks, key=lambda t: (int(t['planned_ns']), int(t['task'])))
+        observed = sorted(tasks, key=lambda t: (int(t['submit_ns']), int(t['task'])))
+        self.assertEqual([t['task'] for t in ordered], [t['task'] for t in observed])
+
+    def test_phase_exact_normalization_handles_tiny_budgets_and_empty_cohort(self):
+        for seed in (1, 7, 42):
+            meta, _, tasks, _ = self.run_case(**{'initial-cpu-us': 1, 'steady-cpu-us': 7,
+                'jitter': .99, 'long-prob': .6, 'long-factor': 10, 'seed': seed})
+            self.assertEqual(meta['planned_initial_cpu_us'], 12)
+            self.assertEqual(meta['planned_steady_cpu_us'], 63)
+            self.assertTrue(all(int(t['target_cpu_us']) >= 1 for t in tasks))
+            self.assertTrue(all(t['target_cpu_us'] == '1' for t in tasks if t['phase'] == 'initial'))
+        meta, _, tasks, _ = self.run_case(**{'initial-cpu-us': 1, 'steady-tasks': 0})
+        self.assertEqual(meta['planned_steady_cpu_us'], 0)
+        self.assertEqual(meta['planned_cpu_us'], 12)
+        self.assertTrue(all(t['target_cpu_us'] == '1' for t in tasks))
+
+    def test_single_phase_override_falls_back_to_cpu_us_and_explicit_estimate_wins(self):
+        for option, means in [('initial-cpu-us', {'initial': 20, 'steady': 100}),
+                              ('steady-cpu-us', {'initial': 100, 'steady': 20})]:
+            meta, _, tasks, _ = self.run_case(**{option: 20, 'estimate-us': 73})
+            self.assertEqual(meta['estimate_source'], 'explicit')
+            for phase, budget in means.items():
+                cohort = [t for t in tasks if t['phase'] == phase]
+                self.assertEqual(meta['resolved_' + phase + '_cpu_us'], budget)
+                self.assertEqual(sum(int(t['target_cpu_us']) for t in cohort), len(cohort) * budget)
+            self.assertTrue(all(t['estimate_us'] == '73' for t in tasks))
+
+    def test_phase_estimates_do_not_leak_random_target_with_or_without_normalization(self):
+        cases = []
+        for normalization, tail in [('none', 0), ('exact', .7)]:
+            meta, _, tasks, _ = self.run_case(**{'initial-cpu-us': 20, 'steady-cpu-us': 200,
+                'estimate-jitter': .25, 'mean-normalization': normalization, 'long-prob': tail})
+            self.assertEqual(meta['estimate_source'], 'phase_nominal_mean')
+            self.assertEqual(meta['mean_normalization_scope'], 'none' if normalization == 'none' else 'per_phase')
+            for task in tasks:
+                nominal = 200 if task['phase'] == 'steady' else 20
+                self.assertLessEqual(.75 * nominal - 1, int(task['estimate_us']))
+                self.assertLessEqual(int(task['estimate_us']), 1.25 * nominal)
+            cases.append(tasks)
+        self.assertEqual([t['estimate_us'] for t in cases[0]], [t['estimate_us'] for t in cases[1]])
+        self.assertNotEqual([t['target_cpu_us'] for t in cases[0]], [t['target_cpu_us'] for t in cases[1]])
+
+    def test_no_phase_overrides_keep_legacy_global_normalization_and_estimates(self):
+        _, _, raw, _ = self.run_case(**{'mean-normalization': 'none'})
+        meta, _, exact, _ = self.run_case()
+        _, _, explicit_zero, _ = self.run_case(**{'initial-cpu-us': 0, 'steady-cpu-us': 0})
+        self.assertEqual(meta['mean_normalization_scope'], 'global')
+        self.assertEqual(meta['estimate_source'], 'synthetic_target')
+        self.assertEqual(meta['initial_cpu_us'], 0)
+        self.assertEqual(meta['steady_cpu_us'], 0)
+        extra = len(raw) * 99
+        weights = sum(int(t['target_cpu_us']) - 1 for t in raw)
+        cumulative = assigned = 0
+        expected = []
+        for task in raw:
+            cumulative += int(task['target_cpu_us']) - 1
+            next_total = int(Fraction(cumulative * extra, weights) + Fraction(1, 2))
+            expected.append(1 + next_total - assigned)
+            assigned = next_total
+        self.assertEqual([int(t['target_cpu_us']) for t in exact], expected)
+        self.assertEqual([t['target_cpu_us'] for t in exact], [t['target_cpu_us'] for t in explicit_zero])
+        self.assertTrue(all(t['estimate_us'] == t['target_cpu_us'] for t in exact))
+
     def test_invalid_wave_and_acceptance_options(self):
         for args in (['--workload', 'bad'], ['--accept-threshold', '-2'],
                      ['--accept-threshold', 'nan'], ['--burst-window-ms', '-1'],
                      ['--steady-window-ms', '0'],
+                     ['--initial-cpu-us', '1'], ['--steady-cpu-us', '1'],
+                     ['--workload', 'request-wave', '--initial-cpu-us', '-1'],
+                     ['--workload', 'request-wave', '--steady-cpu-us', '-1'],
+                     ['--workload', 'request-wave', '--initial-cpu-us', '3600000001'],
+                     ['--workload', 'request-wave', '--steady-cpu-us', '3600000001'],
                      ['--workload', 'request-wave', '--burst-placement', 'spread'],
                      ['--workload', 'request-wave', '--max-planned-tasks', '80']):
             result = subprocess.run([str(BINARY), *args, '--output', str(self.root / 'invalid')],

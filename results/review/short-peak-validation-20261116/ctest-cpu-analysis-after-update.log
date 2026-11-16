@@ -1,0 +1,8 @@
+Internal ctest changing into directory: /root/rank_demo/stage3_balance/build-independent
+Test project /root/rank_demo/stage3_balance/build-independent
+    Start 13: independent_cpu_trace_analysis
+1/1 Test #13: independent_cpu_trace_analysis ...   Passed    1.66 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   1.66 sec

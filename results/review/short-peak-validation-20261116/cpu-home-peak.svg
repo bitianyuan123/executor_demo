@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1250" height="570" viewBox="0 0 1250 570">
+<rect width="100%" height="100%" fill="white"/>
+<text x="75" y="26" font-family="sans-serif" font-size="19">home: actual request 12 short-peak timeline (home pool0)</text>
+<text x="75" y="48" font-family="sans-serif" font-size="12">Non-idle task residency (%), not IRQ-exact CPU utilization. Missing data is not zero.</text>
+<path d="M 75,400.0 H 1210" stroke="#ddd"/><text x="67" y="404.0" text-anchor="end" font-family="sans-serif" font-size="12">0</text>
+<path d="M 75,325.0 H 1210" stroke="#ddd"/><text x="67" y="329.0" text-anchor="end" font-family="sans-serif" font-size="12">25</text>
+<path d="M 75,250.0 H 1210" stroke="#ddd"/><text x="67" y="254.0" text-anchor="end" font-family="sans-serif" font-size="12">50</text>
+<path d="M 75,175.0 H 1210" stroke="#ddd"/><text x="67" y="179.0" text-anchor="end" font-family="sans-serif" font-size="12">75</text>
+<path d="M 75,100.0 H 1210" stroke="#ddd"/><text x="67" y="104.0" text-anchor="end" font-family="sans-serif" font-size="12">100</text>
+<text x="75.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">995.1</text>
+<text x="302.0000000000007" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">1003.1</text>
+<text x="529.0000000000014" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">1011.1</text>
+<text x="755.9999999999987" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">1019.1</text>
+<text x="982.9999999999993" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">1027.1</text>
+<text x="1210.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">1035.1</text>
+<text x="75" y="78" fill="#111827" font-family="sans-serif" font-size="13">union</text>
+<polyline points="75.00,215.65 93.52,185.50 121.90,237.78 150.27,183.70 178.65,230.50 207.02,163.52 235.40,116.95 263.77,118.38 292.15,170.05 320.52,162.25 348.90,235.45 377.27,171.33 405.65,126.40 434.02,103.38 462.40,112.67 490.77,104.20 519.15,105.10 547.52,117.02 575.90,104.58 604.27,176.05 632.65,164.35 661.02,165.48 689.40,152.20 717.77,151.52 746.15,141.17 774.52,212.65 802.90,204.10 831.27,219.40 859.65,163.75 888.02,163.75 916.40,141.62 944.77,220.75 973.15,187.98 1001.52,278.20 1029.90,227.57 1058.27,357.48 1086.65,295.98 1115.02,244.52 1143.40,184.00 1171.77,169.52 1200.15,177.55" fill="none" stroke="#111827" stroke-width="1.2"/>
+<text x="225" y="78" fill="#2563eb" font-family="sans-serif" font-size="13">pool0</text>
+<polyline points="75.00,100.00 93.52,100.00 121.90,128.65 150.27,100.00 178.65,100.00 207.02,100.00 235.40,100.00 263.77,100.00 292.15,100.00 320.52,100.00 348.90,100.00 377.27,100.00 405.65,100.00 434.02,100.00 462.40,100.00 490.77,100.00 519.15,110.20 547.52,134.05 575.90,109.15 604.27,252.10 632.65,228.70 661.02,230.95 689.40,164.80 717.77,200.20 746.15,180.55 774.52,175.30 802.90,158.20 831.27,334.30 859.65,227.50 888.02,227.50 916.40,172.30 944.77,210.40 973.15,158.50 1001.52,313.60 1029.90,250.00 1058.27,391.00 1086.65,345.10 1115.02,250.00 1143.40,245.95 1171.77,239.05 1200.15,246.85" fill="none" stroke="#2563eb" stroke-width="1.2"/>
+<text x="375" y="78" fill="#ea580c" font-family="sans-serif" font-size="13">pool1</text>
+<polyline points="75.00,331.30 93.52,271.00 121.90,346.90 150.27,267.40 178.65,361.00 207.02,227.05 235.40,133.90 263.77,136.75 292.15,240.10 320.52,224.50 348.90,370.90 377.27,242.65 405.65,152.80 434.02,106.75 462.40,125.35 490.77,108.40 519.15,100.00 547.52,100.00 575.90,100.00 604.27,100.00 632.65,100.00 661.02,100.00 689.40,139.60 717.77,102.85 746.15,101.80 774.52,250.00 802.90,250.00 831.27,104.50 859.65,100.00 888.02,100.00 916.40,110.95 944.77,231.10 973.15,217.45 1001.52,242.80 1029.90,205.15 1058.27,323.95 1086.65,246.85 1115.02,239.05 1143.40,122.05 1171.77,100.00 1200.15,108.25" fill="none" stroke="#ea580c" stroke-width="1.2"/>
+<text x="75" y="445" font-family="sans-serif" font-size="12">Milliseconds from workload epoch (individual run timeline)</text>
+<rect x="216.88" y="465" width="28.04" height="8" fill="#2563eb" opacity=".7"><title>home pool 0, request 12: actual initial submissions</title></rect>
+<text x="75" y="555" font-family="sans-serif" font-size="11">Bottom tracks: actual initial submission spans by home pool. Full-run lines retain per-pixel extrema.</text>
+</svg>

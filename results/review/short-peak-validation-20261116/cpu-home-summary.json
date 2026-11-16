@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "metric": "scheduler_nonidle_task_residency_pct",
+  "status": "ok",
+  "bin_ms": 1.0,
+  "runs": [
+    {
+      "policy": "home",
+      "status": "ok",
+      "issues": [],
+      "request_waveform": {
+        "applicable": true,
+        "status": "failed",
+        "passed": false,
+        "issues": [
+          "union_mean_outside_45_55pct",
+          "fragmented_onset_fraction_exceeds_10pct"
+        ],
+        "reasons": [
+          "union_mean_outside_45_55pct",
+          "fragmented_onset_fraction_exceeds_10pct"
+        ],
+        "contract": {
+          "version": 1,
+          "kind": "provisional_synthetic_profile_acceptance_not_business_calibration",
+          "high_pct": 90.0,
+          "sensitivity_high_pct": [
+            80.0,
+            90.0,
+            95.0
+          ],
+          "maximum_bin_ms": 2.0,
+          "minimum_complete_requests": 30,
+          "minimum_complete_fraction": 0.95,
+          "minimum_onset_fraction": 0.9,
+          "near_onset_start_by_ms": 5.0,
+          "onset_region_end_ms": 30.0,
+          "median_peak_width_range_ms": [
+            5.0,
+            20.0
+          ],
+          "p90_peak_width_max_ms": 25.0,
+          "extra_onset_high_tolerance_ms": 2.0,
+          "maximum_fragmented_fraction": 0.1,
+          "background_median_range_pct": [
+            35.0,
+            65.0
+          ],
+          "background_high_fraction_p90_max": 0.1,
+          "background_longest_high_p90_max_ms": 10.0,
+          "union_mean_range_pct": [
+            45.0,
+            55.0
+          ],
+          "minimum_background_window_fraction": 0.9
+        },
+        "alignment": "actual_first_initial_submit",
+        "background": "30ms after actual first initial submit until min(anchor+home_period,next_same_home_actual_submit)",
+        "period_ms": 166.66666666666666,
+        "requests": 60,
+        "complete_requests": 60,
+        "complete_fraction": 1.0,
+        "anchor_lag_ms": {
+          "n": 60,
+          "median": 0.059068,
+          "p90": 0.073916,
+          "max": 1.177284
+        },
+        "clipped_by_next_request": 33,
+        "background_mean_pct": {
+          "n": 60,
+          "median": 50.85646341254521,
+          "p90": 56.05727031962057,
+          "max": 69.7978743419564
+        },
+        "sensitivity": {
+          "80": {
+            "onset_fraction": 1.0,
+            "onset_width_ms": {
+              "n": 60,
+              "median": 10.0,
+              "p90": 13.0,
+              "max": 20.0
+            },
+            "fragmented_fraction": 0.2833333333333333,
+            "background_high_fraction": {
+              "n": 60,
+              "median": 0.0658536583759667,
+              "p90": 0.12439755453433293,
+              "max": 0.3804878039500298
+            },
+            "background_longest_high_ms": {
+              "n": 60,
+              "median": 2.0,
+              "p90": 7.0,
+              "max": 28.0
+            }
+          },
+          "90": {
+            "onset_fraction": 1.0,
+            "onset_width_ms": {
+              "n": 60,
+              "median": 10.0,
+              "p90": 11.0,
+              "max": 20.0
+            },
+            "fragmented_fraction": 0.13333333333333333,
+            "background_high_fraction": {
+              "n": 60,
+              "median": 0.021951219458655562,
+              "p90": 0.08783229436390341,
+              "max": 0.27073170665675195
+            },
+            "background_longest_high_ms": {
+              "n": 60,
+              "median": 1.0,
+              "p90": 6.0,
+              "max": 19.0
+            }
+          },
+          "95": {
+            "onset_fraction": 1.0,
+            "onset_width_ms": {
+              "n": 60,
+              "median": 9.0,
+              "p90": 11.0,
+              "max": 20.0
+            },
+            "fragmented_fraction": 0.06666666666666667,
+            "background_high_fraction": {
+              "n": 60,
+              "median": 0.00731838730319521,
+              "p90": 0.08049253528692131,
+              "max": 0.21951219458655563
+            },
+            "background_longest_high_ms": {
+              "n": 60,
+              "median": 1.0,
+              "p90": 6.0,
+              "max": 13.0
+            }
+          }
+        },
+        "union_mean_pct": 55.02424623
+      },
+      "metric": "scheduler_nonidle_task_residency_pct",
+      "bin_ms": 1.0,
+      "capture_start_monotonic_ns": 2201604800893139,
+      "capture_end_monotonic_ns": 2201610949675264,
+      "observer": {
+        "observer_process_cpu_seconds": 0.374906873,
+        "reader_thread_cpu_seconds": 0.337310426,
+        "bytes_written": 8016489,
+        "timestamp_precision": "microseconds",
+        "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess",
+        "events_parsed": 44111
+      },
+      "limitations": [
+        "Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.",
+        "The configured bin width is an integration window, not an independent /proc/stat accounting sample.",
+        "No-event CPUs are unknown; every scope retains its original logical-CPU denominator.",
+        "Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.",
+        "The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported."
+      ],
+      "cpu_quality": {
+        "0": {
+          "status": "ok",
+          "issues": [],
+          "events": 12243
+        },
+        "1": {
+          "status": "ok",
+          "issues": [],
+          "events": 9957
+        },
+        "2": {
+          "status": "ok",
+          "issues": [],
+          "events": 11464
+        },
+        "3": {
+          "status": "ok",
+          "issues": [],
+          "events": 10447
+        }
+      },
+      "cohort_requests": 60,
+      "cohort_tasks": 9600,
+      "aligned_windows": [
+        {
+          "start_ms": 0.0,
+          "end_ms": 5.0,
+          "requests": 60,
+          "expected_requests": 60,
+          "mean_home_occupancy_pct": 98.847823,
+          "complete_requests": 60,
+          "truncated_requests": 0,
+          "observed_duration_ms": 300.0,
+          "expected_duration_ms": 300.0,
+          "duration_coverage": 1.0,
+          "max_missing_window_ms": 0.0,
+          "aggregation": "observed_duration_weighted_mean_not_zero_filled"
+        },
+        {
+          "start_ms": 5.0,
+          "end_ms": 10.0,
+          "requests": 60,
+          "expected_requests": 60,
+          "mean_home_occupancy_pct": 94.513887,
+          "complete_requests": 60,
+          "truncated_requests": 0,
+          "observed_duration_ms": 300.0,
+          "expected_duration_ms": 300.0,
+          "duration_coverage": 1.0,
+          "max_missing_window_ms": 0.0,
+          "aggregation": "observed_duration_weighted_mean_not_zero_filled"
+        },
+        {
+          "start_ms": 10.0,
+          "end_ms": 20.0,
+          "requests": 60,
+          "expected_requests": 60,
+          "mean_home_occupancy_pct": 58.123486666666665,
+          "complete_requests": 60,
+          "truncated_requests": 0,
+          "observed_duration_ms": 600.0,
+          "expected_duration_ms": 600.0,
+          "duration_coverage": 1.0,
+          "max_missing_window_ms": 0.0,
+          "aggregation": "observed_duration_weighted_mean_not_zero_filled"
+        },
+        {
+          "start_ms": 20.0,
+          "end_ms": 30.0,
+          "requests": 60,
+          "expected_requests": 60,
+          "mean_home_occupancy_pct": 51.030572416666665,
+          "complete_requests": 60,
+          "truncated_requests": 0,
+          "observed_duration_ms": 600.0,
+          "expected_duration_ms": 600.0,
+          "duration_coverage": 1.0,
+          "max_missing_window_ms": 0.0,
+          "aggregation": "observed_duration_weighted_mean_not_zero_filled"
+        },
+        {
+          "start_ms": 30.0,
+          "end_ms": 100.0,
+          "requests": 60,
+          "expected_requests": 60,
+          "mean_home_occupancy_pct": 51.71717092857143,
+          "complete_requests": 60,
+          "truncated_requests": 0,
+          "observed_duration_ms": 4200.0,
+          "expected_duration_ms": 4200.0,
+          "duration_coverage": 1.0,
+          "max_missing_window_ms": 0.0,
+          "aggregation": "observed_duration_weighted_mean_not_zero_filled"
+        },
+        {
+          "start_ms": 100.0,
+          "end_ms": 166.66666666666666,
+          "requests": 60,
+          "expected_requests": 60,
+          "mean_home_occupancy_pct": 51.80159414313526,
+          "complete_requests": 27,
+          "truncated_requests": 33,
+          "observed_duration_ms": 3997.386219,
+          "expected_duration_ms": 4000.00002,
+          "duration_coverage": 0.9993465497532672,
+          "max_missing_window_ms": 1.115698,
+          "aggregation": "observed_duration_weighted_mean_not_zero_filled"
+        }
+      ],
+      "aligned_curve": {
+        "anchor": "actual_first_initial_submit",
+        "range_ms": [
+          -10,
+          166.66666666666666
+        ],
+        "peak_zoom_range_ms": [
+          -5,
+          35
+        ],
+        "next_same_home_request_clips_background": true,
+        "aggregation": "observed_duration_weighted_mean; partial windows retain request/time coverage",
+        "warning": "Phase-aligned averages do not measure the distribution of individual wave peak widths. Use request_waveform.csv; absent time is not zero-filled."
+      },
+      "measurement_window": {
+        "start_monotonic_ns": 2201605830790754,
+        "end_monotonic_ns": 2201610830790754,
+        "full_capture_coverage": true,
+        "scopes": {
+          "union": {
+            "busy_ns": 11004849246,
+            "known_busy_ns": 11004849246,
+            "capacity_ns": 20000000000,
+            "known_capacity_ns": 20000000000,
+            "known_cpus": 4,
+            "total_cpus": 4,
+            "coverage": 1.0,
+            "occupancy_pct": 55.02424623,
+            "status": "ok"
+          },
+          "pool0": {
+            "busy_ns": 5526364246,
+            "known_busy_ns": 5526364246,
+            "capacity_ns": 10000000000,
+            "known_capacity_ns": 10000000000,
+            "known_cpus": 2,
+            "total_cpus": 2,
+            "coverage": 1.0,
+            "occupancy_pct": 55.26364246,
+            "status": "ok"
+          },
+          "pool1": {
+            "busy_ns": 5478485000,
+            "known_busy_ns": 5478485000,
+            "capacity_ns": 10000000000,
+            "known_capacity_ns": 10000000000,
+            "known_cpus": 2,
+            "total_cpus": 2,
+            "coverage": 1.0,
+            "occupancy_pct": 54.78485,
+            "status": "ok"
+          }
+        },
+        "bin_diagnostics": {
+          "union": {
+            "expected_complete_bins": 4999,
+            "observed_complete_bins": 4999,
+            "complete_bin_coverage": 1.0,
+            "observed_complete_bin_peak_pct": 100.0,
+            "ge90_duration_fraction": 0.029205841168233646,
+            "observed_ge90_ms": 146.0,
+            "longest_observed_ge90_ms": 20.0,
+            "status": "ok"
+          },
+          "pool0": {
+            "expected_complete_bins": 4999,
+            "observed_complete_bins": 4999,
+            "complete_bin_coverage": 1.0,
+            "observed_complete_bin_peak_pct": 100.0,
+            "ge90_duration_fraction": 0.10242048409681936,
+            "observed_ge90_ms": 512.0,
+            "longest_observed_ge90_ms": 19.0,
+            "status": "ok"
+          },
+          "pool1": {
+            "expected_complete_bins": 4999,
+            "observed_complete_bins": 4999,
+            "complete_bin_coverage": 1.0,
+            "observed_complete_bin_peak_pct": 100.0,
+            "ge90_duration_fraction": 0.09801960392078415,
+            "observed_ge90_ms": 490.0,
+            "longest_observed_ge90_ms": 21.0,
+            "status": "ok"
+          }
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.",
+    "The configured bin width is an integration window, not an independent /proc/stat accounting sample.",
+    "No-event CPUs are unknown; every scope retains its original logical-CPU denominator.",
+    "Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.",
+    "The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported."
+  ]
+}

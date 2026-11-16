@@ -1,0 +1,50 @@
+Internal ctest changing into directory: /root/rank_demo/stage3_balance/build-independent
+Test project /root/rank_demo/stage3_balance/build-independent
+      Start  1: independent_functional
+ 1/13 Test  #1: independent_functional ..............   Passed    0.91 sec
+      Start  2: independent_analysis
+ 2/13 Test  #2: independent_analysis ................   Passed    0.07 sec
+      Start  3: independent_prediction
+ 3/13 Test  #3: independent_prediction ..............   Passed    0.06 sec
+      Start  4: independent_routing_core
+ 4/13 Test  #4: independent_routing_core ............   Passed    0.00 sec
+      Start  5: independent_routing
+ 5/13 Test  #5: independent_routing .................   Passed    1.47 sec
+      Start  6: independent_balance_analysis
+ 6/13 Test  #6: independent_balance_analysis ........   Passed    0.90 sec
+      Start  7: independent_balance_matrix
+ 7/13 Test  #7: independent_balance_matrix ..........   Passed    0.72 sec
+      Start  8: independent_acceptance
+ 8/13 Test  #8: independent_acceptance ..............   Passed    0.00 sec
+      Start  9: independent_request_wave
+ 9/13 Test  #9: independent_request_wave ............   Passed    1.98 sec
+      Start 10: independent_request_wave_runner
+10/13 Test #10: independent_request_wave_runner .....   Passed    0.45 sec
+      Start 11: independent_request_wave_analysis
+11/13 Test #11: independent_request_wave_analysis ...   Passed    0.15 sec
+      Start 12: independent_cpu_trace_capture
+12/13 Test #12: independent_cpu_trace_capture .......   Passed    0.07 sec
+      Start 13: independent_cpu_trace_analysis
+13/13 Test #13: independent_cpu_trace_analysis ......***Failed    1.43 sec
+............................F..
+======================================================================
+FAIL: test_short_alignment_clips_next_burst_and_keeps_missing_wave_denominator (__main__.ShortPeakWaveform.test_short_alignment_clips_next_burst_and_keeps_missing_wave_denominator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/rank_demo/stage3_balance/experiments/independent/../../tests/test_cpu_trace_analysis.py", line 403, in test_short_alignment_clips_next_burst_and_keeps_missing_wave_denominator
+    self.assertEqual(windows[-1]['requests'], 29)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 30 != 29
+
+----------------------------------------------------------------------
+Ran 31 tests in 1.374s
+
+FAILED (failures=1)
+
+
+92% tests passed, 1 tests failed out of 13
+
+Total Test time (real) =   8.22 sec
+
+The following tests FAILED:
+	 13 - independent_cpu_trace_analysis (Failed)

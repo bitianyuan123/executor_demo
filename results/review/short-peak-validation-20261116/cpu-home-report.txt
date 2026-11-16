@@ -1,0 +1,37 @@
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=1 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 8016489, "events_parsed": 44111, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 0.374906873, "reader_thread_cpu_seconds": 0.337310426, "timestamp_precision": "microseconds"}
+REQUEST WAVEFORM status=failed; passed=false; applicable=true
+reasons=union_mean_outside_45_55pct,fragmented_onset_fraction_exceeds_10pct
+complete_waves=60/60 (100.000%); anchor=actual_first_initial_submit; P=166.667ms; clipped_by_next_home=33
+union_mean=55.024%; background_mean_median/p90=50.856/56.057%; anchor_lag_median/p90=0.059/0.074ms
+high_pct,onset_wave_pct,peak_width_median_ms,peak_width_p90_ms,peak_width_max_ms,fragmented_wave_pct,background_high_p90_pct,background_longest_high_p90_ms
+80,100.000,10.000,13.000,20.000,28.333,12.440,7.000
+90,100.000,10.000,11.000,20.000,13.333,8.783,6.000
+95,100.000,9.000,11.000,20.000,6.667,8.049,6.000
+Provisional synthetic home-only contract, NOT business calibration: fixed high=90%; >=30 complete waves/95% coverage; onset>=90%; width median=5..20ms, p90<=25ms; fragmented<=10%; union=45..55%; background median=35..65%, p90 high-time<=10% and longest<=10ms.
+80/95% are sensitivity from the SAME trace, never automatically selected. Individual peak widths come from request_waveform.csv, not the aligned mean curve.
+ALIGNED CURVE {"aggregation": "observed_duration_weighted_mean; partial windows retain request/time coverage", "anchor": "actual_first_initial_submit", "next_same_home_request_clips_background": true, "peak_zoom_range_ms": [-5, 35], "range_ms": [-10, 166.66666666666666], "warning": "Phase-aligned averages do not measure the distribution of individual wave peak widths. Use request_waveform.csv; absent time is not zero-filled."}
+CPU coverage: 4/4; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,55.024,100.000,0.029,20.000,4999/4999,1.000,1.000
+pool0,55.264,100.000,0.102,19.000,4999/4999,1.000,1.000
+pool1,54.785,100.000,0.098,21.000,4999/4999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,observed_requests,complete_requests,truncated_requests,time_coverage_pct,max_missing_window_ms,observed_duration_weighted_home_residency_pct
+0-5,60/60,60,0,100.000,0.000,98.848
+5-10,60/60,60,0,100.000,0.000,94.514
+10-20,60/60,60,0,100.000,0.000,58.123
+20-30,60/60,60,0,100.000,0.000,51.031
+30-100,60/60,60,0,100.000,0.000,51.717
+100-166.667,60/60,27,33,99.935,1.116,51.802
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.

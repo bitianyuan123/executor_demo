@@ -353,6 +353,13 @@ def analyze_run(entry, plan, root, window):
         result['cohort'] = describe(cohort)
         result['phases'] = {phase: describe([r for r in cohort if r['phase'] == phase])
                             for phase in ('initial', 'steady')}
+        result['phase_cpu_budgets_us'] = {phase: {
+            'configured': plan['base'].get(phase+'-cpu-us', plan['base'].get('cpu-us')),
+            'resolved_nominal': meta.get('resolved_'+phase+'_cpu_us',
+                plan['base'].get(phase+'-cpu-us') or plan['base'].get('cpu-us')),
+            'target_mean': sum(r['target_cpu_us'] for r in cohort if r['phase'] == phase) /
+                result['phases'][phase]['n'] if result['phases'][phase]['n'] else None,
+        } for phase in ('initial', 'steady')}
         spans = initial_submission_spans(cohort)
         result['initial_submission_spans'] = spans
         if spans['over_30ms_requests']:
@@ -431,6 +438,12 @@ def analyze(plan_path, manifest_path=None):
     names = [entry.get('policy') for entry in entries]
     if not entries or len(names) != len(set(names)) or any(name not in POLICIES for name in names):
         raise ValueError('manifest must contain unique recognized policies')
+    expected_policies = set(plan.get('policies', {}))
+    if 'home' not in expected_policies or not expected_policies <= set(POLICIES):
+        raise ValueError('plan must contain home and only recognized policies')
+    analysis_only = manifest.get('analysis_only') is True
+    if analysis_only and names != ['home']:
+        raise ValueError('analysis_only is reserved for one home validation run')
     runs, cohorts, metas = [], {}, {}
     for entry in entries:
         run, rows, meta = analyze_run(entry, plan, root, window)
@@ -443,8 +456,10 @@ def analyze(plan_path, manifest_path=None):
         runs.append(run)
         cohorts[entry['policy']], metas[entry['policy']] = rows, meta
     comparison_issues = []
-    if set(names) != set(POLICIES):
-        comparison_issues.append('not_three_policy_runs')
+    if set(names) != expected_policies:
+        comparison_issues.append('not_all_planned_policy_runs')
+    if len(names) < 2:
+        comparison_issues.append('fewer_than_two_policy_runs')
     if not all(run['valid'] for run in runs):
         comparison_issues.append('invalid_run')
     if len({run.get('trace_sha256') for run in runs}) != 1:
@@ -457,12 +472,17 @@ def analyze(plan_path, manifest_path=None):
         home = next(run for run in runs if run['policy'] == 'home')
         indexed = {run['policy']: run for run in runs}
         for baseline_name, policy in (('home', 'source_only'), ('home', 'guarded'), ('source_only', 'guarded')):
+            if baseline_name not in indexed or policy not in indexed:
+                continue
             baseline, run = indexed[baseline_name], indexed[policy]
             comparisons.append({'baseline': baseline_name, 'policy': policy, **{
                 f'{latency}_{kind}_change_pct': 100*(run['cohort'][latency][kind]/baseline['cohort'][latency][kind]-1)
                 if baseline['cohort'][latency][kind] else None
                 for latency in ('S', 'L') for kind in ('mean_ms', 'p99_ms')}})
     report = {'schema_version': 1, 'family': 'request-wave', 'plan': str(plan_path), 'calibration': calibration,
+              'analysis_only': analysis_only, 'profile': plan.get('profile', 'legacy'),
+              'functional_only': manifest.get('functional_only') is True,
+              'home_waveform_gate': manifest.get('home_waveform_gate'),
               'cohort': {'selection': 'request_planned_ns in [warmup_seconds, request_end_seconds); all tasks and drain completions retained',
                          'warmup_seconds': window[0], 'request_end_seconds': window[1]},
               'latency_definitions_ms': {'S': 'end-submit', 'W': 'start-submit', 'X': 'end-start',
@@ -498,6 +518,7 @@ def render(report):
     lines = ['REQUEST-WAVE DESCRIPTIVE REPORT',
              f"INPUT request_rate={base.get('arrival-rate', 'NA')}/s; arrival={base.get('arrival', 'NA')}; seed={base.get('seed', 'NA')}; duration={base['duration']}s",
              f"INPUT initial_tasks={base['burst-min']}..{base['burst-max']} over {base.get('burst-window-ms', 'NA')}ms; steady_tasks={base['steady-tasks']} over {base.get('steady-window-ms', 'NA')}ms; CPU_budget={base.get('cpu-us', 'NA')}us; jitter={base.get('jitter', 'NA')}; long_prob={base.get('long-prob', 'NA')}; normalization={base.get('mean-normalization', 'NA')}",
+             f"PHASE CPU BUDGET initial={base.get('initial-cpu-us', base.get('cpu-us', 'NA'))}us; steady={base.get('steady-cpu-us', base.get('cpu-us', 'NA'))}us; profile={report.get('profile', 'legacy')}; 0 means inherit CPU_budget; resolved nominal and actual cohort target means are printed below",
              f"RESOURCES pools={base['pools']}; workers_per_pool={base['threads']}; affinity={base.get('affinity', 'NA')}; C={inputs['capacities']}; NUMA={inputs['numa']}; pool_CPUs={inputs['pool_cpus']}",
              f"OBSERVATION instrumentation={base.get('instrumentation', 'NA')}; load={base.get('load-observation', 'NA')}; CPU_sample_ms={base.get('sample-ms', 'NA')}; order={inputs['policy_order']}; policies={json.dumps(inputs['policies'], sort_keys=True)}",
              f"request cohort: [{report['cohort']['warmup_seconds']}, {report['cohort']['request_end_seconds']}) seconds; retain entire requests and drain",
@@ -505,6 +526,11 @@ def render(report):
              'comparison_valid='+str(report['comparison_valid']).lower(),
              'comparison_issues='+','.join(report['comparison_issues']), '',
              'policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger']
+    if report.get('functional_only'):
+        lines.insert(1, 'FUNCTIONAL_ONLY: development exercise without high-resolution trace. Home 5-20ms waveform is unvalidated; numeric comparisons are not production-performance evidence.')
+    gate = report.get('home_waveform_gate')
+    if gate is not None:
+        lines.insert(1, 'HOME WAVEFORM GATE '+json.dumps({key: gate.get(key) for key in ('status', 'passed', 'comparison_allowed', 'reasons')}, sort_keys=True))
     for run in report['runs']:
         cohort, decisions = run.get('cohort', {}), run.get('decisions', {})
         values = [run['policy'], run['valid'], cohort.get('n'), cohort.get('requests'),
@@ -518,6 +544,8 @@ def render(report):
             lines.append('INVALID '+run['policy']+': '+'; '.join(run['issues']))
         for warning in run.get('warnings', []):
             lines.append('WARNING '+run['policy']+': '+warning)
+        if run.get('phase_cpu_budgets_us'):
+            lines.append('PHASE TARGET CPU '+run['policy']+': '+json.dumps(run['phase_cpu_budgets_us'], sort_keys=True))
     if report['comparisons']:
         lines += ['', 'baseline,policy,S_mean_change_pct,S_p99_change_pct,L_mean_change_pct,L_p99_change_pct (negative=lower latency)']
         for row in report['comparisons']:
@@ -576,7 +604,7 @@ def main(argv=None):
         writer.writeheader(); writer.writerows(report['buckets'])
     print(text, end='')
     print(f'Artifacts: {out}/report.json, {out}/report.txt, {out}/buckets.csv')
-    return 0 if all(run['valid'] for run in report['runs']) and (report['comparison_valid'] or report['calibration']) else 2
+    return 0 if all(run['valid'] for run in report['runs']) and (report['comparison_valid'] or report['calibration'] or report['analysis_only']) else 2
 
 
 if __name__ == '__main__':

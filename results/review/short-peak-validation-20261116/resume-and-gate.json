@@ -1,0 +1,165 @@
+{
+  "functional_resume": [
+    "SKIP home: complete matching run already exists"
+  ],
+  "functional_resume_again": [
+    "SKIP home: complete matching run already exists",
+    "SKIP source_only: complete matching run already exists"
+  ],
+  "cpu_resume": [
+    "SKIP home: complete matching run already exists",
+    "Home waveform gate: failed; measured_shape_passed=False; comparison_allowed=False"
+  ],
+  "cpu_home_waveform_gate": {
+    "status": "failed",
+    "passed": false,
+    "comparison_allowed": false,
+    "reasons": [
+      "union_mean_outside_45_55pct",
+      "fragmented_onset_fraction_exceeds_10pct"
+    ],
+    "home_request_waveform": {
+      "applicable": true,
+      "status": "failed",
+      "passed": false,
+      "issues": [
+        "union_mean_outside_45_55pct",
+        "fragmented_onset_fraction_exceeds_10pct"
+      ],
+      "reasons": [
+        "union_mean_outside_45_55pct",
+        "fragmented_onset_fraction_exceeds_10pct"
+      ],
+      "contract": {
+        "version": 1,
+        "kind": "provisional_synthetic_profile_acceptance_not_business_calibration",
+        "high_pct": 90.0,
+        "sensitivity_high_pct": [
+          80.0,
+          90.0,
+          95.0
+        ],
+        "maximum_bin_ms": 2.0,
+        "minimum_complete_requests": 30,
+        "minimum_complete_fraction": 0.95,
+        "minimum_onset_fraction": 0.9,
+        "near_onset_start_by_ms": 5.0,
+        "onset_region_end_ms": 30.0,
+        "median_peak_width_range_ms": [
+          5.0,
+          20.0
+        ],
+        "p90_peak_width_max_ms": 25.0,
+        "extra_onset_high_tolerance_ms": 2.0,
+        "maximum_fragmented_fraction": 0.1,
+        "background_median_range_pct": [
+          35.0,
+          65.0
+        ],
+        "background_high_fraction_p90_max": 0.1,
+        "background_longest_high_p90_max_ms": 10.0,
+        "union_mean_range_pct": [
+          45.0,
+          55.0
+        ],
+        "minimum_background_window_fraction": 0.9
+      },
+      "alignment": "actual_first_initial_submit",
+      "background": "30ms after actual first initial submit until min(anchor+home_period,next_same_home_actual_submit)",
+      "period_ms": 166.66666666666666,
+      "requests": 60,
+      "complete_requests": 60,
+      "complete_fraction": 1.0,
+      "anchor_lag_ms": {
+        "n": 60,
+        "median": 0.059068,
+        "p90": 0.073916,
+        "max": 1.177284
+      },
+      "clipped_by_next_request": 33,
+      "background_mean_pct": {
+        "n": 60,
+        "median": 50.85646341254521,
+        "p90": 56.05727031962057,
+        "max": 69.7978743419564
+      },
+      "sensitivity": {
+        "80": {
+          "onset_fraction": 1.0,
+          "onset_width_ms": {
+            "n": 60,
+            "median": 10.0,
+            "p90": 13.0,
+            "max": 20.0
+          },
+          "fragmented_fraction": 0.2833333333333333,
+          "background_high_fraction": {
+            "n": 60,
+            "median": 0.0658536583759667,
+            "p90": 0.12439755453433293,
+            "max": 0.3804878039500298
+          },
+          "background_longest_high_ms": {
+            "n": 60,
+            "median": 2.0,
+            "p90": 7.0,
+            "max": 28.0
+          }
+        },
+        "90": {
+          "onset_fraction": 1.0,
+          "onset_width_ms": {
+            "n": 60,
+            "median": 10.0,
+            "p90": 11.0,
+            "max": 20.0
+          },
+          "fragmented_fraction": 0.13333333333333333,
+          "background_high_fraction": {
+            "n": 60,
+            "median": 0.021951219458655562,
+            "p90": 0.08783229436390341,
+            "max": 0.27073170665675195
+          },
+          "background_longest_high_ms": {
+            "n": 60,
+            "median": 1.0,
+            "p90": 6.0,
+            "max": 19.0
+          }
+        },
+        "95": {
+          "onset_fraction": 1.0,
+          "onset_width_ms": {
+            "n": 60,
+            "median": 9.0,
+            "p90": 11.0,
+            "max": 20.0
+          },
+          "fragmented_fraction": 0.06666666666666667,
+          "background_high_fraction": {
+            "n": 60,
+            "median": 0.00731838730319521,
+            "p90": 0.08049253528692131,
+            "max": 0.21951219458655563
+          },
+          "background_longest_high_ms": {
+            "n": 60,
+            "median": 1.0,
+            "p90": 6.0,
+            "max": 13.0
+          }
+        }
+      },
+      "union_mean_pct": 55.02424623
+    }
+  },
+  "cpu_candidate_directory_exists": false,
+  "cpu_workload_policies_launched": [
+    "home"
+  ],
+  "original_local_directories": [
+    "/root/rank_demo/stage3_balance/results/short-peak-dev-functional-20261116",
+    "/root/rank_demo/stage3_balance/results/short-peak-dev-trace-20261116"
+  ]
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze and run one request-wave workload: three policies, once each.
+"""Freeze and run one request-wave workload, once per selected policy.
 
 The /proc/stat observer is out of the submission process. Its samples are never
 used for routing or for changing the offered load. All times are CLOCK_MONOTONIC.
@@ -25,6 +25,7 @@ POLICIES = {
     'source_only': {'routing': 'threshold', 'load-threshold': .8, 'accept-threshold': -1},
     'guarded': {'routing': 'threshold', 'load-threshold': .8, 'accept-threshold': .5},
 }
+SHORT_POLICIES = {name: POLICIES[name] for name in ('home', 'source_only')}
 CPU_FIELDS = ['interval_start_monotonic_ns', 'monotonic_ns', 'elapsed_s', 'scope',
               'cpu_ids', 'execution_pct', 'iowait_pct', 'steal_pct', 'total_delta',
               'valid', 'reason']
@@ -104,8 +105,14 @@ def validate_plan(plan):
         raise ValueError('frozen plan changed; generate a new plan in a new output directory')
     if digest(plan['base']) != plan['workload_sha256']:
         raise ValueError('workload fingerprint mismatch')
-    if plan['policies'] != POLICIES or sorted(plan['policy_order']) != sorted(POLICIES):
-        raise ValueError('expected exactly home/source_only/guarded once each')
+    profile = plan.get('profile', 'legacy')
+    if profile not in ('legacy', 'short-peak'):
+        raise ValueError('unsupported request-wave profile')
+    expected_policies = SHORT_POLICIES if profile == 'short-peak' else POLICIES
+    if plan['policies'] != expected_policies or sorted(plan['policy_order']) != sorted(expected_policies):
+        raise ValueError('expected exactly one run of each profile policy')
+    if profile == 'short-peak' and plan['policy_order'] != ['home', 'source_only']:
+        raise ValueError('short-peak must validate home before launching source_only')
     trace = trace_config(plan)
     if not isinstance(trace['enabled'], bool):
         raise ValueError('cpu_trace.enabled must be boolean')
@@ -119,6 +126,72 @@ def validate_plan(plan):
         raise ValueError('observer CPUs must be unique and outside the experiment CPU union')
     if observer and not trace['enabled']:
         raise ValueError('dedicated observer CPUs require --cpu-trace')
+    if profile == 'short-peak' and trace['enabled'] and trace['bin_ms'] > 2:
+        raise ValueError('short-peak requires CPU trace bins <=2ms (default 1ms)')
+
+
+def short_peak_budgets(args, groups, capacities, contract):
+    """Analytic starting guess, not feedback control or a measured peak promise."""
+    if args.cpu_us is not None:
+        raise ValueError('short-peak uses phase budgets; --cpu-us is incompatible')
+    if len({len(group) for group in groups}) != 1 or any(capacity != len(group) for capacity, group in zip(capacities, groups)):
+        raise ValueError('short-peak model requires equal CPU groups and capacities equal to their logical CPU counts')
+    rho = args.target_utilization
+    peak_ms = args.peak_target_ms
+    utilization_low, utilization_high = [value / 100 for value in contract['union_mean_range_pct']]
+    if not math.isfinite(rho) or not utilization_low <= rho <= utilization_high:
+        raise ValueError('short-peak target utilization must be in [0.45,0.55] to match the frozen 45-55% waveform contract')
+    peak_low, peak_high = contract['median_peak_width_range_ms']
+    if not math.isfinite(peak_ms) or not peak_low <= peak_ms <= peak_high:
+        raise ValueError('short-peak peak target must be in [5,20] ms to match the frozen waveform contract; it remains a model guess')
+    period_s = len(groups) / args.request_rate
+    tau_s = peak_ms / 1000
+    if period_s * 1000 <= contract['onset_region_end_ms']:
+        raise ValueError('short-peak same-home request period must exceed 30ms so the recovery/background window exists')
+    if tau_s >= period_s:
+        raise ValueError('peak target must be shorter than the same-home request period')
+    burst_ms = args.burst_window_ms if args.burst_window_ms is not None else 1
+    steady_ms = args.steady_window_ms if args.steady_window_ms is not None else period_s * 1000
+    if not math.isfinite(burst_ms) or not 0 < burst_ms < peak_ms:
+        raise ValueError('short-peak release window must be positive and shorter than the peak target')
+    if not math.isclose(steady_ms, period_s * 1000, rel_tol=1e-12, abs_tol=1e-9):
+        raise ValueError('short-peak steady-window-ms must equal the same-home request period; model assumes continuous steady demand')
+    capacity = len(groups[0])
+    total_us = sum(map(len, groups)) * rho * 1e6 / args.request_rate
+    initial_work_us = capacity * (1 - rho) * tau_s / (1 - tau_s / period_s) * 1e6
+    initial_us = args.initial_cpu_us if args.initial_cpu_us is not None else round(initial_work_us / args.initial_tasks)
+    steady_us = args.steady_cpu_us if args.steady_cpu_us is not None else round((total_us - args.initial_tasks * initial_us) / args.steady_tasks)
+    if initial_us <= 0 or steady_us <= 0:
+        raise ValueError('phase CPU budgets must be positive; initial work must leave a positive steady budget')
+    actual_initial_us = args.initial_tasks * initial_us
+    actual_steady_us = args.steady_tasks * steady_us
+    steady_cpu = actual_steady_us / 1e6 / period_s
+    if steady_cpu >= capacity:
+        raise ValueError('steady phase alone saturates the home pool; cannot model a recovering short peak')
+    actual_rho = (actual_initial_us + actual_steady_us) / 1e6 / period_s / capacity
+    if actual_rho >= 1:
+        raise ValueError('phase budgets overload the resource domain on average')
+    if not utilization_low - 1e-12 <= actual_rho <= utilization_high + 1e-12:
+        raise ValueError(f'rounded phase budgets imply {actual_rho * 100:.6g}% nominal CPU demand outside the frozen 45-55% contract; use a compatible target or phase budgets')
+    model = {
+        'requested_target_utilization': rho, 'requested_peak_target_ms': peak_ms,
+        'same_home_period_ms': period_s * 1000, 'logical_cpus_per_pool': capacity,
+        'initial_task_cpu_us': initial_us, 'steady_task_cpu_us': steady_us,
+        'initial_cpu_us_per_request': actual_initial_us,
+        'steady_cpu_us_per_request': actual_steady_us,
+        'cpu_us_per_request': actual_initial_us + actual_steady_us,
+        'actual_nominal_utilization': actual_rho,
+        'steady_nominal_pool_utilization': steady_cpu / capacity,
+        'estimated_fluid_peak_ms': actual_initial_us / 1000 / (capacity - steady_cpu),
+        'phase_budget_overrides': {'initial': args.initial_cpu_us is not None, 'steady': args.steady_cpu_us is not None},
+        'formula': 'B=C*(1-rho)*tau/(1-tau/P); estimated peak=B/(C-steady_work/P)',
+        'assumptions': ['equal disjoint logical CPU groups; C is CPU-time capacity, not physical-core throughput',
+                        'initial CPU work is approximated as an instantaneous batch',
+                        'steady work is approximated as continuous fluid demand with period P',
+                        'ignores per-task scheduling, discrete long steady tasks, instrumentation and unrelated work',
+                        'model is an initial guess; measured home waveform must pass before ARM policy comparison'],
+    }
+    return initial_us, steady_us, burst_ms, steady_ms, model
 
 
 def trace_config(plan):
@@ -138,8 +211,19 @@ def new_trace_capture(plan, directory):
                                   buffer_kb=trace_config(plan)['buffer_kb'])
 
 
+def waveform_acceptance_contract():
+    # Keep one definition of the provisional acceptance thresholds, while
+    # freezing their full values into each new short-peak plan for audit/resume.
+    path = Path(__file__).with_name('analyze_cpu_trace.py')
+    spec = importlib.util.spec_from_file_location('request_wave_cpu_analysis', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return dict(module.WAVEFORM_CONTRACT)
+
+
 def create_plan(args):
     arm = args.deployment == 'arm'
+    short_peak = args.profile == 'short-peak'
     allowed = sorted(os.sched_getaffinity(0))
     if args.cpus:
         groups = [parse_cpus(v) for v in args.cpus.split(';')]
@@ -177,22 +261,40 @@ def create_plan(args):
         raise ValueError('observer CPUs exceed current allowed mask; launch without restricting the parent with taskset')
     duration = args.duration if args.duration is not None else (60 if arm else 3)
     warmup = args.warmup if args.warmup is not None else (10 if arm else .5)
-    budget = args.cpu_us if args.cpu_us is not None else (25000 if arm else max(1, round(len(union) * .5 * 1e6 / (args.request_rate * (args.initial_tasks + args.steady_tasks)))))
     threads = args.threads if args.threads is not None else (128 if arm else 16)
-    positive = (duration, args.request_rate, budget, threads, args.initial_tasks,
-                args.steady_tasks, args.burst_window_ms, args.steady_window_ms)
+    positive = (duration, args.request_rate, threads, args.initial_tasks, args.steady_tasks)
     if any(not math.isfinite(v) or v <= 0 for v in positive) or not 0 <= warmup < duration:
         raise ValueError('invalid positive workload values or analysis window')
+    model = None
+    if short_peak:
+        shape_contract = waveform_acceptance_contract()
+        if threads < max(map(len, groups)):
+            raise ValueError('short-peak requires at least one worker per selected logical CPU in each pool; fewer workers invalidate the full-capacity peak model')
+        initial_us, steady_us, burst_ms, steady_ms, model = short_peak_budgets(args, groups, capacities, shape_contract)
+        # Common fallback is not used by either phase; explicit positive value
+        # keeps the executable's generic argument validation straightforward.
+        budget = initial_us
+        actual_work_us = model['cpu_us_per_request']
+    else:
+        if args.initial_cpu_us is not None or args.steady_cpu_us is not None:
+            raise ValueError('runner phase budgets require --profile short-peak')
+        budget = args.cpu_us if args.cpu_us is not None else (25000 if arm else max(1, round(len(union) * .5 * 1e6 / (args.request_rate * (args.initial_tasks + args.steady_tasks)))))
+        burst_ms = args.burst_window_ms if args.burst_window_ms is not None else 20
+        steady_ms = args.steady_window_ms if args.steady_window_ms is not None else 400
+        actual_work_us = (args.initial_tasks + args.steady_tasks) * budget
+    if any(not math.isfinite(value) or value <= 0 for value in (budget, burst_ms, steady_ms)):
+        raise ValueError('CPU budget and release windows must be positive')
     if not 0 <= args.jitter < 1 or args.sample_ms < 10:
         raise ValueError('jitter must be in [0,1), sample-ms must be >=10')
+    bin_ms = args.cpu_bin_ms if args.cpu_bin_ms is not None else (1 if short_peak else 5)
     base = {
         'deployment': 'target' if arm else 'dev', 'workload': 'request-wave',
         'pools': len(groups), 'threads': threads, 'cpus': cpus,
         'numa': ','.join(map(str, nodes)), 'capacities': ','.join(f'{v:g}' for v in capacities),
         'affinity': 'cluster', 'arrival-rate': args.request_rate, 'arrival': 'regular',
         'duration': duration, 'burst-min': args.initial_tasks, 'burst-max': args.initial_tasks,
-        'burst-window-ms': args.burst_window_ms, 'steady-tasks': args.steady_tasks,
-        'steady-window-ms': args.steady_window_ms, 'burst-placement': 'local',
+        'burst-window-ms': burst_ms, 'steady-tasks': args.steady_tasks,
+        'steady-window-ms': steady_ms, 'burst-placement': 'local',
         'cpu-us': budget, 'jitter': args.jitter, 'long-prob': 0, 'long-factor': 8,
         'mean-normalization': 'exact', 'work-mode': 'cpu', 'seed': args.seed,
         'instrumentation': 'full', 'load-observation': 'basic', 'load-metric': 'outstanding',
@@ -200,26 +302,30 @@ def create_plan(args):
         'sample-ms': args.sample_ms, 'max-outstanding': 100000,
         'max-planned-tasks': 2000000, 'drain-seconds': 120 if arm else 20,
     }
-    order = list(POLICIES)
-    random.Random(args.seed ^ 0xA5A5).shuffle(order)
+    if short_peak:
+        base.update({'initial-cpu-us': initial_us, 'steady-cpu-us': steady_us, 'estimate-us': 0})
+    policies = SHORT_POLICIES if short_peak else POLICIES
+    order = list(policies)
+    if not short_peak:
+        random.Random(args.seed ^ 0xA5A5).shuffle(order)
     task_rate = args.request_rate * (args.initial_tasks + args.steady_tasks)
     plan = {
         'schema_version': SCHEMA, 'family': 'request-wave', 'deployment': args.deployment,
         'base': base, 'analysis': {'warmup_seconds': warmup, 'request_end_seconds': duration,
                                  'cohort': 'request_planned_ns; include all later tasks belonging to selected requests'},
         'pool_cpus': groups, 'numa': nodes, 'capacities': capacities, 'cpu_union': union,
-        'policies': POLICIES, 'policy_order': order, 'workload_sha256': digest(base),
+        'policies': policies, 'policy_order': order, 'workload_sha256': digest(base),
         'cpu_observer': {'interval_ms': args.sample_ms, 'source': '/proc/stat',
                          'execution_fields': ['user', 'nice', 'system', 'irq', 'softirq'],
                          'guest_accounting': 'guest and guest_nice already included in user/nice; not added twice',
                          'clock_ticks_per_second': os.sysconf('SC_CLK_TCK'),
                          'scope': 'selected logical CPUs, includes unrelated work and runner overhead',
                          'resolution_limit': '100 ms samples cannot resolve a <30 ms peak; counters are tick-accounted'},
-        'cpu_trace': {'enabled': args.cpu_trace, 'bin_ms': args.cpu_bin_ms,
+        'cpu_trace': {'enabled': args.cpu_trace, 'bin_ms': bin_ms,
                       'buffer_kb': args.cpu_trace_buffer_kb, 'observer_cpu_ids': observer_cpus},
-        'nominal': {'tasks_per_second': task_rate, 'cpu_seconds_per_second': task_rate * budget / 1e6,
+        'nominal': {'tasks_per_second': task_rate, 'cpu_seconds_per_second': args.request_rate * actual_work_us / 1e6,
                     'selected_logical_cpus': len(union),
-                    'execution_percent': 100 * task_rate * budget / 1e6 / len(union),
+                    'execution_percent': 100 * args.request_rate * actual_work_us / 1e6 / len(union),
                     'per_pool_request_gap_ms': 1000 * len(groups) / args.request_rate},
         'notes': ['Synthetic independent CPU tasks; not DAG and not a reproduction of 100 ms operator execution.',
                   '25 ms default on 96 logical CPUs gives ~50% nominal CPU-time demand; measure actual utilization.',
@@ -228,6 +334,19 @@ def create_plan(args):
                   'One seed; each policy once; observed differences have no repeated-run confidence interval.',
                   'Request duration bounds request starts, not later steady task releases or drain completion.'],
     }
+    if short_peak:
+        plan['profile'] = 'short-peak'
+        plan['phase_workload'] = model
+        plan['waveform_acceptance'] = {
+            **shape_contract,
+            'scope': 'home only; source_only waveform is an outcome, not an acceptance condition',
+            'requires_high_resolution_trace_on_arm': True,
+            'status_without_trace': 'unvalidated; dev may exercise functional policy paths only',
+        }
+        plan['notes'][1] = 'Short initial CPU segments and longer steady CPU segments preserve nominal mean demand; each phase is normalized independently.'
+        plan['notes'] += ['home runs first and is reused on resume; ARM source_only is gated by the measured home shape.',
+                          'No automatic budget adjustment; a failed home waveform requires diagnosis and a newly frozen workload for both policies.',
+                          'The business 5-20ms peak is an approximate observation with no established occupancy cutoff; >=90% is a provisional experiment contract, not a measured production threshold.']
     plan['plan_sha256'] = digest(plan)
     validate_plan(plan)
     validate_resources(plan)
@@ -237,12 +356,18 @@ def create_plan(args):
         f.write(json.dumps(plan, ensure_ascii=False, indent=2) + '\n')
     print(f'Frozen plan: {destination.resolve()}')
     print(f"{len(groups)} pools x {threads} threads; selected logical CPUs={len(union)}; NUMA={nodes}")
-    print(f"{args.request_rate:g} requests/s; initial {args.initial_tasks} tasks/{args.burst_window_ms:g}ms + steady {args.steady_tasks} tasks/{args.steady_window_ms:g}ms")
-    print(f"Synthetic mean CPU budget {budget}us; nominal CPU demand={plan['nominal']['cpu_seconds_per_second']:.3f} CPU-s/s, {plan['nominal']['execution_percent']:.2f}% of selected logical CPUs")
+    print(f"{args.request_rate:g} requests/s; initial {args.initial_tasks} tasks/{burst_ms:g}ms + steady {args.steady_tasks} tasks/{steady_ms:g}ms")
+    budget_label = f'initial={initial_us}us, steady={steady_us}us (separately normalized)' if short_peak else f'mean={budget}us'
+    print(f"Synthetic CPU budgets {budget_label}; nominal CPU demand={plan['nominal']['cpu_seconds_per_second']:.3f} CPU-s/s, {plan['nominal']['execution_percent']:.2f}% of selected logical CPUs")
+    if short_peak:
+        print(f"Fluid initial guess={model['estimated_fluid_peak_ms']:.3f}ms high occupancy; actual home shape must be measured, not inferred from this estimate")
     print(f'Run order: {", ".join(order)}; one run each; duration={duration:g}s, warmup={warmup:g}s')
     if args.cpu_trace:
-        print(f'CPU trace: idle-transition events, {args.cpu_bin_ms}ms reconstructed bins; observer CPUs={observer_cpus or "inherited"}; requires writable tracefs instances')
-    print('Not a 100ms real-business reproduction. Calibrate once; keep the final workload identical for all policies.')
+        print(f'CPU trace: idle-transition events, {bin_ms}ms reconstructed bins; observer CPUs={observer_cpus or "inherited"}; requires writable tracefs instances')
+    if short_peak:
+        print('Not a 100ms real-business reproduction. The ordinary home run is the shape check; no additional calibration run is required.')
+    else:
+        print('Not a 100ms real-business reproduction. Calibrate once; keep the final workload identical for all policies.')
     return plan
 
 
@@ -452,6 +577,45 @@ def execute_one(plan, binary, binary_sha, directory, policy, calibration=False):
     return manifest
 
 
+def analyze_saved(plan, plan_path, manifest_path, root, calibration=False):
+    """Analyze persisted records; this never launches additional workload."""
+    analyzer = Path(__file__).with_name('analyze_request_wave.py')
+    analysis_command = [sys.executable, str(analyzer), '--plan', str(plan_path), '--manifest', str(manifest_path),
+                        '--output', str(root / ('calibration-analysis' if calibration else 'analysis'))]
+    print('Analyzing the saved samples (no additional workload run)...', flush=True)
+    result = subprocess.run(analysis_command, check=False)
+    if result.returncode:
+        raise RuntimeError(f'analysis exited {result.returncode}; raw runs are preserved for inspection')
+    if not trace_config(plan)['enabled']:
+        return None
+    curve_analyzer = Path(__file__).with_name('analyze_cpu_trace.py')
+    output = root / ('calibration-cpu-curves' if calibration else 'cpu-curves')
+    curve_command = [sys.executable, str(curve_analyzer), '--plan', str(plan_path),
+                     '--manifest', str(manifest_path), '--output', str(output)]
+    print('Reconstructing CPU time curves from idle-transition events (no additional workload run)...', flush=True)
+    result = subprocess.run(curve_command, check=False)
+    if result.returncode:
+        raise RuntimeError(f'CPU curve analysis exited {result.returncode}; raw capture is preserved, do not treat missing curves as zero utilization')
+    return json.loads((output / 'summary.json').read_text())
+
+
+def home_waveform_gate(plan, curves):
+    """Only measured home acceptance may unlock an ARM short-peak comparison."""
+    if plan.get('profile') != 'short-peak':
+        return {'status': 'not_applicable', 'passed': False, 'comparison_allowed': True}
+    if not trace_config(plan)['enabled']:
+        functional = plan['deployment'] == 'dev'
+        return {'status': 'functional_only' if functional else 'insufficient_data',
+                'passed': False, 'comparison_allowed': functional,
+                'reasons': ['No high-resolution CPU trace: waveform unvalidated; /proc/stat cannot establish a 5-20ms peak.']}
+    home = next((run for run in (curves or {}).get('runs', []) if run.get('policy') == 'home'), {})
+    shape = home.get('request_waveform', {})
+    passed = home.get('status') == 'ok' and shape.get('passed') is True
+    return {'status': shape.get('status', 'insufficient_data'), 'passed': passed,
+            'comparison_allowed': passed, 'reasons': shape.get('reasons', ['Missing measured home waveform acceptance']),
+            'home_request_waveform': shape}
+
+
 def execute(args):
     plan_path = args.plan.resolve()
     plan = json.loads(plan_path.read_text())
@@ -470,64 +634,78 @@ def execute(args):
             raise ValueError('observer CPU affinity was not applied exactly; no workload launched')
     calibration = args.command == 'calibrate'
     order = ['home'] if calibration else plan['policy_order']
+    selection = ['home'] if getattr(args, 'only', None) == 'home' else order
     root = plan_path.parent
     manifest_path = root / ('calibration_manifest.json' if calibration else 'run_manifest.json')
     manifest = {'schema_version': SCHEMA, 'family': 'request-wave', 'plan_sha256': plan['plan_sha256'],
                 'binary_sha256': binary_sha, 'binary': str(binary), 'policy_order': order,
-                'calibration': calibration, 'runs': []}
+                'calibration': calibration, 'runs': [], 'last_selection': selection,
+                'functional_only': plan.get('profile') == 'short-peak' and plan['deployment'] == 'dev' and not trace_config(plan)['enabled']}
     if manifest_path.exists():
         previous = json.loads(manifest_path.read_text())
         if any(previous.get(k) != manifest[k] for k in ('plan_sha256', 'binary_sha256', 'policy_order', 'calibration')):
             raise ValueError('existing top-level manifest identity differs; no overwrite')
-    for policy in order:
+        previous_runs = previous.get('runs', [])
+        if len({run['policy'] for run in previous_runs}) != len(previous_runs) or any(run['policy'] not in order for run in previous_runs):
+            raise ValueError('existing top-level manifest contains unexpected or duplicate policies')
+        # Preserve already completed policies when the user requests just home.
+        manifest['runs'] = previous_runs
+    analyzed_after_last_run = False
+    for policy in selection:
         directory = root / ('calibration' if calibration else 'runs') / policy
         run = execute_one(plan, binary, binary_sha, directory, policy, calibration)
-        manifest['runs'].append(run)
+        by_policy = {entry['policy']: entry for entry in manifest['runs']}
+        by_policy[policy] = run
+        manifest['runs'] = [by_policy[name] for name in order if name in by_policy]
+        manifest['analysis_only'] = not calibration and [entry['policy'] for entry in manifest['runs']] == ['home']
         atomic_json(manifest_path, manifest)
+        analyzed_after_last_run = False
         summary = run.get('summary', {})
         print(f"{policy}: {run['status']}; all-run task mean={summary.get('task_mean_ms', 'NA')}ms p99={summary.get('task_p99_ms', 'NA')}ms; CPU observer={run['cpu_observation']['status']}", flush=True)
         if run['status'] != 'completed':
             raise RuntimeError(f"{policy} failed; {directory / 'manifest.json'}; {'; '.join(run['errors'])}")
+        if plan.get('profile') == 'short-peak' and policy == 'home':
+            curves = analyze_saved(plan, plan_path, manifest_path, root, calibration)
+            analyzed_after_last_run = True
+            gate = home_waveform_gate(plan, curves)
+            manifest['home_waveform_gate'] = gate
+            atomic_json(manifest_path, manifest)
+            print(f"Home waveform gate: {gate['status']}; measured_shape_passed={gate['passed']}; comparison_allowed={gate['comparison_allowed']}", flush=True)
+            if gate['status'] == 'functional_only':
+                print('Development functional exercise only; these runs do not validate the short-peak waveform or production performance.', flush=True)
+            if not gate['comparison_allowed'] and not calibration and selection != ['home']:
+                raise RuntimeError('home waveform did not pass; source_only was not launched. Inspect saved analysis and cpu-curves. If changing workload, freeze a new plan for both policies; no automatic retuning.')
     print(f'Saved manifest: {manifest_path}')
     print('Above latency includes warmup. Use analyze_request_wave.py for request-cohort latency and selected-CPU observation.')
     if calibration:
         print('Calibration does not tune workload or launch the comparison. If changing assumptions, generate a new plan; never adjust one policy alone.')
-    analyzer = Path(__file__).with_name('analyze_request_wave.py')
-    analysis_command = [sys.executable, str(analyzer), '--plan', str(plan_path), '--manifest', str(manifest_path),
-                        '--output', str(root / ('calibration-analysis' if calibration else 'analysis'))]
-    print('Analyzing the saved samples (no additional workload run)...', flush=True)
-    result = subprocess.run(analysis_command, check=False)
-    if result.returncode:
-        raise RuntimeError(f'analysis exited {result.returncode}; raw runs are preserved for inspection')
-    if trace_config(plan)['enabled']:
-        curve_analyzer = Path(__file__).with_name('analyze_cpu_trace.py')
-        curve_command = [sys.executable, str(curve_analyzer), '--plan', str(plan_path),
-                         '--manifest', str(manifest_path), '--output',
-                         str(root / ('calibration-cpu-curves' if calibration else 'cpu-curves'))]
-        print('Reconstructing CPU time curves from idle-transition events (no additional workload run)...', flush=True)
-        curve_result = subprocess.run(curve_command, check=False)
-        if curve_result.returncode:
-            raise RuntimeError(f'CPU curve analysis exited {curve_result.returncode}; raw capture is preserved, do not treat missing curves as zero utilization')
+    if not analyzed_after_last_run:
+        analyze_saved(plan, plan_path, manifest_path, root, calibration)
 
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
     commands = p.add_subparsers(dest='command', required=True)
-    create = commands.add_parser('plan', help='freeze workload and randomize exactly three policies once')
+    create = commands.add_parser('plan', help='freeze legacy three-policy or short-peak two-policy comparison')
     create.add_argument('--deployment', choices=('arm', 'dev'), default='arm')
+    create.add_argument('--profile', choices=('legacy', 'short-peak'), default='legacy')
     create.add_argument('--out', type=Path, required=True)
     create.add_argument('--cpus'); create.add_argument('--numa'); create.add_argument('--capacities')
     create.add_argument('--pools', type=int); create.add_argument('--threads', type=int)
     create.add_argument('--cpu-us', type=int); create.add_argument('--duration', type=float)
+    create.add_argument('--initial-cpu-us', type=int, help='short-peak initial phase mean; otherwise derived from the frozen fluid model')
+    create.add_argument('--steady-cpu-us', type=int, help='short-peak steady phase mean; otherwise derived to preserve nominal target utilization')
+    create.add_argument('--peak-target-ms', type=float, default=10, help='short-peak analytic initial guess in [5,20]ms; not a measured guarantee (default 10)')
+    create.add_argument('--target-utilization', type=float, default=.5, help='short-peak nominal logical CPU-time demand fraction in [.45,.55], matching its frozen waveform contract (default .5)')
     create.add_argument('--warmup', type=float); create.add_argument('--request-rate', type=float, default=12)
     create.add_argument('--initial-tasks', type=int, default=80)
     create.add_argument('--steady-tasks', type=int, default=80)
-    create.add_argument('--burst-window-ms', type=float, default=20)
-    create.add_argument('--steady-window-ms', type=float, default=400)
+    create.add_argument('--burst-window-ms', type=float, help='initial release window: legacy 20ms, short-peak 1ms')
+    create.add_argument('--steady-window-ms', type=float, help='steady release window: legacy 400ms, short-peak same-home period')
     create.add_argument('--jitter', type=float, default=.5)
     create.add_argument('--sample-ms', type=int, default=100)
     create.add_argument('--cpu-trace', action='store_true', help='capture idle transitions and automatically reconstruct precise CPU occupancy curves')
-    create.add_argument('--cpu-bin-ms', type=int, default=5, help='CPU trace reconstruction window, independent of --sample-ms (default 5)')
+    create.add_argument('--cpu-bin-ms', type=int, help='CPU trace reconstruction window, independent of --sample-ms (legacy 5ms; short-peak 1ms)')
     create.add_argument('--cpu-trace-buffer-kb', type=int, default=256, help='trace ring buffer KiB per CPU (default 256)')
     create.add_argument('--observer-cpus', help='optional idle CPUs outside experiment union for the Python observer; launch parent without taskset')
     create.add_argument('--seed', type=int, default=52000)
@@ -535,6 +713,8 @@ def parser():
         execute_parser = commands.add_parser(name)
         execute_parser.add_argument('--plan', type=Path, required=True)
         execute_parser.add_argument('--binary', type=Path, default=Path('build/experiments/independent/independent_load'))
+        if name == 'run':
+            execute_parser.add_argument('--only', choices=('home',), help='run/reuse the ordinary home baseline only; a later run resumes the same plan')
     return p
 
 

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1250" height="570" viewBox="0 0 1250 570">
+<rect width="100%" height="100%" fill="white"/>
+<text x="75" y="26" font-family="sans-serif" font-size="19">home: mean home waveform, short-peak zoom</text>
+<text x="75" y="48" font-family="sans-serif" font-size="12">Non-idle task residency (%), not IRQ-exact CPU utilization. Missing data is not zero.</text>
+<path d="M 75,400.0 H 1210" stroke="#ddd"/><text x="67" y="404.0" text-anchor="end" font-family="sans-serif" font-size="12">0</text>
+<path d="M 75,325.0 H 1210" stroke="#ddd"/><text x="67" y="329.0" text-anchor="end" font-family="sans-serif" font-size="12">25</text>
+<path d="M 75,250.0 H 1210" stroke="#ddd"/><text x="67" y="254.0" text-anchor="end" font-family="sans-serif" font-size="12">50</text>
+<path d="M 75,175.0 H 1210" stroke="#ddd"/><text x="67" y="179.0" text-anchor="end" font-family="sans-serif" font-size="12">75</text>
+<path d="M 75,100.0 H 1210" stroke="#ddd"/><text x="67" y="104.0" text-anchor="end" font-family="sans-serif" font-size="12">100</text>
+<text x="75.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">-5.0</text>
+<text x="302.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">3.0</text>
+<text x="529.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">11.0</text>
+<text x="756.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">19.0</text>
+<text x="983.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">27.0</text>
+<text x="1210.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">35.0</text>
+<path d="M 216.875,100 V 400" stroke="#888" stroke-dasharray="4 4"/>
+<text x="216.875" y="422" text-anchor="middle" font-family="sans-serif" font-size="12">0</text>
+<text x="75" y="78" fill="#111827" font-family="sans-serif" font-size="13">home_mean</text>
+<polyline points="89.19,222.94 117.56,253.16 145.94,216.88 174.31,264.97 202.69,215.13 231.06,110.35 259.44,104.47 287.81,102.02 316.19,100.45 344.56,100.00 372.94,100.00 401.31,101.75 429.69,109.34 458.06,131.23 486.44,139.96 514.81,167.33 543.19,192.20 571.56,210.90 599.94,219.49 628.31,234.72 656.69,257.16 685.06,234.72 713.44,245.99 741.81,228.44 770.19,265.36 798.56,228.81 826.94,266.78 855.31,219.60 883.69,275.99 912.06,222.19 940.44,283.28 968.81,208.85 997.19,262.03 1025.56,231.59 1053.94,269.98 1082.31,238.15 1110.69,266.33 1139.06,241.05 1167.44,266.69 1195.81,249.05" fill="none" stroke="#111827" stroke-width="1.2"/>
+<text x="225" y="78" fill="#2563eb" font-family="sans-serif" font-size="13">pool0</text>
+<polyline points="89.19,222.82 117.56,254.24 145.94,212.78 174.31,266.25 202.69,225.56 231.06,110.10 259.44,105.90 287.81,100.00 316.19,100.00 344.56,100.00 372.94,100.00 401.31,100.83 429.69,108.64 458.06,136.42 486.44,151.68 514.81,181.15 543.19,203.67 571.56,207.63 599.94,216.11 628.31,234.71 656.69,252.42 685.06,234.35 713.44,248.14 741.81,221.21 770.19,270.74 798.56,228.54 826.94,269.20 855.31,229.92 883.69,266.14 912.06,220.98 940.44,270.68 968.81,194.48 997.19,253.39 1025.56,233.61 1053.94,275.24 1082.31,251.55 1110.69,268.62 1139.06,239.08 1167.44,258.19 1195.81,232.06" fill="none" stroke="#2563eb" stroke-width="1.2"/>
+<text x="375" y="78" fill="#ea580c" font-family="sans-serif" font-size="13">pool1</text>
+<polyline points="89.19,223.07 117.56,252.08 145.94,220.99 174.31,263.68 202.69,204.71 231.06,110.60 259.44,103.04 287.81,104.03 316.19,100.89 344.56,100.00 372.94,100.00 401.31,102.68 429.69,110.04 458.06,126.04 486.44,128.24 514.81,153.51 543.19,180.73 571.56,214.18 599.94,222.86 628.31,234.72 656.69,261.90 685.06,235.08 713.44,243.84 741.81,235.67 770.19,259.97 798.56,229.08 826.94,264.37 855.31,209.27 883.69,285.83 912.06,223.40 940.44,295.87 968.81,223.21 997.19,270.68 1025.56,229.56 1053.94,264.71 1082.31,224.75 1110.69,264.05 1139.06,243.03 1167.44,275.19 1195.81,266.05" fill="none" stroke="#ea580c" stroke-width="1.2"/>
+<text x="75" y="445" font-family="sans-serif" font-size="12">Milliseconds from each request actual first initial submit (averaged waveform)</text>
+<text x="75" y="480" font-family="sans-serif" font-size="12">All subsequent task activity is retained. Later intervals are not guaranteed steady state.</text>
+<text x="75" y="502" font-family="sans-serif" font-size="12">Mean waveform width is NOT the distribution of individual request peak widths; use request_waveform.csv.</text>
+<text x="75" y="524" font-family="sans-serif" font-size="12">Actual observed durations weight partial windows. CSV records request/time coverage; missing time is not zero-filled.</text>
+</svg>

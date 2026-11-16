@@ -105,7 +105,8 @@ struct Opt {
   size_t steadyTasks = 80;
   uint64_t progressUs = 5000, failSubmitTask = std::numeric_limits<uint64_t>::max();
   size_t pools = 2, threads = 2, burstMin = 1, burstMax = 1, maxOutstanding = 10000, maxPlanned = 1000000;
-  uint64_t cpuUs = 1000, estimateUs = 0, seed = 42, arrivals = 0, sampleMs = 100, iterationsPerUs = 64;
+  uint64_t cpuUs = 1000, initialCpuUs = 0, steadyCpuUs = 0;
+  uint64_t estimateUs = 0, seed = 42, arrivals = 0, sampleMs = 100, iterationsPerUs = 64;
   size_t maxSamples=1000000; uint64_t failTask=std::numeric_limits<uint64_t>::max();
   double rate = 100, duration = 5, jitter = .5, tailProb = .02, tailFactor = 8, drain = 30, estimateJitter = 0;
 };
@@ -125,10 +126,13 @@ All options take one value. No AffinityExecutor, graph or RPC; routing happens b
                                   duration limits request arrivals, not their follow-up releases
 --burst-placement local|spread     One RR pool per arrival or RR pool per task (local)
 --cpu-us N --jitter F               Uniform CPU budget around N, fraction F (1000,.5)
+--initial-cpu-us N --steady-cpu-us N  request-wave phase nominal CPU budgets; 0 uses cpu-us (0,0)
 --long-prob F --long-factor F       Mixture tail probability and multiplier (.02,8)
 --mean-normalization none|exact    exact rescales finite workload to mean cpu-us (none)
+                                  with any phase override, normalize each phase separately
 --work-mode cpu|iterations --iterations-per-us N  CPU target or fixed loop work (cpu,64)
---estimate-us N                    Work estimate for full/extra observation, 0=synthetic target
+--estimate-us N                    Work estimate, 0=phase nominal mean with phase overrides,
+                                  otherwise legacy synthetic target; N>0 is common to both phases
 --estimate-jitter F                Independent multiplicative U(1-F,1+F) estimate error (0)
 --instrumentation none|queue|counters|full  Increasing observation levels (full)
 --routing home|threshold|spread    Keep home, threshold spill, or static task RR (home)
@@ -187,6 +191,8 @@ Opt parse(int argc, char** argv) {
     else if (k == "--max-outstanding") o.maxOutstanding = integer(v);
     else if (k == "--max-planned-tasks") o.maxPlanned = integer(v);
     else if (k == "--cpu-us") o.cpuUs = integer(v);
+    else if (k == "--initial-cpu-us") o.initialCpuUs = integer(v);
+    else if (k == "--steady-cpu-us") o.steadyCpuUs = integer(v);
     else if (k == "--estimate-us") o.estimateUs = integer(v);
     else if (k == "--seed") o.seed = integer(v);
     else if (k == "--arrivals") o.arrivals = integer(v);
@@ -222,6 +228,10 @@ Opt parse(int argc, char** argv) {
       o.tailProb < 0 || o.tailProb > 1 || o.tailFactor < 1 || o.tailFactor > 1000 || !o.sampleMs ||
       o.sampleMs > 60000 || o.maxSamples > 10000000 || o.estimateUs > 3600000000000ULL)
     throw std::invalid_argument("option outside supported bounds");
+  if (o.initialCpuUs > 3600000000ULL || o.steadyCpuUs > 3600000000ULL)
+    throw std::invalid_argument("phase CPU budget outside supported bounds");
+  if (o.workload != "request-wave" && (o.initialCpuUs || o.steadyCpuUs))
+    throw std::invalid_argument("phase CPU budget overrides require workload=request-wave");
   if (o.loadThreshold < 0 || o.minImprovement < 0 || !o.progressUs || o.progressUs > 3600000000ULL ||
       (o.acceptThreshold < 0 && o.acceptThreshold != -1))
     throw std::invalid_argument("invalid load threshold, improvement or progress interval");
@@ -320,6 +330,11 @@ struct Task {
 };
 struct Burst { size_t first, count, pool; uint64_t planned, actual=0; };
 struct Sample { uint64_t t; size_t pool; int64_t queue, pending, inflight, work, outstanding, remaining; double capacity; };
+bool hasPhaseCpuOverrides(const Opt& o) { return o.initialCpuUs || o.steadyCpuUs; }
+uint64_t nominalCpuUs(const Opt& o, bool steady) {
+  const auto phase = steady ? o.steadyCpuUs : o.initialCpuUs;
+  return phase ? phase : o.cpuUs;
+}
 std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
   std::mt19937_64 workload(o.seed), arrival(o.seed ^ 0xabcde1234ULL), widths(o.seed ^ 0x491bda22ULL);
   std::uniform_real_distribution<double> unit(0,1);
@@ -335,13 +350,14 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
     if (k > o.maxPlanned || tasks.size() > o.maxPlanned-k) throw std::invalid_argument("planned task count exceeds max-planned-tasks");
     auto when = uint64_t(t * 1e9); bursts.push_back({tasks.size(),k,b%o.pools,when});
     for (size_t j=0; j<k; ++j) {
-      auto target = uint64_t(std::max(1., double(o.cpuUs) * (1 + o.jitter*(2*unit(workload)-1)) * (unit(workload)<o.tailProb ? o.tailFactor : 1)));
+      const bool steady = o.workload == "request-wave" && j>=initial;
+      auto target = uint64_t(std::max(1., double(nominalCpuUs(o,steady)) * (1 + o.jitter*(2*unit(workload)-1)) * (unit(workload)<o.tailProb ? o.tailFactor : 1)));
       Task r; r.id=tasks.size(); r.burst=b;
       r.pool=o.burstPlacement=="local" ? b%o.pools : r.id%o.pools;
       r.homePool=r.pool; r.burstIndex=j; r.burstRemaining=k-j-1;
       r.planned=when; r.requestPlanned=when;
       if (o.workload == "request-wave") {
-        r.steady=j>=initial;
+        r.steady=steady;
         // Deterministic offsets preserve an identical open-loop trace across policies.
         const double offsetMs=r.steady ? o.burstWindowMs+
           o.steadyWindowMs*double(j-initial)/double(o.steadyTasks) :
@@ -356,7 +372,7 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
   // distribute the remainder proportionally, using cumulative rounding so the
   // integer total is exactly N * cpuUs without a sort or another O(N) buffer.
   // Raw/default workloads remain unchanged for compatibility with old evidence.
-  if(o.meanNormalization=="exact" && !tasks.empty()) {
+  if(o.meanNormalization=="exact" && !tasks.empty() && !hasPhaseCpuOverrides(o)) {
     long double weights=0;
     for(const auto& r:tasks)weights+=r.target-1;
     uint64_t extra=uint64_t(tasks.size())*(o.cpuUs-1), assigned=0;
@@ -367,13 +383,36 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
         (weights ? uint64_t(std::round(cumulative/weights*extra)) : uint64_t(i+1)*(o.cpuUs-1));
       r.target=1+next-assigned; assigned=next;
     }
+  } else if(o.meanNormalization=="exact" && hasPhaseCpuOverrides(o)) {
+    // A short initial pulse must not be enlarged to pay for the steady phase.
+    // Normalize the two complete finite cohorts independently, preserving the
+    // legacy random draw order and release timestamps. A cohort may be empty.
+    for(bool steady : {false,true}) {
+      size_t count=0;
+      long double weights=0;
+      for(const auto& r:tasks) if(r.steady==steady) { ++count; weights+=r.target-1; }
+      if(!count) continue;
+      const uint64_t meanUs=nominalCpuUs(o,steady);
+      const uint64_t extra=uint64_t(count)*(meanUs-1);
+      uint64_t assigned=0; size_t index=0; long double cumulative=0;
+      for(auto& r:tasks) if(r.steady==steady) {
+        cumulative+=r.target-1; ++index;
+        const uint64_t next=index==count ? extra :
+          (weights ? uint64_t(std::round(cumulative/weights*extra)) : uint64_t(index)*(meanUs-1));
+        r.target=1+next-assigned; assigned=next;
+      }
+    }
   }
   uint64_t totalEstimate=0;
   std::mt19937_64 estimates(o.seed ^ 0x71d3babeULL);
   for(auto& r:tasks) {
     if(r.target>std::numeric_limits<uint64_t>::max()/std::max<uint64_t>(1000,o.iterationsPerUs))
       throw std::invalid_argument("normalized task budget exceeds supported clock/work range");
-    r.estimate=o.estimateUs ? o.estimateUs : r.target;
+    // Phase means are available before submission, but the random task budget
+    // is not exposed to the new profile's routing estimator. Keep the historical
+    // synthetic oracle only when no phase override was requested.
+    r.estimate=o.estimateUs ? o.estimateUs :
+      (hasPhaseCpuOverrides(o) ? nominalCpuUs(o,r.steady) : r.target);
     if(o.estimateJitter)r.estimate=uint64_t(std::max(1.,double(r.estimate)*(1+o.estimateJitter*(2*unit(estimates)-1))));
     if(r.estimate>uint64_t(std::numeric_limits<int64_t>::max())-totalEstimate)
       throw std::invalid_argument("sum of work estimates exceeds supported range");
@@ -509,7 +548,11 @@ int run(const Opt& o) {
     <<",\"planned_initial_tasks\":"<<initialTasks<<",\"planned_steady_tasks\":"<<steadyTasks
     <<",\"planned_initial_cpu_us\":"<<initialTargetUs<<",\"planned_steady_cpu_us\":"<<steadyTargetUs
     <<",\"mean_normalization\":"<<js(o.meanNormalization)<<",\"cpu_us\":"<<o.cpuUs<<",\"jitter\":"<<o.jitter
+    <<",\"mean_normalization_scope\":"<<js(o.meanNormalization=="none"?"none":hasPhaseCpuOverrides(o)?"per_phase":"global")
+    <<",\"initial_cpu_us\":"<<o.initialCpuUs<<",\"steady_cpu_us\":"<<o.steadyCpuUs
+    <<",\"resolved_initial_cpu_us\":"<<nominalCpuUs(o,false)<<",\"resolved_steady_cpu_us\":"<<nominalCpuUs(o,true)
     <<",\"long_prob\":"<<o.tailProb<<",\"long_factor\":"<<o.tailFactor<<",\"estimate_us\":"<<o.estimateUs
+    <<",\"estimate_source\":"<<js(o.estimateUs?"explicit":hasPhaseCpuOverrides(o)?"phase_nominal_mean":"synthetic_target")
     <<",\"estimate_jitter\":"<<o.estimateJitter<<",\"seed\":"<<o.seed
     <<",\"work_mode\":"<<js(o.workMode)<<",\"iterations_per_us\":"<<o.iterationsPerUs<<",\"max_outstanding\":"<<o.maxOutstanding
     <<",\"max_planned_tasks\":"<<o.maxPlanned<<",\"sample_ms\":"<<o.sampleMs<<",\"max_samples\":"<<o.maxSamples<<",\"fail_task\":"<<(o.failTask==std::numeric_limits<uint64_t>::max()?"null":std::to_string(o.failTask))<<",\"drain_seconds\":"<<o.drain

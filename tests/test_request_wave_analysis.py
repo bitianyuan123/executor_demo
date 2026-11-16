@@ -214,6 +214,61 @@ class RequestWaveAnalysis(unittest.TestCase):
         self.assertEqual(row['policy'], 'guarded')
         self.assertEqual(row['S_p99_ms_change_pct'], 0.)
 
+    def test_two_planned_policies_are_a_complete_comparison(self):
+        plan = a.read_json(self.plan)
+        plan['profile'] = 'short-peak'
+        plan['policies'].pop('guarded')
+        plan['plan_sha256'] = a.digest({k: v for k, v in plan.items() if k != 'plan_sha256'})
+        dump(self.plan, plan)
+        modify_json(self.root/'run_manifest.json', lambda manifest: manifest.update(
+            runs=manifest['runs'][:2], plan_sha256=plan['plan_sha256']))
+        report = a.analyze(self.plan)
+        self.assertTrue(report['comparison_valid'], report['comparison_issues'])
+        self.assertEqual([(r['baseline'], r['policy']) for r in report['comparisons']], [('home', 'source_only')])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(a.main(['--plan', str(self.plan)]), 0)
+
+    def test_explicit_home_analysis_only_never_claims_policy_comparison(self):
+        modify_json(self.root/'run_manifest.json', lambda manifest: manifest.update(
+            runs=manifest['runs'][:1], analysis_only=True))
+        report = a.analyze(self.plan)
+        self.assertFalse(report['comparison_valid'])
+        self.assertEqual(report['comparisons'], [])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(a.main(['--plan', str(self.plan)]), 0)
+        modify_json(self.root/'run_manifest.json', lambda manifest: manifest['runs'][0].update(policy='source_only'))
+        with self.assertRaisesRegex(ValueError, 'one home'):
+            a.analyze(self.plan)
+
+    def test_phase_budgets_are_printed_and_actual_targets_are_retained(self):
+        plan = a.read_json(self.plan)
+        plan['base'].update({'initial-cpu-us': 1000, 'steady-cpu-us': 49000})
+        plan['plan_sha256'] = a.digest({k: v for k, v in plan.items() if k != 'plan_sha256'})
+        dump(self.plan, plan)
+        modify_json(self.root/'run_manifest.json', lambda manifest: manifest.update(plan_sha256=plan['plan_sha256']))
+        for policy in a.POLICIES:
+            modify_json(self.root/f'runs/{policy}/data/metadata.json', lambda meta: meta.update(initial_cpu_us=1000, steady_cpu_us=49000))
+            modify_tasks(self.root, policy, lambda rows: [row.update(target_cpu_us='1000' if row['phase'] == 'initial' else '49000') for row in rows])
+        report = a.analyze(self.plan)
+        self.assertTrue(report['comparison_valid'], report['runs'])
+        self.assertEqual(report['runs'][0]['phase_cpu_budgets_us']['initial']['target_mean'], 1000)
+        self.assertEqual(report['runs'][0]['phase_cpu_budgets_us']['steady']['target_mean'], 49000)
+        rendered = a.render(report)
+        self.assertIn('initial=1000us; steady=49000us', rendered)
+        self.assertIn('PHASE TARGET CPU home:', rendered)
+
+    def test_functional_only_and_waveform_gate_are_visible_in_standalone_report(self):
+        modify_json(self.root/'run_manifest.json', lambda manifest: manifest.update(
+            functional_only=True, home_waveform_gate={'status': 'functional_only',
+                'passed': False, 'comparison_allowed': True, 'reasons': ['no CPU trace']}))
+        report = a.analyze(self.plan)
+        self.assertTrue(report['functional_only'])
+        self.assertFalse(report['home_waveform_gate']['passed'])
+        rendered = a.render(report)
+        self.assertIn('FUNCTIONAL_ONLY:', rendered)
+        self.assertIn('waveform is unvalidated', rendered)
+        self.assertIn('HOME WAVEFORM GATE', rendered)
+
     def test_initial_submission_span_is_per_request_and_ignores_steady(self):
         rows = [dict(burst=0, phase='initial', planned_ns=0, submit_ns=1_000_000),
                 dict(burst=0, phase='initial', planned_ns=20_000_000, submit_ns=41_000_000),

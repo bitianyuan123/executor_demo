@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "family": "request-wave",
+  "deployment": "dev",
+  "base": {
+    "deployment": "dev",
+    "workload": "request-wave",
+    "pools": 2,
+    "threads": 16,
+    "cpus": "0,1;2,3",
+    "numa": "0,0",
+    "capacities": "2,2",
+    "affinity": "cluster",
+    "arrival-rate": 12,
+    "arrival": "regular",
+    "duration": 6.0,
+    "burst-min": 80,
+    "burst-max": 80,
+    "burst-window-ms": 1,
+    "steady-tasks": 80,
+    "steady-window-ms": 166.66666666666666,
+    "burst-placement": "local",
+    "cpu-us": 133,
+    "jitter": 0.5,
+    "long-prob": 0,
+    "long-factor": 8,
+    "mean-normalization": "exact",
+    "work-mode": "cpu",
+    "seed": 52000,
+    "instrumentation": "full",
+    "load-observation": "basic",
+    "load-metric": "outstanding",
+    "estimate-us": 0,
+    "estimate-jitter": 0,
+    "min-improvement": 0,
+    "sample-ms": 100,
+    "max-outstanding": 100000,
+    "max-planned-tasks": 2000000,
+    "drain-seconds": 20,
+    "initial-cpu-us": 133,
+    "steady-cpu-us": 1950
+  },
+  "analysis": {
+    "warmup_seconds": 1.0,
+    "request_end_seconds": 6.0,
+    "cohort": "request_planned_ns; include all later tasks belonging to selected requests"
+  },
+  "pool_cpus": [
+    [
+      0,
+      1
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "numa": [
+    0,
+    0
+  ],
+  "capacities": [
+    2.0,
+    2.0
+  ],
+  "cpu_union": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "policies": {
+    "home": {
+      "routing": "home",
+      "load-threshold": 0.8,
+      "accept-threshold": -1
+    },
+    "source_only": {
+      "routing": "threshold",
+      "load-threshold": 0.8,
+      "accept-threshold": -1
+    }
+  },
+  "policy_order": [
+    "home",
+    "source_only"
+  ],
+  "workload_sha256": "7b363dec4591dd2c197ee627b2a8a7fecf633bf545ffd18fa0dcedc59f37dfbb",
+  "cpu_observer": {
+    "interval_ms": 100,
+    "source": "/proc/stat",
+    "execution_fields": [
+      "user",
+      "nice",
+      "system",
+      "irq",
+      "softirq"
+    ],
+    "guest_accounting": "guest and guest_nice already included in user/nice; not added twice",
+    "clock_ticks_per_second": 100,
+    "scope": "selected logical CPUs, includes unrelated work and runner overhead",
+    "resolution_limit": "100 ms samples cannot resolve a <30 ms peak; counters are tick-accounted"
+  },
+  "cpu_trace": {
+    "enabled": true,
+    "bin_ms": 1,
+    "buffer_kb": 256,
+    "observer_cpu_ids": []
+  },
+  "nominal": {
+    "tasks_per_second": 1920,
+    "cpu_seconds_per_second": 1.99968,
+    "selected_logical_cpus": 4,
+    "execution_percent": 49.992,
+    "per_pool_request_gap_ms": 166.66666666666666
+  },
+  "notes": [
+    "Synthetic independent CPU tasks; not DAG and not a reproduction of 100 ms operator execution.",
+    "Short initial CPU segments and longer steady CPU segments preserve nominal mean demand; each phase is normalized independently.",
+    "SMT logical CPU-time is not equivalent to full physical-core throughput.",
+    "No CPU utilization input to routing, no feedback pacing and no per-policy workload adjustment.",
+    "One seed; each policy once; observed differences have no repeated-run confidence interval.",
+    "Request duration bounds request starts, not later steady task releases or drain completion.",
+    "home runs first and is reused on resume; ARM source_only is gated by the measured home shape.",
+    "No automatic budget adjustment; a failed home waveform requires diagnosis and a newly frozen workload for both policies.",
+    "The business 5-20ms peak is an approximate observation with no established occupancy cutoff; >=90% is a provisional experiment contract, not a measured production threshold."
+  ],
+  "profile": "short-peak",
+  "phase_workload": {
+    "requested_target_utilization": 0.5,
+    "requested_peak_target_ms": 10,
+    "same_home_period_ms": 166.66666666666666,
+    "logical_cpus_per_pool": 2,
+    "initial_task_cpu_us": 133,
+    "steady_task_cpu_us": 1950,
+    "initial_cpu_us_per_request": 10640,
+    "steady_cpu_us_per_request": 156000,
+    "cpu_us_per_request": 166640,
+    "actual_nominal_utilization": 0.49992000000000003,
+    "steady_nominal_pool_utilization": 0.468,
+    "estimated_fluid_peak_ms": 10.0,
+    "phase_budget_overrides": {
+      "initial": false,
+      "steady": false
+    },
+    "formula": "B=C*(1-rho)*tau/(1-tau/P); estimated peak=B/(C-steady_work/P)",
+    "assumptions": [
+      "equal disjoint logical CPU groups; C is CPU-time capacity, not physical-core throughput",
+      "initial CPU work is approximated as an instantaneous batch",
+      "steady work is approximated as continuous fluid demand with period P",
+      "ignores per-task scheduling, discrete long steady tasks, instrumentation and unrelated work",
+      "model is an initial guess; measured home waveform must pass before ARM policy comparison"
+    ]
+  },
+  "waveform_acceptance": {
+    "version": 1,
+    "kind": "provisional_synthetic_profile_acceptance_not_business_calibration",
+    "high_pct": 90.0,
+    "sensitivity_high_pct": [
+      80.0,
+      90.0,
+      95.0
+    ],
+    "maximum_bin_ms": 2.0,
+    "minimum_complete_requests": 30,
+    "minimum_complete_fraction": 0.95,
+    "minimum_onset_fraction": 0.9,
+    "near_onset_start_by_ms": 5.0,
+    "onset_region_end_ms": 30.0,
+    "median_peak_width_range_ms": [
+      5.0,
+      20.0
+    ],
+    "p90_peak_width_max_ms": 25.0,
+    "extra_onset_high_tolerance_ms": 2.0,
+    "maximum_fragmented_fraction": 0.1,
+    "background_median_range_pct": [
+      35.0,
+      65.0
+    ],
+    "background_high_fraction_p90_max": 0.1,
+    "background_longest_high_p90_max_ms": 10.0,
+    "union_mean_range_pct": [
+      45.0,
+      55.0
+    ],
+    "minimum_background_window_fraction": 0.9,
+    "scope": "home only; source_only waveform is an outcome, not an acceptance condition",
+    "requires_high_resolution_trace_on_arm": true,
+    "status_without_trace": "unvalidated; dev may exercise functional policy paths only"
+  },
+  "plan_sha256": "178177c13d452928175092976642b6f38f6612dc172a479eb30a0915f86a3bde"
+}

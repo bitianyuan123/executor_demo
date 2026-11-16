@@ -14,6 +14,8 @@
 
 真实应用无法与开发/测试环境联网时，使用[生产调优离线交接包](handoff/production-tuning/README.md)：内含已有负载与CPU证据、指标/亲和性指导、有限阈值探索规则，以及探索→设计→实现→验收→迭代五个独立prompt。默认现状与一个候选各一次，不照搬旧指南的多因素矩阵或默认重复；生产收益以现场完整请求时延为准。
 
+阶段3当前执行入口：[短CPU峰值负载修订与最小验证](stages/03-independent/SHORT_PEAK_GUIDE.md)。旧home的CPU高位持续约175–185ms，与用户新观察的粗略5–20ms不符；新profile保持约50%总需求，先用home验证形态，再复用基线与source_only各一次比较。
+
 再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
 
 ## 获取与依赖

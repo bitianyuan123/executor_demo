@@ -3,6 +3,7 @@ build*/
 __pycache__/
 *.pyc
 results/runs/
+results/short-peak-*/
 results/local/
 results/staged/runs/
 results/staged/placement/
