@@ -28,6 +28,48 @@ ARM observe、tune、evaluate 合计 **122 轮**，发压时长合计约 **122 �
 
 主场景以 2.4 bursts/s 到达，每个 burst 100 个独立任务，home 池按 burst 轮转选择；同一 burst 初始集中在同一个 home 池。任务平均消耗 100ms 线程 CPU 时间，均匀扰动 ±50%，有限样本均值精确归一化；没有图依赖、RPC 等待和真实缓存/内存亲和收益。整机输入工作量约 24 CPU-s/s。每轮发压 60 秒，打印摘要对应 12000 个任务的分析窗口。
 
+### Q、N、C 和阈值 H 的含义
+
+下标 i 表示第 i 个线程池。当前是6个池，每池16或256个worker；每池cluster允许16个逻辑CPU（8个物理核的SMT线程）。不要将池数量、worker数量和CPU数量混为一谈。
+
+|符号|含义|如何获得|不能解释成什么|
+|---|---|---|---|
+|Q_i|Folly公开的任务队列积压估计|提交新task前调用该池 `getTaskQueueSize()`|不是Linux runq，不覆盖所有已领取/正在执行的task，也不是可靠的“已提交未开始”完整计数|
+|N_i|应用已为该池接纳/预留、尚未终态释放的task数，命令中叫 `outstanding`|应用为每池维护一个原子计数，投递前加1，task退出时减1，投递失败回滚|不是请求数、活跃线程数、正在CPU上运行的线程数或runq长度|
+|C_i|对负载评分的容量归一化尺度|本demo默认 `min(固定worker数,该池allowed逻辑CPU数)`，启动时确定|不是测得的CPU吞吐，也不是CPU利用率；SMT不代表计算吞吐翻倍|
+|H|触发考虑跨池投递的阈值|配置 `--load-threshold`|不是硬并发上限，也不是毫秒时延目标|
+
+本轮cluster组无论每池16还是256个worker，都是 `C=16`。`N/C=2` 表示平均每个容量单位对应两个未结束task，不表示CPU利用率200%，也不表示等待2ms。使用none/numa亲和时池之间共享CPU资源，C不能按池相加为独占总容量，当前阈值结论不能直接平移。
+
+### 在 Folly 和应用的哪个位置采集
+
+本版本默认队列的Q读取路径是 `CPUThreadPoolExecutor::getTaskQueueSize()` → `UnboundedBlockingQueue::size()` → `ThrottledLifoSem::valueGuess()`。最后读的是同步协议的计数快照；取走任务、分配唤醒与真正获得CPU并不是同一事件。故Q很低甚至为0时，仍可有许多未结束task在竞争CPU。具体队列/gflags变更时应重新确认路径，详见阶段2分析。
+
+N由应用的executor投递封装维护，现有实现无需修改Folly，不读取 `/proc`。每次算子/独立task调用 `pool.add()` 都经过同一封装，计数归属**实际选中池**，不是固定归属request的home池。
+
+```mermaid
+sequenceDiagram
+    participant A as 应用投递入口
+    participant L as 每池负载计数
+    participant F as Folly CPUThreadPoolExecutor
+    participant T as Worker执行回调
+    A->>L: 读取home和必要候选的N/C，选目标池
+    A->>L: 目标池N加1（必须早于add）
+    A->>F: add(包裹后的task)
+    F->>T: 出队并执行回调
+    Note over T,L: 回调开始不扣N；被抢占或等待CPU时也继续计入
+    T->>L: 回调结束/异常/协作取消，N减1
+    Note over A,L: add失败则在提交侧回滚，避免泄漏
+```
+
+实现位置见 [main.cpp](../../experiments/independent/src/main.cpp)：容量计算第403行；读取Q/N并归一化第489–498行；选择目标第510行；投递前预留N第532行；回调scope guard释放第548行；add失败回滚第569行。路由判定在 [LoadRouting.h](../../experiments/independent/src/LoadRouting.h) 第32–45行。
+
+这样，被唤醒但还在内核runq排队、已出队尚未开始回调、已开始但被抢占的task，都仍计入N。N对整个在途生命周期计数，不能据此反推出这些状态各占多少。路由实时读提交前快照；`pools.csv`的100ms周期样本只是离线诊断，不能用这个采样间隔作为分流控制的刷新间隔。
+
+在 `instrumentation=none, load-observation=minimal, load-metric=outstanding` 下，每成功接纳的task额外维护N两次relaxed原子RMW，加一次、减一次；路由未触发时读1个池，触发扫描时最多读6个池，每池一次relaxed load。启动时缓存C。原有全局准入计数、任务记录和其他必要开销另计，不能把上述操作次数直接换算为已经测得的纳秒成本。Q利用Folly已有计数，其默认ThrottledLifoSem读取是O(1)原子load（默认seq_cst）；N增加维护成本，但统计范围更完整。允许快照误差并不允许普通变量并发读写。
+
+接入业务时还需保证：所有投递路径都覆盖；异常、取消、过期或队列丢弃都恰好释放一次；计数存活到全部任务释放之后。本demo采用join排空和协作取消，不能直接假设生产环境被丢弃的闭包也会执行回调里的scope guard。异步RPC发出后若CPU回调返回，应结束本次CPU执行片段的计数，RPC返回后新就绪的CPU片段重新接纳；不要把整个request等待网络的时间都计为CPU池负载。同步阻塞RPC则仍占worker、仍在N中，因此这时N也不是纯CPU需求。
+
 observe 还包括 smooth 和初始 spread 两种对照。tune/evaluate 的主收益表使用相同 local 工作负载，只改变投递策略：
 
 ```mermaid
@@ -104,6 +146,42 @@ observe 采用 3 个完整 seed 的留出验证。后续用户输出确认了配
 若目标仅是当前 demo 的时延，0.5 阈值明显优于 2，且与静态 spread 接近。阈值 2 可以被解释为保留更多 home 执行的选择，但需要写明该权衡，不能称其为时延最优阈值。日志 971–975 行中的冻结理由仍是占位文字。
 
 **已经冻结并验证的是阈值 2。不得用 evaluate 的结果追溯修改 selection，再把同一批 evaluate 当作新阈值的独立验证。** 如需以 0.5 为独立新方案，应另立问题并预先定义验证；本阶段收尾不要求做这一步，也不要求为了得到“最优”二字继续搜索阈值。
+
+### 当前可以怎样选指标和阈值
+
+可以得到一个明确的下一阶段候选：**应用侧N计数，按N/C评分，H=2，最小改善量0**。它有本轮7个新seed的描述性收益支持，主机别名的正式配对重算仍按收尾指南完成。它是可复现的起点，不是已经证明的生产最优参数；当前收益来自统一full/progress观测，minimal净收益与硬件维护成本尚不能从本日志认定。
+
+等价的策略参数为：
+
+```text
+--routing threshold --load-metric outstanding --load-threshold 2
+--min-improvement 0 --capacities 16,16,16,16,16,16
+```
+
+选择逻辑（读数均在本task预留计数之前）：
+
+```text
+target = home
+home_score = N[home] / C[home]
+if home_score > H:
+    扫描其他池，选择N[i]/C[i]最低且严格小于home_score的池
+    没有更低分的池则继续使用home
+对target预留N并提交task；终态恰好释放一次
+```
+
+`H=2,C=16` 时旧N为32仍保留home；加到33后，下一task才触发扫描。`H=0.5` 时旧N为8仍保留home；加到9后，下一task触发。目标池只需比home低，不要求一定低于H；相等不分流。因此H不是强制限流线，也不是“池永不超过32项”的保证。
+
+本demo只有一个投递者，跨池读数不是原子快照。真实业务多个executor线程同时投递时，可能同时选中同一个低负载池；预留N能使后续投递看到压力，但不能保证并发选择不扎堆。这属于DAG/多生产者阶段的验证范围，不追加为本次简单矩阵的前置要求。
+
+|当前目标|可采用的判断|证据强度与边界|
+|---|---|---|
+|保留更多home执行，同时显著改善局部拥塞|N/C > 2作为DAG阶段候选|7个新seed；约67%跨池，时延明显改善；真实亲和收益尚未测|
+|当前无亲和代价的简单demo尽量低时延|静态task级spread是已验证的强基线；N阈值0.5接近它|spread有7个新seed；N阈值0.5仅3个tune seed，不宣称独立验证最优|
+|找可跨任意业务使用的最佳阈值或p99公式|当前不能给出|任务成本、阻塞、共享CPU域和未来到达都会改变关系|
+
+阈值较低意味着更早分散本批task。在忽略提交期间完成、各池起初空闲的直观模型中，H=2会先让home保留33项，再将更多后续项送往其他池，与实测约67%分流一致；H=0.5较早触发，最终6池接近均分100项，跨池比例接近83%。这解释了时延与亲和保留之间的选择，但不是所有负载都满足的性能公式。
+
+N比Q更完整，不代表N对单task完成时延的预测必然精确。路由只需要发现“哪个池相对积压更多”，这比预测一个task的完成p99容易。本轮数据支持前者有用，对后者的改进很有限。当前没有证据值得为同样的入口信号引入work/remaining的额外维护复杂度。
 
 ## 6. 配对报告为何没有合成七对
 
