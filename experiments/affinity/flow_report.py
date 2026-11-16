@@ -17,6 +17,24 @@ SPEC = importlib.util.spec_from_file_location('affinity_report', Path(__file__).
 report = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(report)
 ROLES = ('init', 'first-wave stage0', 'later-wave stage0', 'ordinary successors', 'join')
+# affinity-v2 writes int(RequestExecutor::Reason) to tasks.csv. Preserve the
+# enum order; the test checks this contract against RequestExecutor.h.
+ROUTING_REASONS = ('Home', 'BelowBusyThreshold', 'ReturnHome', 'LocalSpill',
+                   'CrossNumaSpill', 'InsufficientGain', 'HopBudget',
+                   'PinnedHome', 'NonFork')
+
+
+def routing_reason(row):
+    value = row['reason']
+    if type(value) is not int or value < 0:
+        raise ValueError('routing reason must be a nonnegative integer')
+    # choose() only enters ReturnHome when preferred != home, and preferred is
+    # the submission source for a child. returnLow <= busyHigh means it then
+    # returns that choice without another spill. A source already at home
+    # cannot legitimately have this reason in the current v2 contract.
+    if value == 2 and not (row['source'] != row['home'] and row['chosen'] == row['home']):
+        raise ValueError('ReturnHome reason requires source!=home and chosen==home')
+    return ROUTING_REASONS[value] if value < len(ROUTING_REASONS) else f'Unknown({value})'
 
 
 def distribution(values):
@@ -94,9 +112,11 @@ def task_roles(summary, tasks):
     output = {}
     for role, rows in groups.items():
         cpu = [row['cpu_ns'] / 1e6 for row in rows if row.get('cpu_ns') is not None]
+        reasons = Counter(routing_reason(row) for row in rows)
         output[role] = {'n': len(rows),
                         'migrations': sum(row['source'] != row['chosen'] for row in rows),
                         'return_home': sum(row['source'] != row['home'] and row['chosen'] == row['home'] for row in rows),
+                        'routing_reasons': dict(sorted(reasons.items())),
                         'wait_ms': report.mean([(row['start_ns'] - row['submitted_ns']) / 1e6 for row in rows]),
                         'cpu_ms': report.mean(cpu) if len(cpu) == len(rows) else None,
                         'wall_ms': report.mean([(row['finish_ns'] - row['start_ns']) / 1e6 for row in rows])}
@@ -142,10 +162,11 @@ def print_flow(run, warmup_seconds, window_seconds):
     if roles is None:
         print('Callback roles unavailable: trace=0.')
     else:
-        print('Roles: completed planned-request cohort, all callback records including late ones. source is submission context; migration is routing, not a kernel CPU migration.')
-        print('| role | n | source!=chosen | source!=home && chosen==home | wait mean ms | CPU mean ms | wall mean ms |')
+        print('Roles: completed planned-request cohort, all callback records including late ones. source is submission context; migration is routing, not a kernel CPU migration. ReturnHome is a chooser reason; routing back to home can also have other reasons.')
+        print('| role | n | source!=chosen | source!=home && chosen==home | wait mean ms | CPU mean ms | wall mean ms | routing reasons |')
         for role, row in roles.items():
-            print(f'| {role} | {row["n"]} | {row["migrations"]} | {row["return_home"]} | {number(row["wait_ms"])} | {number(row["cpu_ms"])} | {number(row["wall_ms"])} |')
+            reasons = ', '.join(f'{reason}:{count}' for reason, count in row['routing_reasons'].items()) or '-'
+            print(f'| {role} | {row["n"]} | {row["migrations"]} | {row["return_home"]} | {number(row["wait_ms"])} | {number(row["cpu_ms"])} | {number(row["wall_ms"])} | {reasons} |')
         print(f'Role conservation: {sum(row["n"] for row in roles.values())} = {len(ids)} completed requests x {summary["nodes_per_request"]} callbacks; wait starts after routing selection, CPU/wall includes successor submission. Ordinary successors have depth>0; joins are separate.')
 
 

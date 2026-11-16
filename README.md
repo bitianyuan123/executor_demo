@@ -23,7 +23,9 @@
 - [每cluster一池的实验矩阵](docs/REAL_WORKLOAD_MATRIX.md)：主线验证单request扇出、线程过配、NUMA借出与数据亲和；四池仅作可选历史重放。
 - [目标机4001日志审阅](docs/TARGET_V2_4001_REVIEW.md)：v2单request借出初筛、线程数结果与证据边界；当时的补证和校准已由4002完成。
 - [目标机4002补证与校准](docs/TARGET_V2_4002_REVIEW.md)：配对审计完成、CPU策略全部回退、首波尺度冻结；当时布置的竞争对照已由4003完成。
-- [目标机4003竞争结果与当前执行步骤](docs/TARGET_V2_4003_REVIEW.md)：regular的O均值收益约43%，burst8缩小至约4%；只读补查入口时序，然后进入三个连续分支工作集检查。
+- [目标机4003竞争结果](docs/TARGET_V2_4003_REVIEW.md)：regular的O均值收益约43%，burst8缩小至约4%；当时布置的入口补证和分支校准已完成。
+- [目标机4004补证与当前执行步骤](docs/TARGET_V2_4004_REVIEW.md)：确认burst批内投递拉宽，连续分支工作量冻结；下一批none/branch64各四策略、三seed，共24轮。
+- [4005历史真实trace审阅](docs/TRACE_4005_REVIEW.md)：采用最终精确计数，纠正HLL混用；区分unique、waking与onCPU相关性，不据历史四池决定cluster阈值。
 - [本轮实际验证](results/review/TRACE_LOAD_VALIDATION.md)：本地功能和读成本，不冒充ARM真实负载结论。
 
 再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
@@ -76,7 +78,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前用户已完成阶段3初测、旧DAG home基线、六cluster的v2初筛、尺度校准及[4003的regular/burst8竞争对照](docs/TARGET_V2_4003_REVIEW.md)。下一步只读补查已有CSV的实际burst跨度与请求均值分解，再检查depth2的none/branch64/branch256三个工作集，进入数据亲和和后继去向；不重跑已完成校准或矩阵。旧`s4-routing`按需补充；burst8提供受控请求竞争，不替代单request扇出主线。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
+当前已完成阶段3初测、旧DAG home基线、六cluster的v2初筛、regular/burst8竞争及[4004入口补证/连续分支校准](docs/TARGET_V2_4004_REVIEW.md)。下一步直接执行4004第6节：同形状none/branch64、四种后继策略、三seed的24轮有限矩阵；不重跑已完成校准。256KiB与burst保留为后续复验。历史trace的[4005结果](docs/TRACE_4005_REVIEW.md)提供机制参考，其缺口不阻塞主线。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 

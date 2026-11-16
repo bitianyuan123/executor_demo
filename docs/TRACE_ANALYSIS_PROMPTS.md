@@ -4,6 +4,8 @@
 
 模板中的四池配置仅描述已有历史采集。目标实验是在所选 CPU 全集中每个已确认硬件 cluster 对应一个池；当前独立子集为六个 cluster。分析新 trace 时，应填写其实际部署和映射，不沿用历史四池数据。历史分析可与目标实验并行推进。
 
+[4005回传审阅](TRACE_4005_REVIEW.md)发现了旧HLL数值与后续exact描述混用。以下模板新增一致性核对；已有该trace的最终精确结果，无需仅为更新提示词重扫原文件。
+
 ## GLM5.2：主分析
 
 ```text
@@ -30,6 +32,7 @@
 3. 事件头 CPU 是记录 CPU，target_cpu 才是目标；未绑 CPU 时只有部分 CPU 的 trace 不能解释为全局轨迹。analyzer --cpu-mask 是十进制覆盖元数据，不会过滤记录；声明 coverage=full 不代表自动认证。
 4. 无 CSV 时先无映射运行，输出真实候选名/TID，结果保持 unmapped；不能仅因背景说有四池就编造四个池或按连续 TID 均分。名称正则只能标 heuristic，说明截断/复用风险。历史 trace 不能用重启后进程的 /proc TID 表映射。
 5. 映射应来自本次采集、能校验实际池注册。CSV≤8192 TID 的逐窗 unique 使用 exact bitset；HLL 约13%标准误不能判断20与22这类小变化。核对每池线程数但不强凑128。
+6. 每张表注明对应产物和统计方法；若重跑exact，不能复制旧HLL列。exact unique不可大于其映射TID集合大小。CSV由名称派生时，必须同时写“基数精确、身份heuristic”，不可因工具显示csv而隐去来源。不同指标各自峰值要分别标时间，不拼成同时发生的状态。
 
 二、执行量化分析。
 先生成 discovery，再有真实映射时生成 summary.txt、summary.json；先 mkdir 输出目录，保留 audit/warnings。默认 1/5/10/30 ms 固定窗口，必要时 --include-windows，仅在本地保存。全文件扫描用于闭合窗口边界，指标限定所选绝对时间范围。

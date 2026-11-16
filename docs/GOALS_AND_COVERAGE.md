@@ -83,7 +83,7 @@ v2使用固定迭代/访问次数，使迁移变慢时仍完成同样工作；v1
 | `scripts/conditional_latency.py`、stage3 `predict.py` | 独立任务条件分位、整轮留出预测 | 不能直接读取v2 schema或预测其request关键路径 |
 | `experiments/affinity/report.py` | 审计v2合同、请求mean/p95/p99、callback占用、同seed合法home差值及实验角色 | 每轮描述性配对；没有自动跨seed置信区间或生产最优排名 |
 | `experiments/affinity/diagnose.py` | v2请求时序/积压、首波投递/启动/callback跨度、Q/I/O条件task分位 | 离线诊断；不是kernel runq测量、稳态认证或负载→request p99模型 |
-| `experiments/affinity/flow_report.py` | 成功请求均值的入口lag/attempt后分解、完整burst实际跨度、init/普通后继等角色 | 复用原CSV审计；attempt不等于root入队，角色回home不等于特定算法分支命中 |
+| `experiments/affinity/flow_report.py` | 成功请求均值分解、完整burst实际跨度、init/普通后继等角色及选池原因 | 复用原CSV审计；attempt不等于root入队，路由回home与ReturnHome原因分别统计 |
 | `scripts/compare_runs.py` | 阶段3/v1的声明式合同与整轮差值区间 | 不兼容v2 schema，不能把目录直接替换后声称已复用 |
 | `scripts/analyze_sched_trace.py`及Perfetto SQL | 调度事件/线程状态与质量审计 | 没有业务marker，不输出request因果结论 |
 
@@ -109,7 +109,9 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 沿[cluster实验指南](REAL_WORKLOAD_MATRIX.md)的4.1→4.3→4.4推进：home低负载校准单请求工作；增加重叠并扫描线程数；固定线程档比较负载信号；换用有连续分支的真实读写模型后重新冻结工作，再测同NUMA借出、parent/home、fork/all、chunk和跨NUMA。
 
-[目标机4001结果](TARGET_V2_4001_REVIEW.md)、[4002补证/校准](TARGET_V2_4002_REVIEW.md)及[4003竞争结果](TARGET_V2_4003_REVIEW.md)已覆盖六cluster初筛与有限请求竞争：CPU策略全部回退O；300万迭代已冻结；regular的O均值收益约43%，burst8约4%。下一步只读补查入口时序，再检查depth2的三个连续分支工作集，为parent/home、fork/all准备数据依赖负载。数据亲和、有效CPU信号收益与正式尾部结论仍未完成；不要把已完成校准和12轮竞争对照当成待办从头执行。
+[4001](TARGET_V2_4001_REVIEW.md)至[4003](TARGET_V2_4003_REVIEW.md)已覆盖六cluster初筛与有限请求竞争；[4004](TARGET_V2_4004_REVIEW.md)又完成入口补证及depth2连续分支的三档校准。当前下一步为none/branch64各home、all-parent、all-home、fork-parent的24轮同资源对照，代码与命令见4004第6节。数据亲和的策略收益、有效CPU信号收益与正式尾部结论仍待验证，不把已完成校准重复列为待办。
+
+[4005历史trace审阅](TRACE_4005_REVIEW.md)确认最终exact unique与onCPU关系较强，而waking→onCPU在1ms下仅中度相关；它没有采集Folly I/Q或request标记，不能将其换成廉价active代理已经验收的结论，也不恢复四池为目标配置。
 
 先用少量请求验收配置和量级，之后才扩大正式尾部样本。入口burst、历史四池重放和旧trace可按具体问题补充，不阻塞主线。每轮只收集终端报告也可推进，但须保留本地原始CSV、计划、metadata和二进制，不能仅保存挑选后的性能行。
 

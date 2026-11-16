@@ -5,6 +5,7 @@ import csv
 import importlib.util
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -148,6 +149,46 @@ class FlowUnitTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             flow.task_roles(graph_summary(), tasks)
 
+    def test_reason_enum_matches_current_csv_numeric_contract(self):
+        header = TOOL.parent / 'include/executor_demo/RequestExecutor.h'
+        enum = re.search(r'enum class Reason\s*\{([^}]+)\}', header.read_text()).group(1)
+        names = tuple(name.strip() for name in enum.split(',') if name.strip())
+        self.assertEqual(flow.ROUTING_REASONS, names)
+
+    def test_routing_back_home_does_not_imply_return_home_reason(self):
+        tasks = graph_tasks()
+        # Two ordinary successors route from pool 1 back to home 0, but only
+        # one takes the affinity-return branch; the other selects home as an
+        # ordinary local-spill candidate. The third successor stays at source.
+        tasks[3]['reason'] = 1  # BelowBusyThreshold, source/chosen 1/1
+        tasks[4]['reason'] = 2  # ReturnHome, source/chosen 1/0
+        tasks[7]['reason'] = 3  # LocalSpill, source/chosen 1/0
+        roles = flow.task_roles(graph_summary(), tasks)
+        successors = roles['ordinary successors']
+        self.assertEqual(successors['return_home'], 2)
+        self.assertEqual(successors['routing_reasons'],
+                         {'BelowBusyThreshold': 1, 'LocalSpill': 1, 'ReturnHome': 1})
+        self.assertEqual(sum(successors['routing_reasons'].values()), successors['n'])
+        # choose() cannot enter ReturnHome when source is already home, and a
+        # ReturnHome choice cannot choose another destination in this schema.
+        for source, chosen in ((0, 0), (1, 1)):
+            with self.subTest(source=source, chosen=chosen):
+                tasks[4].update(source=source, chosen=chosen)
+                with self.assertRaisesRegex(ValueError, 'ReturnHome reason requires'):
+                    flow.task_roles(graph_summary(), tasks)
+
+    def test_unknown_reason_is_visible_and_no_trace_has_no_reason_statistics(self):
+        tasks = graph_tasks()
+        tasks[4]['reason'] = 99
+        roles = flow.task_roles(graph_summary(), tasks)
+        self.assertEqual(roles['ordinary successors']['routing_reasons'],
+                         {'Home': 2, 'Unknown(99)': 1})
+        self.assertIsNone(flow.task_roles({**graph_summary(), 'trace': False}, tasks))
+        for invalid in (-1, True, 2.0):
+            tasks[4]['reason'] = invalid
+            with self.assertRaisesRegex(ValueError, 'nonnegative integer'):
+                flow.task_roles(graph_summary(), tasks)
+
 
 class AuditedCliTest(unittest.TestCase):
     def setUp(self):
@@ -182,6 +223,21 @@ class AuditedCliTest(unittest.TestCase):
         self.assertEqual(process.stdout.count('RUN '), 2)
         self.assertIn('Callback roles unavailable: trace=0', process.stdout)
         self.assertIn('trailing-partial=1', process.stdout)
+
+    def test_cli_reports_unknown_reason_and_rejects_impossible_return(self):
+        self.tasks[1]['reason'] = 99
+        csv_write(self.run / 'tasks.csv', self.tasks)
+        process = self.invoke()
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertIn('routing reasons', process.stdout)
+        self.assertIn('Unknown(99):1', process.stdout)
+        self.assertIn('routing back to home can also have other reasons', process.stdout)
+        # Request 0 tag 2 already stays at home (source=chosen=home=0).
+        self.tasks[2]['reason'] = 2
+        csv_write(self.run / 'tasks.csv', self.tasks)
+        process = self.invoke()
+        self.assertNotEqual(process.returncode, 0)
+        self.assertIn('ReturnHome reason requires', process.stderr)
 
     def test_shared_audit_rejects_truncated_requests_bad_task_and_checksum(self):
         csv_write(self.run / 'requests.csv', self.rows[:-1])
