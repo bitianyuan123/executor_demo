@@ -109,9 +109,9 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 [4001](TARGET_V2_4001_REVIEW.md)至[4004](TARGET_V2_4004_REVIEW.md)完成初筛、竞争与尺度校准；[4006](TARGET_V2_4006_REVIEW.md)完成24轮后继策略，[4008](TARGET_V2_4008_REVIEW.md)完成task异质性，[4009](TARGET_V2_4009_REVIEW.md)完成联合诊断与burst8。regular与burst下策略收益不同，不能自动外推生产；这些轮次不再列为待办。
 
-当前先执行[真实负载校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)和[现场提示词](WORKLOAD_CALIBRATION_PROMPT.md)，暂缓扩大Q/active/O、线程数或阈值矩阵。已有trace定向补N/持续性口径；业务端补executor到达、CPU/request、图依赖/ready、RPC与数据归属。旧trace缺少的request/operator身份不能靠更多sched统计补出，也不恢复四池为目标。
+当前先执行[真实负载校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)和[离线提示词](WORKLOAD_CALIBRATION_PROMPT.md)，只在已有trace的分析环境定向补N/持续性口径；真实应用不可访问，executor到达、CPU/request、图/ready、RPC与数据归属的缺失值作为显式假设，不要求生产采样、源码或重采。旧trace缺少的request/operator身份不能靠更多sched统计补出，也不恢复四池为目标。
 
-校准输入并留出真实窗口后，再使用[cluster实验指南](REAL_WORKLOAD_MATRIX.md)中的少量对照验证信号/线程、fork/all、NUMA和持续门控。每个模型变化须对应具体现场特征；支持生产推荐前，还须目标cluster业务验证与正式尾部重复。终端回传仍可推进，目标机保留CSV、metadata及原始观测，不能只保存精选性能行。
+完成一次有界补证后即可继续使用[cluster实验指南](REAL_WORKLOAD_MATRIX.md)中的少量对照验证信号/线程、fork/all、NUMA和持续门控。每个模型变化须注明对应的旧trace现象或未知量敏感性假设；无需等待真实窗口或业务采样。支持生产推荐前，仍需后置的目标cluster业务验证与正式尾部重复。终端回传仍可推进，目标机保留CSV、metadata及原始观测，不能只保存精选性能行。
 
 ## 8. 本次覆盖审查的验证事实
 

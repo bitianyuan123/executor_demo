@@ -83,7 +83,7 @@ CoDel可借鉴“持续延迟超过目标才动作、及时重置”的思想。
 
 ## 6. 负载与对照应补哪些，何时做
 
-9轮task异质性与9轮burst已分别由4008/4009完成；先按[真实校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)补现场特征，再选有依据的工作族及固定fork/all、parent/home规则做门控专项。本页不提供gate的ARM执行命令，因为gate尚未实现；不能让用户执行不存在的CLI。
+9轮task异质性与9轮burst已分别由4008/4009完成；先按[真实校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)复核离线可得证据，再选实测现象支持或明确标为敏感性假设的工作族及固定fork/all、parent/home规则做门控专项。本页不提供gate的ARM执行命令，因为gate尚未实现；不能让用户执行不存在的CLI。
 
 | 必测形态 | 要揭示的问题 | 当前驱动状态 |
 |---|---|---|

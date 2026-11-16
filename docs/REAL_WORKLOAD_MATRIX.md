@@ -8,11 +8,11 @@
 
 目标、实现难点及逐项验证状态集中在[验收覆盖](GOALS_AND_COVERAGE.md)。本指南用于选择下一组对照，不意味着所有负载组合、ARM性能与生产接入均已验证。
 
-目标机已完成[4001初筛](TARGET_V2_4001_REVIEW.md)、[4002配对补证/尺度校准](TARGET_V2_4002_REVIEW.md)、[4003竞争对照](TARGET_V2_4003_REVIEW.md)、[4004入口补证/连续分支校准](TARGET_V2_4004_REVIEW.md)及[4006的24轮后继策略对照](TARGET_V2_4006_REVIEW.md)。[4008](TARGET_V2_4008_REVIEW.md)已完成task异质性，[4009](TARGET_V2_4009_REVIEW.md)又完成联合诊断和burst8九轮。当前先按[真实校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)补齐业务特征，暂不继续扩大本页的策略/线程矩阵；本页保留已有能力与后续选项，不是全部待跑清单。历史[4005 trace](TRACE_4005_REVIEW.md)支持关注短时峰值，但不决定六cluster池阈值，亦不替代目标部署策略对照。
+目标机已完成[4001初筛](TARGET_V2_4001_REVIEW.md)、[4002配对补证/尺度校准](TARGET_V2_4002_REVIEW.md)、[4003竞争对照](TARGET_V2_4003_REVIEW.md)、[4004入口补证/连续分支校准](TARGET_V2_4004_REVIEW.md)及[4006的24轮后继策略对照](TARGET_V2_4006_REVIEW.md)。[4008](TARGET_V2_4008_REVIEW.md)已完成task异质性，[4009](TARGET_V2_4009_REVIEW.md)又完成联合诊断和burst8九轮。当前先按[真实校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)离线复核现有trace，未知业务量列为敏感性假设，随后继续有限策略/线程对照，不以生产采样为前提；本页保留已有能力与后续选项，不是全部待跑清单。历史[4005 trace](TRACE_4005_REVIEW.md)支持关注短时峰值，但不决定六cluster池阈值，亦不替代目标部署策略对照。
 
 ## 1. 新增变量及其准确含义
 
-4005之后的复核见[trace到目标实验的分步计划](TRACE_TO_TARGET_PLAN.md)：4007窗口、4008异质性、4009burst均已完成，当前先校准真实性，再选择线程/信号与容量实验。该计划明确区分已有参数和仍待开发的v2异步RPC、内部ready释放节奏，不能将本页所有变量组合都视为当前必跑矩阵。
+4005之后的复核见[trace到目标实验的分步计划](TRACE_TO_TARGET_PLAN.md)：4007窗口、4008异质性、4009burst均已完成，当前先做有界离线补证，再按可观察现象与未知假设选择线程/信号与容量实验。该计划明确区分已有参数和仍待开发的v2异步RPC、内部ready释放节奏，不能将本页所有变量组合都视为当前必跑矩阵。
 
 | 参数 | 作用 | 保持与变化 |
 |---|---|---|
