@@ -113,6 +113,65 @@ class TimelineTest(unittest.TestCase):
         self.assertNotIn('I', old, 'missing I must not be silently replaced with zero')
 
 
+class JointLoadTest(unittest.TestCase):
+    fields = set(diagnose.LOAD_FIELDS.values())
+
+    def test_equal_marginals_do_not_imply_equal_joint_load(self):
+        aligned = [task(0, 1, 0, 1, 2, queue=0, inflight=0, outstanding=0),
+                   task(1, 1, 1, 2, 3, queue=1, inflight=2, outstanding=2)]
+        opposed = [task(0, 1, 0, 1, 2, queue=0, inflight=2, outstanding=2),
+                   task(1, 1, 1, 2, 3, queue=1, inflight=0, outstanding=0)]
+        groups = [{'capacity': 1}]
+        marginal_counts = lambda rows: {
+            signal: [(item['bucket'], item['n']) for item in bins]
+            for signal, bins in diagnose.load_conditions(rows, groups, 0, 10 * MS, self.fields).items()}
+        self.assertEqual(marginal_counts(aligned), marginal_counts(opposed))
+        first = diagnose.joint_load_conditions(aligned, groups, 0, 10 * MS, self.fields)
+        second = diagnose.joint_load_conditions(opposed, groups, 0, 10 * MS, self.fields)
+        self.assertEqual({row['key'] for row in first['cells']}, {(False, False, False), (True, True, True)})
+        self.assertEqual({row['key'] for row in second['cells']}, {(False, True, True), (True, False, False)})
+        self.assertEqual(first['n'], 2)
+        self.assertEqual(sum(row['n'] for row in second['cells']), second['n'])
+        self.assertEqual(sum(row['percent'] for row in second['cells']), 100)
+
+    def test_chosen_capacity_boundaries_and_late_completion(self):
+        rows = [task(0, 0, 10, 11, 12, kind='init', queue=100),
+                task(0, 1, 9, 15, 40, queue=100),  # submit before window
+                task(0, 2, 10, 12, 50, inflight=2, outstanding=2),
+                task(1, 1, 19, 35, 55, chosen=1, inflight=4, outstanding=5),
+                task(1, 2, 19, 20, 22, chosen=1, queue=1, inflight=5, outstanding=4),
+                task(1, 3, 20, 21, 23, queue=100)]  # exact end excluded
+        result = diagnose.joint_load_conditions(rows, [{'capacity': 2}, {'capacity': 4}],
+                                                10 * MS, 20 * MS, self.fields)
+        self.assertEqual(result['n'], 3)
+        cells = {row['key']: row for row in result['cells']}
+        self.assertEqual(set(cells), {(False, False, False), (False, False, True), (True, True, False)})
+        self.assertEqual(cells[False, False, False]['wall_ms']['p99'], 38)
+        self.assertEqual(cells[False, False, True]['wait_ms']['p99'], 16)
+        self.assertEqual(cells[False, False, True]['wall_ms']['p99'], 20)
+        for row in result['cells']:
+            self.assertEqual((row['n'], row['requests'], row['pools']), (1, 1, 1))
+            self.assertAlmostEqual(row['percent'], 100 / 3)
+
+    def test_all_eight_cells_empty_samples_and_missing_original_fields(self):
+        rows = [task(index, 1, 0, 1, 2, queue=int(q), inflight=2 * int(i), outstanding=2 * int(o))
+                for index, (q, i, o) in enumerate((q, i, o) for q in (False, True)
+                                                  for i in (False, True) for o in (False, True))]
+        result = diagnose.joint_load_conditions(rows, [{'capacity': 1}], 0, MS, self.fields)
+        self.assertEqual(len(result['cells']), 8)
+        self.assertEqual(sum(row['n'] for row in result['cells']), 8)
+        empty = diagnose.joint_load_conditions(rows, [{'capacity': 1}], MS, 2 * MS, self.fields)
+        self.assertEqual((empty['status'], empty['n'], empty['cells']), ('available', 0, []))
+        # Parsed rows still contain I, just as report.load_run defaults old
+        # optional fields; only the original CSV header certifies availability.
+        for missing in self.fields:
+            result = diagnose.joint_load_conditions(rows, [{'capacity': 1}], 0, MS, self.fields - {missing})
+            self.assertEqual(result['status'], 'unavailable')
+            self.assertEqual(result['missing_fields'], [missing])
+            self.assertIsNone(result['n'])
+            self.assertEqual(result['cells'], [])
+
+
 def write_trace_zero_fixture(directory):
     rows = [request(0, 0, 1, 20), request(1, 10, 12, 45),
             request(2, 20, 21, 21, 'admission_rejected')]
@@ -149,6 +208,30 @@ class AuditedCliTest(unittest.TestCase):
         return subprocess.run([sys.executable, str(TOOL), str(self.run), *map(str, args)],
                               text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
 
+    def enable_trace_fixture(self, include_inflight=True):
+        tasks = []
+        for record in self.rows:
+            if record['status'] != 'completed':
+                continue
+            for tag, kind in enumerate(('init', 'operator', 'join')):
+                submitted = record['submitted_ns'] // MS + tag
+                row = task(record['request'], tag, submitted, submitted + 1, submitted + 2,
+                           kind=kind, queue=record['request'],
+                           inflight=2 if record['request'] == 0 else 0,
+                           outstanding=3 if record['request'] == 0 else 1)
+                row.update(source=0, hops=0, reason=0, migrated=0, cross_numa=0,
+                           cpu_ns=MS, iterations=1, read_words=0, write_words=0, checksum=tag)
+                if not include_inflight:
+                    row.pop('callback_inflight_before')
+                tasks.append(row)
+        with (self.run / 'tasks.csv').open('w', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(tasks[0]))
+            writer.writeheader()
+            writer.writerows(tasks)
+        summary = json.loads((self.run / 'summary.json').read_text())
+        summary.update(trace=True, observed_tasks=len(tasks))
+        (self.run / 'summary.json').write_text(json.dumps(summary))
+
     def test_trace_zero_rejections_and_multiple_runs(self):
         process = self.invoke(str(self.run), '--window-seconds', '.04', '--bin-ms', '10', '--max-bins', '4')
         self.assertEqual(process.returncode, 0, process.stderr)
@@ -158,6 +241,39 @@ class AuditedCliTest(unittest.TestCase):
         self.assertIn('0.040000', process.stdout)
         self.assertIn('cannot prove 16 CPUs on-CPU for 30 ms', process.stdout)
         self.assertIn('experiment_role=manual_or_unclassified', process.stdout)
+
+    def test_joint_flag_is_opt_in_and_trace_zero_is_unavailable(self):
+        original = self.invoke()
+        joint = self.invoke('--joint-load')
+        self.assertEqual(original.returncode, 0, original.stderr)
+        self.assertEqual(joint.returncode, 0, joint.stderr)
+        self.assertNotIn('Joint load', original.stdout)
+        self.assertEqual(joint.stdout.replace('Joint load unavailable: trace=0.\n', ''), original.stdout)
+
+    def test_joint_cli_uses_original_header_and_keeps_default_output(self):
+        self.enable_trace_fixture()
+        original = self.invoke('--window-seconds', '.02')
+        joint = self.invoke('--window-seconds', '.02', '--joint-load')
+        self.assertEqual(original.returncode, 0, original.stderr)
+        self.assertEqual(joint.returncode, 0, joint.stderr)
+        self.assertNotIn('Joint load', original.stdout)
+        self.assertTrue(joint.stdout.startswith(original.stdout))
+        self.assertIn('window=2;', joint.stdout)
+        self.assertIn('| Q =0, I/C >1, O/C >1 | 1/50.000%/1/1 |', joint.stdout)
+        self.assertIn('| Q >0, I/C <=1, O/C <=1 | 1/50.000%/1/1 |', joint.stdout)
+        self.assertIn('NOT an atomic snapshot', joint.stdout)
+        self.assertIn('not time spent busy', joint.stdout)
+        self.assertIn('LOW n<1000', joint.stdout)
+        self.assertLessEqual(len(joint.stdout.splitlines()) - len(original.stdout.splitlines()), 11)
+        empty = self.invoke('--warmup-seconds', '.1', '--window-seconds', '.1', '--joint-load')
+        self.assertEqual(empty.returncode, 0, empty.stderr)
+        self.assertIn('window=0;', empty.stdout)
+        self.assertIn('no qualifying operators', empty.stdout)
+        self.enable_trace_fixture(include_inflight=False)
+        missing = self.invoke('--joint-load')
+        self.assertEqual(missing.returncode, 0, missing.stderr)
+        self.assertIn('Joint load unavailable: original tasks.csv is missing callback_inflight_before.', missing.stdout)
+        self.assertNotIn('| same-row load conditions', missing.stdout)
 
     def test_nonterminal_or_missing_requests_are_rejected_by_shared_audit(self):
         for rows in (self.rows[:-1], [{**row, 'status': 'pending'} if row['request'] == 1 else row

@@ -6,7 +6,7 @@
 
 [4005审阅](TRACE_4005_REVIEW.md)已支持短时服务集中、线程过配及指标口径需要分开；它没有request/operator边界、Folly Q/I/O或内存访问信息。继续解释同一份五事件trace，不能补出这些不存在的信息。
 
-4004布置的none/branch64 × 四策略 × 三seed共24轮，已在[4006完成](TARGET_V2_4006_REVIEW.md)，历史trace未改变该合同。当前执行入口更新为4006第5～6节的既有CSV诊断及9轮task级异质性；六cluster绑定、128线程/池、regular12 QPS、80/4宽与2/2深、300万迭代保持不变。不重跑24轮，也不等待历史trace补证才继续目标实验。
+4004布置的none/branch64 × 四策略 × 三seed共24轮，已在[4006完成](TARGET_V2_4006_REVIEW.md)，历史trace未改变该合同。4007的已有JSON窗口补证及4008的9轮task异质性也已完成。当前入口为[4008第6～7节](TARGET_V2_4008_REVIEW.md)的现有CSV联合诊断及9轮burst8竞争；保持六cluster、128线程/池、平均12QPS、80/4宽与2/2深、300万迭代及branch64/task不变。不重跑已有结果，不等待历史trace进一步补证。
 
 ## 2. 历史trace还值得解析什么
 
@@ -27,7 +27,7 @@
 
 连续高桶段有桶边界误差、阈值依赖及左右边界删失；跨过观察边界的段会单列数量。它描述观察窗内连续固定桶，不识别request，也不能断言这是完整的业务burst持续时间。末尾不足一个桶单独报告并排除；缺series、截断、存储丢更新、错轴或无效数值直接报错，绝不补成idle。`coverage=unknown`、等待删失与名称推断的池映射限制仍随报告保留，读取成功不代表原始采集完整。
 
-4005终端记录的JSON已含series，可在测试机直接打印两档桶宽；每档是几十行摘要。没有安装新依赖，也无需重编C++/Folly：
+下述两档已有窗口已在4007完成，结果见[最新审阅](TARGET_V2_4008_REVIEW.md#4-4007支持长短集中段并存不验证3ms门控)。保留原命令供复现，不需重复运行；没有新依赖，不需重编C++/Folly：
 
 ```bash
 (
@@ -46,8 +46,8 @@ python3 scripts/analyze_sched_windows.py "$TRACE_SUMMARY" --bin-ms 10
 
 | 维度 | 当前实现 | 后续动作 |
 |---|---|---|
-| 请求与内部并发 | 开放到达regular/poisson/burst；每request多波分支链、join和初始大扇出 | 4006已验证当前数据后继。之后在新图上复验burst，不能以旧depth1结果替代 |
-| 成本异质性 | request或task级固定seed扰动、长尾倍率均已支持 | 4006为request级；下一批task级检验同一request内的分支慢任务，在新合同内配对 |
+| 请求与内部并发 | 开放到达regular/poisson/burst；每request多波分支链、join和初始大扇出 | 4006/4008已验证当前数据后继与task异质性；下一批在新图上复验burst，不能以旧depth1结果替代 |
+| 成本异质性 | request或task级固定seed扰动、长尾倍率均已支持 | 4006为request级；4008已完成task级慢算子对照，下一批保持task，只改变到达形态 |
 | 线程过配与信号 | 固定worker数；Q、callback I、O、估计work及后台CPU可替换 | 保留16/128线程与Q/active/O少量对照；不能把窗口unique-onCPU当作I已获验证 |
 | 数据亲和 | none/request-ro/branch-rw/mixed；home初始化、连续分支读写 | 先64KiB，再256KiB或共享读；不是对真实cache miss的复现或直接测量 |
 | 内部ready释放节奏 | 一个callback连续addBatch，后继依赖自然释放，可配置后续wave | `batch-chunk`控制选池预留粒度，**不控制时间间隔**；非阻塞分段release需要新增驱动，目前未实现 |
@@ -63,8 +63,8 @@ python3 scripts/analyze_sched_windows.py "$TRACE_SUMMARY" --bin-ms 10
 先筛选机制，再扩大压力与样本；不展开全部参数的笛卡尔积。
 
 1. **24轮已完成。** 4006显示借出收益明确、后继大量迁移却暂无稳定额外收益、ordinary ReturnHome触发不足1%。保留home/fork-parent/all-parent进入下一项；all-home留作专门回迁问题，不能据弱覆盖淘汰。
-2. **按结果选择单变量敏感性。** 当前确定为9轮task级异质性，不同时加branch256或burst。之后再在depth2/branch64下复验burst或扩大足迹。各族固定合同、同seed交错重复，不能把不同工作族直接配对；request与task扰动可能改变总迭代数，需要保留实际总量校验。
-3. **单独验证负载信号与线程数。** 固定branch64及候选的后继规则、域、阈值，再比较Q/active/O；16和128线程分别作为配置块，块内只改信号。利用`diagnose.py`观察Q/C、I/C、O/C分桶、等待及CPU/wall差，检查是否真正覆盖Q很小而回调很多的区间。当前提交点样本只描述所选池，不能给出全时间占比或所有被考察候选的状态；如需联合Q≈0且I高的比例，可离线读取同一CSV行，不能从两张边缘分桶表相乘推导。统一阈值是第一轮控制条件，之后各信号有限调参并留出验证，避免把尺度失配当算法优劣。
+2. **异质性已完成，下一批增加请求竞争。** 4008在task级仍未显示all相对fork的稳定额外均值收益；保持depth2/branch64/task，只改burst8，三策略×三seed共9轮，不同时增大工作集或改变阈值。各族固定合同、同seed配对；regular/burst跨时段的裸差不能排除环境漂移。
+3. **单独验证负载信号与线程数。** 固定branch64及候选的后继规则、域、阈值，再比较Q/active/O；16和128线程分别作为配置块，块内只改信号。利用`diagnose.py`观察Q/C、I/C、O/C分桶、等待及CPU/wall差，检查是否真正覆盖Q很小而回调很多的区间。当前提交点样本只描述所选池，不能给出全时间占比或所有被考察候选的状态；现在可用`diagnose.py --joint-load`离线读取同一CSV行的Q/I/O八格，不从边缘分布推导联合比例；仍不是原子快照或时间占比。统一阈值是第一轮控制条件，之后各信号有限调参并留出验证，避免把尺度失配当算法优劣。
 4. **容量与泛化。** 对冻结候选做6/12/16 QPS等有限压力档；若仍远离容量，可在CPU、RSS、拒绝及lag可控前提下增加独立档位，保存失败和积压，过载停止并解释，不在同轮自适应降低到达。SMT的16逻辑CPU只是名义归一化容量，不是16物理核吞吐。随后才测试同NUMA优先/允许跨NUMA、chunk和迁移成本参数；一项一项展开，不能把远端资源增加与策略改变混在一对结果里。
 5. **异步与尾部验收。** 在v2中单独开发非阻塞完成源，外部等待不占worker；恢复沿捕获的request/parent上下文重新进入同一入口。外部pending与池O分开，验证exactly-once、取消、关闭排空和失败补偿。同步sleep用于callback I、outstanding O等计数信号的阻塞反例。候选冻结后增加请求数、独立重复和未参与选择的seed/压力；短轮192请求p99只作机制初筛，不作为生产尾延迟结论。
 
@@ -74,7 +74,7 @@ python3 scripts/analyze_sched_windows.py "$TRACE_SUMMARY" --bin-ms 10
 
 ## 5. 新观测应在目标配置采什么
 
-4006已有明确路径和收益差异，先解释现有CSV；只有出现无法解释的等待、回迁、跨NUMA差异，才做少数单独诊断轮。调度trace的记录开销不混入正式性能轮。新采集按[trace工作流](TRACE_WORKFLOW.md)保存时钟、过滤/CPU覆盖、丢事件与映射证据，不能只采目标CPU而遗漏外部唤醒方。
+4006/4008已有明确路径和收益差异，先解释现有CSV；只有出现无法解释的等待、回迁、跨NUMA差异，才做少数单独诊断轮。调度trace的记录开销不混入正式性能轮。新采集按[trace工作流](TRACE_WORKFLOW.md)保存时钟、过滤/CPU覆盖、丢事件与映射证据，不能只采目标CPU而遗漏外部唤醒方。
 
 生产可复用的最小关联设计：
 

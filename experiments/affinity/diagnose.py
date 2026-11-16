@@ -179,11 +179,65 @@ def load_conditions(tasks, groups, start, end, available_fields):
     return result
 
 
+def joint_load_conditions(tasks, groups, start, end, available_fields):
+    """Join Q/I/O from each operator row; never synthesize an absent field.
+
+    The shared audit may provide defaults for old optional columns, so original
+    CSV field availability, rather than the parsed row keys, is authoritative.
+    """
+    missing = sorted(set(LOAD_FIELDS.values()) - available_fields)
+    if missing:
+        return {'status': 'unavailable', 'missing_fields': missing, 'n': None, 'cells': []}
+    buckets = {}
+    total = 0
+    for task in tasks:
+        if task['kind'] != 'operator' or not start <= task['submitted_ns'] < end:
+            continue
+        capacity = float(groups[task['chosen']]['capacity'])
+        key = (task['queue_before'] > 0,
+               task['callback_inflight_before'] > capacity,
+               task['outstanding_before'] > capacity)
+        buckets.setdefault(key, []).append(task)
+        total += 1
+    cells = []
+    for key, rows in sorted(buckets.items()):
+        cells.append({'key': key, 'n': len(rows), 'percent': len(rows) * 100 / total,
+                      'requests': len({row['request'] for row in rows}),
+                      'pools': len({row['chosen'] for row in rows}),
+                      'wait_ms': distribution([(row['start_ns'] - row['submitted_ns']) / 1e6 for row in rows]),
+                      'wall_ms': distribution([(row['finish_ns'] - row['start_ns']) / 1e6 for row in rows])})
+    return {'status': 'available', 'missing_fields': [], 'n': total, 'cells': cells}
+
+
+def print_joint_load(conditions, min_tail_samples):
+    if conditions['status'] == 'unavailable':
+        print('Joint load unavailable: original tasks.csv is missing ' + ', '.join(conditions['missing_fields']) + '.')
+        return
+    print(f'Joint load: total operators submitted in the post-choice [start,end) window={conditions["n"]}; '
+          'Q zero/nonzero x I/C<=1/>1 x O/C<=1/>1; C is the chosen pool nominal capacity.')
+    print('Each row joins separate relaxed reads, NOT an atomic snapshot. Percentages count operator submissions, '
+          'not time spent busy. Post-selection bias, role/cost confounding and request dependence remain; '
+          'these cells do not establish causality or validate prediction of request p99.')
+    if not conditions['n']:
+        print('Joint load: no qualifying operators; no empty cell is interpreted as idle.')
+        return
+    print('| same-row load conditions | operators/% of all selected/unique requests/unique pools | '
+          'wait p50/p99 ms | callback wall p50/p99 ms | tail screen |')
+    for row in conditions['cells']:
+        q, inflight, outstanding = row['key']
+        label = f'Q {">0" if q else "=0"}, I/C {">1" if inflight else "<=1"}, O/C {">1" if outstanding else "<=1"}'
+        screen = f'LOW n<{min_tail_samples}' if row['n'] < min_tail_samples else 'not an independence/CI guarantee'
+        print(f'| {label} | {row["n"]}/{row["percent"]:.3f}%/{row["requests"]}/{row["pools"]} | '
+              + '/'.join(fmt(row['wait_ms'][key]) for key in ('p50', 'p99')) + ' | '
+              + '/'.join(fmt(row['wall_ms'][key]) for key in ('p50', 'p99'))
+              + f' | {screen}; nominal top 1%={row["n"]*.01:.2f} |')
+
+
 def fmt(value):
     return '-' if value is None else f'{value:.3f}'
 
 
-def print_diagnosis(run, start, end, width, min_tail_samples, available_fields):
+def print_diagnosis(run, start, end, width, min_tail_samples, available_fields, joint_load=False):
     summary = run['summary']
     origin = summary['origin_ns']
     print(f'\nRUN {run["path"]}: pool_count={len(summary["groups"])}, affinity={summary["affinity"]}, '
@@ -231,6 +285,8 @@ def print_diagnosis(run, start, end, width, min_tail_samples, available_fields):
 
     if not summary['trace']:
         print('trace=0: task load samples and callback concurrency unavailable.')
+        if joint_load:
+            print('Joint load unavailable: trace=0.')
         return
     print('Load conditions: Q=Folly queue guess, I=callback inflight, O=outstanding; divide by CHOSEN pool nominal capacity. '
           'Snapshots are post-selection, so routing creates selection bias; these are operator-submission samples, not time-weighted load.')
@@ -250,6 +306,9 @@ def print_diagnosis(run, start, end, width, min_tail_samples, available_fields):
                   + '/'.join(fmt(waits[key]) for key in ('p50', 'p95', 'p99')) + ' | '
                   + '/'.join(fmt(wall[key]) for key in ('p50', 'p95', 'p99'))
                   + f' | {screen}; nominal top 1%={row["n"]*.01:.2f} |')
+    if joint_load:
+        print_joint_load(joint_load_conditions(run['tasks'], summary['groups'], start, end, available_fields),
+                         min_tail_samples)
 
 
 def main():
@@ -260,6 +319,8 @@ def main():
     parser.add_argument('--bin-ms', type=float, help='explicit bin width; otherwise >=1000 ms, coarsened to max-bins')
     parser.add_argument('--max-bins', type=int, default=20)
     parser.add_argument('--min-tail-samples', type=int, default=1000)
+    parser.add_argument('--joint-load', action='store_true',
+                        help='also report same-row Q/I/O combinations from existing operator records')
     args = parser.parse_args()
     if not math.isfinite(args.warmup_seconds) or args.warmup_seconds < 0:
         parser.error('warmup-seconds must be finite and nonnegative')
@@ -285,7 +346,7 @@ def main():
             if run['summary']['trace']:
                 with (path / 'tasks.csv').open(newline='') as stream:
                     fields = set(csv.DictReader(stream).fieldnames or [])
-            print_diagnosis(run, start, end, width, args.min_tail_samples, fields)
+            print_diagnosis(run, start, end, width, args.min_tail_samples, fields, args.joint_load)
     except (OSError, ValueError, TypeError, KeyError, OverflowError) as error:
         print(f'affinity diagnose: {error}', file=sys.stderr)
         return 2

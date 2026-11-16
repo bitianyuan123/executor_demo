@@ -153,7 +153,7 @@ python3 experiments/affinity/diagnose.py results/affinity/routing-run-01/seed-* 
   --warmup-seconds 5 --window-seconds 10 --bin-ms 1000
 ```
 
-该工具复用报告的输入审计，输出Q/I/O条件task分位、首波投递/启动/callback跨度和请求积压/lag；`stage0_callback_span_ms`从最早callback开始到最晚完成，不从提交起算。它不按每秒p99求总体p99，不将callback并发当成onCPU，也不把排空视为稳态。分桶是投递task采样且目标池已经选定，受选择、批内顺序与任务成本影响；先在home基线解释，再做整轮策略干预。阶段3与v1的`compare_runs.py`不兼容v2 schema；当前v2跨seed仍是逐轮描述性比较，没有自动置信区间。完整承接与边界见[验收覆盖](../../docs/GOALS_AND_COVERAGE.md)。
+可加`--joint-load`输出同一operator行的Q零/非零 × I/C≤1/>1 × O/C≤1/>1联合分桶；最多八格，缺原始字段不补零，不增加热路径记录。相同行仍不是原子快照，样本比例不是时间繁忙比例。该工具复用报告的输入审计，输出Q/I/O条件task分位、首波投递/启动/callback跨度和请求积压/lag；`stage0_callback_span_ms`从最早callback开始到最晚完成，不从提交起算。它不按每秒p99求总体p99，不将callback并发当成onCPU，也不把排空视为稳态。分桶是投递task采样且目标池已经选定，受选择、批内顺序与任务成本影响；先在home基线解释，再做整轮策略干预。阶段3与v1的`compare_runs.py`不兼容v2 schema；当前v2跨seed仍是逐轮描述性比较，没有自动置信区间。完整承接与边界见[验收覆盖](../../docs/GOALS_AND_COVERAGE.md)。
 
 入口微突发与连续分支诊断使用只读工具，无需增加热路径记录或重编：
 
@@ -162,7 +162,7 @@ python3 experiments/affinity/flow_report.py results/affinity/routing-run-01/seed
   --warmup-seconds 2 --window-seconds 8
 ```
 
-它复用完整审计，将成功请求均值分为投递lag与attempt→完成，单列失败/拒绝；p99不能相减。对完整burst计算实际attempt跨度与首attempt lag，区分整批后移和批内拉宽；对成功计划到达cohort保留全部晚完成回调，分类init、首波stage0、后续波stage0、普通后继和join。request的attempt记录在准入检查/构造/root add之前，不等于入队；回home列为source非home且chosen等于home，不等于特定阈值分支命中。`routing reasons`列另统计已有CSV的Home/ReturnHome/LocalSpill/NonFork等原因；未知值显示Unknown(n)，当前契约下矛盾的ReturnHome记录拒绝。24轮已完成；最新结果、已有CSV诊断及下一批9轮task级异质性命令见[4006审阅](../../docs/TARGET_V2_4006_REVIEW.md)，无需重编C++。
+它复用完整审计，将成功请求均值分为投递lag与attempt→完成，单列失败/拒绝；p99不能相减。对完整burst计算实际attempt跨度与首attempt lag，区分整批后移和批内拉宽；对成功计划到达cohort保留全部晚完成回调，分类init、首波stage0、后续波stage0、普通后继和join。request的attempt记录在准入检查/构造/root add之前，不等于入队；回home列为source非home且chosen等于home，不等于特定阈值分支命中。`routing reasons`列另统计已有CSV的Home/ReturnHome/LocalSpill/NonFork等原因；未知值显示Unknown(n)，当前契约下矛盾的ReturnHome记录拒绝。24轮与后续9轮task异质性均已完成；最新结果、已有CSV联合诊断及下一批9轮burst8命令见[4008审阅](../../docs/TARGET_V2_4008_REVIEW.md)，无需重编C++。
 
 同seed成对delta是整轮统计量之差，不把请求当独立重复。默认少于1000请求提示尾部样本不足；1000也仅约10个名义尾样本，不是自动可信。初筛240请求/12QPS只看机制、稳定性和数量级；正式p99建议每配置至少数千到上万请求，≥5次交错重复，并检查队列/提交lag是否随时间增长。共享负载下有相关性，不能拿每秒p99平均当总体p99。
 

@@ -26,7 +26,9 @@
 - [目标机4003竞争结果](docs/TARGET_V2_4003_REVIEW.md)：regular的O均值收益约43%，burst8缩小至约4%；当时布置的入口补证和分支校准已完成。
 - [目标机4004补证与连续分支校准](docs/TARGET_V2_4004_REVIEW.md)：确认burst批内投递拉宽，冻结工作量；当时布置的24轮已由4006完成。
 - [4005历史真实trace审阅](docs/TRACE_4005_REVIEW.md)：采用最终精确计数，纠正HLL混用；区分unique、waking与onCPU相关性，不据历史四池决定cluster阈值。
-- [目标机4006后继策略结果与当前执行步骤](docs/TARGET_V2_4006_REVIEW.md)：24轮完成；借出收益明显，持续后继重选暂无稳定额外收益；下一步为已有CSV诊断和9轮task级分支异质性。
+- [目标机4006后继策略结果](docs/TARGET_V2_4006_REVIEW.md)：24轮完成；当时安排的CSV诊断和9轮task级分支异质性已由4008完成。
+- [4007/4008最新结果与当前执行步骤](docs/TARGET_V2_4008_REVIEW.md)：task异质性下借出均值改善约37%，持续后继重选仍暂无稳定额外收益；下一步为现有CSV联合诊断和9轮burst8竞争对照。
+- [持续压力门控候选审阅](docs/PERSISTENT_PRESSURE_REVIEW.md)：复核外部0.85ms/3ms说法，明确观测与状态机缺口；尚未修改运行策略。
 - [trace补证与后续目标实验](docs/TRACE_TO_TARGET_PLAN.md)：只读已有JSON分析同期压力与连续高桶；明确task异质性、线程/信号、异步RPC与正式尾部验证的顺序和实现缺口。
 - [本轮实际验证](results/review/TRACE_LOAD_VALIDATION.md)：本地功能和读成本，不冒充ARM真实负载结论。
 
