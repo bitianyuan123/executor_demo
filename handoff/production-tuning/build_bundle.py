@@ -10,7 +10,7 @@ import tarfile
 
 
 FILES = [
-    ".gitattributes", "README.md", "GUIDE.md", "EVIDENCE.md", "WORKSHEET.md", "build_bundle.py",
+    ".gitattributes", "README.md", "GUIDE.md", "EVIDENCE.md", "WORKSHEET.md", "PROMPT_ONLY.md", "build_bundle.py",
     "prompts/01_DISCOVER.md", "prompts/02_DESIGN.md", "prompts/03_IMPLEMENT.md",
     "prompts/04_VALIDATE.md", "prompts/05_ITERATE.md",
     "references/README.md", "references/LoadRouting.h",
