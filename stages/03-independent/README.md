@@ -6,6 +6,8 @@
 
 针对微突发CPU波形，见[自动采集5ms CPU曲线](CPU_CURVE_GUIDE.md)：使用独立内核事件捕获，保留100ms统计，测试结束自动输出各池和并集曲线。
 
+ARM高精度观测已完成，见[3005 CPU与时延联合报告](ARM_3005_CPU_CURVE_REPORT.md)。整体约50%占用下，source_only将各池最长连续高占用从175–185ms缩短为20ms，任务p99下降76.011%；短时峰值仍可达100%，不能把100ms窗口峰值降低理解为消除了微突发。无需为本轮再次发压。
+
 本阶段回答：在给定 CPU 资源、线程数和到达过程下，原版 Folly 的队列观测值在多大程度上解释任务等待和完成时延；补充 pending/inflight/工作量估计是否有价值，额外计量带来多少扰动。
 
 工程是 [`experiments/independent`](../../experiments/independent/README.md)，独立 CMake 项目和 `independent_load` 可执行文件。它只链接原版 `folly::CPUThreadPoolExecutor`，没有 DAG、RPC 或实验性 `AffinityExecutor`。本页描述默认 home 投递的原始实验；新增的可选阈值投递实验单独见[负载指标与均衡设计](BALANCE_DESIGN.md)、[运行指南](BALANCE_GUIDE.md)，不会混入历史结果。阶段4、5的策略不会进入本阶段的运行路径。

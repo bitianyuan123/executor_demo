@@ -1,0 +1,4 @@
+policy,bytes_written,events_parsed,observer_cpu_scope,observer_process_cpu_seconds,reader_thread_cpu_seconds,timestamp_precision
+home,90281578,501003,"whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess",18.22558588,16.91346002,microseconds
+guarded,106721632,592768,"whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess",20.99617481,19.73388246,microseconds
+source_only,112441328,621080,"whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess",23.10386354,21.85171067,microseconds

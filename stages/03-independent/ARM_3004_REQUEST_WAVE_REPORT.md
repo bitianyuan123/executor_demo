@@ -6,6 +6,8 @@
 
 关于当前怎样选择指标、怎样选择策略及是否补其他负载场景，另见[选型报告](METRIC_POLICY_SELECTION_REPORT.md)，其中汇总CPU指标并限定可选补测范围。
 
+后续[3005高精度CPU报告](ARM_3005_CPU_CURVE_REPORT.md)已补足5ms尺度观测：source_only仍有100%的短时局部峰值，但各池最长连续高占用缩短至20ms。本文保留3004的原始100ms统计，不将其峰值外推到更短时间尺度。
+
 ## 1. 证据范围与有效性
 
 来源为用户提供的[3004.log原件](../../results/stage3-arm-3004/3004.log)。[归档目录](../../results/stage3-arm-3004/README.md)保存SHA256、逐表提取和绘图脚本。

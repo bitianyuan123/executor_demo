@@ -1,0 +1,4 @@
+baseline,policy,S_mean_change_pct,S_p99_change_pct,L_mean_change_pct,L_p99_change_pct
+home,source_only,-60.812,-76.011,-60.730,-75.919
+home,guarded,-37.676,-36.722,-37.714,-36.721
+source_only,guarded,59.036,163.779,58.612,162.772
