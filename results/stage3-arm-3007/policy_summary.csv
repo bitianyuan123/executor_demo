@@ -1,0 +1,3 @@
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,96000,600,26.789,72.796,27.155,72.922,50.330,2881.581,0.000,0.000,0.000,NA
+source_only,True,96000,600,25.105,72.681,25.300,72.762,50.379,2882.201,0.410,0.464,0.000,0.000

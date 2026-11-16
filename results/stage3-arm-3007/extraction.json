@@ -1,0 +1,70 @@
+{
+  "source": "3007.log",
+  "source_sha256": "80ac28db53ed1c032c2b4fd3e401ed3f6e87e3a97c395e7f9396486462ab84a8",
+  "new_workload_runs_observed": {
+    "home": 0,
+    "source_only": 1
+  },
+  "comparison_runs": {
+    "home": "reused from 3006",
+    "source_only": "new in 3007"
+  },
+  "home_skip_messages": 2,
+  "source_completed_messages": 1,
+  "home_summary_matches_3006": true,
+  "strict_passed": false,
+  "comparison_reported_valid": true,
+  "review_status": "accepted_posthoc",
+  "extracted_tables": {
+    "policy_summary": {
+      "printed_copies": 2,
+      "data_rows": 2
+    },
+    "comparisons": {
+      "printed_copies": 2,
+      "data_rows": 1
+    },
+    "cpu_procstat": {
+      "printed_copies": 2,
+      "data_rows": 14
+    },
+    "initial_spans": {
+      "printed_copies": 2,
+      "data_rows": 2
+    },
+    "decomposition": {
+      "printed_copies": 2,
+      "data_rows": 6
+    },
+    "buckets": {
+      "printed_copies": 2,
+      "data_rows": 36
+    },
+    "home_cpu_thresholds": {
+      "printed_copies": 2,
+      "data_rows": 3
+    },
+    "home_cpu_scopes": {
+      "printed_copies": 2,
+      "data_rows": 7
+    },
+    "home_cpu_aligned_windows": {
+      "printed_copies": 2,
+      "data_rows": 8
+    },
+    "source_only_cpu_thresholds": {
+      "printed_copies": 2,
+      "data_rows": 3
+    },
+    "source_only_cpu_scopes": {
+      "printed_copies": 2,
+      "data_rows": 7
+    },
+    "source_only_cpu_aligned_windows": {
+      "printed_copies": 2,
+      "data_rows": 8
+    }
+  },
+  "evidence_scope": "Terminal summaries only; raw tasks and CPU traces remain on ARM. Changes derived from rounded values are approximate, not recomputed p99.",
+  "repeat_note": "Two identical report prints and two home precheck/skip messages are not repeated workload trials."
+}

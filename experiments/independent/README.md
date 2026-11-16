@@ -1,6 +1,6 @@
 # 独立任务负载实验：工程与运行指南
 
-**当前下一步按[3006报告](../../stages/03-independent/ARM_3006_SHORT_PEAK_REPORT.md)复用home、只补source_only一次。** 离线复核确认高位全部在13ms内结束；使用显式inspection参数记录事后复核，原严格碎峰失败保留。不重新生成计划，不重编译，不重跑home。[短峰指南](../../stages/03-independent/SHORT_PEAK_GUIDE.md)列出完整续跑命令。
+**当前短峰开关对照已完成，结果见[3007完整报告](../../stages/03-independent/ARM_3007_SHORT_PEAK_POLICY_REPORT.md)。** initial任务提交到完成p99约降低80.4%，steady和全体完成p99基本不变；本轮无需补跑、重编译或扩大矩阵。[短峰指南](../../stages/03-independent/SHORT_PEAK_GUIDE.md)保留复现命令，已经有3007结果时不需重复执行。
 
 这个项目只使用原版 Folly CPUThreadPoolExecutor。每次 arrival 提交一个或多个独立 CPU 任务；默认保留原来的 home 池投递，没有 DAG、RPC 或阶段5扩展。先阅读[阶段3设计与分析方案](../../stages/03-independent/README.md)。
 

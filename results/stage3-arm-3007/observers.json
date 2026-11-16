@@ -1,0 +1,18 @@
+{
+  "home": {
+    "bytes_written": 104483583,
+    "events_parsed": 581658,
+    "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess",
+    "observer_process_cpu_seconds": 20.84649378,
+    "reader_thread_cpu_seconds": 19.55051083,
+    "timestamp_precision": "microseconds"
+  },
+  "source_only": {
+    "bytes_written": 118389806,
+    "events_parsed": 657121,
+    "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess",
+    "observer_process_cpu_seconds": 26.15942444,
+    "reader_thread_cpu_seconds": 24.88447754,
+    "timestamp_precision": "microseconds"
+  }
+}

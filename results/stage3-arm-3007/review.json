@@ -1,0 +1,14 @@
+{
+  "background_high_fraction_max": 0.0,
+  "fragmented_requests": 83,
+  "home_identity_sha256": "1c871a3d45059f47f87c1caeee7068df87d403db983390e98b5a911c8d56a193",
+  "home_trace_sha256": "6474abe4155245fa37318ca3fcbd3ed69025971dc1bf32c87424d5c71c1c4f1e",
+  "inspection_path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/short-peak-inspection/inspection.json",
+  "inspection_sha256": "d6cdc89cc38ed93ce27e576be785b4e18823e141005958d3aa65a414f99c8e80",
+  "last_high_end_max_ms": 13.0,
+  "late_20_30_high_max_ms": 0.0,
+  "plan_sha256": "65be70f3be943b00a1bda189e498dd53fde5b81a7bdea180c2e560cabb95074c",
+  "reason": "Explicit post-result review: all observed >=90% segments end within 20ms; no late or background high occupancy. Fragmentation-only strict failure remains failed.",
+  "requests": 600,
+  "status": "accepted_posthoc"
+}

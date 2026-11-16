@@ -1,0 +1,4 @@
+high_pct,onset_wave_pct,peak_width_median_ms,peak_width_p90_ms,peak_width_max_ms,fragmented_wave_pct,background_high_p90_pct,background_longest_high_p90_ms
+80,99.833,2.000,2.000,3.000,0.000,1.702,2.000
+90,53.667,1.000,2.000,2.000,0.000,1.064,1.000
+95,16.500,1.000,1.000,2.000,0.000,0.638,1.000
