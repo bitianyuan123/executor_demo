@@ -12,7 +12,9 @@ OUT = ROOT/'figures'
 OUT.mkdir(exist_ok=True)
 POLICIES = ['home', 'guarded', 'source_only']
 COLORS = ['#777777', '#d88b16', '#2474b5']
-LABELS = ['Home only', 'Source > 0.8 + target < 0.5', 'Source > 0.8']
+LABELS = ['Home: no spill',
+          'Guarded: home N/C > 0.8; target N/C < 0.5',
+          'Source only: home N/C > 0.8; choose a lighter target']
 SHORT = ['Home', 'Guarded', 'Source only']
 plt.rcParams.update({'font.family': 'DejaVu Sans', 'font.size': 10,
                      'svg.fonttype': 'none', 'svg.hashsalt': 'stage3-arm-3005'})
@@ -33,7 +35,7 @@ def save(fig, name):
 
 windows = read('cpu_trace_aligned_windows')
 summary = {r['policy']: r for r in read('policy_summary')}
-fig, axes = plt.subplots(1, 2, figsize=(12.7, 5.8), gridspec_kw={'width_ratios': [2.05, 1]})
+fig, axes = plt.subplots(1, 2, figsize=(12.7, 6.2), gridspec_kw={'width_ratios': [2.05, 1]})
 for k, (policy, label, color) in enumerate(zip(POLICIES, LABELS, COLORS)):
     rows = [r for r in windows if r['policy'] == policy]
     xs = [i+(k-1)*.25 for i in range(5)]
@@ -60,14 +62,16 @@ for ax in axes:
     ax.grid(axis='y', alpha=.2)
     ax.set_axisbelow(True)
 fig.suptitle('ARM 3005: short release burst, prolonged local saturation, policy differences', fontsize=13, y=.98)
-fig.subplots_adjust(left=.065, right=.98, top=.85, bottom=.30, wspace=.28)
+fig.subplots_adjust(left=.065, right=.98, top=.85, bottom=.34, wspace=.28)
 fig.text(.5, .025, 'Bars use five printed window averages, not a reconstructed continuous 5 ms curve.\n'
-         'Aligned home contexts overlap and include other requests / migrated work. One run per policy; descriptive only.',
+         'Aligned home contexts overlap and include other requests / spilled work. One run per policy; descriptive only.\n'
+         'S p99 is per task, not per request: submit precedes routing and Folly add; end precedes callback cleanup.\n'
+         'N = unfinished tasks; C = 16 logical CPUs per pool. N/C thresholds are not CPU utilization thresholds.',
          ha='center', fontsize=9)
 save(fig, 'cpu_phase_summary')
 
 scopes = read('cpu_trace_scopes')
-fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.9))
+fig, axes = plt.subplots(1, 2, figsize=(10.6, 5.7))
 for i, (policy, color) in enumerate(zip(POLICIES, COLORS)):
     pools = [r for r in scopes if r['policy'] == policy and r['scope'].startswith('pool')]
     values = [float(r['longest_observed_ge90_ms']) for r in pools]
@@ -91,9 +95,13 @@ for ax in axes:
     ax.grid(axis='y', alpha=.2)
     ax.set_axisbelow(True)
 fig.suptitle('ARM 3005: CPU saturation duration across six clusters', fontsize=13)
+fig.legend(handles=[plt.Line2D([], [], color=color, marker='s', linestyle='None', label=label)
+                    for color, label in zip(COLORS, LABELS)],
+           loc='lower center', bbox_to_anchor=(.5, .12), frameon=False, fontsize=9)
 fig.text(.5,.025, 'Each dot is one cluster; annotated ranges are min–max across six clusters, not uncertainty or request-duration percentiles.\n'
-         '90% is a reporting threshold only. One workload run per policy; all 9,999 complete bins and 96 CPUs reported covered.',
+         '90% is a reporting threshold only. One workload run per policy; all 9,999 complete bins and 96 CPUs reported covered.\n'
+         'N = unfinished tasks; C = 16 logical CPUs per pool. N/C thresholds are not CPU utilization thresholds.',
          ha='center', fontsize=9)
-fig.subplots_adjust(left=.075, right=.98, top=.82, bottom=.22, wspace=.27)
+fig.subplots_adjust(left=.075, right=.98, top=.82, bottom=.36, wspace=.27)
 save(fig, 'cpu_saturation_duration')
 print('Saved figures/cpu_phase_summary.{png,svg} and figures/cpu_saturation_duration.{png,svg}')
