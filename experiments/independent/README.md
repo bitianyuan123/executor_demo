@@ -1,5 +1,7 @@
 # 独立任务负载实验：工程与运行指南
 
+**当前下一步只执行[微突发与目标池接纳验证](../../stages/03-independent/REQUEST_WAVE_GUIDE.md)：一次短校准＋三种策略各一次。** 新增request-wave负载、目标接纳门槛和独立CPU观测。下文保留历史实验入口，不需要同时执行历史矩阵。
+
 这个项目只使用原版 Folly CPUThreadPoolExecutor。每次 arrival 提交一个或多个独立 CPU 任务；默认保留原来的 home 池投递，没有 DAG、RPC 或阶段5扩展。先阅读[阶段3设计与分析方案](../../stages/03-independent/README.md)。
 
 新增的阶段3负载均衡实验通过显式 `--routing threshold` 启用，在提交时选择其他原生线程池。指标选择、阈值冻结、留出验证及低开销模式见[设计](../../stages/03-independent/BALANCE_DESIGN.md)和[分步运行指南](../../stages/03-independent/BALANCE_GUIDE.md)。旧命令仍使用原行为。
@@ -18,7 +20,7 @@ ctest --test-dir build-independent --output-on-failure
 build-independent/independent_load --help
 ```
 
-独立项目包含七组CTest：原有功能、分析和整轮留出预测测试，以及阈值选池、实际线程池计数生命周期、负载均衡统计和矩阵生成测试。覆盖缺测、守恒、拒绝/取消/异常、预算配对、训练隔离和计划恢复；它们验证功能，不验证性能优劣。
+独立项目包含十一组CTest：原有七组回归，加上目标接纳边界、request-wave功能、运行器/CPU观测和波形统计分析测试。覆盖缺测、守恒、拒绝/取消/异常、预算配对、训练隔离、跨请求任务交错与尾部保留、计划恢复；它们验证功能，不验证性能优劣。
 
 ## 开发机分步运行
 

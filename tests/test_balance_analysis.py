@@ -68,6 +68,31 @@ def write_manifest(root, entries, **extra):
 
 
 class Statistics(unittest.TestCase):
+    def test_wave_requires_request_cohort_analyzer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            entry,_=fixture(root,mutate_metadata={'workload':'request-wave'})
+            with self.assertRaisesRegex(ValueError,'analyze_request_wave'):
+                a.load_run(entry['path'],entry,{})
+
+    def test_flat_phase_csv_extension(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            entry,rows=fixture(root)
+            for row in rows:
+                row.update(phase='initial',request_planned_ns=row['planned_ns'])
+            with (Path(entry['path'])/'tasks.csv').open('w',newline='') as handle:
+                writer=csv.DictWriter(handle,fieldnames=list(rows[0]))
+                writer.writeheader();writer.writerows(rows)
+            loaded=a.load_run(entry['path'],entry,{})
+            self.assertEqual(loaded['rows'][0]['phase'],'initial')
+
+    def test_legacy_policy_id_cannot_hide_target_acceptance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            entry,_=fixture(Path(directory),mutate_metadata={'accept_threshold':.5})
+            with self.assertRaisesRegex(ValueError,'legacy policy IDs'):
+                a.load_run(entry['path'],entry,{})
+
     def test_constant_correlation_is_not_zero(self):
         self.assertIsNone(a.pearson([1, 1, 1], [2, 4, 8]))
         self.assertIsNone(a.pearson([], []))

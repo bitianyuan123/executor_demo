@@ -172,12 +172,16 @@ def load_run(path, entry, manifest, window_start=0., window_end=None, hostname_a
     summary = json.loads((path/'summary.json').read_text())
     if meta.get('stage') != 3:
         raise ValueError(f'not stage 3: {path}')
+    if meta.get('workload', 'flat') != 'flat':
+        raise ValueError('request-wave requires analyze_request_wave.py (request-arrival cohort)')
+    if meta.get('accept_threshold', -1) >= 0:
+        raise ValueError('target acceptance is not represented by legacy policy IDs; use the request-wave workflow')
     duration = float(meta['duration_seconds'])
     end = duration if window_end is None else float(window_end)
     if not 0 <= window_start < end <= duration:
         raise ValueError(f'analysis cohort outside run duration: {path}')
     with (path/'tasks.csv').open(newline='') as handle:
-        raw = [{k: (v if k == 'status' else numeric(v)) for k, v in row.items()} for row in csv.DictReader(handle)]
+        raw = [{k: (v if k in ('status', 'phase') else numeric(v)) for k, v in row.items()} for row in csv.DictReader(handle)]
     if len(raw) != meta.get('planned_tasks') or len(raw) != summary.get('planned_tasks'):
         raise ValueError(f'truncated task CSV: {path}')
     if len({r['task'] for r in raw}) != len(raw):

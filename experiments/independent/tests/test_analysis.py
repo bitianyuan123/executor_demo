@@ -14,6 +14,26 @@ spec3=importlib.util.spec_from_file_location('design',Path(__file__).resolve().p
 d=importlib.util.module_from_spec(spec3);spec3.loader.exec_module(d)
 
 class Analysis(unittest.TestCase):
+    def test_wave_requires_request_cohort_analyzer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            p=Path(directory)
+            (p/'metadata.json').write_text(json.dumps({'stage':3,'workload':'request-wave'}))
+            (p/'summary.json').write_text(json.dumps({'conservation_ok':True}))
+            with self.assertRaisesRegex(ValueError,'analyze_request_wave'):
+                a.load_run(p)
+
+    def test_flat_csv_extension_remains_readable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            p=Path(directory)
+            (p/'metadata.json').write_text(json.dumps({'stage':3,'planned_tasks':1,'workload':'flat'}))
+            (p/'summary.json').write_text(json.dumps({'conservation_ok':True,'planned_tasks':1,
+                'completed_tasks':1,'canceled_tasks':0,'rejected_tasks':0,'failed_tasks':0}))
+            (p/'tasks.csv').write_text('status,task,planned_ns,submit_ns,start_ns,end_ns,target_cpu_us,pending,inflight,phase,home_score\n'
+                'completed,0,0,1,2,1000002,1000,0,1,initial,0.125\n')
+            _,_,rows=a.load_run(p)
+            self.assertEqual(rows[0]['home_score'],.125)
+            self.assertAlmostEqual(rows[0]['wall_ms'],1)
+
     def test_quantile_and_empty(self):
         self.assertIsNone(a.quantile([]));self.assertEqual(a.quantile(list(range(100))),98)
         self.assertEqual(a.quantile([5]),5)

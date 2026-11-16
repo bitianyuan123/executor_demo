@@ -18,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <numeric>
 #include <random>
 #include <set>
 #include <sstream>
@@ -96,9 +97,12 @@ struct Opt {
   std::string output = "independent-run", cpus, numa, affinity = "none", deployment = "dev";
   std::string instrumentation = "full", arrival = "regular", workMode = "cpu";
   std::string meanNormalization = "none", burstPlacement = "local";
+  std::string workload = "flat";
   std::string routing = "home", loadMetric = "outstanding", capacities;
   std::string loadObservation = "off", requestedLoadObservation = "off";
-  double loadThreshold = 1, minImprovement = 0;
+  double loadThreshold = 1, minImprovement = 0, acceptThreshold = -1;
+  double burstWindowMs = 20, steadyWindowMs = 400;
+  size_t steadyTasks = 80;
   uint64_t progressUs = 5000, failSubmitTask = std::numeric_limits<uint64_t>::max();
   size_t pools = 2, threads = 2, burstMin = 1, burstMax = 1, maxOutstanding = 10000, maxPlanned = 1000000;
   uint64_t cpuUs = 1000, estimateUs = 0, seed = 42, arrivals = 0, sampleMs = 100, iterationsPerUs = 64;
@@ -115,6 +119,10 @@ All options take one value. No AffinityExecutor, graph or RPC; routing happens b
 --arrival-rate N --duration S       Open-loop arrivals/second and offered duration (100,5)
 --arrival regular|poisson --arrivals N  N=0 means duration determines count
 --burst-min N --burst-max N         Independent jobs per arrival, same round-robin pool (1,1)
+--workload flat|request-wave       flat simultaneous burst; wave initial + steady releases (flat)
+--burst-window-ms F                wave initial jobs at uniform offsets in [0,F) ms (20)
+--steady-tasks N --steady-window-ms F  wave follow-up jobs in [initial window,initial+F) (80,400)
+                                  duration limits request arrivals, not their follow-up releases
 --burst-placement local|spread     One RR pool per arrival or RR pool per task (local)
 --cpu-us N --jitter F               Uniform CPU budget around N, fraction F (1000,.5)
 --long-prob F --long-factor F       Mixture tail probability and multiplier (.02,8)
@@ -126,6 +134,7 @@ All options take one value. No AffinityExecutor, graph or RPC; routing happens b
 --routing home|threshold|spread    Keep home, threshold spill, or static task RR (home)
 --load-metric queue|outstanding|work|remaining  Threshold routing metric (outstanding)
 --load-threshold F --min-improvement F  Strict home threshold and required improvement (1,0)
+--accept-threshold F               Candidate pre-add score must be strictly below F; -1 disables
 --capacities 'N,N,...'             Per-pool accounting divisors; default min(threads,mask CPUs)
 --load-observation off|minimal|basic|progress  Extra load snapshots/counters (off)
                                   minimal observes only load-metric; threshold off becomes basic
@@ -137,7 +146,7 @@ All options take one value. No AffinityExecutor, graph or RPC; routing happens b
 --fail-task N                      Test-only: inject callback failure for task ID N
 --max-outstanding N                Nonblocking task admission limit across pools (10000)
 --max-planned-tasks N              Bound preallocated telemetry memory (1000000)
---drain-seconds S                  Cancel unfinished work after offered duration + S (30)
+--drain-seconds S                  Cancel after max(duration,last task release) + S (30)
 --help
 Times use CLOCK_MONOTONIC; work targets use CLOCK_THREAD_CPUTIME_ID, never worker sleeps.
 All modes retain admission/cancellation atomics and basic latency timestamps: none is not zero overhead.
@@ -158,11 +167,16 @@ Opt parse(int argc, char** argv) {
     else if (k == "--work-mode") o.workMode = v;
     else if (k == "--mean-normalization") o.meanNormalization = v;
     else if (k == "--burst-placement") o.burstPlacement = v;
+    else if (k == "--workload") o.workload = v;
+    else if (k == "--burst-window-ms") o.burstWindowMs = number(v);
+    else if (k == "--steady-window-ms") o.steadyWindowMs = number(v);
+    else if (k == "--steady-tasks") o.steadyTasks = integer(v);
     else if (k == "--routing") o.routing = v;
     else if (k == "--load-metric") o.loadMetric = v;
     else if (k == "--load-observation") o.requestedLoadObservation = v;
     else if (k == "--capacities") o.capacities = v;
     else if (k == "--load-threshold") o.loadThreshold = number(v);
+    else if (k == "--accept-threshold") o.acceptThreshold = number(v);
     else if (k == "--min-improvement") o.minImprovement = number(v);
     else if (k == "--progress-us") o.progressUs = integer(v);
     else if (k == "--fail-submit-task") o.failSubmitTask = integer(v);
@@ -197,6 +211,7 @@ Opt parse(int argc, char** argv) {
       !choice(o.instrumentation,{"none","queue","counters","full"}) || !choice(o.arrival,{"regular","poisson"}) ||
       !choice(o.workMode,{"cpu","iterations"}) || !choice(o.meanNormalization,{"none","exact"}) ||
       !choice(o.burstPlacement,{"local","spread"}) ||
+      !choice(o.workload,{"flat","request-wave"}) ||
       !choice(o.routing,{"home","threshold","spread"}) ||
       !choice(o.loadMetric,{"queue","outstanding","work","remaining"}) ||
       !choice(o.requestedLoadObservation,{"off","minimal","basic","progress"})) throw std::invalid_argument("invalid enum option");
@@ -207,8 +222,15 @@ Opt parse(int argc, char** argv) {
       o.tailProb < 0 || o.tailProb > 1 || o.tailFactor < 1 || o.tailFactor > 1000 || !o.sampleMs ||
       o.sampleMs > 60000 || o.maxSamples > 10000000 || o.estimateUs > 3600000000000ULL)
     throw std::invalid_argument("option outside supported bounds");
-  if (o.loadThreshold < 0 || o.minImprovement < 0 || !o.progressUs || o.progressUs > 3600000000ULL)
+  if (o.loadThreshold < 0 || o.minImprovement < 0 || !o.progressUs || o.progressUs > 3600000000ULL ||
+      (o.acceptThreshold < 0 && o.acceptThreshold != -1))
     throw std::invalid_argument("invalid load threshold, improvement or progress interval");
+  if (o.burstWindowMs < 0 || o.burstWindowMs > 86400000 ||
+      o.steadyWindowMs <= 0 || o.steadyWindowMs > 86400000 ||
+      (o.workload == "request-wave" && o.steadyTasks > o.maxPlanned))
+    throw std::invalid_argument("invalid request-wave window or steady task count");
+  if (o.workload == "request-wave" && o.burstPlacement != "local")
+    throw std::invalid_argument("request-wave requires burst-placement=local for fixed request home; use routing=spread for static spreading");
   o.loadObservation = o.requestedLoadObservation;
   if (o.routing == "threshold" && o.loadObservation == "off") o.loadObservation = "basic";
   if (o.loadMetric == "remaining" && o.loadObservation != "minimal") o.loadObservation = "progress";
@@ -288,7 +310,10 @@ struct Task {
   double homeScore=-1, selectedScore=-1, capacity=0;
   int64_t routeNs=-1, routeCandidates=-1;
   bool spilled=false;
-  uint64_t planned=0, submit=0, start=0, end=0, target=0, estimate=0, cpu=0;
+  bool sourceOverThreshold=false, noEligibleTarget=false, noImprovement=false;
+  size_t eligibleCandidates=0;
+  bool steady=false;
+  uint64_t planned=0, requestPlanned=0, submit=0, start=0, end=0, target=0, estimate=0, cpu=0;
   int64_t queue=-1, pending=-1, inflight=-1, work=-1;
   int tid=-1;
   enum State { Planned, Rejected, Completed, Canceled, Deadline, Failed } state=Planned;
@@ -303,7 +328,10 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
   std::vector<Task> tasks;
   double t = o.arrival == "regular" ? 0 : interval(arrival);
   for (size_t b=0; t < o.duration && (!o.arrivals || b < o.arrivals); ++b) {
-    size_t k = width(widths);
+    size_t initial = width(widths);
+    if (initial > o.maxPlanned || (o.workload == "request-wave" && o.steadyTasks > o.maxPlanned-initial))
+      throw std::invalid_argument("planned task count exceeds max-planned-tasks");
+    size_t k = initial + (o.workload == "request-wave" ? o.steadyTasks : 0);
     if (k > o.maxPlanned || tasks.size() > o.maxPlanned-k) throw std::invalid_argument("planned task count exceeds max-planned-tasks");
     auto when = uint64_t(t * 1e9); bursts.push_back({tasks.size(),k,b%o.pools,when});
     for (size_t j=0; j<k; ++j) {
@@ -311,7 +339,16 @@ std::vector<Task> makeTasks(const Opt& o, std::vector<Burst>& bursts) {
       Task r; r.id=tasks.size(); r.burst=b;
       r.pool=o.burstPlacement=="local" ? b%o.pools : r.id%o.pools;
       r.homePool=r.pool; r.burstIndex=j; r.burstRemaining=k-j-1;
-      r.planned=when; r.target=target; tasks.push_back(r);
+      r.planned=when; r.requestPlanned=when;
+      if (o.workload == "request-wave") {
+        r.steady=j>=initial;
+        // Deterministic offsets preserve an identical open-loop trace across policies.
+        const double offsetMs=r.steady ? o.burstWindowMs+
+          o.steadyWindowMs*double(j-initial)/double(o.steadyTasks) :
+          o.burstWindowMs*double(j)/double(initial);
+        r.planned+=uint64_t(offsetMs*1e6);
+      }
+      r.target=target; tasks.push_back(r);
     }
     t = o.arrival == "regular" ? double(b+1)/o.rate : t+interval(arrival);
   }
@@ -403,6 +440,22 @@ int run(const Opt& o) {
   } else for (const auto& mask:l.masks) capacities.push_back(double(std::min(o.threads,mask.size())));
   std::vector<Burst> bursts; auto tasks=makeTasks(o,bursts);
   if(tasks.empty()) throw std::invalid_argument("no planned tasks: increase duration/rate");
+  // Storage remains request-contiguous for burst accounting; submission follows
+  // the global ready-time order, so overlapping waves cannot block later requests.
+  std::vector<size_t> releaseOrder(tasks.size());
+  std::iota(releaseOrder.begin(),releaseOrder.end(),0);
+  if(o.workload=="request-wave") std::stable_sort(releaseOrder.begin(),releaseOrder.end(),
+    [&](size_t a,size_t b){return tasks[a].planned<tasks[b].planned;});
+  const uint64_t lastRelease=tasks[releaseOrder.back()].planned;
+  uint64_t totalTargetUs=0, initialTargetUs=0, steadyTargetUs=0;
+  size_t initialTasks=0, steadyTasks=0;
+  for(const auto& task:tasks) {
+    if(task.target>std::numeric_limits<uint64_t>::max()-totalTargetUs)
+      throw std::invalid_argument("total CPU target overflow");
+    totalTargetUs+=task.target;
+    if(task.steady){steadyTargetUs+=task.target;++steadyTasks;}
+    else {initialTargetUs+=task.target;++initialTasks;}
+  }
   if(std::filesystem::exists(o.output)) throw std::invalid_argument("output directory already exists");
   std::filesystem::create_directories(o.output);
   const auto path=[&](const char* f){return std::filesystem::path(o.output)/f;};
@@ -429,11 +482,15 @@ int run(const Opt& o) {
   }
   workers.close();
   utsname host{}; uname(&host);
+  const uint64_t epoch=ns()+20000000ULL,
+    deadline=epoch+std::max(uint64_t(o.duration*1e9),lastRelease)+uint64_t(o.drain*1e9);
   std::ofstream metadata(path("metadata.json")); metadata<<std::setprecision(std::numeric_limits<double>::max_digits10);
   metadata<<"{\n\"schema\":1,\"stage\":3,\"executor\":\"original folly::CPUThreadPoolExecutor\",\"queue\":\"Folly default\",\n"
     <<"\"deployment\":"<<js(o.deployment)<<",\"hostname\":"<<js(host.nodename)<<",\"kernel\":"<<js(host.release)<<",\"machine\":"<<js(host.machine)
-    <<",\"pid\":"<<getpid()<<",\"affinity\":"<<js(o.affinity)<<",\"instrumentation\":"<<js(o.instrumentation)
+    <<",\"pid\":"<<getpid()<<",\"epoch_monotonic_ns\":"<<epoch
+    <<",\"affinity\":"<<js(o.affinity)<<",\"instrumentation\":"<<js(o.instrumentation)
     <<",\"routing\":"<<js(o.routing)<<",\"load_metric\":"<<js(o.loadMetric)<<",\"load_threshold\":"<<o.loadThreshold
+    <<",\"accept_threshold\":"<<o.acceptThreshold
     <<",\"capacities\":"<<array(capacities)<<",\"capacity_source\":"<<js(o.capacities.empty()?"min(threads,effective_mask_logical_cpus)":"explicit")
     <<",\"min_improvement\":"<<o.minImprovement<<",\"progress_us\":"<<o.progressUs
     <<",\"requested_load_observation\":"<<js(o.requestedLoadObservation)<<",\"effective_load_observation\":"<<js(o.loadObservation)
@@ -446,6 +503,11 @@ int run(const Opt& o) {
   for(size_t i=0;i<l.masks.size();++i) { if(i)metadata<<','; metadata<<array(l.masks[i]); }
   metadata<<"],\"arrival\":"<<js(o.arrival)<<",\"arrival_rate\":"<<o.rate<<",\"duration_seconds\":"<<o.duration<<",\"arrival_limit\":"<<o.arrivals
     <<",\"burst_min\":"<<o.burstMin<<",\"burst_max\":"<<o.burstMax<<",\"burst_placement\":"<<js(o.burstPlacement)
+    <<",\"workload\":"<<js(o.workload)<<",\"burst_window_ms\":"<<o.burstWindowMs
+    <<",\"steady_tasks\":"<<o.steadyTasks<<",\"steady_window_ms\":"<<o.steadyWindowMs
+    <<",\"last_task_release_ns\":"<<lastRelease<<",\"planned_cpu_us\":"<<totalTargetUs
+    <<",\"planned_initial_tasks\":"<<initialTasks<<",\"planned_steady_tasks\":"<<steadyTasks
+    <<",\"planned_initial_cpu_us\":"<<initialTargetUs<<",\"planned_steady_cpu_us\":"<<steadyTargetUs
     <<",\"mean_normalization\":"<<js(o.meanNormalization)<<",\"cpu_us\":"<<o.cpuUs<<",\"jitter\":"<<o.jitter
     <<",\"long_prob\":"<<o.tailProb<<",\"long_factor\":"<<o.tailFactor<<",\"estimate_us\":"<<o.estimateUs
     <<",\"estimate_jitter\":"<<o.estimateJitter<<",\"seed\":"<<o.seed
@@ -453,14 +515,13 @@ int run(const Opt& o) {
     <<",\"max_planned_tasks\":"<<o.maxPlanned<<",\"sample_ms\":"<<o.sampleMs<<",\"max_samples\":"<<o.maxSamples<<",\"fail_task\":"<<(o.failTask==std::numeric_limits<uint64_t>::max()?"null":std::to_string(o.failTask))<<",\"drain_seconds\":"<<o.drain
     <<",\"planned_arrivals\":"<<bursts.size()<<",\"planned_tasks\":"<<tasks.size()<<",\"clock\":\"CLOCK_MONOTONIC relative ns\","
     <<"\"limits\":[\"Native queue is approximate Folly queue telemetry, not kernel runq\",\"No numa memory binding or physical cluster discovery\","
-    <<"\"All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps\",\"work estimate retains full cost until completion, not remaining CPU\",\"Capacity is a logical accounting divisor, not physical throughput; overlapping masks share resources\",\"Load snapshots use separate relaxed atomic reads, not one coherent multi-pool transaction\",\"Remaining is a periodically published estimate; underestimation may yield zero before completion\",\"Routing observes only currently submitted tasks, not future burst arrivals; no queued-task migration\",\"Progress observation adds thread CPU clock reads to iterations mode\",\"spilled counts successful add calls whose selected pool differs from home\"]}\n";
+    <<"\"All instrumentation modes retain safety atomics, CPU work clock and basic task timestamps\",\"work estimate retains full cost until completion, not remaining CPU\",\"Capacity is a logical accounting divisor, not physical throughput; overlapping masks share resources\",\"Load snapshots use separate relaxed atomic reads, not one coherent multi-pool transaction\",\"Remaining is a periodically published estimate; underestimation may yield zero before completion\",\"Routing observes only currently submitted tasks, not future burst arrivals; no queued-task migration\",\"Single producer reserves before the next decision; acceptance is a pre-add score gate, not a lifetime load cap\",\"request-wave follow-ups are independent scheduled tasks, not dependency-driven DAG readiness\",\"Progress observation adds thread CPU clock reads to iterations mode\",\"spilled counts successful add calls whose selected pool differs from home\"]}\n";
   metadata.close();
   std::atomic<uint64_t> outstanding{0}; std::atomic<bool> cancel{false}, stopSample{false};
   std::vector<Sample> samples;
   uint64_t samplesDropped=0; bool samplingFailed=false;
   std::mutex sampleMutex; std::condition_variable sampleWake;
   rusage usageBegin{},usageEnd{}; getrusage(RUSAGE_SELF,&usageBegin);
-  uint64_t epoch=ns()+20000000ULL, deadline=epoch+uint64_t((o.duration+o.drain)*1e9);
   std::thread sampler;
   if(queue||observe) sampler=std::thread([&] {
     try {
@@ -497,20 +558,25 @@ int run(const Opt& o) {
       o.loadMetric=="work" ? s.work : s.remaining;
     return independent::normalizedScore(value,capacities[pool],o.loadMetric=="work"||o.loadMetric=="remaining");
   };
-  for(auto& b:bursts) {
-    until(epoch+b.planned); b.actual=ns()-epoch;
-    for(size_t j=0;j<b.count;++j) {
-      auto& t=tasks[b.first+j];
+  for(size_t taskIndex:releaseOrder) {
+      auto& t=tasks[taskIndex];
+      auto& b=bursts[t.burst];
+      // For flat workloads keep the old one-sleep-per-burst hot path.
+      if(o.workload=="request-wave" || t.burstIndex==0)until(epoch+t.planned);
       t.submit=ns()-epoch;
+      if(t.burstIndex==0)b.actual=t.submit;
       // Routing observes the state before this task's reservation. There is one
       // producer; future burst tasks are not inspected by the admission policy.
       if(observe) {
         const auto routeBegin=ns();
         if(o.routing=="threshold") {
           const auto decision=independent::chooseThreshold(t.homePool,o.pools,o.loadThreshold,
-            o.minImprovement,t.id%o.pools,readLoad);
+            o.minImprovement,t.id%o.pools,readLoad,o.acceptThreshold);
           t.pool=decision.pool; t.homeScore=decision.homeScore;
           t.selectedScore=decision.selectedScore; t.routeCandidates=decision.candidates;
+          t.sourceOverThreshold=decision.sourceOverThreshold;
+          t.noEligibleTarget=decision.noEligibleTarget; t.noImprovement=decision.noImprovement;
+          t.eligibleCandidates=decision.eligibleCandidates;
         } else {
           t.homeScore=readLoad(t.homePool); t.routeCandidates=1;
           if(o.routing=="spread")t.pool=t.id%o.pools;
@@ -569,7 +635,6 @@ int run(const Opt& o) {
         if(maintainOutstanding)c.outstanding.fetch_sub(1,relaxed);
         outstanding.fetch_sub(1,relaxed);t.state=Task::Rejected;
       }
-    }
   }
   while(outstanding.load(std::memory_order_acquire)) {
     if(ns()>=deadline)cancel.store(true,relaxed);
@@ -581,16 +646,22 @@ int run(const Opt& o) {
   getrusage(RUSAGE_SELF,&usageEnd);
   auto tvSeconds=[](const timeval& tv){return double(tv.tv_sec)+double(tv.tv_usec)/1e6;};
   uint64_t completed=0,rejected=0,canceled=0,failed=0,spilled=0;
+  uint64_t sourceOverThreshold=0,noEligibleTarget=0,noImprovement=0;
   std::vector<double> latency,wait,plannedLatency,cpuTime,burstLatency,arrivalLag,routeCosts;
   std::map<uint64_t,std::vector<double>> seconds;
-  std::ofstream csv(path("tasks.csv")); csv<<std::setprecision(std::numeric_limits<double>::max_digits10)<<"task,burst,pool,status,target_cpu_us,estimate_us,planned_ns,submit_ns,start_ns,end_ns,native_queue,pending,inflight,work_estimate_us,thread_cpu_ns,worker_tid,home_pool,home_native_queue,home_outstanding,home_work_estimate_us,home_remaining_work_us,selected_native_queue,selected_outstanding,selected_work_estimate_us,selected_remaining_work_us,home_score,selected_score,route_ns,route_candidates,spilled,burst_index,burst_remaining,capacity,home_inflight,selected_inflight\n";
+  std::ofstream csv(path("tasks.csv")); csv<<std::setprecision(std::numeric_limits<double>::max_digits10)<<"task,burst,pool,status,target_cpu_us,estimate_us,planned_ns,submit_ns,start_ns,end_ns,native_queue,pending,inflight,work_estimate_us,thread_cpu_ns,worker_tid,home_pool,home_native_queue,home_outstanding,home_work_estimate_us,home_remaining_work_us,selected_native_queue,selected_outstanding,selected_work_estimate_us,selected_remaining_work_us,home_score,selected_score,route_ns,route_candidates,spilled,burst_index,burst_remaining,capacity,home_inflight,selected_inflight,request_planned_ns,phase,source_over_threshold,no_eligible_target,no_improvement,eligible_candidates\n";
   for(const auto& t:tasks) {
     csv<<t.id<<','<<t.burst<<','<<t.pool<<','<<stateName(t.state)<<','<<t.target<<','<<t.estimate<<','<<t.planned<<','<<t.submit<<','<<t.start<<','<<t.end<<','<<t.queue<<','<<t.pending<<','<<t.inflight<<','<<t.work<<','<<(full?int64_t(t.cpu):-1)<<','<<t.tid
       <<','<<t.homePool<<','<<t.homeLoad.queue<<','<<t.homeLoad.outstanding<<','<<t.homeLoad.work<<','<<t.homeLoad.remaining
       <<','<<t.selectedLoad.queue<<','<<t.selectedLoad.outstanding<<','<<t.selectedLoad.work<<','<<t.selectedLoad.remaining
       <<','<<t.homeScore<<','<<t.selectedScore<<','<<t.routeNs<<','<<t.routeCandidates<<','<<int(t.spilled)
-      <<','<<t.burstIndex<<','<<t.burstRemaining<<','<<t.capacity<<','<<t.homeLoad.inflight<<','<<t.selectedLoad.inflight<<'\n';
+      <<','<<t.burstIndex<<','<<t.burstRemaining<<','<<t.capacity<<','<<t.homeLoad.inflight<<','<<t.selectedLoad.inflight
+      <<','<<t.requestPlanned<<','<<(t.steady?"steady":"initial")<<','<<int(t.sourceOverThreshold)
+      <<','<<int(t.noEligibleTarget)<<','<<int(t.noImprovement)<<','<<t.eligibleCandidates<<'\n';
     if(t.spilled)++spilled;
+    if(t.sourceOverThreshold)++sourceOverThreshold;
+    if(t.noEligibleTarget)++noEligibleTarget;
+    if(t.noImprovement)++noImprovement;
     if(t.routeNs>=0)routeCosts.push_back(double(t.routeNs));
     if(t.state==Task::Completed) {
       ++completed;double elapsed=double(t.end-t.submit)/1e6; latency.push_back(elapsed);wait.push_back(double(t.start-t.submit)/1e6);
@@ -617,6 +688,8 @@ int run(const Opt& o) {
   std::ofstream summary(path("summary.json"));summary<<std::setprecision(12)<<"{\"planned_tasks\":"<<tasks.size()<<",\"completed_tasks\":"<<completed
     <<",\"rejected_tasks\":"<<rejected<<",\"canceled_tasks\":"<<canceled<<",\"failed_tasks\":"<<failed<<",\"complete_bursts\":"<<burstLatency.size()
     <<",\"spilled_tasks\":"<<spilled<<",\"route_ns_mean\":"<<stat(routeCosts)<<",\"route_ns_p99\":"<<stat(routeCosts,true)
+    <<",\"source_over_threshold_tasks\":"<<sourceOverThreshold<<",\"no_eligible_target_tasks\":"<<noEligibleTarget
+    <<",\"no_improvement_tasks\":"<<noImprovement
     <<",\"final_outstanding\":"<<outstanding.load()<<",\"counters_balanced\":"<<(balanced?"true":"false")
     <<",\"conservation_ok\":"<<(completed+rejected+canceled+failed==tasks.size()&&balanced?"true":"false")<<",\"observed_seconds\":"<<double(finish)/1e9
     <<",\"task_mean_ms\":"<<stat(latency)<<",\"task_p99_ms\":"<<stat(latency,true)<<",\"submit_to_start_mean_ms\":"<<stat(wait)

@@ -63,6 +63,8 @@ def load_run(path, warmup=0., end=None):
     summary = json.loads((path/'summary.json').read_text())
     if metadata.get('stage') != 3 or not summary.get('conservation_ok'):
         raise ValueError(f'not a complete valid stage-3 run: {path}')
+    if metadata.get('workload', 'flat') != 'flat':
+        raise ValueError('request-wave requires analyze_request_wave.py (request-arrival cohort)')
     with (path/'tasks.csv').open() as f:
         raw = list(csv.DictReader(f))
     if len(raw) != metadata['planned_tasks'] or len(raw) != summary['planned_tasks']:
@@ -74,7 +76,16 @@ def load_run(path, warmup=0., end=None):
     for rawrow in raw:
         if rawrow['status'] != 'completed':
             continue
-        r = {k:int(v) for k,v in rawrow.items() if k != 'status'}
+        r = {}
+        for k, v in rawrow.items():
+            if k in ('status', 'phase'):
+                continue
+            try:
+                r[k] = int(v)
+            except ValueError:
+                r[k] = float(v)
+                if not math.isfinite(r[k]):
+                    raise ValueError('nonfinite task CSV value')
         if r['planned_ns'] < warmup*1e9 or (end is not None and r['planned_ns'] >= end*1e9):
             continue
         if not r['planned_ns'] <= r['submit_ns'] <= r['start_ns'] <= r['end_ns']:
