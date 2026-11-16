@@ -8,6 +8,8 @@
 
 目标、实现难点及逐项验证状态集中在[验收覆盖](GOALS_AND_COVERAGE.md)。本指南用于选择下一组对照，不意味着所有负载组合、ARM性能与生产接入均已验证。
 
+目标机已回传首批v2结果，见[4001日志审阅与下一步](TARGET_V2_4001_REVIEW.md)：六cluster主线已跑通，单request借出有平均时延收益，但signals请求峰值均为1。当前先补打印已有report并做两轮工作量校准，不需要重复下面的完整初筛矩阵。
+
 ## 1. 新增变量及其准确含义
 
 | 参数 | 作用 | 保持与变化 |
@@ -98,7 +100,7 @@ python3 experiments/affinity/run_matrix.py \
   --widths 20,4 --depths 1,2 --model none --accesses 0 --iterations 1000000
 ```
 
-将iterations替换成4.1冻结的值；QPS也是显式实验变量。不同到达序列不做同轨迹策略配对。实际运行后打印`python3 experiments/affinity/report.py <运行目录>/seed-*`；96请求的p99接近最大值，只能初筛。
+将iterations替换成4.1冻结的值；QPS也是显式实验变量。不同到达序列不做同轨迹策略配对。runner末尾的`Report:`仅打印建议命令，不会执行它；实际运行后还需执行`python3 experiments/affinity/report.py <运行目录>/seed-*`。nearest-rank下96请求的p99就是最大值，只能初筛。
 
 ### 4.3 先比较线程数和信号，再决定借出策略
 

@@ -21,6 +21,7 @@
 - [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
 - [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。
 - [每cluster一池的实验矩阵](docs/REAL_WORKLOAD_MATRIX.md)：主线验证单request扇出、线程过配、NUMA借出与数据亲和；四池仅作可选历史重放。
+- [目标机4001日志审阅与下一步](docs/TARGET_V2_4001_REVIEW.md)：v2单request借出初筛、线程数结果与证据边界；补现有报告，再校准首波尺度。
 - [本轮实际验证](results/review/TRACE_LOAD_VALIDATION.md)：本地功能和读成本，不冒充ARM真实负载结论。
 
 再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
@@ -73,7 +74,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前用户已完成阶段3初测及旧DAG home基线，可直接进入[每cluster一池的v2主实验](docs/REAL_WORKLOAD_MATRIX.md)：在已确认的`0-47,192-239`六cluster子集上，校准单request扇出，再比较线程过配、二层借出与数据亲和；旧`s4-routing`和入口request burst均为按需补充，不是前置步骤。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
+当前用户已完成阶段3初测、旧DAG home基线及[六cluster的v2首批初筛](docs/TARGET_V2_4001_REVIEW.md)。下一步先补现有报告和首波尺度校准，再沿[每cluster一池的v2主实验](docs/REAL_WORKLOAD_MATRIX.md)增加请求竞争与数据亲和；不重跑已有矩阵。旧`s4-routing`和入口request burst均为按需补充，不是前置步骤。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 
