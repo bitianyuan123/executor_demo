@@ -1,0 +1,349 @@
+{
+  "schema": 1,
+  "source": "3003.log",
+  "source_sha256": "6ce5bb0c2742588a039791e4ec5f20d690d75818d12b24794c9989fd404a01d2",
+  "source_bytes": 99306,
+  "source_line_count": 394,
+  "additional_source": {
+    "path": "buckets-terminal.txt",
+    "sha256": "235882e1aadaf195b4dd69fd1ffbd45a44e2655a2a4630183b744e088dd34d84",
+    "bytes": 35786,
+    "origin": "Subsequent user terminal text, archived separately; not inside original 3003.log",
+    "rows": 192,
+    "groups": 24,
+    "tasks_per_group": 12000,
+    "low_tail_rows": [
+      {
+        "group": "main-t256-local",
+        "config_id": "c383f86cfb2e",
+        "held_seed": "11000",
+        "metric": "queue_per_capacity",
+        "bucket": "7",
+        "lower_inclusive": "4.9375",
+        "upper_exclusive": "NA",
+        "boundary_source": "training_seeds_only",
+        "n": "964",
+        "unique_bursts": "120",
+        "mean_ms": "585.481404964",
+        "p99_ms": "692.255297",
+        "tail_quality": "LOW_TAIL",
+        "W_mean_ms": "281.800758527",
+        "W_p99_ms": "328.79753",
+        "X_mean_ms": "302.406952386",
+        "X_p99_ms": "418.45271"
+      }
+    ]
+  },
+  "provenance": {
+    "observe": {
+      "manifests": [
+        {
+          "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/observe/manifest.json",
+          "selection": null,
+          "sha256": "c9a7eafeaeddddff5c3eb116ed31bab936faf13adda25eec13b42066010382f9",
+          "split": "observe"
+        }
+      ],
+      "normalization": null,
+      "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/observe-analysis/report.json",
+      "script_sha256": "473e1c323ddb84af1c3150f79ed0e6ee728748301d6c0989f8ef86f420d605d0",
+      "sha256": "91f7de7977c1aec4d1ce1fb94241477a7fda2c464d95bd3f1094b9da5a6f573b"
+    },
+    "tune": {
+      "manifests": [
+        {
+          "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/tune/manifest.json",
+          "selection": null,
+          "sha256": "8f63719c5b07c00315344f7689d5d0d3134b408c249952af5e98ddf5eddb96ae",
+          "split": "tune"
+        }
+      ],
+      "normalization": null,
+      "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/tune-analysis/report.json",
+      "script_sha256": "473e1c323ddb84af1c3150f79ed0e6ee728748301d6c0989f8ef86f420d605d0",
+      "sha256": "8f605971df520902d4a7774014691383135f4ada2fb7aacd7f1e2be5c6212ee0"
+    },
+    "evaluate": {
+      "manifests": [
+        {
+          "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/evaluate/manifest.json",
+          "selection": {
+            "applicable_scopes": [
+              {
+                "comparison_group": "main-t16-local",
+                "workload": {
+                  "affinity": "cluster",
+                  "arrival": "regular",
+                  "arrival-rate": 2.4,
+                  "burst-max": 100,
+                  "burst-min": 100,
+                  "burst-placement": "local",
+                  "capacities": "16,16,16,16,16,16",
+                  "cpu-us": 100000,
+                  "cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+                  "deployment": "target",
+                  "estimate-jitter": 0,
+                  "estimate-us": 100000,
+                  "jitter": 0.5,
+                  "load-observation": "progress",
+                  "long-factor": 8,
+                  "long-prob": 0,
+                  "mean-normalization": "exact",
+                  "numa": "0,0,0,2,2,2",
+                  "pools": 6,
+                  "progress-us": 5000,
+                  "threads": 16,
+                  "work-mode": "cpu"
+                }
+              },
+              {
+                "comparison_group": "main-t256-local",
+                "workload": {
+                  "affinity": "cluster",
+                  "arrival": "regular",
+                  "arrival-rate": 2.4,
+                  "burst-max": 100,
+                  "burst-min": 100,
+                  "burst-placement": "local",
+                  "capacities": "16,16,16,16,16,16",
+                  "cpu-us": 100000,
+                  "cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+                  "deployment": "target",
+                  "estimate-jitter": 0,
+                  "estimate-us": 100000,
+                  "jitter": 0.5,
+                  "load-observation": "progress",
+                  "long-factor": 8,
+                  "long-prob": 0,
+                  "mean-normalization": "exact",
+                  "numa": "0,0,0,2,2,2",
+                  "pools": 6,
+                  "progress-us": 5000,
+                  "threads": 256,
+                  "work-mode": "cpu"
+                }
+              }
+            ],
+            "chosen_cases": [
+              "main-t16-local-outstanding-h2",
+              "main-t256-local-outstanding-h2"
+            ],
+            "metric": "outstanding",
+            "note": "Manual frozen decision before evaluation; no automatic claim of a winner.",
+            "queue_threshold": 2.0,
+            "reason": "填写实际tune结论和选择理由",
+            "schema_version": 1,
+            "selected_at_unix": 1794809330.3998382,
+            "source_config_sha256": "2a368698fe2f4e061fc385d4b6c0b53a803effb6dd96397952d76763facae9bb",
+            "source_manifest": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/tune/manifest.json",
+            "source_manifest_sha256": "8f63719c5b07c00315344f7689d5d0d3134b408c249952af5e98ddf5eddb96ae",
+            "source_seeds": [
+              21000,
+              21001,
+              21002
+            ],
+            "source_split": "tune",
+            "split_seeds": {
+              "cost": [
+                41000,
+                41001,
+                41002
+              ],
+              "evaluate": [
+                31000,
+                31001,
+                31002
+              ],
+              "observe": [
+                11000,
+                11001,
+                11002
+              ],
+              "tune": [
+                21000,
+                21001,
+                21002
+              ]
+            },
+            "threshold": 2.0
+          },
+          "sha256": "e5c63f0bbf8441cdd663ccb096c9d15d2b35852b3f26dd44afd98cc1f46adbbb",
+          "split": "evaluate"
+        }
+      ],
+      "normalization": {
+        "applied_runs": 35,
+        "authority": "explicit operator assertion that aliased names identify the same experiment host",
+        "hostname_aliases": {
+          "localhost.localdomain": "localhost"
+        },
+        "reason": "3001: same isolated ARM host; only hostname changed, resource and workload configs identical",
+        "scope": "analysis config identity only; raw input files and metadata are preserved"
+      },
+      "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/evaluate-alias-analysis/report.json",
+      "script_sha256": "43469b39e8d40cd37e424c95f67a68f09fca90c1ab12f6be27b06212635930b1",
+      "sha256": "33d2456de8e431d79fbd4805b2c8469f76621c0610438d11fd6f3723339af1c4"
+    },
+    "minimal": {
+      "manifests": [
+        {
+          "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/minimal/manifest.json",
+          "selection": {
+            "applicable_scopes": [
+              {
+                "comparison_group": "main-t16-local",
+                "workload": {
+                  "affinity": "cluster",
+                  "arrival": "regular",
+                  "arrival-rate": 2.4,
+                  "burst-max": 100,
+                  "burst-min": 100,
+                  "burst-placement": "local",
+                  "capacities": "16,16,16,16,16,16",
+                  "cpu-us": 100000,
+                  "cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+                  "deployment": "target",
+                  "estimate-jitter": 0,
+                  "estimate-us": 100000,
+                  "jitter": 0.5,
+                  "load-observation": "progress",
+                  "long-factor": 8,
+                  "long-prob": 0,
+                  "mean-normalization": "exact",
+                  "numa": "0,0,0,2,2,2",
+                  "pools": 6,
+                  "progress-us": 5000,
+                  "threads": 16,
+                  "work-mode": "cpu"
+                }
+              },
+              {
+                "comparison_group": "main-t256-local",
+                "workload": {
+                  "affinity": "cluster",
+                  "arrival": "regular",
+                  "arrival-rate": 2.4,
+                  "burst-max": 100,
+                  "burst-min": 100,
+                  "burst-placement": "local",
+                  "capacities": "16,16,16,16,16,16",
+                  "cpu-us": 100000,
+                  "cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+                  "deployment": "target",
+                  "estimate-jitter": 0,
+                  "estimate-us": 100000,
+                  "jitter": 0.5,
+                  "load-observation": "progress",
+                  "long-factor": 8,
+                  "long-prob": 0,
+                  "mean-normalization": "exact",
+                  "numa": "0,0,0,2,2,2",
+                  "pools": 6,
+                  "progress-us": 5000,
+                  "threads": 256,
+                  "work-mode": "cpu"
+                }
+              }
+            ],
+            "chosen_cases": [
+              "main-t16-local-outstanding-h2",
+              "main-t256-local-outstanding-h2"
+            ],
+            "metric": "outstanding",
+            "note": "Manual frozen decision before evaluation; no automatic claim of a winner.",
+            "queue_threshold": 2.0,
+            "reason": "填写实际tune结论和选择理由",
+            "schema_version": 1,
+            "selected_at_unix": 1794809330.3998382,
+            "source_config_sha256": "2a368698fe2f4e061fc385d4b6c0b53a803effb6dd96397952d76763facae9bb",
+            "source_manifest": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/tune/manifest.json",
+            "source_manifest_sha256": "8f63719c5b07c00315344f7689d5d0d3134b408c249952af5e98ddf5eddb96ae",
+            "source_seeds": [
+              21000,
+              21001,
+              21002
+            ],
+            "source_split": "tune",
+            "split_seeds": {
+              "cost": [
+                41000,
+                41001,
+                41002
+              ],
+              "evaluate": [
+                31000,
+                31001,
+                31002
+              ],
+              "observe": [
+                11000,
+                11001,
+                11002
+              ],
+              "tune": [
+                21000,
+                21001,
+                21002
+              ]
+            },
+            "threshold": 2.0
+          },
+          "sha256": "a1d2c5eb53df8c84cb655ab28db641e67a6d6feceac2c0ba5d0d4bb19b2b415d",
+          "split": "evaluate"
+        }
+      ],
+      "normalization": {
+        "applied_runs": 0,
+        "authority": "explicit operator assertion that aliased names identify the same experiment host",
+        "hostname_aliases": {
+          "localhost.localdomain": "localhost"
+        },
+        "reason": "3001/3002: same isolated ARM host; hostname labels only",
+        "scope": "analysis config identity only; raw input files and metadata are preserved"
+      },
+      "path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/minimal-analysis/report.json",
+      "script_sha256": "43469b39e8d40cd37e424c95f67a68f09fca90c1ab12f6be27b06212635930b1",
+      "sha256": "a4dd446ef085b0fc5140af1c285e4b6354d5b5dfd0bcec56075fcbc7552496d9"
+    }
+  },
+  "section_counts": {
+    "counts.csv": 4,
+    "warnings.csv": 1,
+    "configurations.csv": 7,
+    "runs.csv": 15,
+    "cases.csv": 29,
+    "comparisons.csv": 22,
+    "minimal_pairs.csv": 6,
+    "quality_groups.csv": 2,
+    "correlations.csv": 48,
+    "prediction_folds.csv": 48
+  },
+  "source_header_lines": {
+    "counts.csv": 68,
+    "warnings.csv": 75,
+    "configurations.csv": 79,
+    "runs.csv": 89,
+    "cases.csv": 107,
+    "comparisons.csv": 139,
+    "minimal_pairs.csv": 164,
+    "quality_groups.csv": 175,
+    "correlations.csv": 180,
+    "prediction_folds.csv": 231
+  },
+  "exact_duplicate_sections_removed": {
+    "quality_groups.csv": 1,
+    "correlations.csv": 1,
+    "prediction_folds.csv": 1
+  },
+  "available": [
+    "summary.txt (complete)",
+    "quality.txt (complete; identical duplicate removed)",
+    "buckets.txt (192 rows, complete in subsequent user terminal text)"
+  ],
+  "missing": [
+    "collection.json (not printed)",
+    "ARM task CSV (not provided)"
+  ],
+  "precision": "CSV cell strings preserve printed digits. Collector usually formats floats as .12g; no claim of source-report precision.",
+  "validation": "Extracted table counts and duplicate consistency checked. Source run validity inherited from ARM analyzer, not revalidated from raw tasks."
+}

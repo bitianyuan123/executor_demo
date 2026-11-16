@@ -1,0 +1,7 @@
+case,config_id,seed,run,baseline_run,valid,reasons,planned_latency_ms_mean_delta,planned_latency_ms_p99_delta,process_cpu_per_completed_task_ms_delta
+main-t256-local-outstanding-h2,ee82da7d01aa,32000,main-t256-local-outstanding-h2-s32000,main-t256-local-home-s32000,true,[],-345.102898838,-426.618663,0.000685208333323
+main-t256-local-spread-policy,ee82da7d01aa,32000,main-t256-local-spread-policy-s32000,main-t256-local-home-s32000,true,[],-365.583673546,-506.541016,0.00141027777779
+main-t256-local-outstanding-h2,ee82da7d01aa,32001,main-t256-local-outstanding-h2-s32001,main-t256-local-home-s32001,true,[],-345.188477194,-422.361794,0.00176520833332
+main-t256-local-spread-policy,ee82da7d01aa,32001,main-t256-local-spread-policy-s32001,main-t256-local-home-s32001,true,[],-365.942570622,-502.89794,0.00228
+main-t256-local-outstanding-h2,ee82da7d01aa,32002,main-t256-local-outstanding-h2-s32002,main-t256-local-home-s32002,true,[],-346.835929303,-421.11549,0.0012095138889
+main-t256-local-spread-policy,ee82da7d01aa,32002,main-t256-local-spread-policy-s32002,main-t256-local-home-s32002,true,[],-367.503997524,-503.131997,0.00209145833334

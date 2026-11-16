@@ -12,6 +12,8 @@
 
 综合报告将同时使用已有observe的指标质量、tune/evaluate的策略效果和minimal九轮。测试机只需按[综合报告离线收集指南](ARM_REPORT_COLLECTION.md)打印三段文本，无需上传CSV或扩展矩阵。
 
+3003及会话补充的192条分桶记录已形成[指标与策略有效性报告](ARM_3003_METRIC_POLICY_REPORT.md)。当前先审阅已有结果；后续只规划[四种组合各一次、共4轮的小对照](MINIMAL_FOLLOWUP_PLAN.md)，不展开突发大小×线程数的矩阵，不执行原minimal剩余组合，不进入DAG阶段。
+
 ## 1. 观测、分流和实验边界
 
 令 `C_i` 为池 i 的评分归一化容量，默认 `min(固定worker数, 该池允许的逻辑CPU数)`。它是可配置的比较尺度，不是测得的物理CPU吞吐；SMT双线程不等于两倍吞吐。
