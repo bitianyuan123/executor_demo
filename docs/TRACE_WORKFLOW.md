@@ -6,7 +6,7 @@
 
 后续实验主线是：**在所选 CPU 全集中，每个已确认的硬件 cluster 对应一个池**；当前独立实验子集包含六个 cluster，因此该子集目标为六池。新实验需记录实际 pool→cluster、TID→pool→NUMA 关系及 CPU 列表。历史未绑核 trace 仅用于认识负载时序和调度机制，不要求它补出并不存在的 cluster 绑定，也不能由历史单池“20/80”推出目标 cluster 池的繁忙阈值。目标实验可以独立推进，无须等待旧 trace 分析全部完成。
 
-已有trace的发现、名称派生CSV及精确复算已回传，结论见[4005审阅](TRACE_4005_REVIEW.md)。当前无需重复执行全文件扫描或重采旧业务；优先沿[4004目标实验](TARGET_V2_4004_REVIEW.md)继续。下述完整工作流保留供新trace与质量补证使用。CSV使unique计数精确，不会把名称推断的pool身份自动变成注册证据。
+已有trace的发现、名称派生CSV及精确复算已回传，结论见[4005审阅](TRACE_4005_REVIEW.md)。当前无需重复执行全文件扫描或重采旧业务；优先沿[4006后的目标实验](TARGET_V2_4006_REVIEW.md)继续。下述完整工作流保留供新trace与质量补证使用。CSV使unique计数精确，不会把名称推断的pool身份自动变成注册证据。
 
 ## 1. 已有 `cat trace` 导出的 trace.log：先看质量和线程候选
 
@@ -74,6 +74,8 @@ python3 scripts/analyze_sched_trace.py "$TRACE_LOG" \
 若保存了真实采集 CPU 列表，可加 `--cpu-mask "$CAPTURE_CPU_LIST"`。这是十进制列表，例如 `0-383`，**只作为覆盖元数据，不过滤已有记录**。它与 tracefs 的十六进制 `tracing_cpumask` 不同。只采了部分 CPU 用 `--coverage partial`；确认完整的 CPU/事件覆盖且审计通过后才声明 full。没有任何 CPU 事件不等于该 CPU idle。
 
 ## 3. 若文件是 trace-cmd 的二进制 trace.dat
+
+已有带`--include-windows`的JSON时，先用[窗口补证工具](TRACE_TO_TARGET_PLAN.md#2-历史trace还值得解析什么)分析服务集中与各池同期压力，通常无需重扫文本。`python3 scripts/analyze_sched_windows.py "$TRACE_OUT/summary.json" --bin-ms 1`只打印有界摘要；缺失/截断窗口会报错，不补作idle。它不新增request、Folly任务或硬件cluster信息。
 
 `trace-cmd report -i` 的输入必须是其二进制记录，不能把 `cat trace` 的文本改名为 `.dat`。`-N` 禁用显示插件，`-t` 保留完整时间精度；不要用 `-R` raw 输出，它可能把状态改成数值并移除本工具需要的分隔格式。[trace-cmd report 手册](https://www.trace-cmd.org/Documentation/trace-cmd/trace-cmd-report.1.html)
 

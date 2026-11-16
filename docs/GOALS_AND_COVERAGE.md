@@ -109,7 +109,7 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 沿[cluster实验指南](REAL_WORKLOAD_MATRIX.md)的4.1→4.3→4.4推进：home低负载校准单请求工作；增加重叠并扫描线程数；固定线程档比较负载信号；换用有连续分支的真实读写模型后重新冻结工作，再测同NUMA借出、parent/home、fork/all、chunk和跨NUMA。
 
-[4001](TARGET_V2_4001_REVIEW.md)至[4003](TARGET_V2_4003_REVIEW.md)已覆盖六cluster初筛与有限请求竞争；[4004](TARGET_V2_4004_REVIEW.md)又完成入口补证及depth2连续分支的三档校准。当前下一步为none/branch64各home、all-parent、all-home、fork-parent的24轮同资源对照，代码与命令见4004第6节。数据亲和的策略收益、有效CPU信号收益与正式尾部结论仍待验证，不把已完成校准重复列为待办。
+[4001](TARGET_V2_4001_REVIEW.md)至[4003](TARGET_V2_4003_REVIEW.md)已覆盖六cluster初筛与有限请求竞争；[4004](TARGET_V2_4004_REVIEW.md)完成入口补证及depth2三档校准；[4006](TARGET_V2_4006_REVIEW.md)已完成none/branch64各四策略、三seed的24轮同资源对照。当前合同下借出收益明确，持续后继重选没有稳定额外收益；下一步为已有CSV负载诊断和9轮task级分支异质性。其他数据模型、有效CPU信号与正式尾部结论仍待验证，不把已完成测试重复列为待办。
 
 [4005历史trace审阅](TRACE_4005_REVIEW.md)确认最终exact unique与onCPU关系较强，而waking→onCPU在1ms下仅中度相关；它没有采集Folly I/Q或request标记，不能将其换成廉价active代理已经验收的结论，也不恢复四池为目标配置。
 

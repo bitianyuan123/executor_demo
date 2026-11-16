@@ -8,9 +8,11 @@
 
 目标、实现难点及逐项验证状态集中在[验收覆盖](GOALS_AND_COVERAGE.md)。本指南用于选择下一组对照，不意味着所有负载组合、ARM性能与生产接入均已验证。
 
-目标机已完成[4001初筛](TARGET_V2_4001_REVIEW.md)、[4002配对补证/尺度校准](TARGET_V2_4002_REVIEW.md)、[4003竞争对照](TARGET_V2_4003_REVIEW.md)和[4004入口补证/连续分支校准](TARGET_V2_4004_REVIEW.md)。当前300万迭代、depth2与分支访问量已经冻结，下一批none/branch64各四种后继策略、三seed，共24轮；具体命令见4004第6节，不重跑已完成矩阵。历史[4005 trace](TRACE_4005_REVIEW.md)支持关注短时峰值，但不决定六cluster池阈值，亦不替代目标部署策略对照。
+目标机已完成[4001初筛](TARGET_V2_4001_REVIEW.md)、[4002配对补证/尺度校准](TARGET_V2_4002_REVIEW.md)、[4003竞争对照](TARGET_V2_4003_REVIEW.md)、[4004入口补证/连续分支校准](TARGET_V2_4004_REVIEW.md)及[4006的24轮后继策略对照](TARGET_V2_4006_REVIEW.md)。下一批为branch64、task级分支异质性、home/all-parent/fork-parent、三seed共9轮；具体命令见4006第5～6节，不重跑已完成矩阵。历史[4005 trace](TRACE_4005_REVIEW.md)支持关注短时峰值，但不决定六cluster池阈值，亦不替代目标部署策略对照。
 
 ## 1. 新增变量及其准确含义
+
+4005之后的复核见[trace到目标实验的分步计划](TRACE_TO_TARGET_PLAN.md)：可补已有JSON的同期窗口摘要；后续按task级异质性、线程/信号、burst与容量分步选择。该计划明确区分已有参数和仍待开发的v2异步RPC、内部ready释放节奏，不能将本页所有变量组合都视为当前必跑矩阵。
 
 | 参数 | 作用 | 保持与变化 |
 |---|---|---|

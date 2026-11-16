@@ -162,7 +162,7 @@ python3 experiments/affinity/flow_report.py results/affinity/routing-run-01/seed
   --warmup-seconds 2 --window-seconds 8
 ```
 
-它复用完整审计，将成功请求均值分为投递lag与attempt→完成，单列失败/拒绝；p99不能相减。对完整burst计算实际attempt跨度与首attempt lag，区分整批后移和批内拉宽；对成功计划到达cohort保留全部晚完成回调，分类init、首波stage0、后续波stage0、普通后继和join。request的attempt记录在准入检查/构造/root add之前，不等于入队；回home列为source非home且chosen等于home，不等于特定阈值分支命中。`routing reasons`列另统计已有CSV的Home/ReturnHome/LocalSpill/NonFork等原因；未知值显示Unknown(n)，当前契约下矛盾的ReturnHome记录拒绝。最新结果及下一批24轮命令见[4004审阅](../../docs/TARGET_V2_4004_REVIEW.md)，无需重编C++。
+它复用完整审计，将成功请求均值分为投递lag与attempt→完成，单列失败/拒绝；p99不能相减。对完整burst计算实际attempt跨度与首attempt lag，区分整批后移和批内拉宽；对成功计划到达cohort保留全部晚完成回调，分类init、首波stage0、后续波stage0、普通后继和join。request的attempt记录在准入检查/构造/root add之前，不等于入队；回home列为source非home且chosen等于home，不等于特定阈值分支命中。`routing reasons`列另统计已有CSV的Home/ReturnHome/LocalSpill/NonFork等原因；未知值显示Unknown(n)，当前契约下矛盾的ReturnHome记录拒绝。24轮已完成；最新结果、已有CSV诊断及下一批9轮task级异质性命令见[4006审阅](../../docs/TARGET_V2_4006_REVIEW.md)，无需重编C++。
 
 同seed成对delta是整轮统计量之差，不把请求当独立重复。默认少于1000请求提示尾部样本不足；1000也仅约10个名义尾样本，不是自动可信。初筛240请求/12QPS只看机制、稳定性和数量级；正式p99建议每配置至少数千到上万请求，≥5次交错重复，并检查队列/提交lag是否随时间增长。共享负载下有相关性，不能拿每秒p99平均当总体p99。
 
