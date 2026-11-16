@@ -111,6 +111,8 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 当前先执行[真实负载校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)和[离线提示词](WORKLOAD_CALIBRATION_PROMPT.md)，只在已有trace的分析环境定向补N/持续性口径；真实应用不可访问，executor到达、CPU/request、图/ready、RPC与数据归属的缺失值作为显式假设，不要求生产采样、源码或重采。旧trace缺少的request/operator身份不能靠更多sched统计补出，也不恢复四池为目标。
 
+分析期间可以独立执行[18轮观测扰动对照](PARALLEL_COVERAGE_PLAN.md)：固定4009负载，只交叉详细追踪开关与home/fork/all，检查小幅策略差是否依赖计量路径。它无需等待trace结论，也不扩展未经校准的负载；新增离线报告严格审计开关配对，不放宽原有report的同trace配对规则。
+
 完成一次有界补证后即可继续使用[cluster实验指南](REAL_WORKLOAD_MATRIX.md)中的少量对照验证信号/线程、fork/all、NUMA和持续门控。每个模型变化须注明对应的旧trace现象或未知量敏感性假设；无需等待真实窗口或业务采样。支持生产推荐前，仍需后置的目标cluster业务验证与正式尾部重复。终端回传仍可推进，目标机保留CSV、metadata及原始观测，不能只保存精选性能行。
 
 ## 8. 本次覆盖审查的验证事实

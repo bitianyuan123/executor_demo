@@ -14,7 +14,7 @@ import sys
 
 SUITES = ("routing", "signals", "arrival", "cluster-baseline", "real-baseline",
           "legacy-four-pool-replay", "blocking", "follow", "granularity",
-          "deployment", "threads", "overhead")
+          "deployment", "threads", "overhead", "follow-overhead")
 HISTORICAL_SUITES = ("real-baseline", "legacy-four-pool-replay")
 
 
@@ -54,6 +54,15 @@ def cases(suite):
     if suite == "overhead":
         return [(f"{policy}-trace{trace}", {"policy": policy, "trace": str(trace)})
                 for policy in ("home", "outstanding") for trace in (0, 1)]
+    if suite == "follow-overhead":
+        # Keep all six cells in the same seed block. Explicit continuation and
+        # balance-at prevent caller defaults from changing the three strategies.
+        return [(f"{name}-trace{trace}", {"policy": policy, "balance-at": when,
+                                           "continuation": "parent", "trace": str(trace)})
+                for name, policy, when in (("home", "home", "all"),
+                                          ("fork-parent", "outstanding", "fork"),
+                                          ("all-parent", "outstanding", "all"))
+                for trace in (0, 1)]
     raise ValueError(suite)
 
 

@@ -34,7 +34,7 @@ def check_matrix_plans():
     matrix_spec.loader.exec_module(matrix)
     historical = ('real-baseline', 'legacy-four-pool-replay')
     generic = ('routing', 'signals', 'arrival', 'blocking', 'follow', 'granularity',
-               'deployment', 'threads', 'overhead')
+               'deployment', 'threads', 'overhead', 'follow-overhead')
     check(matrix.cases(historical[0]) == matrix.cases(historical[1]),
           'historical replay aliases have different workloads')
     check({case['threads'] for _, case in matrix.cases('threads')} ==
@@ -109,6 +109,23 @@ def check_matrix_plans():
               'case filter changed the selected policy configuration')
         options, _ = plan('signals', base, case_filter='cpu')
         check(set(options) == {'cpu'}, 'single-case filter did not select its suite case')
+        options, _ = plan('follow-overhead', {**base, '--policy': 'work',
+                          '--continuation': 'home', '--balance-at': 'fork', '--trace': '9'},
+                          seeds='420,421,422')
+        expected = {f'{name}-trace{trace}': (policy, when, 'parent', str(trace))
+                    for name, policy, when in (('home', 'home', 'all'),
+                                              ('fork-parent', 'outstanding', 'fork'),
+                                              ('all-parent', 'outstanding', 'all'))
+                    for trace in (0, 1)}
+        check(set(options) == set(expected), 'follow-overhead must retain all six cells')
+        for name, contract in expected.items():
+            check(tuple(options[name][key] for key in
+                        ('--policy', '--balance-at', '--continuation', '--trace')) == contract,
+                  f'{name}: trace/strategy contract inherited an unintended caller default')
+        options, _ = plan('follow-overhead', base,
+                          case_filter='fork-parent-trace0,fork-parent-trace1')
+        check(set(options) == {'fork-parent-trace0', 'fork-parent-trace1'},
+              'follow-overhead case filter lost the selected trace pair')
         for invalid in ('', ' ', ',', 'home,', ',home', 'home,,outstanding',
                         'home,home', 'home, home', 'cpu', 'home,unknown'):
             plan('routing', base, success=False, case_filter=invalid)

@@ -6,6 +6,8 @@
 
 **9轮burst8对照已完成，不重跑；下一步先离线补证已有真实trace，再以显式未知量开展有限Q/active/O或线程数对照，不要求生产访问。** 这修正了[4008指南](TARGET_V2_4008_REVIEW.md)中依据结果继续参数矩阵的后续安排。执行入口转到[真实负载校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)。
 
+后续补充：离线agent分析期间可执行[18轮观测扰动对照](PARALLEL_COVERAGE_PLAN.md)。它固定本轮负载，新增trace开关与三策略的同期交叉控制，专门检查约1%的差异是否受详细追踪影响；不以旧trace1结果替代同期控制，不修改本页已完成结果。
+
 本轮说明到达重叠会明显影响候选策略的收益：regular下两种借出比home快约37%，burst8下仅快约4%～6%；all-parent在burst8的三个seed中均比fork-parent略快。它是有价值的机制证据，但不能据此宣布真实业务应采用all-parent，或持续3ms门控已经有依据。
 
 主线保持**每个硬件cluster一个Folly子池，由总池封装调度**。本批仍为六个已核实cluster、128线程/池、名义capacity16，CPU分区`0-15;16-31;32-47;192-207;208-223;224-239`，NUMA为0和2。L1 RR固定request home，L2仅在同NUMA借出。历史四池未绑CPU配置只提供机制线索，不作为目标部署或验收条件。

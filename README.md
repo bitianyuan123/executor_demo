@@ -30,6 +30,7 @@
 - [4007/4008结果](docs/TARGET_V2_4008_REVIEW.md)：task异质性下借出均值改善约37%；其后安排的联合诊断和9轮burst8已由4009完成。
 - [4009最新结果](docs/TARGET_V2_4009_REVIEW.md)：burst下借出收益缩至约4%～6%，all相对fork出现约1%的小幅收益，说明负载形态影响判断。
 - [当前执行：真实负载校准协议](docs/WORKLOAD_FIDELITY_PROTOCOL.md)与[离线agent提示词](docs/WORKLOAD_CALIBRATION_PROMPT.md)：只用已复制的旧trace/派生产物做有界补证，未知业务量作为显式假设范围，随后继续每cluster一池的稳健性实验；不要求真实环境、源码或重采。
+- [可并行执行：18轮观测扰动对照](docs/PARALLEL_COVERAGE_PLAN.md)：沿用4009负载，同期交错比较home/fork/all与trace开关，检查约1%的候选差异是否依赖详细追踪；无需等待离线分析，也无需重编。
 - [持续压力门控候选审阅](docs/PERSISTENT_PRESSURE_REVIEW.md)：复核外部0.85ms/3ms说法，明确观测与状态机缺口；尚未修改运行策略。
 - [trace补证与后续目标实验](docs/TRACE_TO_TARGET_PLAN.md)：只读已有JSON分析同期压力与连续高桶；明确task异质性、线程/信号、异步RPC与正式尾部验证的顺序和实现缺口。
 - [观测实现验证记录](results/review/TRACE_LOAD_VALIDATION.md)：本地功能和读成本，不冒充ARM真实负载结论。
@@ -84,7 +85,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前已完成阶段3初测、旧DAG home基线及六cluster的v2机制实验，直至[4009联合诊断与burst竞争](docs/TARGET_V2_4009_REVIEW.md)。下一步按[真实负载校准协议](docs/WORKLOAD_FIDELITY_PROTOCOL.md)离线复核已有trace，并将无法识别的业务量保留为假设范围，随后在独立测试环境继续有限机制/稳健性对照；不重跑已有结果，不等待真实业务访问。生产代表性验收是后置条件，不冒充已完成。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
+当前已完成阶段3初测、旧DAG home基线及六cluster的v2机制实验，直至[4009联合诊断与burst竞争](docs/TARGET_V2_4009_REVIEW.md)。下一步按[真实负载校准协议](docs/WORKLOAD_FIDELITY_PROTOCOL.md)离线复核已有trace，并将无法识别的业务量保留为假设范围；同时可在独立测试环境执行[18轮观测扰动对照](docs/PARALLEL_COVERAGE_PLAN.md)。随后选择有限机制/稳健性对照，不将已完成轮次无条件重跑，不等待真实业务访问。生产代表性验收是后置条件，不冒充已完成。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 
