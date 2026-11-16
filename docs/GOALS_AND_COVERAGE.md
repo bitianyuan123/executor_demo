@@ -107,13 +107,11 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 ## 7. 当前执行入口
 
-沿[cluster实验指南](REAL_WORKLOAD_MATRIX.md)的4.1→4.3→4.4推进：home低负载校准单请求工作；增加重叠并扫描线程数；固定线程档比较负载信号；换用有连续分支的真实读写模型后重新冻结工作，再测同NUMA借出、parent/home、fork/all、chunk和跨NUMA。
+[4001](TARGET_V2_4001_REVIEW.md)至[4004](TARGET_V2_4004_REVIEW.md)完成初筛、竞争与尺度校准；[4006](TARGET_V2_4006_REVIEW.md)完成24轮后继策略，[4008](TARGET_V2_4008_REVIEW.md)完成task异质性，[4009](TARGET_V2_4009_REVIEW.md)完成联合诊断与burst8。regular与burst下策略收益不同，不能自动外推生产；这些轮次不再列为待办。
 
-[4001](TARGET_V2_4001_REVIEW.md)至[4003](TARGET_V2_4003_REVIEW.md)已覆盖六cluster初筛与有限请求竞争；[4004](TARGET_V2_4004_REVIEW.md)完成入口补证及depth2三档校准；[4006](TARGET_V2_4006_REVIEW.md)已完成none/branch64各四策略、三seed的24轮同资源对照。[4008](TARGET_V2_4008_REVIEW.md)又完成9轮task级分支异质性，借出收益明确，持续后继重选仍没有稳定额外收益。下一步为已有CSV联合负载诊断和9轮burst8竞争对照；[持续压力门控](PERSISTENT_PRESSURE_REVIEW.md)仅为候选设计，尚未实现。其他数据模型、有效CPU信号与正式尾部结论仍待验证，不把已完成测试重复列为待办。
+当前先执行[真实负载校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)和[现场提示词](WORKLOAD_CALIBRATION_PROMPT.md)，暂缓扩大Q/active/O、线程数或阈值矩阵。已有trace定向补N/持续性口径；业务端补executor到达、CPU/request、图依赖/ready、RPC与数据归属。旧trace缺少的request/operator身份不能靠更多sched统计补出，也不恢复四池为目标。
 
-[4005历史trace审阅](TRACE_4005_REVIEW.md)确认最终exact unique与onCPU关系较强，而waking→onCPU在1ms下仅中度相关；它没有采集Folly I/Q或request标记，不能将其换成廉价active代理已经验收的结论，也不恢复四池为目标配置。
-
-先用少量请求验收配置和量级，之后才扩大正式尾部样本。入口burst、历史四池重放和旧trace可按具体问题补充，不阻塞主线。每轮只收集终端报告也可推进，但须保留本地原始CSV、计划、metadata和二进制，不能仅保存挑选后的性能行。
+校准输入并留出真实窗口后，再使用[cluster实验指南](REAL_WORKLOAD_MATRIX.md)中的少量对照验证信号/线程、fork/all、NUMA和持续门控。每个模型变化须对应具体现场特征；支持生产推荐前，还须目标cluster业务验证与正式尾部重复。终端回传仍可推进，目标机保留CSV、metadata及原始观测，不能只保存精选性能行。
 
 ## 8. 本次覆盖审查的验证事实
 

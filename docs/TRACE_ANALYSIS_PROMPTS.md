@@ -6,7 +6,7 @@
 
 [4005回传审阅](TRACE_4005_REVIEW.md)发现了旧HLL数值与后续exact描述混用。以下模板新增一致性核对；已有该trace的最终精确结果，无需仅为更新提示词重扫原文件。
 
-对于外部agent新增的“8900次/s、N=7.8、1266段、3ms门控”说法，另用[持续性口径与在线价值审计提示词](TRACE_DURATION_AUDIT_PROMPT.md)。4007的均值倍数高onCPU桶不等同N过载事件；该补证可并行，不阻塞六cluster目标实验。
+对于外部agent新增的“8900次/s、N=7.8、1266段、3ms门控”说法，另用[持续性口径与在线价值审计提示词](TRACE_DURATION_AUDIT_PROMPT.md)。4007的均值倍数高onCPU桶不等同N过载事件；4009后当前先执行[真实负载校准提示词](WORKLOAD_CALIBRATION_PROMPT.md)，将本项并入其有界补证，不重复扫描。旧trace始终不能替代request/operator观测。
 
 ## GLM5.2：主分析
 

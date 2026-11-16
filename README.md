@@ -27,10 +27,12 @@
 - [目标机4004补证与连续分支校准](docs/TARGET_V2_4004_REVIEW.md)：确认burst批内投递拉宽，冻结工作量；当时布置的24轮已由4006完成。
 - [4005历史真实trace审阅](docs/TRACE_4005_REVIEW.md)：采用最终精确计数，纠正HLL混用；区分unique、waking与onCPU相关性，不据历史四池决定cluster阈值。
 - [目标机4006后继策略结果](docs/TARGET_V2_4006_REVIEW.md)：24轮完成；当时安排的CSV诊断和9轮task级分支异质性已由4008完成。
-- [4007/4008最新结果与当前执行步骤](docs/TARGET_V2_4008_REVIEW.md)：task异质性下借出均值改善约37%，持续后继重选仍暂无稳定额外收益；下一步为现有CSV联合诊断和9轮burst8竞争对照。
+- [4007/4008结果](docs/TARGET_V2_4008_REVIEW.md)：task异质性下借出均值改善约37%；其后安排的联合诊断和9轮burst8已由4009完成。
+- [4009最新结果](docs/TARGET_V2_4009_REVIEW.md)：burst下借出收益缩至约4%～6%，all相对fork出现约1%的小幅收益，说明负载形态影响判断。
+- [当前执行：真实负载校准协议](docs/WORKLOAD_FIDELITY_PROTOCOL.md)与[现场agent提示词](docs/WORKLOAD_CALIBRATION_PROMPT.md)：暂缓扩大策略矩阵，定向审计旧trace并补executor到达、CPU/request、ready/依赖、RPC及数据特征；机制成立不等于已验证生产代表性。
 - [持续压力门控候选审阅](docs/PERSISTENT_PRESSURE_REVIEW.md)：复核外部0.85ms/3ms说法，明确观测与状态机缺口；尚未修改运行策略。
 - [trace补证与后续目标实验](docs/TRACE_TO_TARGET_PLAN.md)：只读已有JSON分析同期压力与连续高桶；明确task异质性、线程/信号、异步RPC与正式尾部验证的顺序和实现缺口。
-- [本轮实际验证](results/review/TRACE_LOAD_VALIDATION.md)：本地功能和读成本，不冒充ARM真实负载结论。
+- [观测实现验证记录](results/review/TRACE_LOAD_VALIDATION.md)：本地功能和读成本，不冒充ARM真实负载结论。
 
 再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
 
@@ -82,7 +84,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前已完成阶段3初测、旧DAG home基线、六cluster的v2初筛、regular/burst8竞争、连续分支校准和[4006的24轮后继策略对照](docs/TARGET_V2_4006_REVIEW.md)。下一步执行4006第5～6节：只读既有CSV诊断，然后branch64/task级异质性、home/all-parent/fork-parent、三seed共9轮；不重跑已完成矩阵。256KiB与新图burst保留为后续复验。历史trace的[4005结果](docs/TRACE_4005_REVIEW.md)提供机制参考，其缺口不阻塞主线。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
+当前已完成阶段3初测、旧DAG home基线及六cluster的v2机制实验，直至[4009联合诊断与burst竞争](docs/TARGET_V2_4009_REVIEW.md)。下一步按[真实负载校准协议](docs/WORKLOAD_FIDELITY_PROTOCOL.md)取得有依据的executor到达、CPU/request、图/ready、RPC与数据特征，暂缓扩大策略矩阵，不重跑已有结果。旧trace按有限问题补证，无法由sched事件识别的业务量须补业务观测；机制结果不等于生产代表性已经验收。首次部署或资源条件变化时，使用[真实环境逐步测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量；不要因此重跑已经完成的阶段3。采集器支持该机使用的cgroup v1，避免将未采集的配额误判为无限制。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 
