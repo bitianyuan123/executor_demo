@@ -100,7 +100,7 @@ python3 experiments/affinity/report.py results/affinity/arm-calibration-01
 
 矩阵metadata保存二进制和核心源码的SHA256、内核、架构及调用者allowed mask；计划记录每轮完整命令。实验期间不要重新编译或替换二进制。
 
-当前执行入口见[4011之后的信号/线程24轮](../../docs/TARGET_V2_SIGNAL_THREAD_GUIDE.md)。`signals --thread-counts 16,128`可在策略筛选后展开线程维度，每seed全部case统一打乱；不能同时在base-args指定threads。未使用此选项时原矩阵行为保持不变。
+信号/线程24轮已由[4012](../../docs/TARGET_V2_4012_REVIEW.md)完成，当前入口为[6轮机制诊断](../../docs/TARGET_V2_SIGNAL_DIAG_GUIDE.md)。`signals --thread-counts 16,128`可在策略筛选后展开线程维度，每seed全部case统一打乱；不能同时在base-args指定threads。未使用此选项时原矩阵行为保持不变。
 
 可在`--base-args`之前用`--cases home,outstanding`仅选所选suite中的两个case，例如`--suite routing --cases home,outstanding`。筛选后再逐seed随机排列；未指定时保持完整套件。空、重复或不属于该suite的case会在创建输出前报错，metadata记录`selected_cases`。这适合[4002校准后的有限竞争对照](../../docs/TARGET_V2_4002_REVIEW.md)，不必为验证两个策略执行整个信号矩阵。
 

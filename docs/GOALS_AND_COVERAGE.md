@@ -111,7 +111,7 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 4010有界补证与4011的18轮观测对照均已完成，见[阶段结论](TARGET_V2_4010_4011_REVIEW.md)。旧trace缺少的业务字段保持unknown，不继续以扫描作为工程前置。外部新增状态解析存在缺陷，0.85ms与3ms不能当已标定参数。
 
-当前测试入口为[24轮信号/线程对照](TARGET_V2_SIGNAL_THREAD_GUIDE.md)：固定burst合同、trace0、all-parent，同seed内home/Q/active/O与16/128线程统一交错；它回答净路由收益，不证明生产信号最优。模型仍保持固定工作与依赖，不为拟合旧四池改变负载。
+4012已完成[24轮信号/线程对照](TARGET_V2_4012_REVIEW.md)：16线程的借出策略均值比128线程低2.93%～4.03%，Q/active/O间未分出稳定赢家，p99也未证明全面改善。当前测试入口仅为[6轮机制诊断](TARGET_V2_SIGNAL_DIAG_GUIDE.md)，解释Q盲区与实际借出，不再重复初筛或扩阈值。模型仍保持固定工作与依赖，不为拟合旧四池改变负载。
 
 真实业务接入另按[分阶段生产agent手册](PRODUCTION_AGENT_PLAYBOOK.md)推进；若只能复制文字，使用[纯prompt交接版](PRODUCTION_AGENT_PROMPTS_ONLY.md)。当地agent先确认源码/授权/资源，再设计、实现、验收、有限迭代。给候选初值与有界梯度，不直接指定生产阈值；不要求环境网络直通。阶段5继续负责组件归属与Folly最小扩展的必要性，当前无需修改Folly核心。
 
