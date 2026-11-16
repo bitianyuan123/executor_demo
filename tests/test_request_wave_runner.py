@@ -49,6 +49,62 @@ class RequestWaveRunnerTests(unittest.TestCase):
                     M.create_plan(args)
             self.assertFalse((Path(directory) / 'plan.json').exists())
 
+    def test_cpu_trace_is_explicit_and_does_not_change_workload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            plain = self.make_plan(root / 'plain')
+            traced = self.make_plan(root / 'traced', '--cpu-trace', '--cpu-bin-ms', '5')
+            self.assertEqual(plain['base'], traced['base'])
+            self.assertFalse(M.trace_config(plain)['enabled'])
+            self.assertTrue(M.trace_config(traced)['enabled'])
+            self.assertEqual(100, traced['base']['sample-ms'])
+            self.assertNotEqual(plain['plan_sha256'], traced['plan_sha256'])
+            legacy = dict(plain)
+            legacy.pop('cpu_trace')
+            legacy['plan_sha256'] = M.digest({k: v for k, v in legacy.items() if k != 'plan_sha256'})
+            M.validate_plan(legacy)
+            self.assertFalse(M.trace_config(legacy)['enabled'])
+
+    def test_trace_validation_rejects_overlapping_observer_and_invalid_bin(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(ValueError, 'bin'):
+                self.make_plan(root / 'invalid', '--cpu-trace', '--cpu-bin-ms', '0')
+            first_cpu = min(os.sched_getaffinity(0))
+            with self.assertRaisesRegex(ValueError, 'outside'):
+                self.make_plan(root / 'overlap', '--cpu-trace', '--observer-cpus', str(first_cpu))
+
+    def test_trace_failure_stops_before_workload_and_records_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            plan = self.make_plan(root / 'plan', '--cpu-trace')
+            capture = mock.Mock()
+            capture.start.side_effect = RuntimeError('tracefs denied')
+            capture.stop.return_value = {'status': 'failed', 'errors': ['tracefs denied']}
+            with mock.patch.object(M, 'new_trace_capture', return_value=capture), \
+                    mock.patch.object(M.subprocess, 'Popen') as popen:
+                run = M.execute_one(plan, Path('/not-launched'), 'binary', root / 'run', 'home')
+            popen.assert_not_called()
+            capture.stop.assert_called_once()
+            self.assertEqual('failed', run['status'])
+            self.assertTrue(any('tracefs denied' in e for e in run['errors']))
+            self.assertEqual('failed', json.loads((root / 'run/manifest.json').read_text())['status'])
+
+    def test_trace_resume_requires_trace_artifacts_and_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            expected = {'plan_sha256': 'plan', 'binary_sha256': 'binary', 'policy': 'home',
+                        'options': {}, 'cpu_trace_enabled': True}
+            record = dict(expected, status='completed', cpu_observation={'status': 'ok'},
+                          cpu_trace={'status': 'failed'})
+            (root / 'manifest.json').write_text(json.dumps(record))
+            with self.assertRaisesRegex(ValueError, 'invalid high-resolution'):
+                M.completed_run(root, expected)
+            record['cpu_trace']['status'] = 'ok'
+            (root / 'manifest.json').write_text(json.dumps(record))
+            with self.assertRaisesRegex(ValueError, 'missing artifacts'):
+                M.completed_run(root, expected)
+
     def test_proc_stat_guest_is_not_added_twice(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'stat'

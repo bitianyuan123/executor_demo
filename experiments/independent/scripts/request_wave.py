@@ -7,6 +7,7 @@ used for routing or for changing the offered load. All times are CLOCK_MONOTONIC
 import argparse
 import csv
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -83,6 +84,9 @@ def validate_resources(plan):
     unavailable = set(union) - os.sched_getaffinity(0)
     if unavailable:
         raise ValueError(f'CPU groups exceed this process allowed CPUs: {sorted(unavailable)}; generate/run ARM plan on the ARM test host')
+    unavailable_observer = set(trace_config(plan)['observer_cpu_ids']) - os.sched_getaffinity(0)
+    if unavailable_observer:
+        raise ValueError(f'observer CPUs exceed current allowed mask: {sorted(unavailable_observer)}; launch parent without a restrictive taskset')
     for group, expected_node in zip(groups, plan['numa']):
         observed = {cpu_node(cpu) for cpu in group}
         if observed != {expected_node}:
@@ -102,6 +106,36 @@ def validate_plan(plan):
         raise ValueError('workload fingerprint mismatch')
     if plan['policies'] != POLICIES or sorted(plan['policy_order']) != sorted(POLICIES):
         raise ValueError('expected exactly home/source_only/guarded once each')
+    trace = trace_config(plan)
+    if not isinstance(trace['enabled'], bool):
+        raise ValueError('cpu_trace.enabled must be boolean')
+    if not isinstance(trace['bin_ms'], int) or not 1 <= trace['bin_ms'] <= 100:
+        raise ValueError('cpu trace bin must be an integer in [1,100] ms')
+    if not isinstance(trace['buffer_kb'], int) or not 64 <= trace['buffer_kb'] <= 4096:
+        raise ValueError('cpu trace buffer must be in [64,4096] KiB per CPU')
+    observer = trace['observer_cpu_ids']
+    if (not isinstance(observer, list) or any(type(cpu) is not int or cpu < 0 for cpu in observer)
+            or len(set(observer)) != len(observer) or set(observer) & set(plan['cpu_union'])):
+        raise ValueError('observer CPUs must be unique and outside the experiment CPU union')
+    if observer and not trace['enabled']:
+        raise ValueError('dedicated observer CPUs require --cpu-trace')
+
+
+def trace_config(plan):
+    # Old frozen plans retain their identity and their existing coarse observer.
+    return {'enabled': False, 'bin_ms': 5, 'buffer_kb': 256, 'observer_cpu_ids': [],
+            **plan.get('cpu_trace', {})}
+
+
+def new_trace_capture(plan, directory):
+    # Lazy loading keeps non-traced runs and import-based runner tests independent
+    # of tracefs and optional runtime privileges.
+    path = Path(__file__).with_name('cpu_trace.py')
+    spec = importlib.util.spec_from_file_location('request_wave_cpu_trace', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.IdleTraceCapture(plan['pool_cpus'], directory,
+                                  buffer_kb=trace_config(plan)['buffer_kb'])
 
 
 def create_plan(args):
@@ -138,6 +172,9 @@ def create_plan(args):
     if any(v < 0 for v in nodes) or any(not math.isfinite(v) or v <= 0 for v in capacities):
         raise ValueError('invalid NUMA ID or capacity')
     union = sorted(cpu for group in groups for cpu in group)
+    observer_cpus = parse_cpus(args.observer_cpus) if args.observer_cpus else []
+    if set(observer_cpus) - set(allowed):
+        raise ValueError('observer CPUs exceed current allowed mask; launch without restricting the parent with taskset')
     duration = args.duration if args.duration is not None else (60 if arm else 3)
     warmup = args.warmup if args.warmup is not None else (10 if arm else .5)
     budget = args.cpu_us if args.cpu_us is not None else (25000 if arm else max(1, round(len(union) * .5 * 1e6 / (args.request_rate * (args.initial_tasks + args.steady_tasks)))))
@@ -178,6 +215,8 @@ def create_plan(args):
                          'clock_ticks_per_second': os.sysconf('SC_CLK_TCK'),
                          'scope': 'selected logical CPUs, includes unrelated work and runner overhead',
                          'resolution_limit': '100 ms samples cannot resolve a <30 ms peak; counters are tick-accounted'},
+        'cpu_trace': {'enabled': args.cpu_trace, 'bin_ms': args.cpu_bin_ms,
+                      'buffer_kb': args.cpu_trace_buffer_kb, 'observer_cpu_ids': observer_cpus},
         'nominal': {'tasks_per_second': task_rate, 'cpu_seconds_per_second': task_rate * budget / 1e6,
                     'selected_logical_cpus': len(union),
                     'execution_percent': 100 * task_rate * budget / 1e6 / len(union),
@@ -201,6 +240,8 @@ def create_plan(args):
     print(f"{args.request_rate:g} requests/s; initial {args.initial_tasks} tasks/{args.burst_window_ms:g}ms + steady {args.steady_tasks} tasks/{args.steady_window_ms:g}ms")
     print(f"Synthetic mean CPU budget {budget}us; nominal CPU demand={plan['nominal']['cpu_seconds_per_second']:.3f} CPU-s/s, {plan['nominal']['execution_percent']:.2f}% of selected logical CPUs")
     print(f'Run order: {", ".join(order)}; one run each; duration={duration:g}s, warmup={warmup:g}s')
+    if args.cpu_trace:
+        print(f'CPU trace: idle-transition events, {args.cpu_bin_ms}ms reconstructed bins; observer CPUs={observer_cpus or "inherited"}; requires writable tracefs instances')
     print('Not a 100ms real-business reproduction. Calibrate once; keep the final workload identical for all policies.')
     return plan
 
@@ -261,6 +302,10 @@ def completed_run(path, expected):
     if manifest.get('status') != 'completed':
         raise ValueError(f'{path}: prior run is {manifest.get("status")}; preserve failure and use a new output directory')
     required = ['data/tasks.csv', 'data/summary.json', 'data/metadata.json', 'cpu_samples.csv', 'stdout.log']
+    if expected.get('cpu_trace_enabled'):
+        required += ['cpu_trace.txt', 'cpu_trace_status.json']
+        if manifest.get('cpu_trace', {}).get('status') != 'ok':
+            raise ValueError(f'{path}: completed run has invalid high-resolution CPU capture')
     if any(not (path / filename).is_file() for filename in required):
         raise ValueError(f'{path}: completed run has missing artifacts; no silent rerun')
     hashes = manifest.get('artifact_sha256', {})
@@ -286,7 +331,8 @@ def execute_one(plan, binary, binary_sha, directory, policy, calibration=False):
         options['duration'] = min(20, options['duration'])
         warmup = min(5, options['duration'] / 4)
     expected = {'plan_sha256': plan['plan_sha256'], 'binary_sha256': binary_sha,
-                'policy': policy, 'options': options}
+                'policy': policy, 'options': options,
+                'cpu_trace_enabled': trace_config(plan)['enabled']}
     old = completed_run(directory, expected)
     if old:
         return old
@@ -300,6 +346,7 @@ def execute_one(plan, binary, binary_sha, directory, policy, calibration=False):
                     path=str(directory), raw_dir=str(raw_dir), command=command,
                     start_monotonic_ns=start, warmup_seconds=warmup, returncode=None,
                     launcher_cpu_union=plan['cpu_union'],
+                    observer_actual_cpu_ids=sorted(os.sched_getaffinity(0)),
                     cpu_observation={'status': 'pending', 'interval_ms': options['sample-ms']})
     atomic_json(directory / 'manifest.json', manifest)
     observation = {'status': 'pending', 'interval_ms': options['sample-ms'], 'sample_rows': 0,
@@ -307,9 +354,13 @@ def execute_one(plan, binary, binary_sha, directory, policy, calibration=False):
                    'error': None, 'scope': 'selected logical CPUs; unrelated work included',
                    'resolution_limit': '100ms defaults cannot resolve <30ms peak'}
     process = None
+    capture = None
     errors = []
     returncode = None
     try:
+        if trace_config(plan)['enabled']:
+            capture = new_trace_capture(plan, directory)
+            capture.start()  # No reader thread until the child has passed preexec.
         previous = read_cpu_stat()
         previous_ns = time.monotonic_ns()
         with (directory / 'cpu_samples.csv').open('w', newline='') as cpu_file, (directory / 'stdout.log').open('w') as logfile:
@@ -319,6 +370,8 @@ def execute_one(plan, binary, binary_sha, directory, policy, calibration=False):
             # experiment CPU union. Observer itself remains outside this mask rule.
             process = subprocess.Popen(command, stdout=logfile, stderr=subprocess.STDOUT,
                                        preexec_fn=lambda: os.sched_setaffinity(0, plan['cpu_union']))
+            if capture is not None:
+                capture.start_reader()
             interval = options['sample-ms'] / 1000
             deadline = time.monotonic() + run_timeout_seconds(options)
             while True:
@@ -379,11 +432,22 @@ def execute_one(plan, binary, binary_sha, directory, policy, calibration=False):
                 process.wait()
         if process is not None:
             returncode = process.returncode
+    finally:
+        if capture is not None:
+            try:
+                manifest['cpu_trace'] = capture.stop()
+                if manifest['cpu_trace'].get('status') != 'ok':
+                    errors.append('high-resolution CPU capture failed; see cpu_trace_status.json')
+            except Exception as exc:
+                manifest['cpu_trace'] = {'status': 'failed', 'error': str(exc)}
+                errors.append(f'high-resolution CPU cleanup failed: {exc}')
     manifest.update(status='failed' if errors else 'completed', end_monotonic_ns=time.monotonic_ns(),
                     returncode=returncode, cpu_observation=observation, errors=errors)
     if not errors:
-        manifest['artifact_sha256'] = {name: file_digest(directory / name) for name in
-            ('data/tasks.csv', 'data/summary.json', 'data/metadata.json', 'cpu_samples.csv', 'stdout.log')}
+        artifacts = ['data/tasks.csv', 'data/summary.json', 'data/metadata.json', 'cpu_samples.csv', 'stdout.log']
+        if trace_config(plan)['enabled']:
+            artifacts += ['cpu_trace.txt', 'cpu_trace_status.json']
+        manifest['artifact_sha256'] = {name: file_digest(directory / name) for name in artifacts}
     atomic_json(directory / 'manifest.json', manifest)
     return manifest
 
@@ -397,6 +461,13 @@ def execute(args):
     if not binary.is_file() or not os.access(binary, os.X_OK):
         raise ValueError(f'binary is not executable: {binary}')
     binary_sha = file_digest(binary)
+    observer = trace_config(plan)['observer_cpu_ids']
+    if observer:
+        # The child's preexec above explicitly restores the experiment union.
+        # The observer and its reader thread stay on the dedicated CPUs.
+        os.sched_setaffinity(0, observer)
+        if os.sched_getaffinity(0) != set(observer):
+            raise ValueError('observer CPU affinity was not applied exactly; no workload launched')
     calibration = args.command == 'calibrate'
     order = ['home'] if calibration else plan['policy_order']
     root = plan_path.parent
@@ -428,6 +499,15 @@ def execute(args):
     result = subprocess.run(analysis_command, check=False)
     if result.returncode:
         raise RuntimeError(f'analysis exited {result.returncode}; raw runs are preserved for inspection')
+    if trace_config(plan)['enabled']:
+        curve_analyzer = Path(__file__).with_name('analyze_cpu_trace.py')
+        curve_command = [sys.executable, str(curve_analyzer), '--plan', str(plan_path),
+                         '--manifest', str(manifest_path), '--output',
+                         str(root / ('calibration-cpu-curves' if calibration else 'cpu-curves'))]
+        print('Reconstructing CPU time curves from idle-transition events (no additional workload run)...', flush=True)
+        curve_result = subprocess.run(curve_command, check=False)
+        if curve_result.returncode:
+            raise RuntimeError(f'CPU curve analysis exited {curve_result.returncode}; raw capture is preserved, do not treat missing curves as zero utilization')
 
 
 def parser():
@@ -446,6 +526,10 @@ def parser():
     create.add_argument('--steady-window-ms', type=float, default=400)
     create.add_argument('--jitter', type=float, default=.5)
     create.add_argument('--sample-ms', type=int, default=100)
+    create.add_argument('--cpu-trace', action='store_true', help='capture idle transitions and automatically reconstruct precise CPU occupancy curves')
+    create.add_argument('--cpu-bin-ms', type=int, default=5, help='CPU trace reconstruction window, independent of --sample-ms (default 5)')
+    create.add_argument('--cpu-trace-buffer-kb', type=int, default=256, help='trace ring buffer KiB per CPU (default 256)')
+    create.add_argument('--observer-cpus', help='optional idle CPUs outside experiment union for the Python observer; launch parent without taskset')
     create.add_argument('--seed', type=int, default=52000)
     for name in ('calibrate', 'run'):
         execute_parser = commands.add_parser(name)
