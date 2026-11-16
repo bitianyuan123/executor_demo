@@ -1,0 +1,3 @@
+# Keep manifest hashes stable across platforms and preserve original CRLF logs.
+* -text
+evidence/* whitespace=cr-at-eol
