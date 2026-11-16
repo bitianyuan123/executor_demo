@@ -1,0 +1,46 @@
+{
+  "source": "3006.log",
+  "source_sha256": "6e12456725a9bd52357322da7b821ceea392165452f15b18765ea7e2896bed39",
+  "workload_runs_observed": {
+    "home": 1,
+    "source_only": 0
+  },
+  "resume_evidence": true,
+  "candidate_block_evidence": true,
+  "repeat_note": "Repeated terminal prints and a verified SKIP are not repeated workload runs.",
+  "extracted_tables": {
+    "policy_summary.csv": {
+      "printed_copies": 4,
+      "data_rows": 1
+    },
+    "decomposition.csv": {
+      "printed_copies": 4,
+      "data_rows": 3
+    },
+    "buckets.csv": {
+      "printed_copies": 4,
+      "data_rows": 36
+    },
+    "cpu_procstat.csv": {
+      "printed_copies": 4,
+      "data_rows": 7
+    },
+    "initial_spans.csv": {
+      "printed_copies": 4,
+      "data_rows": 1
+    },
+    "cpu_thresholds.csv": {
+      "printed_copies": 4,
+      "data_rows": 3
+    },
+    "cpu_scopes.csv": {
+      "printed_copies": 4,
+      "data_rows": 7
+    },
+    "cpu_aligned_windows.csv": {
+      "printed_copies": 4,
+      "data_rows": 8
+    }
+  },
+  "evidence_scope": "Terminal report only; original per-task CSV and CPU trace remain on test host."
+}

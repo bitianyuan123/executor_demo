@@ -1,6 +1,6 @@
 # 独立任务负载实验：工程与运行指南
 
-**当前下一步只执行[短CPU峰值负载修订](../../stages/03-independent/SHORT_PEAK_GUIDE.md)：先home验收波形，再复用基线与source_only各一次对照。** 旧3005的home高占用约175–185ms，不代表用户新描述的粗略5–20ms短峰。新profile分开初始与后续CPU预算，保持约50%名义平均需求；历史矩阵无需同时执行。
+**当前下一步只执行[3006报告中的离线碎峰检查](../../stages/03-independent/ARM_3006_SHORT_PEAK_REPORT.md)，不重跑home、不重新生成计划、不重编译。** 已有home呈现约10ms短峰、随后约50%背景，但原严格碎峰判据失败，尚无source_only结果。[短峰指南](../../stages/03-independent/SHORT_PEAK_GUIDE.md)保留负载构造；历史矩阵无需同时执行。
 
 这个项目只使用原版 Folly CPUThreadPoolExecutor。每次 arrival 提交一个或多个独立 CPU 任务；默认保留原来的 home 池投递，没有 DAG、RPC 或阶段5扩展。先阅读[阶段3设计与分析方案](../../stages/03-independent/README.md)。
 
@@ -20,7 +20,7 @@ ctest --test-dir build-independent --output-on-failure
 build-independent/independent_load --help
 ```
 
-独立项目包含十三组CTest：原有七组回归，加上目标接纳边界、request-wave功能、运行器、请求分析、CPU事件采集与分析。覆盖缺测、守恒、拒绝/取消/异常、预算配对、训练隔离、跨请求任务交错与尾部保留、计划恢复，以及短峰/长峰/碎峰的判别；它们验证功能，不验证性能优劣。
+独立项目包含十四组CTest：原有七组回归，加上目标接纳边界、request-wave功能、运行器、请求分析、CPU事件采集与分析、短峰离线复核。覆盖缺测、守恒、拒绝/取消/异常、预算配对、训练隔离、跨请求任务交错与尾部保留、计划恢复，以及短峰/长峰/碎峰的判别；它们验证功能，不验证性能优劣。
 
 ## 开发机分步运行
 

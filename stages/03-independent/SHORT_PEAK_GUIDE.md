@@ -1,5 +1,15 @@
 # 阶段3修订：短CPU峰值与持续背景负载
 
+**3006已完成home，本轮先执行离线检查，不再执行下方的计划生成、编译或发压步骤。** [3006报告](ARM_3006_SHORT_PEAK_REPORT.md)记录了约10ms短峰及随后约50%背景，也保留碎峰比例13.833%导致的原严格验收失败。更新脚本后只需：
+
+```bash
+git pull --ff-only origin experiment/stage3-load-balance-20261115
+python3 experiments/independent/scripts/inspect_short_peak.py \
+  --plan results/short-peak-arm/plan.json
+```
+
+脚本打印约50行摘要，并写入独立`short-peak-inspection`目录；检查83个碎峰是否主要在20ms内，或存在较晚第二个峰。它不会修改原计划、原分析结果和放行状态，也不会启动负载。保留终端输出供复核。以下为首次执行时的冻结设计与操作记录。
+
 真实业务的新信息是CPU冲高约5–20ms，而3005的home持续高占用约175–185ms。用户已说明5–20ms是粗略观察，尚未确定高占用阈值。**旧结果保留为长峰场景证据，不能据其76%的任务p99收益推荐真实业务参数。** 本轮先检查负载形状，再比较策略，不新增亲和性/线程数/阈值矩阵。
 
 ## 1. 为什么必须改CPU工作量

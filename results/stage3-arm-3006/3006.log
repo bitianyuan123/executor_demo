@@ -1,0 +1,598 @@
+
+[root@localhost executor_demo-stage3-balance]# cmake -S experiments/independent -B build-independent \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH=/home/bty/rank_demo/folly/_install
+-- Found folly: /home/bty/rank_demo/folly/_install
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/bty/rank_demo/executor_demo-stage3-balance/build-independent
+[root@localhost executor_demo-stage3-balance]# cmake --build build-independent -j16
+[ 33%] Built target independent_acceptance_test
+[ 66%] Built target independent_routing_core_test
+[ 83%] Building CXX object CMakeFiles/independent_load.dir/src/main.cpp.o
+[100%] Linking CXX executable independent_load
+[100%] Built target independent_load
+[root@localhost executor_demo-stage3-balance]# ctest --test-dir build-independent --output-on-failure
+Internal ctest changing into directory: /home/bty/rank_demo/executor_demo-stage3-balance/build-independent
+Test project /home/bty/rank_demo/executor_demo-stage3-balance/build-independent
+      Start  1: independent_functional
+ 1/13 Test  #1: independent_functional ..............   Passed    1.23 sec
+      Start  2: independent_analysis
+ 2/13 Test  #2: independent_analysis ................   Passed    0.06 sec
+      Start  3: independent_prediction
+ 3/13 Test  #3: independent_prediction ..............   Passed    0.05 sec
+      Start  4: independent_routing_core
+ 4/13 Test  #4: independent_routing_core ............   Passed    0.00 sec
+      Start  5: independent_routing
+ 5/13 Test  #5: independent_routing .................   Passed    1.84 sec
+      Start  6: independent_balance_analysis
+ 6/13 Test  #6: independent_balance_analysis ........   Passed    0.87 sec
+      Start  7: independent_balance_matrix
+ 7/13 Test  #7: independent_balance_matrix ..........   Passed    0.78 sec
+      Start  8: independent_acceptance
+ 8/13 Test  #8: independent_acceptance ..............   Passed    0.00 sec
+      Start  9: independent_request_wave
+ 9/13 Test  #9: independent_request_wave ............   Passed    2.25 sec
+      Start 10: independent_request_wave_runner
+10/13 Test #10: independent_request_wave_runner .....   Passed    0.44 sec
+      Start 11: independent_request_wave_analysis
+11/13 Test #11: independent_request_wave_analysis ...   Passed    0.12 sec
+      Start 12: independent_cpu_trace_capture
+12/13 Test #12: independent_cpu_trace_capture .......   Passed    0.06 sec
+      Start 13: independent_cpu_trace_analysis
+13/13 Test #13: independent_cpu_trace_analysis ......   Passed    2.19 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Total Test time (real) =   9.90 sec
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/request_wave.py plan \
+  --profile short-peak --deployment arm \
+  --cpu-trace --cpu-bin-ms 1 \
+  --out results/short-peak-arm
+Frozen plan: /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/plan.json
+6 pools x 128 threads; selected logical CPUs=96; NUMA=[0, 0, 0, 2, 2, 2]
+12 requests/s; initial 80 tasks/1ms + steady 80 tasks/500ms
+Synthetic CPU budgets initial=1020us, steady=48980us (separately normalized); nominal CPU demand=48.000 CPU-s/s, 50.00% of selected logical CPUs
+Fluid initial guess=9.996ms high occupancy; actual home shape must be measured, not inferred from this estimate
+Run order: home, source_only; one run each; duration=60s, warmup=10s
+CPU trace: idle-transition events, 1ms reconstructed bins; observer CPUs=inherited; requires writable tracefs instances
+Not a 100ms real-business reproduction. The ordinary home run is the shape check; no additional calibration run is required.
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/request_wave.py run \
+  --plan results/short-peak-arm/plan.json \
+  --binary build-independent/independent_load --only home
+home: completed; all-run task mean=26.7990855263ms p99=72.81227ms; CPU observer=ok
+Analyzing the saved samples (no additional workload run)...
+REQUEST-WAVE DESCRIPTIVE REPORT
+INPUT request_rate=12/s; arrival=regular; seed=52000; duration=60s
+INPUT initial_tasks=80..80 over 1ms; steady_tasks=80 over 500.0ms; CPU_budget=1020us; jitter=0.5; long_prob=0; normalization=exact
+PHASE CPU BUDGET initial=1020us; steady=48980us; profile=short-peak; 0 means inherit CPU_budget; resolved nominal and actual cohort target means are printed below
+RESOURCES pools=6; workers_per_pool=128; affinity=cluster; C=[16.0, 16.0, 16.0, 16.0, 16.0, 16.0]; NUMA=[0, 0, 0, 2, 2, 2]; pool_CPUs=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], [192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], [208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223], [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239]]
+OBSERVATION instrumentation=full; load=basic; CPU_sample_ms=100; order=['home', 'source_only']; policies={"home": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "home"}, "source_only": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "threshold"}}
+request cohort: [10.0, 60.0) seconds; retain entire requests and drain
+S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)
+comparison_valid=false
+comparison_issues=not_all_planned_policy_runs,fewer_than_two_policy_runs
+
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,96000,600,26.789,72.796,27.155,72.922,50.330,2881.581,0.000,0.000,0.000,NA
+PHASE TARGET CPU home: {"initial": {"configured": 1020, "resolved_nominal": 1020, "target_mean": 1018.9912083333334}, "steady": {"configured": 48980, "resolved_nominal": 48980, "target_mean": 48969.95525}}
+
+CPU ARRIVAL WINDOW
+policy,scope,execution_pct,execution_sample_peak_pct,iowait_pct,steal_pct,covered_seconds,intervals,status
+home,union,50.330,54.600,0.000,0.000,49.921,489,ok
+home,pool0,51.245,64.024,0.000,0.000,49.921,489,ok
+home,pool1,49.856,62.112,0.000,0.000,49.921,489,ok
+home,pool2,49.967,61.392,0.000,0.000,49.921,489,ok
+home,pool3,50.212,64.740,0.000,0.000,49.921,489,ok
+home,pool4,50.410,63.030,0.000,0.000,49.921,489,ok
+home,pool5,50.291,63.975,0.000,0.000,49.921,489,ok
+
+INITIAL TASK SUBMISSION SPAN (per request, last submit minus first submit)
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,600,1.707,8.880,0.988,0,0.000
+
+DECOMPOSITION (p99 components are not additive)
+policy,phase,n,requests,S_mean,W_mean,X_mean,L_mean,D_mean,S_p99,W_p99,X_p99,L_p99,D_p99
+home,all,96000,600,26.789,1.635,25.154,27.155,0.366,72.796,7.834,72.681,72.922,4.838
+home,initial,48000,600,4.353,3.154,1.199,4.980,0.628,9.928,8.248,5.039,10.500,5.971
+home,steady,48000,600,49.225,0.116,49.109,49.330,0.105,73.310,5.815,73.199,73.425,1.156
+
+HOME ADMISSION BUCKETS
+phase,metric,lower_inclusive,upper_exclusive,n,requests,S_mean_ms,S_p99_ms,W_mean_ms,X_mean_ms,L_mean_ms,D_mean_ms,tail_quality
+all,N/C,0.000,0.500,25798,600,48.259,73.171,0.015,48.244,48.366,0.107,DESCRIPTIVE
+all,N/C,0.500,0.800,25175,600,42.092,73.181,0.017,42.075,42.281,0.190,DESCRIPTIVE
+all,N/C,0.800,1.000,3009,600,1.628,24.827,0.064,1.564,2.736,1.108,DESCRIPTIVE
+all,N/C,1.000,2.000,10914,600,3.633,54.075,1.168,2.465,4.506,0.873,DESCRIPTIVE
+all,N/C,2.000,4.000,19724,591,5.637,44.641,3.621,2.016,6.254,0.616,DESCRIPTIVE
+all,N/C,4.000,NA,11380,553,9.782,71.284,6.307,3.476,10.011,0.229,DESCRIPTIVE
+all,Q/C,0.000,0.500,59496,600,39.121,73.079,0.085,39.036,39.383,0.262,DESCRIPTIVE
+all,Q/C,0.500,0.800,3335,597,4.420,61.282,1.407,3.013,5.273,0.853,DESCRIPTIVE
+all,Q/C,0.800,1.000,1951,594,5.162,63.560,1.852,3.310,5.938,0.776,DESCRIPTIVE
+all,Q/C,1.000,2.000,10022,592,4.963,49.782,2.793,2.170,5.679,0.716,DESCRIPTIVE
+all,Q/C,2.000,4.000,18782,580,6.788,11.292,5.206,1.583,7.204,0.416,DESCRIPTIVE
+all,Q/C,4.000,NA,2414,446,17.450,78.641,7.380,10.070,17.538,0.087,DESCRIPTIVE
+initial,N/C,0.000,0.500,454,289,1.041,1.535,0.017,1.023,1.445,0.404,LOW_TAIL
+initial,N/C,0.500,0.800,3691,600,1.048,1.548,0.020,1.028,1.828,0.780,DESCRIPTIVE
+initial,N/C,0.800,1.000,2978,600,1.118,2.128,0.064,1.054,2.225,1.108,DESCRIPTIVE
+initial,N/C,1.000,2.000,10630,600,2.404,8.416,1.182,1.222,3.289,0.885,DESCRIPTIVE
+initial,N/C,2.000,4.000,19418,591,4.916,9.413,3.640,1.276,5.531,0.616,DESCRIPTIVE
+initial,N/C,4.000,NA,10829,551,7.410,10.803,6.268,1.142,7.632,0.222,DESCRIPTIVE
+initial,Q/C,0.000,0.500,12467,600,1.385,2.688,0.343,1.042,2.269,0.884,DESCRIPTIVE
+initial,Q/C,0.500,0.800,3216,597,2.756,8.747,1.420,1.336,3.627,0.871,DESCRIPTIVE
+initial,Q/C,0.800,1.000,1883,593,3.400,9.130,1.864,1.536,4.199,0.799,DESCRIPTIVE
+initial,Q/C,1.000,2.000,9829,591,4.059,8.929,2.801,1.258,4.781,0.722,DESCRIPTIVE
+initial,Q/C,2.000,4.000,18636,580,6.425,10.247,5.203,1.222,6.829,0.404,DESCRIPTIVE
+initial,Q/C,4.000,NA,1969,413,8.511,11.337,7.392,1.119,8.592,0.080,DESCRIPTIVE
+steady,N/C,0.000,0.500,25344,600,49.105,73.177,0.015,49.090,49.207,0.102,DESCRIPTIVE
+steady,N/C,0.500,0.800,21484,600,49.143,73.259,0.016,49.127,49.231,0.088,DESCRIPTIVE
+steady,N/C,0.800,1.000,31,30,50.637,68.953,0.049,50.587,51.784,1.147,LOW_TAIL
+steady,N/C,1.000,2.000,284,276,49.622,73.826,0.654,48.968,50.033,0.412,LOW_TAIL
+steady,N/C,2.000,4.000,306,278,51.415,74.921,2.410,49.005,52.075,0.661,LOW_TAIL
+steady,N/C,4.000,NA,551,551,56.409,80.585,7.074,49.334,56.784,0.375,LOW_TAIL
+steady,Q/C,0.000,0.500,47029,600,49.124,73.212,0.017,49.107,49.222,0.097,DESCRIPTIVE
+steady,Q/C,0.500,0.800,119,116,49.383,74.046,1.048,48.335,49.764,0.382,LOW_TAIL
+steady,Q/C,0.800,1.000,68,68,53.952,75.198,1.514,52.438,54.082,0.130,LOW_TAIL
+steady,Q/C,1.000,2.000,193,185,50.977,75.233,2.360,48.617,51.388,0.411,LOW_TAIL
+steady,Q/C,2.000,4.000,146,137,53.187,80.307,5.573,47.614,55.071,1.884,LOW_TAIL
+steady,Q/C,4.000,NA,445,445,57.003,80.585,7.329,49.674,57.120,0.117,LOW_TAIL
+
+NOTES
+One run per policy: descriptive observed differences, no confidence intervals or significance claims.
+Admission N/Q are read before this task reservation; each observation is paired with that same task latency.
+N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.
+Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.
+S=W+X and L=D+S per task and for means; p99 values cannot be added.
+No completion-window filtering and no averaging of per-second or per-bucket p99.
+CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.
+CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.
+Tasks execute independently (no DAG), but their timings are statistically correlated through shared request release/home and CPU competition. LOW_TAIL means fewer than 1000 tasks (fewer than about 10 nominal tail observations); larger samples remain descriptive.
+Source-trigger fractions count actual routing decisions; home does not run threshold decisions, so its trigger fraction is zero by construction.
+Artifacts: /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/analysis/report.json, /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/analysis/report.txt, /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/analysis/buckets.csv
+Reconstructing CPU time curves from idle-transition events (no additional workload run)...
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=1 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 104483583, "events_parsed": 581658, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 20.84649378, "reader_thread_cpu_seconds": 19.55051083, "timestamp_precision": "microseconds"}
+REQUEST WAVEFORM status=failed; passed=false; applicable=true
+reasons=fragmented_onset_fraction_exceeds_10pct
+complete_waves=600/600 (100.000%); anchor=actual_first_initial_submit; P=500.000ms; clipped_by_next_home=298
+union_mean=50.201%; background_mean_median/p90=49.255/51.367%; anchor_lag_median/p90=0.057/0.061ms
+high_pct,onset_wave_pct,peak_width_median_ms,peak_width_p90_ms,peak_width_max_ms,fragmented_wave_pct,background_high_p90_pct,background_longest_high_p90_ms
+80,100.000,9.000,10.000,13.000,7.333,0.000,0.000
+90,99.500,8.000,10.000,12.000,13.833,0.000,0.000
+95,94.167,7.000,9.000,12.000,13.000,0.000,0.000
+Provisional synthetic home-only contract, NOT business calibration: fixed high=90%; >=30 complete waves/95% coverage; onset>=90%; width median=5..20ms, p90<=25ms; fragmented<=10%; union=45..55%; background median=35..65%, p90 high-time<=10% and longest<=10ms.
+80/95% are sensitivity from the SAME trace, never automatically selected. Individual peak widths come from request_waveform.csv, not the aligned mean curve.
+ALIGNED CURVE {"aggregation": "observed_duration_weighted_mean; partial windows retain request/time coverage", "anchor": "actual_first_initial_submit", "next_same_home_request_clips_background": true, "peak_zoom_range_ms": [-5, 35], "range_ms": [-10, 500.0], "warning": "Phase-aligned averages do not measure the distribution of individual wave peak widths. Use request_waveform.csv; absent time is not zero-filled."}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.201,66.757,0.000,0.000,49999/49999,1.000,1.000
+pool0,50.533,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool1,49.876,100.000,0.017,11.000,49999/49999,1.000,1.000
+pool2,50.056,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool3,50.070,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool4,50.368,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool5,50.300,100.000,0.015,10.000,49999/49999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,observed_requests,complete_requests,truncated_requests,time_coverage_pct,max_missing_window_ms,observed_duration_weighted_home_residency_pct
+0-5,600/600,600,0,100.000,0.000,96.738
+5-10,600/600,600,0,100.000,0.000,89.896
+10-20,600/600,600,0,100.000,0.000,50.212
+20-30,600/600,600,0,100.000,0.000,49.988
+30-100,600/600,600,0,100.000,0.000,49.926
+100-200,600/600,600,0,100.000,0.000,49.613
+200-300,600/600,600,0,100.000,0.000,49.079
+300-500,600/600,302,298,99.999,0.084,49.004
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.
+Home waveform gate: failed; measured_shape_passed=False; comparison_allowed=False
+Saved manifest: /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/run_manifest.json
+Above latency includes warmup. Use analyze_request_wave.py for request-cohort latency and selected-CPU observation.
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# cat results/short-peak-arm/analysis/report.txt
+cat results/short-peak-arm/cpu-curves/report.txt
+REQUEST-WAVE DESCRIPTIVE REPORT
+INPUT request_rate=12/s; arrival=regular; seed=52000; duration=60s
+INPUT initial_tasks=80..80 over 1ms; steady_tasks=80 over 500.0ms; CPU_budget=1020us; jitter=0.5; long_prob=0; normalization=exact
+PHASE CPU BUDGET initial=1020us; steady=48980us; profile=short-peak; 0 means inherit CPU_budget; resolved nominal and actual cohort target means are printed below
+RESOURCES pools=6; workers_per_pool=128; affinity=cluster; C=[16.0, 16.0, 16.0, 16.0, 16.0, 16.0]; NUMA=[0, 0, 0, 2, 2, 2]; pool_CPUs=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], [192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], [208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223], [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239]]
+OBSERVATION instrumentation=full; load=basic; CPU_sample_ms=100; order=['home', 'source_only']; policies={"home": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "home"}, "source_only": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "threshold"}}
+request cohort: [10.0, 60.0) seconds; retain entire requests and drain
+S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)
+comparison_valid=false
+comparison_issues=not_all_planned_policy_runs,fewer_than_two_policy_runs
+
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,96000,600,26.789,72.796,27.155,72.922,50.330,2881.581,0.000,0.000,0.000,NA
+PHASE TARGET CPU home: {"initial": {"configured": 1020, "resolved_nominal": 1020, "target_mean": 1018.9912083333334}, "steady": {"configured": 48980, "resolved_nominal": 48980, "target_mean": 48969.95525}}
+
+CPU ARRIVAL WINDOW
+policy,scope,execution_pct,execution_sample_peak_pct,iowait_pct,steal_pct,covered_seconds,intervals,status
+home,union,50.330,54.600,0.000,0.000,49.921,489,ok
+home,pool0,51.245,64.024,0.000,0.000,49.921,489,ok
+home,pool1,49.856,62.112,0.000,0.000,49.921,489,ok
+home,pool2,49.967,61.392,0.000,0.000,49.921,489,ok
+home,pool3,50.212,64.740,0.000,0.000,49.921,489,ok
+home,pool4,50.410,63.030,0.000,0.000,49.921,489,ok
+home,pool5,50.291,63.975,0.000,0.000,49.921,489,ok
+
+INITIAL TASK SUBMISSION SPAN (per request, last submit minus first submit)
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,600,1.707,8.880,0.988,0,0.000
+
+DECOMPOSITION (p99 components are not additive)
+policy,phase,n,requests,S_mean,W_mean,X_mean,L_mean,D_mean,S_p99,W_p99,X_p99,L_p99,D_p99
+home,all,96000,600,26.789,1.635,25.154,27.155,0.366,72.796,7.834,72.681,72.922,4.838
+home,initial,48000,600,4.353,3.154,1.199,4.980,0.628,9.928,8.248,5.039,10.500,5.971
+home,steady,48000,600,49.225,0.116,49.109,49.330,0.105,73.310,5.815,73.199,73.425,1.156
+
+HOME ADMISSION BUCKETS
+phase,metric,lower_inclusive,upper_exclusive,n,requests,S_mean_ms,S_p99_ms,W_mean_ms,X_mean_ms,L_mean_ms,D_mean_ms,tail_quality
+all,N/C,0.000,0.500,25798,600,48.259,73.171,0.015,48.244,48.366,0.107,DESCRIPTIVE
+all,N/C,0.500,0.800,25175,600,42.092,73.181,0.017,42.075,42.281,0.190,DESCRIPTIVE
+all,N/C,0.800,1.000,3009,600,1.628,24.827,0.064,1.564,2.736,1.108,DESCRIPTIVE
+all,N/C,1.000,2.000,10914,600,3.633,54.075,1.168,2.465,4.506,0.873,DESCRIPTIVE
+all,N/C,2.000,4.000,19724,591,5.637,44.641,3.621,2.016,6.254,0.616,DESCRIPTIVE
+all,N/C,4.000,NA,11380,553,9.782,71.284,6.307,3.476,10.011,0.229,DESCRIPTIVE
+all,Q/C,0.000,0.500,59496,600,39.121,73.079,0.085,39.036,39.383,0.262,DESCRIPTIVE
+all,Q/C,0.500,0.800,3335,597,4.420,61.282,1.407,3.013,5.273,0.853,DESCRIPTIVE
+all,Q/C,0.800,1.000,1951,594,5.162,63.560,1.852,3.310,5.938,0.776,DESCRIPTIVE
+all,Q/C,1.000,2.000,10022,592,4.963,49.782,2.793,2.170,5.679,0.716,DESCRIPTIVE
+all,Q/C,2.000,4.000,18782,580,6.788,11.292,5.206,1.583,7.204,0.416,DESCRIPTIVE
+all,Q/C,4.000,NA,2414,446,17.450,78.641,7.380,10.070,17.538,0.087,DESCRIPTIVE
+initial,N/C,0.000,0.500,454,289,1.041,1.535,0.017,1.023,1.445,0.404,LOW_TAIL
+initial,N/C,0.500,0.800,3691,600,1.048,1.548,0.020,1.028,1.828,0.780,DESCRIPTIVE
+initial,N/C,0.800,1.000,2978,600,1.118,2.128,0.064,1.054,2.225,1.108,DESCRIPTIVE
+initial,N/C,1.000,2.000,10630,600,2.404,8.416,1.182,1.222,3.289,0.885,DESCRIPTIVE
+initial,N/C,2.000,4.000,19418,591,4.916,9.413,3.640,1.276,5.531,0.616,DESCRIPTIVE
+initial,N/C,4.000,NA,10829,551,7.410,10.803,6.268,1.142,7.632,0.222,DESCRIPTIVE
+initial,Q/C,0.000,0.500,12467,600,1.385,2.688,0.343,1.042,2.269,0.884,DESCRIPTIVE
+initial,Q/C,0.500,0.800,3216,597,2.756,8.747,1.420,1.336,3.627,0.871,DESCRIPTIVE
+initial,Q/C,0.800,1.000,1883,593,3.400,9.130,1.864,1.536,4.199,0.799,DESCRIPTIVE
+initial,Q/C,1.000,2.000,9829,591,4.059,8.929,2.801,1.258,4.781,0.722,DESCRIPTIVE
+initial,Q/C,2.000,4.000,18636,580,6.425,10.247,5.203,1.222,6.829,0.404,DESCRIPTIVE
+initial,Q/C,4.000,NA,1969,413,8.511,11.337,7.392,1.119,8.592,0.080,DESCRIPTIVE
+steady,N/C,0.000,0.500,25344,600,49.105,73.177,0.015,49.090,49.207,0.102,DESCRIPTIVE
+steady,N/C,0.500,0.800,21484,600,49.143,73.259,0.016,49.127,49.231,0.088,DESCRIPTIVE
+steady,N/C,0.800,1.000,31,30,50.637,68.953,0.049,50.587,51.784,1.147,LOW_TAIL
+steady,N/C,1.000,2.000,284,276,49.622,73.826,0.654,48.968,50.033,0.412,LOW_TAIL
+steady,N/C,2.000,4.000,306,278,51.415,74.921,2.410,49.005,52.075,0.661,LOW_TAIL
+steady,N/C,4.000,NA,551,551,56.409,80.585,7.074,49.334,56.784,0.375,LOW_TAIL
+steady,Q/C,0.000,0.500,47029,600,49.124,73.212,0.017,49.107,49.222,0.097,DESCRIPTIVE
+steady,Q/C,0.500,0.800,119,116,49.383,74.046,1.048,48.335,49.764,0.382,LOW_TAIL
+steady,Q/C,0.800,1.000,68,68,53.952,75.198,1.514,52.438,54.082,0.130,LOW_TAIL
+steady,Q/C,1.000,2.000,193,185,50.977,75.233,2.360,48.617,51.388,0.411,LOW_TAIL
+steady,Q/C,2.000,4.000,146,137,53.187,80.307,5.573,47.614,55.071,1.884,LOW_TAIL
+steady,Q/C,4.000,NA,445,445,57.003,80.585,7.329,49.674,57.120,0.117,LOW_TAIL
+
+NOTES
+One run per policy: descriptive observed differences, no confidence intervals or significance claims.
+Admission N/Q are read before this task reservation; each observation is paired with that same task latency.
+N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.
+Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.
+S=W+X and L=D+S per task and for means; p99 values cannot be added.
+No completion-window filtering and no averaging of per-second or per-bucket p99.
+CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.
+CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.
+Tasks execute independently (no DAG), but their timings are statistically correlated through shared request release/home and CPU competition. LOW_TAIL means fewer than 1000 tasks (fewer than about 10 nominal tail observations); larger samples remain descriptive.
+Source-trigger fractions count actual routing decisions; home does not run threshold decisions, so its trigger fraction is zero by construction.
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=1 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 104483583, "events_parsed": 581658, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 20.84649378, "reader_thread_cpu_seconds": 19.55051083, "timestamp_precision": "microseconds"}
+REQUEST WAVEFORM status=failed; passed=false; applicable=true
+reasons=fragmented_onset_fraction_exceeds_10pct
+complete_waves=600/600 (100.000%); anchor=actual_first_initial_submit; P=500.000ms; clipped_by_next_home=298
+union_mean=50.201%; background_mean_median/p90=49.255/51.367%; anchor_lag_median/p90=0.057/0.061ms
+high_pct,onset_wave_pct,peak_width_median_ms,peak_width_p90_ms,peak_width_max_ms,fragmented_wave_pct,background_high_p90_pct,background_longest_high_p90_ms
+80,100.000,9.000,10.000,13.000,7.333,0.000,0.000
+90,99.500,8.000,10.000,12.000,13.833,0.000,0.000
+95,94.167,7.000,9.000,12.000,13.000,0.000,0.000
+Provisional synthetic home-only contract, NOT business calibration: fixed high=90%; >=30 complete waves/95% coverage; onset>=90%; width median=5..20ms, p90<=25ms; fragmented<=10%; union=45..55%; background median=35..65%, p90 high-time<=10% and longest<=10ms.
+80/95% are sensitivity from the SAME trace, never automatically selected. Individual peak widths come from request_waveform.csv, not the aligned mean curve.
+ALIGNED CURVE {"aggregation": "observed_duration_weighted_mean; partial windows retain request/time coverage", "anchor": "actual_first_initial_submit", "next_same_home_request_clips_background": true, "peak_zoom_range_ms": [-5, 35], "range_ms": [-10, 500.0], "warning": "Phase-aligned averages do not measure the distribution of individual wave peak widths. Use request_waveform.csv; absent time is not zero-filled."}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.201,66.757,0.000,0.000,49999/49999,1.000,1.000
+pool0,50.533,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool1,49.876,100.000,0.017,11.000,49999/49999,1.000,1.000
+pool2,50.056,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool3,50.070,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool4,50.368,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool5,50.300,100.000,0.015,10.000,49999/49999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,observed_requests,complete_requests,truncated_requests,time_coverage_pct,max_missing_window_ms,observed_duration_weighted_home_residency_pct
+0-5,600/600,600,0,100.000,0.000,96.738
+5-10,600/600,600,0,100.000,0.000,89.896
+10-20,600/600,600,0,100.000,0.000,50.212
+20-30,600/600,600,0,100.000,0.000,49.988
+30-100,600/600,600,0,100.000,0.000,49.926
+100-200,600/600,600,0,100.000,0.000,49.613
+200-300,600/600,600,0,100.000,0.000,49.079
+300-500,600/600,302,298,99.999,0.084,49.004
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/request_wave.py run \
+  --plan results/short-peak-arm/plan.json \
+  --binary build-independent/independent_load
+cat results/short-peak-arm/analysis/report.txt
+cat results/short-peak-arm/cpu-curves/report.txt
+SKIP home: complete matching run already exists
+home: completed; all-run task mean=26.7990855263ms p99=72.81227ms; CPU observer=ok
+Analyzing the saved samples (no additional workload run)...
+REQUEST-WAVE DESCRIPTIVE REPORT
+INPUT request_rate=12/s; arrival=regular; seed=52000; duration=60s
+INPUT initial_tasks=80..80 over 1ms; steady_tasks=80 over 500.0ms; CPU_budget=1020us; jitter=0.5; long_prob=0; normalization=exact
+PHASE CPU BUDGET initial=1020us; steady=48980us; profile=short-peak; 0 means inherit CPU_budget; resolved nominal and actual cohort target means are printed below
+RESOURCES pools=6; workers_per_pool=128; affinity=cluster; C=[16.0, 16.0, 16.0, 16.0, 16.0, 16.0]; NUMA=[0, 0, 0, 2, 2, 2]; pool_CPUs=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], [192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], [208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223], [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239]]
+OBSERVATION instrumentation=full; load=basic; CPU_sample_ms=100; order=['home', 'source_only']; policies={"home": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "home"}, "source_only": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "threshold"}}
+request cohort: [10.0, 60.0) seconds; retain entire requests and drain
+S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)
+comparison_valid=false
+comparison_issues=not_all_planned_policy_runs,fewer_than_two_policy_runs
+
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,96000,600,26.789,72.796,27.155,72.922,50.330,2881.581,0.000,0.000,0.000,NA
+PHASE TARGET CPU home: {"initial": {"configured": 1020, "resolved_nominal": 1020, "target_mean": 1018.9912083333334}, "steady": {"configured": 48980, "resolved_nominal": 48980, "target_mean": 48969.95525}}
+
+CPU ARRIVAL WINDOW
+policy,scope,execution_pct,execution_sample_peak_pct,iowait_pct,steal_pct,covered_seconds,intervals,status
+home,union,50.330,54.600,0.000,0.000,49.921,489,ok
+home,pool0,51.245,64.024,0.000,0.000,49.921,489,ok
+home,pool1,49.856,62.112,0.000,0.000,49.921,489,ok
+home,pool2,49.967,61.392,0.000,0.000,49.921,489,ok
+home,pool3,50.212,64.740,0.000,0.000,49.921,489,ok
+home,pool4,50.410,63.030,0.000,0.000,49.921,489,ok
+home,pool5,50.291,63.975,0.000,0.000,49.921,489,ok
+
+INITIAL TASK SUBMISSION SPAN (per request, last submit minus first submit)
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,600,1.707,8.880,0.988,0,0.000
+
+DECOMPOSITION (p99 components are not additive)
+policy,phase,n,requests,S_mean,W_mean,X_mean,L_mean,D_mean,S_p99,W_p99,X_p99,L_p99,D_p99
+home,all,96000,600,26.789,1.635,25.154,27.155,0.366,72.796,7.834,72.681,72.922,4.838
+home,initial,48000,600,4.353,3.154,1.199,4.980,0.628,9.928,8.248,5.039,10.500,5.971
+home,steady,48000,600,49.225,0.116,49.109,49.330,0.105,73.310,5.815,73.199,73.425,1.156
+
+HOME ADMISSION BUCKETS
+phase,metric,lower_inclusive,upper_exclusive,n,requests,S_mean_ms,S_p99_ms,W_mean_ms,X_mean_ms,L_mean_ms,D_mean_ms,tail_quality
+all,N/C,0.000,0.500,25798,600,48.259,73.171,0.015,48.244,48.366,0.107,DESCRIPTIVE
+all,N/C,0.500,0.800,25175,600,42.092,73.181,0.017,42.075,42.281,0.190,DESCRIPTIVE
+all,N/C,0.800,1.000,3009,600,1.628,24.827,0.064,1.564,2.736,1.108,DESCRIPTIVE
+all,N/C,1.000,2.000,10914,600,3.633,54.075,1.168,2.465,4.506,0.873,DESCRIPTIVE
+all,N/C,2.000,4.000,19724,591,5.637,44.641,3.621,2.016,6.254,0.616,DESCRIPTIVE
+all,N/C,4.000,NA,11380,553,9.782,71.284,6.307,3.476,10.011,0.229,DESCRIPTIVE
+all,Q/C,0.000,0.500,59496,600,39.121,73.079,0.085,39.036,39.383,0.262,DESCRIPTIVE
+all,Q/C,0.500,0.800,3335,597,4.420,61.282,1.407,3.013,5.273,0.853,DESCRIPTIVE
+all,Q/C,0.800,1.000,1951,594,5.162,63.560,1.852,3.310,5.938,0.776,DESCRIPTIVE
+all,Q/C,1.000,2.000,10022,592,4.963,49.782,2.793,2.170,5.679,0.716,DESCRIPTIVE
+all,Q/C,2.000,4.000,18782,580,6.788,11.292,5.206,1.583,7.204,0.416,DESCRIPTIVE
+all,Q/C,4.000,NA,2414,446,17.450,78.641,7.380,10.070,17.538,0.087,DESCRIPTIVE
+initial,N/C,0.000,0.500,454,289,1.041,1.535,0.017,1.023,1.445,0.404,LOW_TAIL
+initial,N/C,0.500,0.800,3691,600,1.048,1.548,0.020,1.028,1.828,0.780,DESCRIPTIVE
+initial,N/C,0.800,1.000,2978,600,1.118,2.128,0.064,1.054,2.225,1.108,DESCRIPTIVE
+initial,N/C,1.000,2.000,10630,600,2.404,8.416,1.182,1.222,3.289,0.885,DESCRIPTIVE
+initial,N/C,2.000,4.000,19418,591,4.916,9.413,3.640,1.276,5.531,0.616,DESCRIPTIVE
+initial,N/C,4.000,NA,10829,551,7.410,10.803,6.268,1.142,7.632,0.222,DESCRIPTIVE
+initial,Q/C,0.000,0.500,12467,600,1.385,2.688,0.343,1.042,2.269,0.884,DESCRIPTIVE
+initial,Q/C,0.500,0.800,3216,597,2.756,8.747,1.420,1.336,3.627,0.871,DESCRIPTIVE
+initial,Q/C,0.800,1.000,1883,593,3.400,9.130,1.864,1.536,4.199,0.799,DESCRIPTIVE
+initial,Q/C,1.000,2.000,9829,591,4.059,8.929,2.801,1.258,4.781,0.722,DESCRIPTIVE
+initial,Q/C,2.000,4.000,18636,580,6.425,10.247,5.203,1.222,6.829,0.404,DESCRIPTIVE
+initial,Q/C,4.000,NA,1969,413,8.511,11.337,7.392,1.119,8.592,0.080,DESCRIPTIVE
+steady,N/C,0.000,0.500,25344,600,49.105,73.177,0.015,49.090,49.207,0.102,DESCRIPTIVE
+steady,N/C,0.500,0.800,21484,600,49.143,73.259,0.016,49.127,49.231,0.088,DESCRIPTIVE
+steady,N/C,0.800,1.000,31,30,50.637,68.953,0.049,50.587,51.784,1.147,LOW_TAIL
+steady,N/C,1.000,2.000,284,276,49.622,73.826,0.654,48.968,50.033,0.412,LOW_TAIL
+steady,N/C,2.000,4.000,306,278,51.415,74.921,2.410,49.005,52.075,0.661,LOW_TAIL
+steady,N/C,4.000,NA,551,551,56.409,80.585,7.074,49.334,56.784,0.375,LOW_TAIL
+steady,Q/C,0.000,0.500,47029,600,49.124,73.212,0.017,49.107,49.222,0.097,DESCRIPTIVE
+steady,Q/C,0.500,0.800,119,116,49.383,74.046,1.048,48.335,49.764,0.382,LOW_TAIL
+steady,Q/C,0.800,1.000,68,68,53.952,75.198,1.514,52.438,54.082,0.130,LOW_TAIL
+steady,Q/C,1.000,2.000,193,185,50.977,75.233,2.360,48.617,51.388,0.411,LOW_TAIL
+steady,Q/C,2.000,4.000,146,137,53.187,80.307,5.573,47.614,55.071,1.884,LOW_TAIL
+steady,Q/C,4.000,NA,445,445,57.003,80.585,7.329,49.674,57.120,0.117,LOW_TAIL
+
+NOTES
+One run per policy: descriptive observed differences, no confidence intervals or significance claims.
+Admission N/Q are read before this task reservation; each observation is paired with that same task latency.
+N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.
+Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.
+S=W+X and L=D+S per task and for means; p99 values cannot be added.
+No completion-window filtering and no averaging of per-second or per-bucket p99.
+CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.
+CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.
+Tasks execute independently (no DAG), but their timings are statistically correlated through shared request release/home and CPU competition. LOW_TAIL means fewer than 1000 tasks (fewer than about 10 nominal tail observations); larger samples remain descriptive.
+Source-trigger fractions count actual routing decisions; home does not run threshold decisions, so its trigger fraction is zero by construction.
+Artifacts: /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/analysis/report.json, /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/analysis/report.txt, /home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/analysis/buckets.csv
+Reconstructing CPU time curves from idle-transition events (no additional workload run)...
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=1 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 104483583, "events_parsed": 581658, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 20.84649378, "reader_thread_cpu_seconds": 19.55051083, "timestamp_precision": "microseconds"}
+REQUEST WAVEFORM status=failed; passed=false; applicable=true
+reasons=fragmented_onset_fraction_exceeds_10pct
+complete_waves=600/600 (100.000%); anchor=actual_first_initial_submit; P=500.000ms; clipped_by_next_home=298
+union_mean=50.201%; background_mean_median/p90=49.255/51.367%; anchor_lag_median/p90=0.057/0.061ms
+high_pct,onset_wave_pct,peak_width_median_ms,peak_width_p90_ms,peak_width_max_ms,fragmented_wave_pct,background_high_p90_pct,background_longest_high_p90_ms
+80,100.000,9.000,10.000,13.000,7.333,0.000,0.000
+90,99.500,8.000,10.000,12.000,13.833,0.000,0.000
+95,94.167,7.000,9.000,12.000,13.000,0.000,0.000
+Provisional synthetic home-only contract, NOT business calibration: fixed high=90%; >=30 complete waves/95% coverage; onset>=90%; width median=5..20ms, p90<=25ms; fragmented<=10%; union=45..55%; background median=35..65%, p90 high-time<=10% and longest<=10ms.
+80/95% are sensitivity from the SAME trace, never automatically selected. Individual peak widths come from request_waveform.csv, not the aligned mean curve.
+ALIGNED CURVE {"aggregation": "observed_duration_weighted_mean; partial windows retain request/time coverage", "anchor": "actual_first_initial_submit", "next_same_home_request_clips_background": true, "peak_zoom_range_ms": [-5, 35], "range_ms": [-10, 500.0], "warning": "Phase-aligned averages do not measure the distribution of individual wave peak widths. Use request_waveform.csv; absent time is not zero-filled."}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.201,66.757,0.000,0.000,49999/49999,1.000,1.000
+pool0,50.533,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool1,49.876,100.000,0.017,11.000,49999/49999,1.000,1.000
+pool2,50.056,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool3,50.070,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool4,50.368,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool5,50.300,100.000,0.015,10.000,49999/49999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,observed_requests,complete_requests,truncated_requests,time_coverage_pct,max_missing_window_ms,observed_duration_weighted_home_residency_pct
+0-5,600/600,600,0,100.000,0.000,96.738
+5-10,600/600,600,0,100.000,0.000,89.896
+10-20,600/600,600,0,100.000,0.000,50.212
+20-30,600/600,600,0,100.000,0.000,49.988
+30-100,600/600,600,0,100.000,0.000,49.926
+100-200,600/600,600,0,100.000,0.000,49.613
+200-300,600/600,600,0,100.000,0.000,49.079
+300-500,600/600,302,298,99.999,0.084,49.004
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.
+Home waveform gate: failed; measured_shape_passed=False; comparison_allowed=False
+request_wave: home waveform did not pass; source_only was not launched. Inspect saved analysis and cpu-curves. If changing workload, freeze a new plan for both policies; no automatic retuning.
+REQUEST-WAVE DESCRIPTIVE REPORT
+INPUT request_rate=12/s; arrival=regular; seed=52000; duration=60s
+INPUT initial_tasks=80..80 over 1ms; steady_tasks=80 over 500.0ms; CPU_budget=1020us; jitter=0.5; long_prob=0; normalization=exact
+PHASE CPU BUDGET initial=1020us; steady=48980us; profile=short-peak; 0 means inherit CPU_budget; resolved nominal and actual cohort target means are printed below
+RESOURCES pools=6; workers_per_pool=128; affinity=cluster; C=[16.0, 16.0, 16.0, 16.0, 16.0, 16.0]; NUMA=[0, 0, 0, 2, 2, 2]; pool_CPUs=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], [192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], [208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223], [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239]]
+OBSERVATION instrumentation=full; load=basic; CPU_sample_ms=100; order=['home', 'source_only']; policies={"home": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "home"}, "source_only": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "threshold"}}
+request cohort: [10.0, 60.0) seconds; retain entire requests and drain
+S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)
+comparison_valid=false
+comparison_issues=not_all_planned_policy_runs,fewer_than_two_policy_runs
+
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,96000,600,26.789,72.796,27.155,72.922,50.330,2881.581,0.000,0.000,0.000,NA
+PHASE TARGET CPU home: {"initial": {"configured": 1020, "resolved_nominal": 1020, "target_mean": 1018.9912083333334}, "steady": {"configured": 48980, "resolved_nominal": 48980, "target_mean": 48969.95525}}
+
+CPU ARRIVAL WINDOW
+policy,scope,execution_pct,execution_sample_peak_pct,iowait_pct,steal_pct,covered_seconds,intervals,status
+home,union,50.330,54.600,0.000,0.000,49.921,489,ok
+home,pool0,51.245,64.024,0.000,0.000,49.921,489,ok
+home,pool1,49.856,62.112,0.000,0.000,49.921,489,ok
+home,pool2,49.967,61.392,0.000,0.000,49.921,489,ok
+home,pool3,50.212,64.740,0.000,0.000,49.921,489,ok
+home,pool4,50.410,63.030,0.000,0.000,49.921,489,ok
+home,pool5,50.291,63.975,0.000,0.000,49.921,489,ok
+
+INITIAL TASK SUBMISSION SPAN (per request, last submit minus first submit)
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,600,1.707,8.880,0.988,0,0.000
+
+DECOMPOSITION (p99 components are not additive)
+policy,phase,n,requests,S_mean,W_mean,X_mean,L_mean,D_mean,S_p99,W_p99,X_p99,L_p99,D_p99
+home,all,96000,600,26.789,1.635,25.154,27.155,0.366,72.796,7.834,72.681,72.922,4.838
+home,initial,48000,600,4.353,3.154,1.199,4.980,0.628,9.928,8.248,5.039,10.500,5.971
+home,steady,48000,600,49.225,0.116,49.109,49.330,0.105,73.310,5.815,73.199,73.425,1.156
+
+HOME ADMISSION BUCKETS
+phase,metric,lower_inclusive,upper_exclusive,n,requests,S_mean_ms,S_p99_ms,W_mean_ms,X_mean_ms,L_mean_ms,D_mean_ms,tail_quality
+all,N/C,0.000,0.500,25798,600,48.259,73.171,0.015,48.244,48.366,0.107,DESCRIPTIVE
+all,N/C,0.500,0.800,25175,600,42.092,73.181,0.017,42.075,42.281,0.190,DESCRIPTIVE
+all,N/C,0.800,1.000,3009,600,1.628,24.827,0.064,1.564,2.736,1.108,DESCRIPTIVE
+all,N/C,1.000,2.000,10914,600,3.633,54.075,1.168,2.465,4.506,0.873,DESCRIPTIVE
+all,N/C,2.000,4.000,19724,591,5.637,44.641,3.621,2.016,6.254,0.616,DESCRIPTIVE
+all,N/C,4.000,NA,11380,553,9.782,71.284,6.307,3.476,10.011,0.229,DESCRIPTIVE
+all,Q/C,0.000,0.500,59496,600,39.121,73.079,0.085,39.036,39.383,0.262,DESCRIPTIVE
+all,Q/C,0.500,0.800,3335,597,4.420,61.282,1.407,3.013,5.273,0.853,DESCRIPTIVE
+all,Q/C,0.800,1.000,1951,594,5.162,63.560,1.852,3.310,5.938,0.776,DESCRIPTIVE
+all,Q/C,1.000,2.000,10022,592,4.963,49.782,2.793,2.170,5.679,0.716,DESCRIPTIVE
+all,Q/C,2.000,4.000,18782,580,6.788,11.292,5.206,1.583,7.204,0.416,DESCRIPTIVE
+all,Q/C,4.000,NA,2414,446,17.450,78.641,7.380,10.070,17.538,0.087,DESCRIPTIVE
+initial,N/C,0.000,0.500,454,289,1.041,1.535,0.017,1.023,1.445,0.404,LOW_TAIL
+initial,N/C,0.500,0.800,3691,600,1.048,1.548,0.020,1.028,1.828,0.780,DESCRIPTIVE
+initial,N/C,0.800,1.000,2978,600,1.118,2.128,0.064,1.054,2.225,1.108,DESCRIPTIVE
+initial,N/C,1.000,2.000,10630,600,2.404,8.416,1.182,1.222,3.289,0.885,DESCRIPTIVE
+initial,N/C,2.000,4.000,19418,591,4.916,9.413,3.640,1.276,5.531,0.616,DESCRIPTIVE
+initial,N/C,4.000,NA,10829,551,7.410,10.803,6.268,1.142,7.632,0.222,DESCRIPTIVE
+initial,Q/C,0.000,0.500,12467,600,1.385,2.688,0.343,1.042,2.269,0.884,DESCRIPTIVE
+initial,Q/C,0.500,0.800,3216,597,2.756,8.747,1.420,1.336,3.627,0.871,DESCRIPTIVE
+initial,Q/C,0.800,1.000,1883,593,3.400,9.130,1.864,1.536,4.199,0.799,DESCRIPTIVE
+initial,Q/C,1.000,2.000,9829,591,4.059,8.929,2.801,1.258,4.781,0.722,DESCRIPTIVE
+initial,Q/C,2.000,4.000,18636,580,6.425,10.247,5.203,1.222,6.829,0.404,DESCRIPTIVE
+initial,Q/C,4.000,NA,1969,413,8.511,11.337,7.392,1.119,8.592,0.080,DESCRIPTIVE
+steady,N/C,0.000,0.500,25344,600,49.105,73.177,0.015,49.090,49.207,0.102,DESCRIPTIVE
+steady,N/C,0.500,0.800,21484,600,49.143,73.259,0.016,49.127,49.231,0.088,DESCRIPTIVE
+steady,N/C,0.800,1.000,31,30,50.637,68.953,0.049,50.587,51.784,1.147,LOW_TAIL
+steady,N/C,1.000,2.000,284,276,49.622,73.826,0.654,48.968,50.033,0.412,LOW_TAIL
+steady,N/C,2.000,4.000,306,278,51.415,74.921,2.410,49.005,52.075,0.661,LOW_TAIL
+steady,N/C,4.000,NA,551,551,56.409,80.585,7.074,49.334,56.784,0.375,LOW_TAIL
+steady,Q/C,0.000,0.500,47029,600,49.124,73.212,0.017,49.107,49.222,0.097,DESCRIPTIVE
+steady,Q/C,0.500,0.800,119,116,49.383,74.046,1.048,48.335,49.764,0.382,LOW_TAIL
+steady,Q/C,0.800,1.000,68,68,53.952,75.198,1.514,52.438,54.082,0.130,LOW_TAIL
+steady,Q/C,1.000,2.000,193,185,50.977,75.233,2.360,48.617,51.388,0.411,LOW_TAIL
+steady,Q/C,2.000,4.000,146,137,53.187,80.307,5.573,47.614,55.071,1.884,LOW_TAIL
+steady,Q/C,4.000,NA,445,445,57.003,80.585,7.329,49.674,57.120,0.117,LOW_TAIL
+
+NOTES
+One run per policy: descriptive observed differences, no confidence intervals or significance claims.
+Admission N/Q are read before this task reservation; each observation is paired with that same task latency.
+N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.
+Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.
+S=W+X and L=D+S per task and for means; p99 values cannot be added.
+No completion-window filtering and no averaging of per-second or per-bucket p99.
+CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.
+CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.
+Tasks execute independently (no DAG), but their timings are statistically correlated through shared request release/home and CPU competition. LOW_TAIL means fewer than 1000 tasks (fewer than about 10 nominal tail observations); larger samples remain descriptive.
+Source-trigger fractions count actual routing decisions; home does not run threshold decisions, so its trigger fraction is zero by construction.
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=1 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 104483583, "events_parsed": 581658, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 20.84649378, "reader_thread_cpu_seconds": 19.55051083, "timestamp_precision": "microseconds"}
+REQUEST WAVEFORM status=failed; passed=false; applicable=true
+reasons=fragmented_onset_fraction_exceeds_10pct
+complete_waves=600/600 (100.000%); anchor=actual_first_initial_submit; P=500.000ms; clipped_by_next_home=298
+union_mean=50.201%; background_mean_median/p90=49.255/51.367%; anchor_lag_median/p90=0.057/0.061ms
+high_pct,onset_wave_pct,peak_width_median_ms,peak_width_p90_ms,peak_width_max_ms,fragmented_wave_pct,background_high_p90_pct,background_longest_high_p90_ms
+80,100.000,9.000,10.000,13.000,7.333,0.000,0.000
+90,99.500,8.000,10.000,12.000,13.833,0.000,0.000
+95,94.167,7.000,9.000,12.000,13.000,0.000,0.000
+Provisional synthetic home-only contract, NOT business calibration: fixed high=90%; >=30 complete waves/95% coverage; onset>=90%; width median=5..20ms, p90<=25ms; fragmented<=10%; union=45..55%; background median=35..65%, p90 high-time<=10% and longest<=10ms.
+80/95% are sensitivity from the SAME trace, never automatically selected. Individual peak widths come from request_waveform.csv, not the aligned mean curve.
+ALIGNED CURVE {"aggregation": "observed_duration_weighted_mean; partial windows retain request/time coverage", "anchor": "actual_first_initial_submit", "next_same_home_request_clips_background": true, "peak_zoom_range_ms": [-5, 35], "range_ms": [-10, 500.0], "warning": "Phase-aligned averages do not measure the distribution of individual wave peak widths. Use request_waveform.csv; absent time is not zero-filled."}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.201,66.757,0.000,0.000,49999/49999,1.000,1.000
+pool0,50.533,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool1,49.876,100.000,0.017,11.000,49999/49999,1.000,1.000
+pool2,50.056,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool3,50.070,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool4,50.368,100.000,0.016,11.000,49999/49999,1.000,1.000
+pool5,50.300,100.000,0.015,10.000,49999/49999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,observed_requests,complete_requests,truncated_requests,time_coverage_pct,max_missing_window_ms,observed_duration_weighted_home_residency_pct
+0-5,600/600,600,0,100.000,0.000,96.738
+5-10,600/600,600,0,100.000,0.000,89.896
+10-20,600/600,600,0,100.000,0.000,50.212
+20-30,600/600,600,0,100.000,0.000,49.988
+30-100,600/600,600,0,100.000,0.000,49.926
+100-200,600/600,600,0,100.000,0.000,49.613
+200-300,600/600,600,0,100.000,0.000,49.079
+300-500,600/600,302,298,99.999,0.084,49.004
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.
+[root@localhost executor_demo-stage3-balance]#
