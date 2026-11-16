@@ -1,0 +1,16 @@
+policy,relative_window_ms,requests,mean_home_nonidle_residency_pct
+home,0-30,600/600,93.434
+home,30-100,600/600,99.976
+home,100-200,600/600,80.519
+home,200-300,600/600,31.653
+home,300-420,600/600,31.896
+guarded,0-30,600/600,93.985
+guarded,30-100,600/600,96.603
+guarded,100-200,600/600,43.910
+guarded,200-300,600/600,39.984
+guarded,300-420,600/600,38.284
+source_only,0-30,600/600,82.721
+source_only,30-100,600/600,44.345
+source_only,100-200,600/600,58.248
+source_only,200-300,600/600,51.667
+source_only,300-420,600/600,45.422

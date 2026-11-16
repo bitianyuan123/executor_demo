@@ -1,0 +1,2526 @@
+
+[root@localhost executor_demo-stage3-balance]# git pull --ff-only origin experiment/stage3-load-balance-20261115
+
+python3 experiments/independent/scripts/cpu_trace.py check \
+  --cpus 0-47,192-239 --output results/cpu-trace-check
+From https://github.com/bitianyuan123/executor_demo
+ * branch            experiment/stage3-load-balance-20261115 -> FETCH_HEAD
+Already up to date.
+{
+  "schema_version": 1,
+  "schema": 1,
+  "status": "ok",
+  "source": "tracefs:sched:sched_switch:idle_transitions",
+  "start_monotonic_ns": 32578033886310,
+  "end_monotonic_ns": 32578234524130,
+  "cpu_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199,
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239
+  ],
+  "groups": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219,
+      220,
+      221,
+      222,
+      223,
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      235,
+      236,
+      237,
+      238,
+      239
+    ]
+  ],
+  "clock": "mono",
+  "timestamp_precision": "microseconds",
+  "buffer_kb_per_cpu": 256,
+  "filter": "prev_pid == 0 || next_pid == 0",
+  "trace_path": "cpu_trace.txt",
+  "instance": "/sys/kernel/tracing/instances/executor-idle-391923-2b0bf5ca404d",
+  "stats": {
+    "0": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.221950\nnow ts: 32578.284732\ndropped events: 0\nread events: 768\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.221950",
+      "now ts": "32578.284732",
+      "dropped events": 0,
+      "read events": 768
+    },
+    "1": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.188721\nnow ts: 32578.284828\ndropped events: 0\nread events: 86\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.188721",
+      "now ts": "32578.284828",
+      "dropped events": 0,
+      "read events": 86
+    },
+    "2": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.098854\nnow ts: 32578.284858\ndropped events: 0\nread events: 2\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.098854",
+      "now ts": "32578.284858",
+      "dropped events": 0,
+      "read events": 2
+    },
+    "3": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.284883\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.284883",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "4": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.081236\nnow ts: 32578.284906\ndropped events: 0\nread events: 28\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.081236",
+      "now ts": "32578.284906",
+      "dropped events": 0,
+      "read events": 28
+    },
+    "5": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.284928\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.284928",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "6": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.284954\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.284954",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "7": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.044006\nnow ts: 32578.284976\ndropped events: 0\nread events: 34\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.044006",
+      "now ts": "32578.284976",
+      "dropped events": 0,
+      "read events": 34
+    },
+    "8": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.284997\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.284997",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "9": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285016\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285016",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "10": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285038\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285038",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "11": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285058\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285058",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "12": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285078\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285078",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "13": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285098\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285098",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "14": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285120\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285120",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "15": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285142\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285142",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "16": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285169\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285169",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "17": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285191\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285191",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "18": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446471402.258900\nnow ts: 32578.285213\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446471402.258900",
+      "now ts": "32578.285213",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "19": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446471402.336380\nnow ts: 32578.285235\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446471402.336380",
+      "now ts": "32578.285235",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "20": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285257\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285257",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "21": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285278\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285278",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "22": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446471397.761327\nnow ts: 32578.285300\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446471397.761327",
+      "now ts": "32578.285300",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "23": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 281418.336829\nnow ts: 32578.285322\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "281418.336829",
+      "now ts": "32578.285322",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "24": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.001049\nnow ts: 32578.285343\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.001049",
+      "now ts": "32578.285343",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "25": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285365\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285365",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "26": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000001\nnow ts: 32578.285386\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000001",
+      "now ts": "32578.285386",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "27": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.072605\nnow ts: 32578.285407\ndropped events: 0\nread events: 4\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.072605",
+      "now ts": "32578.285407",
+      "dropped events": 0,
+      "read events": 4
+    },
+    "28": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 281455.573762\nnow ts: 32578.285430\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "281455.573762",
+      "now ts": "32578.285430",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "29": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285451\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285451",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "30": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285474\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285474",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "31": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446471401.366598\nnow ts: 32578.285496\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446471401.366598",
+      "now ts": "32578.285496",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "32": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446471402.242191\nnow ts: 32578.285518\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446471402.242191",
+      "now ts": "32578.285518",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "33": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285540\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285540",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "34": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285562\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285562",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "35": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285583\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285583",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "36": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 8079551534.713156\nnow ts: 32578.285604\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "8079551534.713156",
+      "now ts": "32578.285604",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "37": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285626\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285626",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "38": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285647\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285647",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "39": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446744069.414322\nnow ts: 32578.285669\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446744069.414322",
+      "now ts": "32578.285669",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "40": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000001\nnow ts: 32578.285690\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000001",
+      "now ts": "32578.285690",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "41": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 3762257348.860932\nnow ts: 32578.285713\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "3762257348.860932",
+      "now ts": "32578.285713",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "42": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.234196\nnow ts: 32578.285734\ndropped events: 0\nread events: 722\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.234196",
+      "now ts": "32578.285734",
+      "dropped events": 0,
+      "read events": 722
+    },
+    "43": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 8462372595.237401\nnow ts: 32578.285756\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "8462372595.237401",
+      "now ts": "32578.285756",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "44": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285778\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285778",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "45": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285800\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285800",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "46": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446471400.951755\nnow ts: 32578.285821\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446471400.951755",
+      "now ts": "32578.285821",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "47": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 2329856631.098454\nnow ts: 32578.285843\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "2329856631.098454",
+      "now ts": "32578.285843",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "192": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.285866\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.285866",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "193": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473597.619635\nnow ts: 32578.285889\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473597.619635",
+      "now ts": "32578.285889",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "194": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473597.728738\nnow ts: 32578.285913\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473597.728738",
+      "now ts": "32578.285913",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "195": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473596.495326\nnow ts: 32578.285935\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473596.495326",
+      "now ts": "32578.285935",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "196": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473594.077969\nnow ts: 32578.285957\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473594.077969",
+      "now ts": "32578.285957",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "197": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473596.731276\nnow ts: 32578.285979\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473596.731276",
+      "now ts": "32578.285979",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "198": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473594.128915\nnow ts: 32578.286002\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473594.128915",
+      "now ts": "32578.286002",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "199": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473597.616563\nnow ts: 32578.286023\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473597.616563",
+      "now ts": "32578.286023",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "200": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473596.246058\nnow ts: 32578.286044\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473596.246058",
+      "now ts": "32578.286044",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "201": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286066\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286066",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "202": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286088\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286088",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "203": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286110\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286110",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "204": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286132\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286132",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "205": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286153\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286153",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "206": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446744069.414322\nnow ts: 32578.286174\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446744069.414322",
+      "now ts": "32578.286174",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "207": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 8241998674.307073\nnow ts: 32578.286196\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "8241998674.307073",
+      "now ts": "32578.286196",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "208": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 3689065058.823139\nnow ts: 32578.286217\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "3689065058.823139",
+      "now ts": "32578.286217",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "209": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.059479\nnow ts: 32578.286240\ndropped events: 0\nread events: 8\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.059479",
+      "now ts": "32578.286240",
+      "dropped events": 0,
+      "read events": 8
+    },
+    "210": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.159624\nnow ts: 32578.286263\ndropped events: 0\nread events: 4\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.159624",
+      "now ts": "32578.286263",
+      "dropped events": 0,
+      "read events": 4
+    },
+    "211": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 7310583992.195113\nnow ts: 32578.286285\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "7310583992.195113",
+      "now ts": "32578.286285",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "212": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286307\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286307",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "213": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 6147487202.532424\nnow ts: 32578.286329\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "6147487202.532424",
+      "now ts": "32578.286329",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "214": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446473663.271802\nnow ts: 32578.286352\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446473663.271802",
+      "now ts": "32578.286352",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "215": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 7882825952.909664\nnow ts: 32578.286375\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "7882825952.909664",
+      "now ts": "32578.286375",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "216": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 2319389199.166349\nnow ts: 32578.286396\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "2319389199.166349",
+      "now ts": "32578.286396",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "217": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286417\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286417",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "218": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446603342.844658\nnow ts: 32578.286438\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446603342.844658",
+      "now ts": "32578.286438",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "219": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286460\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286460",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "220": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446744069.414322\nnow ts: 32578.286482\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446744069.414322",
+      "now ts": "32578.286482",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "221": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286503\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286503",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "222": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000001\nnow ts: 32578.286524\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000001",
+      "now ts": "32578.286524",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "223": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 281362.057298\nnow ts: 32578.286546\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "281362.057298",
+      "now ts": "32578.286546",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "224": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286567\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286567",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "225": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286589\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286589",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "226": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 32578.136048\nnow ts: 32578.286611\ndropped events: 0\nread events: 2\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "32578.136048",
+      "now ts": "32578.286611",
+      "dropped events": 0,
+      "read events": 2
+    },
+    "227": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 7593743481.112129\nnow ts: 32578.286633\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "7593743481.112129",
+      "now ts": "32578.286633",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "228": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 6998704225.038394\nnow ts: 32578.286654\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "6998704225.038394",
+      "now ts": "32578.286654",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "229": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 2329856631.098454\nnow ts: 32578.286676\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "2329856631.098454",
+      "now ts": "32578.286676",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "230": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 7882825952.909664\nnow ts: 32578.286698\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "7882825952.909664",
+      "now ts": "32578.286698",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "231": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 7094049517.983724\nnow ts: 32578.286722\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "7094049517.983724",
+      "now ts": "32578.286722",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "232": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286744\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286744",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "233": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 18446471398.568497\nnow ts: 32578.286766\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "18446471398.568497",
+      "now ts": "32578.286766",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "234": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286788\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286788",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "235": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286815\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286815",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "236": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286836\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286836",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "237": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 8241998674.307073\nnow ts: 32578.286859\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "8241998674.307073",
+      "now ts": "32578.286859",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "238": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts:     0.000000\nnow ts: 32578.286881\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "0.000000",
+      "now ts": "32578.286881",
+      "dropped events": 0,
+      "read events": 0
+    },
+    "239": {
+      "raw": "entries: 0\noverrun: 0\ncommit overrun: 0\nbytes: 0\noldest event ts: 7018986602.419417\nnow ts: 32578.286901\ndropped events: 0\nread events: 0\n",
+      "entries": 0,
+      "overrun": 0,
+      "commit overrun": 0,
+      "bytes": 0,
+      "oldest event ts": "7018986602.419417",
+      "now ts": "32578.286901",
+      "dropped events": 0,
+      "read events": 0
+    }
+  },
+  "errors": [],
+  "bytes_written": 292193,
+  "lost_event_marker": false,
+  "cleanup_complete": true,
+  "reader_started_monotonic_ns": 32578034225690,
+  "online_cpu_ids_start": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199,
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    244,
+    245,
+    246,
+    247,
+    248,
+    249,
+    250,
+    251,
+    252,
+    253,
+    254,
+    255,
+    256,
+    257,
+    258,
+    259,
+    260,
+    261,
+    262,
+    263,
+    264,
+    265,
+    266,
+    267,
+    268,
+    269,
+    270,
+    271,
+    272,
+    273,
+    274,
+    275,
+    276,
+    277,
+    278,
+    279,
+    280,
+    281,
+    282,
+    283,
+    284,
+    285,
+    286,
+    287,
+    288,
+    289,
+    290,
+    291,
+    292,
+    293,
+    294,
+    295,
+    296,
+    297,
+    298,
+    299,
+    300,
+    301,
+    302,
+    303,
+    304,
+    305,
+    306,
+    307,
+    308,
+    309,
+    310,
+    311,
+    312,
+    313,
+    314,
+    315,
+    316,
+    317,
+    318,
+    319,
+    320,
+    321,
+    322,
+    323,
+    324,
+    325,
+    326,
+    327,
+    328,
+    329,
+    330,
+    331,
+    332,
+    333,
+    334,
+    335,
+    336,
+    337,
+    338,
+    339,
+    340,
+    341,
+    342,
+    343,
+    344,
+    345,
+    346,
+    347,
+    348,
+    349,
+    350,
+    351,
+    352,
+    353,
+    354,
+    355,
+    356,
+    357,
+    358,
+    359,
+    360,
+    361,
+    362,
+    363,
+    364,
+    365,
+    366,
+    367,
+    368,
+    369,
+    370,
+    371,
+    372,
+    373,
+    374,
+    375,
+    376,
+    377,
+    378,
+    379,
+    380,
+    381,
+    382,
+    383
+  ],
+  "online_cpu_ids_end": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199,
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    244,
+    245,
+    246,
+    247,
+    248,
+    249,
+    250,
+    251,
+    252,
+    253,
+    254,
+    255,
+    256,
+    257,
+    258,
+    259,
+    260,
+    261,
+    262,
+    263,
+    264,
+    265,
+    266,
+    267,
+    268,
+    269,
+    270,
+    271,
+    272,
+    273,
+    274,
+    275,
+    276,
+    277,
+    278,
+    279,
+    280,
+    281,
+    282,
+    283,
+    284,
+    285,
+    286,
+    287,
+    288,
+    289,
+    290,
+    291,
+    292,
+    293,
+    294,
+    295,
+    296,
+    297,
+    298,
+    299,
+    300,
+    301,
+    302,
+    303,
+    304,
+    305,
+    306,
+    307,
+    308,
+    309,
+    310,
+    311,
+    312,
+    313,
+    314,
+    315,
+    316,
+    317,
+    318,
+    319,
+    320,
+    321,
+    322,
+    323,
+    324,
+    325,
+    326,
+    327,
+    328,
+    329,
+    330,
+    331,
+    332,
+    333,
+    334,
+    335,
+    336,
+    337,
+    338,
+    339,
+    340,
+    341,
+    342,
+    343,
+    344,
+    345,
+    346,
+    347,
+    348,
+    349,
+    350,
+    351,
+    352,
+    353,
+    354,
+    355,
+    356,
+    357,
+    358,
+    359,
+    360,
+    361,
+    362,
+    363,
+    364,
+    365,
+    366,
+    367,
+    368,
+    369,
+    370,
+    371,
+    372,
+    373,
+    374,
+    375,
+    376,
+    377,
+    378,
+    379,
+    380,
+    381,
+    382,
+    383
+  ],
+  "observer_process_cpu_seconds": 0.11859897,
+  "reader_thread_cpu_seconds": 0.05970942,
+  "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess"
+}
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/request_wave.py plan \
+  --deployment arm --out results/request-wave-arm-cpu5 \
+  --cpu-trace --cpu-bin-ms 5
+
+python3 experiments/independent/scripts/request_wave.py run \
+  --plan results/request-wave-arm-cpu5/plan.json \
+  --binary build-independent/independent_load
+Frozen plan: /home/bty/rank_demo/executor_demo-stage3-balance/results/request-wave-arm-cpu5/plan.json
+6 pools x 128 threads; selected logical CPUs=96; NUMA=[0, 0, 0, 2, 2, 2]
+12 requests/s; initial 80 tasks/20ms + steady 80 tasks/400ms
+Synthetic mean CPU budget 25000us; nominal CPU demand=48.000 CPU-s/s, 50.00% of selected logical CPUs
+Run order: home, guarded, source_only; one run each; duration=60s, warmup=10s
+CPU trace: idle-transition events, 5ms reconstructed bins; observer CPUs=inherited; requires writable tracefs instances
+Not a 100ms real-business reproduction. Calibrate once; keep the final workload identical for all policies.
+home: completed; all-run task mean=64.1513826562ms p99=156.03788ms; CPU observer=ok
+guarded: completed; all-run task mean=39.9537213897ms p99=98.70004ms; CPU observer=ok
+source_only: completed; all-run task mean=25.1180594318ms p99=37.38294ms; CPU observer=ok
+Saved manifest: /home/bty/rank_demo/executor_demo-stage3-balance/results/request-wave-arm-cpu5/run_manifest.json
+Above latency includes warmup. Use analyze_request_wave.py for request-cohort latency and selected-CPU observation.
+Analyzing the saved samples (no additional workload run)...
+REQUEST-WAVE DESCRIPTIVE REPORT
+INPUT request_rate=12/s; arrival=regular; seed=52000; duration=60s
+INPUT initial_tasks=80..80 over 20ms; steady_tasks=80 over 400ms; CPU_budget=25000us; jitter=0.5; long_prob=0; normalization=exact
+RESOURCES pools=6; workers_per_pool=128; affinity=cluster; C=[16.0, 16.0, 16.0, 16.0, 16.0, 16.0]; NUMA=[0, 0, 0, 2, 2, 2]; pool_CPUs=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], [192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], [208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223], [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239]]
+OBSERVATION instrumentation=full; load=basic; CPU_sample_ms=100; order=['home', 'guarded', 'source_only']; policies={"guarded": {"accept-threshold": 0.5, "load-threshold": 0.8, "routing": "threshold"}, "home": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "home"}, "source_only": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "threshold"}}
+request cohort: [10.0, 60.0) seconds; retain entire requests and drain
+S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)
+comparison_valid=true
+comparison_issues=
+
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,96000,600,64.052,155.828,64.409,156.032,50.474,2882.084,0.000,0.000,0.000,NA
+WARNING home: 3/600 requests took >30 ms to submit their initial tasks; workload release was stretched. Slow tasks remain included.
+guarded,True,96000,600,39.920,98.604,40.118,98.736,50.322,2882.292,0.205,0.539,0.334,0.620
+WARNING guarded: 1/600 requests took >30 ms to submit their initial tasks; workload release was stretched. Slow tasks remain included.
+source_only,True,96000,600,25.101,37.381,25.293,37.575,50.380,2882.558,0.441,0.520,0.000,0.000
+WARNING source_only: 1/600 requests took >30 ms to submit their initial tasks; workload release was stretched. Slow tasks remain included.
+
+baseline,policy,S_mean_change_pct,S_p99_change_pct,L_mean_change_pct,L_p99_change_pct (negative=lower latency)
+home,source_only,-60.812,-76.011,-60.730,-75.919
+home,guarded,-37.676,-36.722,-37.714,-36.721
+source_only,guarded,59.036,163.779,58.612,162.772
+
+CPU ARRIVAL WINDOW
+policy,scope,execution_pct,execution_sample_peak_pct,iowait_pct,steal_pct,covered_seconds,intervals,status
+home,union,50.474,56.426,0.000,0.000,49.922,489,ok
+home,pool0,51.487,100.000,0.000,0.000,49.922,489,ok
+home,pool1,50.235,100.000,0.001,0.000,49.922,489,ok
+home,pool2,50.381,100.000,0.000,0.000,49.922,489,ok
+home,pool3,50.126,100.000,0.001,0.000,49.922,489,ok
+home,pool4,50.307,100.000,0.000,0.000,49.922,489,ok
+home,pool5,50.318,100.000,0.000,0.000,49.922,489,ok
+guarded,union,50.322,55.141,0.000,0.000,49.898,489,ok
+guarded,pool0,51.394,98.214,0.000,0.000,49.898,489,ok
+guarded,pool1,50.274,100.000,0.000,0.000,49.898,489,ok
+guarded,pool2,50.118,99.401,0.000,0.000,49.898,489,ok
+guarded,pool3,50.141,98.204,0.000,0.000,49.898,489,ok
+guarded,pool4,49.818,98.734,0.001,0.000,49.898,489,ok
+guarded,pool5,50.184,100.000,0.000,0.000,49.898,489,ok
+source_only,union,50.380,59.286,0.000,0.000,49.990,490,ok
+source_only,pool0,51.047,64.671,0.000,0.000,49.990,490,ok
+source_only,pool1,50.387,64.072,0.000,0.000,49.990,490,ok
+source_only,pool2,50.151,64.198,0.000,0.000,49.990,490,ok
+source_only,pool3,50.359,63.750,0.000,0.000,49.990,490,ok
+source_only,pool4,50.334,63.580,0.001,0.000,49.990,490,ok
+source_only,pool5,50.001,64.634,0.000,0.000,49.990,490,ok
+
+INITIAL TASK SUBMISSION SPAN (per request, last submit minus first submit)
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,600,19.908,21.704,19.750,3,0.005
+guarded,600,19.750,20.018,19.750,1,0.002
+source_only,600,21.538,27.245,19.750,1,0.002
+
+DECOMPOSITION (p99 components are not additive)
+policy,phase,n,requests,S_mean,W_mean,X_mean,L_mean,D_mean,S_p99,W_p99,X_p99,L_p99,D_p99
+home,all,96000,600,64.052,16.221,47.832,64.409,0.357,155.828,65.418,129.889,156.032,6.291
+home,initial,48000,600,87.006,24.895,62.110,87.453,0.447,159.448,66.119,136.912,159.705,8.363
+home,steady,48000,600,41.099,7.546,33.553,41.366,0.267,139.172,64.204,84.934,139.451,2.700
+guarded,all,96000,600,39.920,5.854,34.065,40.118,0.199,98.604,43.007,88.123,98.736,4.482
+guarded,initial,48000,600,53.989,11.232,42.757,54.258,0.269,101.302,44.492,92.175,101.511,6.201
+guarded,steady,48000,600,25.850,0.477,25.373,25.978,0.128,67.180,33.577,42.919,67.242,1.273
+source_only,all,96000,600,25.101,0.022,25.079,25.293,0.192,37.381,0.042,37.359,37.575,3.585
+source_only,initial,48000,600,25.133,0.023,25.109,25.313,0.181,37.406,0.067,37.384,37.585,3.443
+source_only,steady,48000,600,25.070,0.021,25.049,25.273,0.204,37.354,0.036,37.334,37.569,3.769
+
+HOME ADMISSION BUCKETS
+phase,metric,lower_inclusive,upper_exclusive,n,requests,S_mean_ms,S_p99_ms,W_mean_ms,X_mean_ms,L_mean_ms,D_mean_ms,tail_quality
+all,N/C,0.000,0.500,33674,600,26.466,72.017,0.017,26.449,26.663,0.197,DESCRIPTIVE
+all,N/C,0.500,0.800,4037,600,38.641,132.447,0.028,38.612,39.232,0.592,DESCRIPTIVE
+all,N/C,0.800,1.000,2256,600,44.417,142.680,0.073,44.344,45.410,0.993,DESCRIPTIVE
+all,N/C,1.000,2.000,11840,600,69.604,153.128,7.137,62.467,70.466,0.863,DESCRIPTIVE
+all,N/C,2.000,4.000,28177,600,83.606,158.168,23.442,60.165,83.984,0.377,DESCRIPTIVE
+all,N/C,4.000,NA,16016,597,113.744,161.421,50.657,63.087,113.879,0.135,DESCRIPTIVE
+all,Q/C,0.000,0.500,54767,600,36.279,136.308,0.956,35.323,36.667,0.387,DESCRIPTIVE
+all,Q/C,0.500,0.800,4525,600,74.849,151.682,13.475,61.375,75.454,0.605,DESCRIPTIVE
+all,Q/C,0.800,1.000,2642,600,80.008,154.773,17.606,62.402,80.536,0.528,DESCRIPTIVE
+all,Q/C,1.000,2.000,14601,600,92.484,158.168,28.091,64.394,92.898,0.414,DESCRIPTIVE
+all,Q/C,2.000,4.000,19465,599,116.192,161.993,50.716,65.476,116.340,0.148,DESCRIPTIVE
+all,Q/C,4.000,NA,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+initial,N/C,0.000,0.500,4800,600,35.479,115.919,0.019,35.460,35.579,0.100,DESCRIPTIVE
+initial,N/C,0.500,0.800,3016,600,43.214,136.617,0.028,43.186,43.484,0.269,DESCRIPTIVE
+initial,N/C,0.800,1.000,1843,600,48.791,144.045,0.065,48.727,49.737,0.945,DESCRIPTIVE
+initial,N/C,1.000,2.000,9662,600,79.285,154.505,8.620,70.665,80.305,1.020,DESCRIPTIVE
+initial,N/C,2.000,4.000,19653,600,97.756,159.915,30.943,66.813,98.149,0.394,DESCRIPTIVE
+initial,N/C,4.000,NA,9026,597,121.701,163.887,55.757,65.943,121.792,0.092,DESCRIPTIVE
+initial,Q/C,0.000,0.500,15804,600,56.119,149.743,2.328,53.791,56.814,0.696,DESCRIPTIVE
+initial,Q/C,0.500,0.800,3465,600,76.856,154.145,13.296,63.560,77.595,0.739,DESCRIPTIVE
+initial,Q/C,0.800,1.000,2044,600,82.016,155.187,17.155,64.861,82.654,0.638,DESCRIPTIVE
+initial,Q/C,1.000,2.000,11183,600,93.588,159.419,27.089,66.500,94.015,0.427,DESCRIPTIVE
+initial,Q/C,2.000,4.000,15504,597,116.668,162.798,49.930,66.738,116.786,0.118,DESCRIPTIVE
+initial,Q/C,4.000,NA,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+steady,N/C,0.000,0.500,28874,600,24.967,37.324,0.016,24.951,25.181,0.213,DESCRIPTIVE
+steady,N/C,0.500,0.800,1021,560,25.130,37.224,0.028,25.101,26.673,1.543,DESCRIPTIVE
+steady,N/C,0.800,1.000,413,352,24.897,37.179,0.109,24.788,26.102,1.205,LOW_TAIL
+steady,N/C,1.000,2.000,2178,597,26.658,43.027,0.558,26.100,26.820,0.162,DESCRIPTIVE
+steady,N/C,2.000,4.000,8524,600,50.983,102.264,6.147,44.836,51.323,0.340,DESCRIPTIVE
+steady,N/C,4.000,NA,6990,597,103.471,154.241,44.071,59.400,103.661,0.190,DESCRIPTIVE
+steady,Q/C,0.000,0.500,38963,600,28.232,71.860,0.399,27.833,28.494,0.262,DESCRIPTIVE
+steady,Q/C,0.500,0.800,1060,571,68.289,99.104,14.059,54.230,68.455,0.166,DESCRIPTIVE
+steady,Q/C,0.800,1.000,598,458,73.143,107.868,19.147,53.996,73.296,0.153,LOW_TAIL
+steady,Q/C,1.000,2.000,3418,600,88.872,127.292,31.369,57.502,89.244,0.373,DESCRIPTIVE
+steady,Q/C,2.000,4.000,3961,599,114.328,156.670,53.793,60.536,114.593,0.264,DESCRIPTIVE
+steady,Q/C,4.000,NA,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+
+NOTES
+One run per policy: descriptive observed differences, no confidence intervals or significance claims.
+Admission N/Q are read before this task reservation; each observation is paired with that same task latency.
+N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.
+Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.
+S=W+X and L=D+S per task and for means; p99 values cannot be added.
+No completion-window filtering and no averaging of per-second or per-bucket p99.
+CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.
+CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.
+Tasks execute independently (no DAG), but their timings are statistically correlated through shared request release/home and CPU competition. LOW_TAIL means fewer than 1000 tasks (fewer than about 10 nominal tail observations); larger samples remain descriptive.
+Source-trigger fractions count actual routing decisions; home does not run threshold decisions, so its trigger fraction is zero by construction.
+Artifacts: /home/bty/rank_demo/executor_demo-stage3-balance/results/request-wave-arm-cpu5/analysis/report.json, /home/bty/rank_demo/executor_demo-stage3-balance/results/request-wave-arm-cpu5/analysis/report.txt, /home/bty/rank_demo/executor_demo-stage3-balance/results/request-wave-arm-cpu5/analysis/buckets.csv
+Reconstructing CPU time curves from idle-transition events (no additional workload run)...
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=5 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 90281578, "events_parsed": 501003, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 18.22558588, "reader_thread_cpu_seconds": 16.91346002, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.481,85.222,0.000,0.000,9999/9999,1.000,1.000
+pool0,51.186,100.000,0.310,175.000,9999/9999,1.000,1.000
+pool1,50.042,100.000,0.319,175.000,9999/9999,1.000,1.000
+pool2,50.409,100.000,0.325,180.000,9999/9999,1.000,1.000
+pool3,50.243,100.000,0.313,180.000,9999/9999,1.000,1.000
+pool4,50.424,100.000,0.323,185.000,9999/9999,1.000,1.000
+pool5,50.584,100.000,0.326,185.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,93.434
+30-100,600/600,99.976
+100-200,600/600,80.519
+200-300,600/600,31.653
+300-420,600/600,31.896
+
+POLICY guarded: ok; issues=none
+OBSERVER {"bytes_written": 106721632, "events_parsed": 592768, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 20.99617481, "reader_thread_cpu_seconds": 19.73388246, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.362,72.773,0.000,0.000,9999/9999,1.000,1.000
+pool0,50.800,100.000,0.171,110.000,9999/9999,1.000,1.000
+pool1,50.292,100.000,0.177,105.000,9999/9999,1.000,1.000
+pool2,50.229,100.000,0.184,105.000,9999/9999,1.000,1.000
+pool3,50.184,100.000,0.175,105.000,9999/9999,1.000,1.000
+pool4,50.195,100.000,0.173,110.000,9999/9999,1.000,1.000
+pool5,50.474,100.000,0.185,110.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,93.985
+30-100,600/600,96.603
+100-200,600/600,43.910
+200-300,600/600,39.984
+300-420,600/600,38.284
+
+POLICY source_only: ok; issues=none
+OBSERVER {"bytes_written": 112441328, "events_parsed": 621080, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 23.10386354, "reader_thread_cpu_seconds": 21.85171067, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.219,99.878,0.115,20.000,9999/9999,1.000,1.000
+pool0,50.351,100.000,0.112,20.000,9999/9999,1.000,1.000
+pool1,50.205,100.000,0.112,20.000,9999/9999,1.000,1.000
+pool2,50.220,100.000,0.115,20.000,9999/9999,1.000,1.000
+pool3,50.260,100.000,0.117,20.000,9999/9999,1.000,1.000
+pool4,50.159,100.000,0.117,20.000,9999/9999,1.000,1.000
+pool5,50.120,100.000,0.121,20.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,82.721
+30-100,600/600,44.345
+100-200,600/600,58.248
+200-300,600/600,51.667
+300-420,600/600,45.422
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# cat results/request-wave-arm-cpu5/cpu-curves/report.txt
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=5 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 90281578, "events_parsed": 501003, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 18.22558588, "reader_thread_cpu_seconds": 16.91346002, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.481,85.222,0.000,0.000,9999/9999,1.000,1.000
+pool0,51.186,100.000,0.310,175.000,9999/9999,1.000,1.000
+pool1,50.042,100.000,0.319,175.000,9999/9999,1.000,1.000
+pool2,50.409,100.000,0.325,180.000,9999/9999,1.000,1.000
+pool3,50.243,100.000,0.313,180.000,9999/9999,1.000,1.000
+pool4,50.424,100.000,0.323,185.000,9999/9999,1.000,1.000
+pool5,50.584,100.000,0.326,185.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,93.434
+30-100,600/600,99.976
+100-200,600/600,80.519
+200-300,600/600,31.653
+300-420,600/600,31.896
+
+POLICY guarded: ok; issues=none
+OBSERVER {"bytes_written": 106721632, "events_parsed": 592768, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 20.99617481, "reader_thread_cpu_seconds": 19.73388246, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.362,72.773,0.000,0.000,9999/9999,1.000,1.000
+pool0,50.800,100.000,0.171,110.000,9999/9999,1.000,1.000
+pool1,50.292,100.000,0.177,105.000,9999/9999,1.000,1.000
+pool2,50.229,100.000,0.184,105.000,9999/9999,1.000,1.000
+pool3,50.184,100.000,0.175,105.000,9999/9999,1.000,1.000
+pool4,50.195,100.000,0.173,110.000,9999/9999,1.000,1.000
+pool5,50.474,100.000,0.185,110.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,93.985
+30-100,600/600,96.603
+100-200,600/600,43.910
+200-300,600/600,39.984
+300-420,600/600,38.284
+
+POLICY source_only: ok; issues=none
+OBSERVER {"bytes_written": 112441328, "events_parsed": 621080, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 23.10386354, "reader_thread_cpu_seconds": 21.85171067, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.219,99.878,0.115,20.000,9999/9999,1.000,1.000
+pool0,50.351,100.000,0.112,20.000,9999/9999,1.000,1.000
+pool1,50.205,100.000,0.112,20.000,9999/9999,1.000,1.000
+pool2,50.220,100.000,0.115,20.000,9999/9999,1.000,1.000
+pool3,50.260,100.000,0.117,20.000,9999/9999,1.000,1.000
+pool4,50.159,100.000,0.117,20.000,9999/9999,1.000,1.000
+pool5,50.120,100.000,0.121,20.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,82.721
+30-100,600/600,44.345
+100-200,600/600,58.248
+200-300,600/600,51.667
+300-420,600/600,45.422
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.
+[root@localhost executor_demo-stage3-balance]# cat results/request-wave-arm-cpu5/analysis/report.txt
+REQUEST-WAVE DESCRIPTIVE REPORT
+INPUT request_rate=12/s; arrival=regular; seed=52000; duration=60s
+INPUT initial_tasks=80..80 over 20ms; steady_tasks=80 over 400ms; CPU_budget=25000us; jitter=0.5; long_prob=0; normalization=exact
+RESOURCES pools=6; workers_per_pool=128; affinity=cluster; C=[16.0, 16.0, 16.0, 16.0, 16.0, 16.0]; NUMA=[0, 0, 0, 2, 2, 2]; pool_CPUs=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], [192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], [208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223], [224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239]]
+OBSERVATION instrumentation=full; load=basic; CPU_sample_ms=100; order=['home', 'guarded', 'source_only']; policies={"guarded": {"accept-threshold": 0.5, "load-threshold": 0.8, "routing": "threshold"}, "home": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "home"}, "source_only": {"accept-threshold": -1, "load-threshold": 0.8, "routing": "threshold"}}
+request cohort: [10.0, 60.0) seconds; retain entire requests and drain
+S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)
+comparison_valid=true
+comparison_issues=
+
+policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger
+home,True,96000,600,64.052,155.828,64.409,156.032,50.474,2882.084,0.000,0.000,0.000,NA
+WARNING home: 3/600 requests took >30 ms to submit their initial tasks; workload release was stretched. Slow tasks remain included.
+guarded,True,96000,600,39.920,98.604,40.118,98.736,50.322,2882.292,0.205,0.539,0.334,0.620
+WARNING guarded: 1/600 requests took >30 ms to submit their initial tasks; workload release was stretched. Slow tasks remain included.
+source_only,True,96000,600,25.101,37.381,25.293,37.575,50.380,2882.558,0.441,0.520,0.000,0.000
+WARNING source_only: 1/600 requests took >30 ms to submit their initial tasks; workload release was stretched. Slow tasks remain included.
+
+baseline,policy,S_mean_change_pct,S_p99_change_pct,L_mean_change_pct,L_p99_change_pct (negative=lower latency)
+home,source_only,-60.812,-76.011,-60.730,-75.919
+home,guarded,-37.676,-36.722,-37.714,-36.721
+source_only,guarded,59.036,163.779,58.612,162.772
+
+CPU ARRIVAL WINDOW
+policy,scope,execution_pct,execution_sample_peak_pct,iowait_pct,steal_pct,covered_seconds,intervals,status
+home,union,50.474,56.426,0.000,0.000,49.922,489,ok
+home,pool0,51.487,100.000,0.000,0.000,49.922,489,ok
+home,pool1,50.235,100.000,0.001,0.000,49.922,489,ok
+home,pool2,50.381,100.000,0.000,0.000,49.922,489,ok
+home,pool3,50.126,100.000,0.001,0.000,49.922,489,ok
+home,pool4,50.307,100.000,0.000,0.000,49.922,489,ok
+home,pool5,50.318,100.000,0.000,0.000,49.922,489,ok
+guarded,union,50.322,55.141,0.000,0.000,49.898,489,ok
+guarded,pool0,51.394,98.214,0.000,0.000,49.898,489,ok
+guarded,pool1,50.274,100.000,0.000,0.000,49.898,489,ok
+guarded,pool2,50.118,99.401,0.000,0.000,49.898,489,ok
+guarded,pool3,50.141,98.204,0.000,0.000,49.898,489,ok
+guarded,pool4,49.818,98.734,0.001,0.000,49.898,489,ok
+guarded,pool5,50.184,100.000,0.000,0.000,49.898,489,ok
+source_only,union,50.380,59.286,0.000,0.000,49.990,490,ok
+source_only,pool0,51.047,64.671,0.000,0.000,49.990,490,ok
+source_only,pool1,50.387,64.072,0.000,0.000,49.990,490,ok
+source_only,pool2,50.151,64.198,0.000,0.000,49.990,490,ok
+source_only,pool3,50.359,63.750,0.000,0.000,49.990,490,ok
+source_only,pool4,50.334,63.580,0.001,0.000,49.990,490,ok
+source_only,pool5,50.001,64.634,0.000,0.000,49.990,490,ok
+
+INITIAL TASK SUBMISSION SPAN (per request, last submit minus first submit)
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,600,19.908,21.704,19.750,3,0.005
+guarded,600,19.750,20.018,19.750,1,0.002
+source_only,600,21.538,27.245,19.750,1,0.002
+
+DECOMPOSITION (p99 components are not additive)
+policy,phase,n,requests,S_mean,W_mean,X_mean,L_mean,D_mean,S_p99,W_p99,X_p99,L_p99,D_p99
+home,all,96000,600,64.052,16.221,47.832,64.409,0.357,155.828,65.418,129.889,156.032,6.291
+home,initial,48000,600,87.006,24.895,62.110,87.453,0.447,159.448,66.119,136.912,159.705,8.363
+home,steady,48000,600,41.099,7.546,33.553,41.366,0.267,139.172,64.204,84.934,139.451,2.700
+guarded,all,96000,600,39.920,5.854,34.065,40.118,0.199,98.604,43.007,88.123,98.736,4.482
+guarded,initial,48000,600,53.989,11.232,42.757,54.258,0.269,101.302,44.492,92.175,101.511,6.201
+guarded,steady,48000,600,25.850,0.477,25.373,25.978,0.128,67.180,33.577,42.919,67.242,1.273
+source_only,all,96000,600,25.101,0.022,25.079,25.293,0.192,37.381,0.042,37.359,37.575,3.585
+source_only,initial,48000,600,25.133,0.023,25.109,25.313,0.181,37.406,0.067,37.384,37.585,3.443
+source_only,steady,48000,600,25.070,0.021,25.049,25.273,0.204,37.354,0.036,37.334,37.569,3.769
+
+HOME ADMISSION BUCKETS
+phase,metric,lower_inclusive,upper_exclusive,n,requests,S_mean_ms,S_p99_ms,W_mean_ms,X_mean_ms,L_mean_ms,D_mean_ms,tail_quality
+all,N/C,0.000,0.500,33674,600,26.466,72.017,0.017,26.449,26.663,0.197,DESCRIPTIVE
+all,N/C,0.500,0.800,4037,600,38.641,132.447,0.028,38.612,39.232,0.592,DESCRIPTIVE
+all,N/C,0.800,1.000,2256,600,44.417,142.680,0.073,44.344,45.410,0.993,DESCRIPTIVE
+all,N/C,1.000,2.000,11840,600,69.604,153.128,7.137,62.467,70.466,0.863,DESCRIPTIVE
+all,N/C,2.000,4.000,28177,600,83.606,158.168,23.442,60.165,83.984,0.377,DESCRIPTIVE
+all,N/C,4.000,NA,16016,597,113.744,161.421,50.657,63.087,113.879,0.135,DESCRIPTIVE
+all,Q/C,0.000,0.500,54767,600,36.279,136.308,0.956,35.323,36.667,0.387,DESCRIPTIVE
+all,Q/C,0.500,0.800,4525,600,74.849,151.682,13.475,61.375,75.454,0.605,DESCRIPTIVE
+all,Q/C,0.800,1.000,2642,600,80.008,154.773,17.606,62.402,80.536,0.528,DESCRIPTIVE
+all,Q/C,1.000,2.000,14601,600,92.484,158.168,28.091,64.394,92.898,0.414,DESCRIPTIVE
+all,Q/C,2.000,4.000,19465,599,116.192,161.993,50.716,65.476,116.340,0.148,DESCRIPTIVE
+all,Q/C,4.000,NA,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+initial,N/C,0.000,0.500,4800,600,35.479,115.919,0.019,35.460,35.579,0.100,DESCRIPTIVE
+initial,N/C,0.500,0.800,3016,600,43.214,136.617,0.028,43.186,43.484,0.269,DESCRIPTIVE
+initial,N/C,0.800,1.000,1843,600,48.791,144.045,0.065,48.727,49.737,0.945,DESCRIPTIVE
+initial,N/C,1.000,2.000,9662,600,79.285,154.505,8.620,70.665,80.305,1.020,DESCRIPTIVE
+initial,N/C,2.000,4.000,19653,600,97.756,159.915,30.943,66.813,98.149,0.394,DESCRIPTIVE
+initial,N/C,4.000,NA,9026,597,121.701,163.887,55.757,65.943,121.792,0.092,DESCRIPTIVE
+initial,Q/C,0.000,0.500,15804,600,56.119,149.743,2.328,53.791,56.814,0.696,DESCRIPTIVE
+initial,Q/C,0.500,0.800,3465,600,76.856,154.145,13.296,63.560,77.595,0.739,DESCRIPTIVE
+initial,Q/C,0.800,1.000,2044,600,82.016,155.187,17.155,64.861,82.654,0.638,DESCRIPTIVE
+initial,Q/C,1.000,2.000,11183,600,93.588,159.419,27.089,66.500,94.015,0.427,DESCRIPTIVE
+initial,Q/C,2.000,4.000,15504,597,116.668,162.798,49.930,66.738,116.786,0.118,DESCRIPTIVE
+initial,Q/C,4.000,NA,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+steady,N/C,0.000,0.500,28874,600,24.967,37.324,0.016,24.951,25.181,0.213,DESCRIPTIVE
+steady,N/C,0.500,0.800,1021,560,25.130,37.224,0.028,25.101,26.673,1.543,DESCRIPTIVE
+steady,N/C,0.800,1.000,413,352,24.897,37.179,0.109,24.788,26.102,1.205,LOW_TAIL
+steady,N/C,1.000,2.000,2178,597,26.658,43.027,0.558,26.100,26.820,0.162,DESCRIPTIVE
+steady,N/C,2.000,4.000,8524,600,50.983,102.264,6.147,44.836,51.323,0.340,DESCRIPTIVE
+steady,N/C,4.000,NA,6990,597,103.471,154.241,44.071,59.400,103.661,0.190,DESCRIPTIVE
+steady,Q/C,0.000,0.500,38963,600,28.232,71.860,0.399,27.833,28.494,0.262,DESCRIPTIVE
+steady,Q/C,0.500,0.800,1060,571,68.289,99.104,14.059,54.230,68.455,0.166,DESCRIPTIVE
+steady,Q/C,0.800,1.000,598,458,73.143,107.868,19.147,53.996,73.296,0.153,LOW_TAIL
+steady,Q/C,1.000,2.000,3418,600,88.872,127.292,31.369,57.502,89.244,0.373,DESCRIPTIVE
+steady,Q/C,2.000,4.000,3961,599,114.328,156.670,53.793,60.536,114.593,0.264,DESCRIPTIVE
+steady,Q/C,4.000,NA,0,0,NA,NA,NA,NA,NA,NA,EMPTY
+
+NOTES
+One run per policy: descriptive observed differences, no confidence intervals or significance claims.
+Admission N/Q are read before this task reservation; each observation is paired with that same task latency.
+N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.
+Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.
+S=W+X and L=D+S per task and for means; p99 values cannot be added.
+No completion-window filtering and no averaging of per-second or per-bucket p99.
+CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.
+CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.
+Tasks execute independently (no DAG), but their timings are statistically correlated through shared request release/home and CPU competition. LOW_TAIL means fewer than 1000 tasks (fewer than about 10 nominal tail observations); larger samples remain descriptive.
+Source-trigger fractions count actual routing decisions; home does not run threshold decisions, so its trigger fraction is zero by construction.
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/analyze_cpu_trace.py \
+  --plan results/request-wave-arm-cpu5/plan.json \
+  --manifest results/request-wave-arm-cpu5/run_manifest.json \
+  --output results/request-wave-arm-cpu5/cpu-curves
+CPU TRACE: scheduler non-idle task residency; not IRQ-exact utilization
+bin_ms=5 status=ok
+
+POLICY home: ok; issues=none
+OBSERVER {"bytes_written": 90281578, "events_parsed": 501003, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 18.22558588, "reader_thread_cpu_seconds": 16.91346002, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.481,85.222,0.000,0.000,9999/9999,1.000,1.000
+pool0,51.186,100.000,0.310,175.000,9999/9999,1.000,1.000
+pool1,50.042,100.000,0.319,175.000,9999/9999,1.000,1.000
+pool2,50.409,100.000,0.325,180.000,9999/9999,1.000,1.000
+pool3,50.243,100.000,0.313,180.000,9999/9999,1.000,1.000
+pool4,50.424,100.000,0.323,185.000,9999/9999,1.000,1.000
+pool5,50.584,100.000,0.326,185.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,93.434
+30-100,600/600,99.976
+100-200,600/600,80.519
+200-300,600/600,31.653
+300-420,600/600,31.896
+
+POLICY guarded: ok; issues=none
+OBSERVER {"bytes_written": 106721632, "events_parsed": 592768, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 20.99617481, "reader_thread_cpu_seconds": 19.73388246, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.362,72.773,0.000,0.000,9999/9999,1.000,1.000
+pool0,50.800,100.000,0.171,110.000,9999/9999,1.000,1.000
+pool1,50.292,100.000,0.177,105.000,9999/9999,1.000,1.000
+pool2,50.229,100.000,0.184,105.000,9999/9999,1.000,1.000
+pool3,50.184,100.000,0.175,105.000,9999/9999,1.000,1.000
+pool4,50.195,100.000,0.173,110.000,9999/9999,1.000,1.000
+pool5,50.474,100.000,0.185,110.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,93.985
+30-100,600/600,96.603
+100-200,600/600,43.910
+200-300,600/600,39.984
+300-420,600/600,38.284
+
+POLICY source_only: ok; issues=none
+OBSERVER {"bytes_written": 112441328, "events_parsed": 621080, "observer_cpu_scope": "whole observer process during capture, including runner and proc/stat work; excludes kernel tracing overhead and workload subprocess", "observer_process_cpu_seconds": 23.10386354, "reader_thread_cpu_seconds": 21.85171067, "timestamp_precision": "microseconds"}
+CPU coverage: 96/96; unknown/invalid={}
+MEASUREMENT WINDOW full_capture_coverage=True
+scope,covered_window_mean_pct,observed_complete_bin_peak_pct,ge90_duration_fraction,longest_observed_ge90_ms,complete_bins,bin_coverage,cpu_coverage
+union,50.219,99.878,0.115,20.000,9999/9999,1.000,1.000
+pool0,50.351,100.000,0.112,20.000,9999/9999,1.000,1.000
+pool1,50.205,100.000,0.112,20.000,9999/9999,1.000,1.000
+pool2,50.220,100.000,0.115,20.000,9999/9999,1.000,1.000
+pool3,50.260,100.000,0.117,20.000,9999/9999,1.000,1.000
+pool4,50.159,100.000,0.117,20.000,9999/9999,1.000,1.000
+pool5,50.120,100.000,0.121,20.000,9999/9999,1.000,1.000
+90% is a descriptive bin threshold, not a routing threshold. Observed peaks/streaks do not bound missing windows.
+relative_window_ms,requests,mean_home_nonidle_residency_pct
+0-30,600/600,82.721
+30-100,600/600,44.345
+100-200,600/600,58.248
+200-300,600/600,51.667
+300-420,600/600,45.422
+
+LIMITATIONS
+Scheduler non-idle task residency is not IRQ-exact CPU utilization; idle-context IRQ/softirq work is not reconstructed.
+The configured bin width is an integration window, not an independent /proc/stat accounting sample.
+No-event CPUs are unknown; every scope retains its original logical-CPU denominator.
+Aligned curves average overlapping request contexts, are descriptive, and are not independent repetitions or guaranteed steady state.
+The trace observes all tasks on selected CPUs, not only this process. CPU hotplug during capture is unsupported.
+[root@localhost executor_demo-stage3-balance]#

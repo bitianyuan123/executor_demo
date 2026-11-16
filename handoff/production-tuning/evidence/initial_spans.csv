@@ -1,0 +1,4 @@
+policy,requests,actual_span_mean_ms,actual_span_p99_ms,planned_span_mean_ms,over_30ms_requests,over_30ms_fraction
+home,600,19.908,21.704,19.750,3,0.005
+guarded,600,19.750,20.018,19.750,1,0.002
+source_only,600,21.538,27.245,19.750,1,0.002
