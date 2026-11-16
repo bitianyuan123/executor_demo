@@ -1,0 +1,1268 @@
+[root@localhost executor_demo]# git status
+On branch experiment/stage3-load-balance-20261115
+Your branch is up to date with 'origin/experiment/stage3-load-balance-20261115'.
+
+nothing to commit, working tree clean
+[root@localhost executor_demo]# git fetch origin experiment/stage3-load-balance-20261115
+git worktree add ../executor_demo-stage3-balance origin/experiment/stage3-load-balance-20261115
+cd ../executor_demo-stage3-balance
+cmake -S experiments/independent -B build-independent-balance -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=../folly/_install
+From https://github.com/bitianyuan123/executor_demo
+ * branch            experiment/stage3-load-balance-20261115 -> FETCH_HEAD
+Preparing worktree (detached HEAD 3dca779)
+HEAD is now at 3dca779 Record stage 3 paired experiments and load metric evidence
+-- The CXX compiler identification is GNU 14.3.1
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /opt/openEuler/gcc-toolset-14/root/usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Error at CMakeLists.txt:5 (find_package):
+  Could not find a package configuration file provided by "folly" with any of
+  the following names:
+
+    follyConfig.cmake
+    folly-config.cmake
+
+  Add the installation prefix of "folly" to CMAKE_PREFIX_PATH or set
+  "folly_DIR" to a directory containing one of the above files.  If "folly"
+  provides a separate development package or SDK, be sure it has been
+  installed.
+
+
+-- Configuring incomplete, errors occurred!
+[root@localhost executor_demo-stage3-balance]# ls /home/bty/rank_demo/folly/_install/lib/cmake/folly/folly-config.cmake
+/home/bty/rank_demo/folly/_install/lib/cmake/folly/folly-config.cmake
+[root@localhost executor_demo-stage3-balance]# cmake -S experiments/independent -B build-independent-balance -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH=/home/bty/rank_demo/folly/_install
+-- Found OpenSSL: /usr/lib64/libcrypto.so (found version "3.0.12")
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Found Boost: /usr/lib64/cmake/Boost-1.83.0/BoostConfig.cmake (found suitable version "1.83.0", minimum required is "1.69.0") found components: context program_options regex
+-- Found folly: /home/bty/rank_demo/folly/_install
+-- Found Python3: /usr/bin/python3.11 (found version "3.11.6") found components: Interpreter
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/bty/rank_demo/executor_demo-stage3-balance/build-independent-balance
+[root@localhost executor_demo-stage3-balance]# cmake --build build-independent-balance -j16
+[4/4] Linking CXX executable independent_load
+[root@localhost executor_demo-stage3-balance]# ctest --test-dir build-independent-balance --output-on-failure
+python3 tests/test_balance_matrix.py
+Internal ctest changing into directory: /home/bty/rank_demo/executor_demo-stage3-balance/build-independent-balance
+Test project /home/bty/rank_demo/executor_demo-stage3-balance/build-independent-balance
+    Start 1: independent_functional
+1/7 Test #1: independent_functional ...........   Passed    1.23 sec
+    Start 2: independent_analysis
+2/7 Test #2: independent_analysis .............   Passed    0.06 sec
+    Start 3: independent_prediction
+3/7 Test #3: independent_prediction ...........   Passed    0.05 sec
+    Start 4: independent_routing_core
+4/7 Test #4: independent_routing_core .........   Passed    0.00 sec
+    Start 5: independent_routing
+5/7 Test #5: independent_routing ..............   Passed    1.83 sec
+    Start 6: independent_balance_analysis
+6/7 Test #6: independent_balance_analysis .....   Passed    0.10 sec
+    Start 7: independent_balance_matrix
+7/7 Test #7: independent_balance_matrix .......   Passed    0.33 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) =   3.60 sec
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.269s
+
+OK
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/balance_matrix.py plan \
+  --phase observe --preset dev --output results/balance-dev/observe.json
+python3 experiments/independent/scripts/balance_matrix.py dry-run \
+  --config results/balance-dev/observe.json
+python3 experiments/independent/scripts/balance_matrix.py run \
+  --config results/balance-dev/observe.json --output results/balance-dev/observe \
+  --binary build-independent-balance/independent_load
+python3 experiments/independent/scripts/analyze_balance.py \
+  --manifest results/balance-dev/observe/manifest.json \
+  --output results/balance-dev/observe-analysis
+split=observe; cases=6; seeds=[11000]; runs=6
+offered hours=0.005, excluding drain/startup; logical CPUs=4
+CPU union=0,1,2,3
+This is a plan/pilot, not an empirical performance conclusion.
+results/balance-dev/observe.json
+split=observe; cases=6; seeds=[11000]; runs=6
+offered hours=0.005, excluding drain/startup; logical CPUs=4
+CPU union=0,1,2,3
+This is a plan/pilot, not an empirical performance conclusion.
+{"case": "negative-t32-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 8.0, "burst-max": 20, "burst-min": 20, "burst-placement": "spread", "capacities": "2,2", "cpu-us": 2000, "cpus": "0,1;2,3", "deployment": "dev", "drain-seconds": 20, "duration": 3.0, "estimate-jitter": 0, "estimate-us": 2000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 10000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0", "pools": 2, "progress-us": 500, "routing": "home", "sample-ms": 20, "seed": 11000, "threads": 32, "work-mode": "cpu"}, "seed": 11000}
+{"case": "main-t2-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 8.0, "burst-max": 20, "burst-min": 20, "burst-placement": "local", "capacities": "2,2", "cpu-us": 2000, "cpus": "0,1;2,3", "deployment": "dev", "drain-seconds": 20, "duration": 3.0, "estimate-jitter": 0, "estimate-us": 2000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 10000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0", "pools": 2, "progress-us": 500, "routing": "home", "sample-ms": 20, "seed": 11000, "threads": 2, "work-mode": "cpu"}, "seed": 11000}
+{"case": "negative-t32-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 160.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "2,2", "cpu-us": 2000, "cpus": "0,1;2,3", "deployment": "dev", "drain-seconds": 20, "duration": 3.0, "estimate-jitter": 0, "estimate-us": 2000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 10000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0", "pools": 2, "progress-us": 500, "routing": "home", "sample-ms": 20, "seed": 11000, "threads": 32, "work-mode": "cpu"}, "seed": 11000}
+{"case": "main-t32-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 8.0, "burst-max": 20, "burst-min": 20, "burst-placement": "local", "capacities": "2,2", "cpu-us": 2000, "cpus": "0,1;2,3", "deployment": "dev", "drain-seconds": 20, "duration": 3.0, "estimate-jitter": 0, "estimate-us": 2000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 10000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0", "pools": 2, "progress-us": 500, "routing": "home", "sample-ms": 20, "seed": 11000, "threads": 32, "work-mode": "cpu"}, "seed": 11000}
+{"case": "negative-t2-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 8.0, "burst-max": 20, "burst-min": 20, "burst-placement": "spread", "capacities": "2,2", "cpu-us": 2000, "cpus": "0,1;2,3", "deployment": "dev", "drain-seconds": 20, "duration": 3.0, "estimate-jitter": 0, "estimate-us": 2000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 10000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0", "pools": 2, "progress-us": 500, "routing": "home", "sample-ms": 20, "seed": 11000, "threads": 2, "work-mode": "cpu"}, "seed": 11000}
+{"case": "negative-t2-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 160.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "2,2", "cpu-us": 2000, "cpus": "0,1;2,3", "deployment": "dev", "drain-seconds": 20, "duration": 3.0, "estimate-jitter": 0, "estimate-us": 2000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 10000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0", "pools": 2, "progress-us": 500, "routing": "home", "sample-ms": 20, "seed": 11000, "threads": 2, "work-mode": "cpu"}, "seed": 11000}
+split=observe; cases=6; seeds=[11000]; runs=6
+offered hours=0.005, excluding drain/startup; logical CPUs=4
+CPU union=0,1,2,3
+This is a plan/pilot, not an empirical performance conclusion.
+negative-t32-spread-home-s11000: completed, 2.97s
+main-t2-local-home-s11000: completed, 2.97s
+negative-t32-smooth-home-s11000: completed, 3.07s
+main-t32-local-home-s11000: completed, 2.97s
+negative-t2-spread-home-s11000: completed, 2.93s
+negative-t2-smooth-home-s11000: completed, 3.07s
+manifest=/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-dev/observe/manifest.json
+runs=6 invalid_runs=0 excluded=0 quality_groups=6
+case split seed valid completed/planned planned_mean_ms planned_p99_ms W_mean_ms X_mean_ms spill
+negative-t32-spread-home observe 11000 True 400/400 6.689 12.419 3.179 3.445 0.000
+main-t2-local-home observe 11000 True 400/400 10.989 22.406 8.930 1.998 0.000
+negative-t32-smooth-home observe 11000 True 400/400 2.058 3.120 0.006 1.999 0.000
+main-t32-local-home observe 11000 True 400/400 12.403 23.419 7.524 4.816 0.000
+negative-t2-spread-home observe 11000 True 400/400 6.239 12.984 4.128 2.046 0.000
+negative-t2-smooth-home observe 11000 True 400/400 2.057 3.107 0.006 1.997 0.000
+PAIRED: case split valid_pairs invalid_pairs planned_mean_delta_ms planned_p99_delta_ms status
+OBSERVER_COST: case pairs CPU_per_completed_delta_ms planned_mean_delta_ms planned_p99_delta_ms
+REDUNDANT_SIGNAL 702f58578df8 constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL 764b7f411592 constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL 4f0fd33387ae constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL 0a274a463688 constant work estimate rescales outstanding; not an independent signal
+QUALITY: config metric target folds mean_MAE_ms p99_pinball_ms p99_coverage MAE_reduction_vs_budget_ms
+No automatic winning metric/threshold. Positive correlation alone is insufficient; see held-out error, tail coverage, validity and cost.
+results/balance-dev/observe-analysis/report.md
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/balance_matrix.py plan \
+  --phase observe --preset target --output results/balance-arm/observe.json
+python3 experiments/independent/scripts/balance_matrix.py dry-run \
+  --config results/balance-arm/observe.json
+taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+  --config results/balance-arm/observe.json --output results/balance-arm/observe \
+  --binary build-independent-balance/independent_load
+python3 experiments/independent/scripts/analyze_balance.py \
+  --manifest results/balance-arm/observe/manifest.json \
+  --output results/balance-arm/observe-analysis
+cat results/balance-arm/observe-analysis/report.md
+split=observe; cases=6; seeds=[11000, 11001, 11002]; runs=18
+offered hours=0.300, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+results/balance-arm/observe.json
+split=observe; cases=6; seeds=[11000, 11001, 11002]; runs=18
+offered hours=0.300, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+{"case": "negative-t256-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "spread", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11000, "threads": 256, "work-mode": "cpu"}, "seed": 11000}
+{"case": "main-t16-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11000, "threads": 16, "work-mode": "cpu"}, "seed": 11000}
+{"case": "negative-t256-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 240.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11000, "threads": 256, "work-mode": "cpu"}, "seed": 11000}
+{"case": "main-t256-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11000, "threads": 256, "work-mode": "cpu"}, "seed": 11000}
+{"case": "negative-t16-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "spread", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11000, "threads": 16, "work-mode": "cpu"}, "seed": 11000}
+{"case": "negative-t16-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 240.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11000, "threads": 16, "work-mode": "cpu"}, "seed": 11000}
+{"case": "negative-t16-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "spread", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11001, "threads": 16, "work-mode": "cpu"}, "seed": 11001}
+{"case": "negative-t256-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "spread", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11001, "threads": 256, "work-mode": "cpu"}, "seed": 11001}
+{"case": "main-t16-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11001, "threads": 16, "work-mode": "cpu"}, "seed": 11001}
+{"case": "main-t256-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11001, "threads": 256, "work-mode": "cpu"}, "seed": 11001}
+{"case": "negative-t16-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 240.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11001, "threads": 16, "work-mode": "cpu"}, "seed": 11001}
+{"case": "negative-t256-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 240.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11001, "threads": 256, "work-mode": "cpu"}, "seed": 11001}
+{"case": "main-t256-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11002, "threads": 256, "work-mode": "cpu"}, "seed": 11002}
+{"case": "negative-t256-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "spread", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11002, "threads": 256, "work-mode": "cpu"}, "seed": 11002}
+{"case": "negative-t256-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 240.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11002, "threads": 256, "work-mode": "cpu"}, "seed": 11002}
+{"case": "negative-t16-smooth-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 240.0, "burst-max": 1, "burst-min": 1, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11002, "threads": 16, "work-mode": "cpu"}, "seed": 11002}
+{"case": "main-t16-local-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "local", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11002, "threads": 16, "work-mode": "cpu"}, "seed": 11002}
+{"case": "negative-t16-spread-home", "options": {"affinity": "cluster", "arrival": "regular", "arrival-rate": 2.4, "burst-max": 100, "burst-min": 100, "burst-placement": "spread", "capacities": "16,16,16,16,16,16", "cpu-us": 100000, "cpus": "0-15;16-31;32-47;192-207;208-223;224-239", "deployment": "target", "drain-seconds": 120, "duration": 60.0, "estimate-jitter": 0, "estimate-us": 100000, "instrumentation": "full", "jitter": 0.5, "load-metric": "queue", "load-observation": "progress", "load-threshold": 0, "long-factor": 8, "long-prob": 0, "max-outstanding": 100000, "max-planned-tasks": 2000000, "mean-normalization": "exact", "min-improvement": 0, "numa": "0,0,0,2,2,2", "pools": 6, "progress-us": 5000, "routing": "home", "sample-ms": 100, "seed": 11002, "threads": 16, "work-mode": "cpu"}, "seed": 11002}
+split=observe; cases=6; seeds=[11000, 11001, 11002]; runs=18
+offered hours=0.300, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+negative-t256-spread-home-s11000: completed, 59.92s
+main-t16-local-home-s11000: completed, 60.34s
+negative-t256-smooth-home-s11000: completed, 60.34s
+main-t256-local-home-s11000: completed, 60.44s
+negative-t16-spread-home-s11000: completed, 59.85s
+negative-t16-smooth-home-s11000: completed, 60.24s
+negative-t16-spread-home-s11001: completed, 59.85s
+negative-t256-spread-home-s11001: completed, 59.97s
+main-t16-local-home-s11001: completed, 60.40s
+main-t256-local-home-s11001: completed, 60.49s
+negative-t16-smooth-home-s11001: completed, 60.24s
+negative-t256-smooth-home-s11001: completed, 60.34s
+main-t256-local-home-s11002: completed, 60.51s
+negative-t256-spread-home-s11002: completed, 59.97s
+negative-t256-smooth-home-s11002: completed, 60.35s
+negative-t16-smooth-home-s11002: completed, 60.25s
+main-t16-local-home-s11002: completed, 60.40s
+negative-t16-spread-home-s11002: completed, 59.91s
+manifest=/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/observe/manifest.json
+runs=18 invalid_runs=0 excluded=0 quality_groups=6
+case split seed valid completed/planned planned_mean_ms planned_p99_ms W_mean_ms X_mean_ms spill
+negative-t256-spread-home observe 11000 True 12000/12000 103.089 165.306 0.119 102.646 0.000
+main-t16-local-home observe 11000 True 12000/12000 360.969 693.634 260.484 100.371 0.000
+negative-t256-smooth-home observe 11000 True 12000/12000 100.450 149.259 0.013 100.384 0.000
+main-t256-local-home observe 11000 True 12000/12000 471.603 673.878 106.916 363.657 0.000
+negative-t16-spread-home observe 11000 True 12000/12000 103.000 180.930 2.250 100.443 0.000
+negative-t16-smooth-home observe 11000 True 12000/12000 100.450 149.253 0.013 100.383 0.000
+negative-t16-spread-home observe 11001 True 12000/12000 102.588 178.497 2.238 100.041 0.000
+negative-t256-spread-home observe 11001 True 12000/12000 102.693 165.409 0.120 102.242 0.000
+main-t16-local-home observe 11001 True 12000/12000 359.877 689.729 259.783 99.973 0.000
+main-t256-local-home observe 11001 True 12000/12000 468.408 667.819 107.149 360.633 0.000
+negative-t16-smooth-home observe 11001 True 12000/12000 100.064 148.983 0.013 99.997 0.000
+negative-t256-smooth-home observe 11001 True 12000/12000 100.064 148.987 0.013 99.997 0.000
+main-t256-local-home observe 11002 True 12000/12000 467.426 671.114 107.576 358.732 0.000
+negative-t256-spread-home observe 11002 True 12000/12000 102.789 167.657 0.116 102.372 0.000
+negative-t256-smooth-home observe 11002 True 12000/12000 100.185 149.258 0.013 100.116 0.000
+negative-t16-smooth-home observe 11002 True 12000/12000 100.186 149.267 0.013 100.117 0.000
+main-t16-local-home observe 11002 True 12000/12000 359.478 692.360 259.254 100.104 0.000
+negative-t16-spread-home observe 11002 True 12000/12000 102.725 182.495 2.240 100.179 0.000
+PAIRED: case split valid_pairs invalid_pairs planned_mean_delta_ms planned_p99_delta_ms status
+OBSERVER_COST: case pairs CPU_per_completed_delta_ms planned_mean_delta_ms planned_p99_delta_ms
+REDUNDANT_SIGNAL 79fbbec9139e constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL c383f86cfb2e constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL 408bfb50e646 constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL 7eb251de2371 constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL 505461e65f13 constant work estimate rescales outstanding; not an independent signal
+REDUNDANT_SIGNAL 3725bd8c8c3b constant work estimate rescales outstanding; not an independent signal
+QUALITY: config metric target folds mean_MAE_ms p99_pinball_ms p99_coverage MAE_reduction_vs_budget_ms
+3725bd8c8c3b burst_context_remaining planned_latency_ms 3 25.6224 0.6518 0.9901 -20.2208
+3725bd8c8c3b burst_context_remaining wait_ms 3 0.1380 0.0051 0.9881 0.0583
+3725bd8c8c3b outstanding_per_capacity planned_latency_ms 3 25.6465 0.6610 0.9899 -20.2449
+3725bd8c8c3b outstanding_per_capacity wait_ms 3 0.1539 0.0056 0.9884 0.0424
+3725bd8c8c3b queue planned_latency_ms 3 25.7235 0.7060 0.9900 -20.3219
+3725bd8c8c3b queue wait_ms 3 0.1963 0.0268 0.9899 -0.0000
+3725bd8c8c3b queue_per_capacity planned_latency_ms 3 25.7235 0.7060 0.9900 -20.3219
+3725bd8c8c3b queue_per_capacity wait_ms 3 0.1963 0.0268 0.9899 -0.0000
+3725bd8c8c3b remaining_ms_per_capacity planned_latency_ms 3 25.6465 0.6610 0.9899 -20.2449
+3725bd8c8c3b remaining_ms_per_capacity wait_ms 3 0.1539 0.0056 0.9884 0.0424
+3725bd8c8c3b work_ms_per_capacity planned_latency_ms 3 25.6465 0.6610 0.9899 -20.2449
+3725bd8c8c3b work_ms_per_capacity wait_ms 3 0.1539 0.0056 0.9884 0.0424
+408bfb50e646 burst_context_remaining planned_latency_ms 3 25.0914 0.4947 0.9899 -21.9611
+408bfb50e646 burst_context_remaining wait_ms 3 0.0037 0.0001 0.9895 0.0000
+408bfb50e646 outstanding_per_capacity planned_latency_ms 3 25.0894 0.4946 0.9900 -21.9591
+408bfb50e646 outstanding_per_capacity wait_ms 3 0.0037 0.0001 0.9895 0.0000
+408bfb50e646 queue planned_latency_ms 3 25.0914 0.4947 0.9899 -21.9611
+408bfb50e646 queue wait_ms 3 0.0037 0.0001 0.9895 0.0000
+408bfb50e646 queue_per_capacity planned_latency_ms 3 25.0914 0.4947 0.9899 -21.9611
+408bfb50e646 queue_per_capacity wait_ms 3 0.0037 0.0001 0.9895 0.0000
+408bfb50e646 remaining_ms_per_capacity planned_latency_ms 3 25.0920 0.4951 0.9896 -21.9617
+408bfb50e646 remaining_ms_per_capacity wait_ms 3 0.0037 0.0001 0.9894 -0.0000
+408bfb50e646 work_ms_per_capacity planned_latency_ms 3 25.0894 0.4946 0.9900 -21.9591
+408bfb50e646 work_ms_per_capacity wait_ms 3 0.0037 0.0001 0.9895 0.0000
+505461e65f13 burst_context_remaining planned_latency_ms 3 25.0914 0.4947 0.9898 -21.9610
+505461e65f13 burst_context_remaining wait_ms 3 0.0037 0.0001 0.9888 0.0000
+505461e65f13 outstanding_per_capacity planned_latency_ms 3 25.0896 0.4946 0.9899 -21.9592
+505461e65f13 outstanding_per_capacity wait_ms 3 0.0037 0.0001 0.9885 0.0000
+505461e65f13 queue planned_latency_ms 3 25.0914 0.4947 0.9898 -21.9610
+505461e65f13 queue wait_ms 3 0.0037 0.0001 0.9888 0.0000
+505461e65f13 queue_per_capacity planned_latency_ms 3 25.0914 0.4947 0.9898 -21.9610
+505461e65f13 queue_per_capacity wait_ms 3 0.0037 0.0001 0.9888 0.0000
+505461e65f13 remaining_ms_per_capacity planned_latency_ms 3 25.0917 0.4947 0.9897 -21.9613
+505461e65f13 remaining_ms_per_capacity wait_ms 3 0.0037 0.0001 0.9883 0.0000
+505461e65f13 work_ms_per_capacity planned_latency_ms 3 25.0896 0.4946 0.9899 -21.9592
+505461e65f13 work_ms_per_capacity wait_ms 3 0.0037 0.0001 0.9885 0.0000
+79fbbec9139e burst_context_remaining planned_latency_ms 3 32.3488 0.9109 0.9895 123.3150
+79fbbec9139e burst_context_remaining wait_ms 3 20.6185 0.5722 0.9897 135.0130
+79fbbec9139e outstanding_per_capacity planned_latency_ms 3 32.5202 0.9204 0.9897 123.1436
+79fbbec9139e outstanding_per_capacity wait_ms 3 21.2013 0.5920 0.9896 134.4303
+79fbbec9139e queue planned_latency_ms 3 34.0282 1.0044 0.9894 121.6356
+79fbbec9139e queue wait_ms 3 23.0334 0.7157 0.9895 132.5982
+79fbbec9139e queue_per_capacity planned_latency_ms 3 34.0282 1.0044 0.9894 121.6356
+79fbbec9139e queue_per_capacity wait_ms 3 23.0334 0.7157 0.9895 132.5982
+79fbbec9139e remaining_ms_per_capacity planned_latency_ms 3 32.5202 0.9204 0.9897 123.1436
+79fbbec9139e remaining_ms_per_capacity wait_ms 3 21.2013 0.5920 0.9896 134.4303
+79fbbec9139e work_ms_per_capacity planned_latency_ms 3 32.5202 0.9204 0.9897 123.1436
+79fbbec9139e work_ms_per_capacity wait_ms 3 21.2013 0.5920 0.9896 134.4303
+7eb251de2371 burst_context_remaining planned_latency_ms 3 25.9375 0.5464 0.9898 -20.3694
+7eb251de2371 burst_context_remaining wait_ms 3 2.9698 0.0683 0.9891 1.3025
+7eb251de2371 outstanding_per_capacity planned_latency_ms 3 26.0415 0.5680 0.9898 -20.4735
+7eb251de2371 outstanding_per_capacity wait_ms 3 3.3404 0.0954 0.9891 0.9319
+7eb251de2371 queue planned_latency_ms 3 26.3121 0.9179 0.9899 -20.7440
+7eb251de2371 queue wait_ms 3 4.2733 0.6114 0.9901 -0.0010
+7eb251de2371 queue_per_capacity planned_latency_ms 3 26.3121 0.9179 0.9899 -20.7440
+7eb251de2371 queue_per_capacity wait_ms 3 4.2733 0.6114 0.9901 -0.0010
+7eb251de2371 remaining_ms_per_capacity planned_latency_ms 3 26.0415 0.5680 0.9898 -20.4735
+7eb251de2371 remaining_ms_per_capacity wait_ms 3 3.3404 0.0954 0.9891 0.9319
+7eb251de2371 work_ms_per_capacity planned_latency_ms 3 26.0415 0.5680 0.9898 -20.4735
+7eb251de2371 work_ms_per_capacity wait_ms 3 3.3404 0.0954 0.9891 0.9319
+c383f86cfb2e burst_context_remaining planned_latency_ms 3 94.5335 1.9626 0.9896 4.8714
+c383f86cfb2e burst_context_remaining wait_ms 3 11.7260 0.3813 0.9899 73.9417
+c383f86cfb2e outstanding_per_capacity planned_latency_ms 3 94.6190 1.9623 0.9897 4.7859
+c383f86cfb2e outstanding_per_capacity wait_ms 3 11.8295 0.3814 0.9897 73.8381
+c383f86cfb2e queue planned_latency_ms 3 94.8940 1.9702 0.9898 4.5109
+c383f86cfb2e queue wait_ms 3 14.1407 0.5199 0.9837 71.5270
+c383f86cfb2e queue_per_capacity planned_latency_ms 3 94.8940 1.9702 0.9898 4.5109
+c383f86cfb2e queue_per_capacity wait_ms 3 14.1407 0.5199 0.9837 71.5270
+c383f86cfb2e remaining_ms_per_capacity planned_latency_ms 3 94.6190 1.9623 0.9897 4.7859
+c383f86cfb2e remaining_ms_per_capacity wait_ms 3 11.8295 0.3814 0.9897 73.8381
+c383f86cfb2e work_ms_per_capacity planned_latency_ms 3 94.6190 1.9623 0.9897 4.7859
+c383f86cfb2e work_ms_per_capacity wait_ms 3 11.8295 0.3814 0.9897 73.8381
+No automatic winning metric/threshold. Positive correlation alone is insufficient; see held-out error, tail coverage, validity and cost.
+results/balance-arm/observe-analysis/report.md
+# 阶段3：指标质量与阈值均衡
+
+读取 18 轮，文件缺失/损坏等排除 0 条。原始 CSV 保留在各运行目录；本报告不重新解释失败为性能收益。
+
+## 逐轮原始摘要
+
+|case / seed / split|valid|完成/计划|planned均值 ms|planned p99 ms|W均值 ms|X均值 ms|spill|
+|---|---|---:|---:|---:|---:|---:|---:|
+|negative-t256-spread-home / 11000 / observe|True|12000/12000|103.089|165.306|0.119|102.646|0.000|
+|main-t16-local-home / 11000 / observe|True|12000/12000|360.969|693.634|260.484|100.371|0.000|
+|negative-t256-smooth-home / 11000 / observe|True|12000/12000|100.450|149.259|0.013|100.384|0.000|
+|main-t256-local-home / 11000 / observe|True|12000/12000|471.603|673.878|106.916|363.657|0.000|
+|negative-t16-spread-home / 11000 / observe|True|12000/12000|103.000|180.930|2.250|100.443|0.000|
+|negative-t16-smooth-home / 11000 / observe|True|12000/12000|100.450|149.253|0.013|100.383|0.000|
+|negative-t16-spread-home / 11001 / observe|True|12000/12000|102.588|178.497|2.238|100.041|0.000|
+|negative-t256-spread-home / 11001 / observe|True|12000/12000|102.693|165.409|0.120|102.242|0.000|
+|main-t16-local-home / 11001 / observe|True|12000/12000|359.877|689.729|259.783|99.973|0.000|
+|main-t256-local-home / 11001 / observe|True|12000/12000|468.408|667.819|107.149|360.633|0.000|
+|negative-t16-smooth-home / 11001 / observe|True|12000/12000|100.064|148.983|0.013|99.997|0.000|
+|negative-t256-smooth-home / 11001 / observe|True|12000/12000|100.064|148.987|0.013|99.997|0.000|
+|main-t256-local-home / 11002 / observe|True|12000/12000|467.426|671.114|107.576|358.732|0.000|
+|negative-t256-spread-home / 11002 / observe|True|12000/12000|102.789|167.657|0.116|102.372|0.000|
+|negative-t256-smooth-home / 11002 / observe|True|12000/12000|100.185|149.258|0.013|100.116|0.000|
+|negative-t16-smooth-home / 11002 / observe|True|12000/12000|100.186|149.267|0.013|100.117|0.000|
+|main-t16-local-home / 11002 / observe|True|12000/12000|359.478|692.360|259.254|100.104|0.000|
+|negative-t16-spread-home / 11002 / observe|True|12000/12000|102.725|182.495|2.240|100.179|0.000|
+
+## 同种子配对收益
+
+下表为候选减home的逐轮差值再取均值；负值表示时延下降。p99没有跨轮合并。
+
+|case / split|有效/无效对|planned均值差 ms|planned p99差 ms|95% CI（p99差）|说明|
+|---|---:|---:|---:|---|---|
+没有可比较的routing候选；观测阶段不产生均衡收益结论。
+
+## 留出整轮的指标预测
+
+下表每行固定配置、指标、目标和模型，数值为留出seed各折等权均值；所有折明细见prediction.csv。MAE越小越好，p99 pinball越小越好，coverage需结合0.99目标和尾样本量判断。buckets.csv边界来自训练seed，p99及LOW_TAIL以独立burst数伴随报告。
+
+|配置 / 指标|目标|模型|折数|mean MAE ms|p99 pinball ms|p99 coverage|相对自身预算基线MAE减少 ms|
+|---|---|---|---:|---:|---:|---:|---:|
+|3725bd8c8c3b / burst_context_remaining|callback_ms|burst_context_remaining|3|25.588|0.650|0.9902|-20.319|
+|3725bd8c8c3b / burst_context_remaining|callback_ms|burst_context_remaining+own_budget_oracle|3|7.926|0.380|0.9901|-2.657|
+|3725bd8c8c3b / burst_context_remaining|latency_ms|burst_context_remaining|3|25.622|0.652|0.9902|-20.233|
+|3725bd8c8c3b / burst_context_remaining|latency_ms|burst_context_remaining+own_budget_oracle|3|8.034|0.384|0.9898|-2.645|
+|3725bd8c8c3b / burst_context_remaining|planned_latency_ms|burst_context_remaining|3|25.622|0.652|0.9901|-20.221|
+|3725bd8c8c3b / burst_context_remaining|planned_latency_ms|burst_context_remaining+own_budget_oracle|3|8.037|0.384|0.9898|-2.636|
+|3725bd8c8c3b / burst_context_remaining|wait_ms|burst_context_remaining|3|0.138|0.005|0.9881|0.058|
+|3725bd8c8c3b / burst_context_remaining|wait_ms|burst_context_remaining+own_budget_oracle|3|0.171|0.007|0.9883|0.026|
+|3725bd8c8c3b / outstanding_per_capacity|callback_ms|outstanding_per_capacity|3|25.608|0.659|0.9899|-20.339|
+|3725bd8c8c3b / outstanding_per_capacity|callback_ms|outstanding_per_capacity+own_budget_oracle|3|7.933|0.380|0.9899|-2.664|
+|3725bd8c8c3b / outstanding_per_capacity|latency_ms|outstanding_per_capacity|3|25.646|0.661|0.9899|-20.257|
+|3725bd8c8c3b / outstanding_per_capacity|latency_ms|outstanding_per_capacity+own_budget_oracle|3|8.041|0.384|0.9899|-2.652|
+|3725bd8c8c3b / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity|3|25.646|0.661|0.9899|-20.245|
+|3725bd8c8c3b / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity+own_budget_oracle|3|8.044|0.384|0.9899|-2.643|
+|3725bd8c8c3b / outstanding_per_capacity|wait_ms|outstanding_per_capacity|3|0.154|0.006|0.9884|0.042|
+|3725bd8c8c3b / outstanding_per_capacity|wait_ms|outstanding_per_capacity+own_budget_oracle|3|0.175|0.008|0.9885|0.021|
+|3725bd8c8c3b / queue|callback_ms|queue|3|25.669|0.694|0.9900|-20.401|
+|3725bd8c8c3b / queue|callback_ms|queue+own_budget_oracle|3|7.955|0.383|0.9897|-2.687|
+|3725bd8c8c3b / queue|latency_ms|queue|3|25.718|0.705|0.9901|-20.329|
+|3725bd8c8c3b / queue|latency_ms|queue+own_budget_oracle|3|8.059|0.393|0.9896|-2.671|
+|3725bd8c8c3b / queue|planned_latency_ms|queue|3|25.724|0.706|0.9900|-20.322|
+|3725bd8c8c3b / queue|planned_latency_ms|queue+own_budget_oracle|3|8.071|0.395|0.9896|-2.669|
+|3725bd8c8c3b / queue|wait_ms|queue|3|0.196|0.027|0.9899|-0.000|
+|3725bd8c8c3b / queue|wait_ms|queue+own_budget_oracle|3|0.196|0.027|0.9899|-0.000|
+|3725bd8c8c3b / queue_per_capacity|callback_ms|queue_per_capacity|3|25.669|0.694|0.9900|-20.401|
+|3725bd8c8c3b / queue_per_capacity|callback_ms|queue_per_capacity+own_budget_oracle|3|7.955|0.383|0.9897|-2.687|
+|3725bd8c8c3b / queue_per_capacity|latency_ms|queue_per_capacity|3|25.718|0.705|0.9901|-20.329|
+|3725bd8c8c3b / queue_per_capacity|latency_ms|queue_per_capacity+own_budget_oracle|3|8.059|0.393|0.9896|-2.671|
+|3725bd8c8c3b / queue_per_capacity|planned_latency_ms|queue_per_capacity|3|25.724|0.706|0.9900|-20.322|
+|3725bd8c8c3b / queue_per_capacity|planned_latency_ms|queue_per_capacity+own_budget_oracle|3|8.071|0.395|0.9896|-2.669|
+|3725bd8c8c3b / queue_per_capacity|wait_ms|queue_per_capacity|3|0.196|0.027|0.9899|-0.000|
+|3725bd8c8c3b / queue_per_capacity|wait_ms|queue_per_capacity+own_budget_oracle|3|0.196|0.027|0.9899|-0.000|
+|3725bd8c8c3b / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity|3|25.608|0.659|0.9899|-20.339|
+|3725bd8c8c3b / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity+own_budget_oracle|3|7.933|0.380|0.9899|-2.664|
+|3725bd8c8c3b / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity|3|25.646|0.661|0.9899|-20.257|
+|3725bd8c8c3b / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|8.041|0.384|0.9899|-2.652|
+|3725bd8c8c3b / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity|3|25.646|0.661|0.9899|-20.245|
+|3725bd8c8c3b / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|8.044|0.384|0.9899|-2.643|
+|3725bd8c8c3b / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity|3|0.154|0.006|0.9884|0.042|
+|3725bd8c8c3b / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity+own_budget_oracle|3|0.175|0.008|0.9885|0.021|
+|3725bd8c8c3b / work_ms_per_capacity|callback_ms|work_ms_per_capacity|3|25.608|0.659|0.9899|-20.339|
+|3725bd8c8c3b / work_ms_per_capacity|callback_ms|work_ms_per_capacity+own_budget_oracle|3|7.933|0.380|0.9899|-2.664|
+|3725bd8c8c3b / work_ms_per_capacity|latency_ms|work_ms_per_capacity|3|25.646|0.661|0.9899|-20.257|
+|3725bd8c8c3b / work_ms_per_capacity|latency_ms|work_ms_per_capacity+own_budget_oracle|3|8.041|0.384|0.9899|-2.652|
+|3725bd8c8c3b / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity|3|25.646|0.661|0.9899|-20.245|
+|3725bd8c8c3b / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity+own_budget_oracle|3|8.044|0.384|0.9899|-2.643|
+|3725bd8c8c3b / work_ms_per_capacity|wait_ms|work_ms_per_capacity|3|0.154|0.006|0.9884|0.042|
+|3725bd8c8c3b / work_ms_per_capacity|wait_ms|work_ms_per_capacity+own_budget_oracle|3|0.175|0.008|0.9885|0.021|
+|408bfb50e646 / burst_context_remaining|callback_ms|burst_context_remaining|3|25.091|0.495|0.9898|-21.961|
+|408bfb50e646 / burst_context_remaining|callback_ms|burst_context_remaining+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / burst_context_remaining|latency_ms|burst_context_remaining|3|25.091|0.495|0.9899|-21.961|
+|408bfb50e646 / burst_context_remaining|latency_ms|burst_context_remaining+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / burst_context_remaining|planned_latency_ms|burst_context_remaining|3|25.091|0.495|0.9899|-21.961|
+|408bfb50e646 / burst_context_remaining|planned_latency_ms|burst_context_remaining+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / burst_context_remaining|wait_ms|burst_context_remaining|3|0.004|0.000|0.9895|0.000|
+|408bfb50e646 / burst_context_remaining|wait_ms|burst_context_remaining+own_budget_oracle|3|0.004|0.000|0.9893|0.000|
+|408bfb50e646 / outstanding_per_capacity|callback_ms|outstanding_per_capacity|3|25.089|0.495|0.9899|-21.959|
+|408bfb50e646 / outstanding_per_capacity|callback_ms|outstanding_per_capacity+own_budget_oracle|3|6.247|0.124|0.9892|-3.117|
+|408bfb50e646 / outstanding_per_capacity|latency_ms|outstanding_per_capacity|3|25.089|0.495|0.9900|-21.959|
+|408bfb50e646 / outstanding_per_capacity|latency_ms|outstanding_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|408bfb50e646 / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity|3|25.089|0.495|0.9900|-21.959|
+|408bfb50e646 / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|408bfb50e646 / outstanding_per_capacity|wait_ms|outstanding_per_capacity|3|0.004|0.000|0.9895|0.000|
+|408bfb50e646 / outstanding_per_capacity|wait_ms|outstanding_per_capacity+own_budget_oracle|3|0.004|0.000|0.9894|-0.000|
+|408bfb50e646 / queue|callback_ms|queue|3|25.091|0.495|0.9898|-21.961|
+|408bfb50e646 / queue|callback_ms|queue+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / queue|latency_ms|queue|3|25.091|0.495|0.9899|-21.961|
+|408bfb50e646 / queue|latency_ms|queue+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / queue|planned_latency_ms|queue|3|25.091|0.495|0.9899|-21.961|
+|408bfb50e646 / queue|planned_latency_ms|queue+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / queue|wait_ms|queue|3|0.004|0.000|0.9895|0.000|
+|408bfb50e646 / queue|wait_ms|queue+own_budget_oracle|3|0.004|0.000|0.9893|0.000|
+|408bfb50e646 / queue_per_capacity|callback_ms|queue_per_capacity|3|25.091|0.495|0.9898|-21.961|
+|408bfb50e646 / queue_per_capacity|callback_ms|queue_per_capacity+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / queue_per_capacity|latency_ms|queue_per_capacity|3|25.091|0.495|0.9899|-21.961|
+|408bfb50e646 / queue_per_capacity|latency_ms|queue_per_capacity+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / queue_per_capacity|planned_latency_ms|queue_per_capacity|3|25.091|0.495|0.9899|-21.961|
+|408bfb50e646 / queue_per_capacity|planned_latency_ms|queue_per_capacity+own_budget_oracle|3|6.247|0.124|0.9894|-3.117|
+|408bfb50e646 / queue_per_capacity|wait_ms|queue_per_capacity|3|0.004|0.000|0.9895|0.000|
+|408bfb50e646 / queue_per_capacity|wait_ms|queue_per_capacity+own_budget_oracle|3|0.004|0.000|0.9893|0.000|
+|408bfb50e646 / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity|3|25.092|0.495|0.9896|-21.962|
+|408bfb50e646 / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9891|-3.117|
+|408bfb50e646 / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity|3|25.092|0.495|0.9896|-21.962|
+|408bfb50e646 / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9890|-3.117|
+|408bfb50e646 / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity|3|25.092|0.495|0.9896|-21.962|
+|408bfb50e646 / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9891|-3.117|
+|408bfb50e646 / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity|3|0.004|0.000|0.9894|-0.000|
+|408bfb50e646 / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity+own_budget_oracle|3|0.004|0.000|0.9898|-0.000|
+|408bfb50e646 / work_ms_per_capacity|callback_ms|work_ms_per_capacity|3|25.089|0.495|0.9899|-21.959|
+|408bfb50e646 / work_ms_per_capacity|callback_ms|work_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9892|-3.117|
+|408bfb50e646 / work_ms_per_capacity|latency_ms|work_ms_per_capacity|3|25.089|0.495|0.9900|-21.959|
+|408bfb50e646 / work_ms_per_capacity|latency_ms|work_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|408bfb50e646 / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity|3|25.089|0.495|0.9900|-21.959|
+|408bfb50e646 / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|408bfb50e646 / work_ms_per_capacity|wait_ms|work_ms_per_capacity|3|0.004|0.000|0.9895|0.000|
+|408bfb50e646 / work_ms_per_capacity|wait_ms|work_ms_per_capacity+own_budget_oracle|3|0.004|0.000|0.9894|-0.000|
+|505461e65f13 / burst_context_remaining|callback_ms|burst_context_remaining|3|25.091|0.495|0.9898|-21.961|
+|505461e65f13 / burst_context_remaining|callback_ms|burst_context_remaining+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / burst_context_remaining|latency_ms|burst_context_remaining|3|25.091|0.495|0.9897|-21.961|
+|505461e65f13 / burst_context_remaining|latency_ms|burst_context_remaining+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / burst_context_remaining|planned_latency_ms|burst_context_remaining|3|25.091|0.495|0.9898|-21.961|
+|505461e65f13 / burst_context_remaining|planned_latency_ms|burst_context_remaining+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / burst_context_remaining|wait_ms|burst_context_remaining|3|0.004|0.000|0.9888|0.000|
+|505461e65f13 / burst_context_remaining|wait_ms|burst_context_remaining+own_budget_oracle|3|0.004|0.000|0.9886|0.000|
+|505461e65f13 / outstanding_per_capacity|callback_ms|outstanding_per_capacity|3|25.090|0.495|0.9899|-21.959|
+|505461e65f13 / outstanding_per_capacity|callback_ms|outstanding_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|505461e65f13 / outstanding_per_capacity|latency_ms|outstanding_per_capacity|3|25.090|0.495|0.9900|-21.959|
+|505461e65f13 / outstanding_per_capacity|latency_ms|outstanding_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|505461e65f13 / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity|3|25.090|0.495|0.9899|-21.959|
+|505461e65f13 / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|505461e65f13 / outstanding_per_capacity|wait_ms|outstanding_per_capacity|3|0.004|0.000|0.9885|0.000|
+|505461e65f13 / outstanding_per_capacity|wait_ms|outstanding_per_capacity+own_budget_oracle|3|0.004|0.000|0.9881|-0.000|
+|505461e65f13 / queue|callback_ms|queue|3|25.091|0.495|0.9898|-21.961|
+|505461e65f13 / queue|callback_ms|queue+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / queue|latency_ms|queue|3|25.091|0.495|0.9897|-21.961|
+|505461e65f13 / queue|latency_ms|queue+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / queue|planned_latency_ms|queue|3|25.091|0.495|0.9898|-21.961|
+|505461e65f13 / queue|planned_latency_ms|queue+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / queue|wait_ms|queue|3|0.004|0.000|0.9888|0.000|
+|505461e65f13 / queue|wait_ms|queue+own_budget_oracle|3|0.004|0.000|0.9886|0.000|
+|505461e65f13 / queue_per_capacity|callback_ms|queue_per_capacity|3|25.091|0.495|0.9898|-21.961|
+|505461e65f13 / queue_per_capacity|callback_ms|queue_per_capacity+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / queue_per_capacity|latency_ms|queue_per_capacity|3|25.091|0.495|0.9897|-21.961|
+|505461e65f13 / queue_per_capacity|latency_ms|queue_per_capacity+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / queue_per_capacity|planned_latency_ms|queue_per_capacity|3|25.091|0.495|0.9898|-21.961|
+|505461e65f13 / queue_per_capacity|planned_latency_ms|queue_per_capacity+own_budget_oracle|3|6.248|0.124|0.9894|-3.117|
+|505461e65f13 / queue_per_capacity|wait_ms|queue_per_capacity|3|0.004|0.000|0.9888|0.000|
+|505461e65f13 / queue_per_capacity|wait_ms|queue_per_capacity+own_budget_oracle|3|0.004|0.000|0.9886|0.000|
+|505461e65f13 / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity|3|25.092|0.495|0.9897|-21.961|
+|505461e65f13 / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.248|0.124|0.9892|-3.118|
+|505461e65f13 / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity|3|25.092|0.495|0.9897|-21.961|
+|505461e65f13 / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.248|0.124|0.9891|-3.118|
+|505461e65f13 / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity|3|25.092|0.495|0.9897|-21.961|
+|505461e65f13 / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.248|0.124|0.9891|-3.118|
+|505461e65f13 / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity|3|0.004|0.000|0.9883|0.000|
+|505461e65f13 / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity+own_budget_oracle|3|0.004|0.000|0.9878|-0.000|
+|505461e65f13 / work_ms_per_capacity|callback_ms|work_ms_per_capacity|3|25.090|0.495|0.9899|-21.959|
+|505461e65f13 / work_ms_per_capacity|callback_ms|work_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|505461e65f13 / work_ms_per_capacity|latency_ms|work_ms_per_capacity|3|25.090|0.495|0.9900|-21.959|
+|505461e65f13 / work_ms_per_capacity|latency_ms|work_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|505461e65f13 / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity|3|25.090|0.495|0.9899|-21.959|
+|505461e65f13 / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity+own_budget_oracle|3|6.247|0.124|0.9893|-3.117|
+|505461e65f13 / work_ms_per_capacity|wait_ms|work_ms_per_capacity|3|0.004|0.000|0.9885|0.000|
+|505461e65f13 / work_ms_per_capacity|wait_ms|work_ms_per_capacity+own_budget_oracle|3|0.004|0.000|0.9881|-0.000|
+|79fbbec9139e / burst_context_remaining|callback_ms|burst_context_remaining|3|25.094|0.498|0.9898|-21.942|
+|79fbbec9139e / burst_context_remaining|callback_ms|burst_context_remaining+own_budget_oracle|3|6.265|0.138|0.9888|-3.113|
+|79fbbec9139e / burst_context_remaining|latency_ms|burst_context_remaining|3|32.348|0.911|0.9895|123.290|
+|79fbbec9139e / burst_context_remaining|latency_ms|burst_context_remaining+own_budget_oracle|3|40.411|1.026|0.9895|115.226|
+|79fbbec9139e / burst_context_remaining|planned_latency_ms|burst_context_remaining|3|32.349|0.911|0.9895|123.315|
+|79fbbec9139e / burst_context_remaining|planned_latency_ms|burst_context_remaining+own_budget_oracle|3|40.417|1.026|0.9895|115.246|
+|79fbbec9139e / burst_context_remaining|wait_ms|burst_context_remaining|3|20.619|0.572|0.9897|135.013|
+|79fbbec9139e / burst_context_remaining|wait_ms|burst_context_remaining+own_budget_oracle|3|40.134|0.988|0.9894|115.498|
+|79fbbec9139e / outstanding_per_capacity|callback_ms|outstanding_per_capacity|3|25.094|0.498|0.9900|-21.942|
+|79fbbec9139e / outstanding_per_capacity|callback_ms|outstanding_per_capacity+own_budget_oracle|3|6.266|0.139|0.9889|-3.114|
+|79fbbec9139e / outstanding_per_capacity|latency_ms|outstanding_per_capacity|3|32.519|0.920|0.9897|123.119|
+|79fbbec9139e / outstanding_per_capacity|latency_ms|outstanding_per_capacity+own_budget_oracle|3|40.037|1.029|0.9894|115.601|
+|79fbbec9139e / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity|3|32.520|0.920|0.9897|123.144|
+|79fbbec9139e / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity+own_budget_oracle|3|40.043|1.029|0.9894|115.621|
+|79fbbec9139e / outstanding_per_capacity|wait_ms|outstanding_per_capacity|3|21.201|0.592|0.9896|134.430|
+|79fbbec9139e / outstanding_per_capacity|wait_ms|outstanding_per_capacity+own_budget_oracle|3|39.777|0.995|0.9894|115.854|
+|79fbbec9139e / queue|callback_ms|queue|3|25.094|0.498|0.9898|-21.943|
+|79fbbec9139e / queue|callback_ms|queue+own_budget_oracle|3|6.266|0.139|0.9888|-3.114|
+|79fbbec9139e / queue|latency_ms|queue|3|34.024|1.004|0.9894|121.614|
+|79fbbec9139e / queue|latency_ms|queue+own_budget_oracle|3|41.008|1.113|0.9890|114.630|
+|79fbbec9139e / queue|planned_latency_ms|queue|3|34.028|1.004|0.9894|121.636|
+|79fbbec9139e / queue|planned_latency_ms|queue+own_budget_oracle|3|41.016|1.114|0.9890|114.648|
+|79fbbec9139e / queue|wait_ms|queue|3|23.033|0.716|0.9895|132.598|
+|79fbbec9139e / queue|wait_ms|queue+own_budget_oracle|3|40.739|1.087|0.9896|114.893|
+|79fbbec9139e / queue_per_capacity|callback_ms|queue_per_capacity|3|25.094|0.498|0.9898|-21.943|
+|79fbbec9139e / queue_per_capacity|callback_ms|queue_per_capacity+own_budget_oracle|3|6.266|0.139|0.9888|-3.114|
+|79fbbec9139e / queue_per_capacity|latency_ms|queue_per_capacity|3|34.024|1.004|0.9894|121.614|
+|79fbbec9139e / queue_per_capacity|latency_ms|queue_per_capacity+own_budget_oracle|3|41.008|1.113|0.9890|114.630|
+|79fbbec9139e / queue_per_capacity|planned_latency_ms|queue_per_capacity|3|34.028|1.004|0.9894|121.636|
+|79fbbec9139e / queue_per_capacity|planned_latency_ms|queue_per_capacity+own_budget_oracle|3|41.016|1.114|0.9890|114.648|
+|79fbbec9139e / queue_per_capacity|wait_ms|queue_per_capacity|3|23.033|0.716|0.9895|132.598|
+|79fbbec9139e / queue_per_capacity|wait_ms|queue_per_capacity+own_budget_oracle|3|40.739|1.087|0.9896|114.893|
+|79fbbec9139e / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity|3|25.094|0.498|0.9900|-21.942|
+|79fbbec9139e / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.266|0.139|0.9889|-3.114|
+|79fbbec9139e / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity|3|32.519|0.920|0.9897|123.119|
+|79fbbec9139e / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|40.037|1.029|0.9894|115.601|
+|79fbbec9139e / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity|3|32.520|0.920|0.9897|123.144|
+|79fbbec9139e / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|40.043|1.029|0.9894|115.621|
+|79fbbec9139e / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity|3|21.201|0.592|0.9896|134.430|
+|79fbbec9139e / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity+own_budget_oracle|3|39.777|0.995|0.9894|115.854|
+|79fbbec9139e / work_ms_per_capacity|callback_ms|work_ms_per_capacity|3|25.094|0.498|0.9900|-21.942|
+|79fbbec9139e / work_ms_per_capacity|callback_ms|work_ms_per_capacity+own_budget_oracle|3|6.266|0.139|0.9889|-3.114|
+|79fbbec9139e / work_ms_per_capacity|latency_ms|work_ms_per_capacity|3|32.519|0.920|0.9897|123.119|
+|79fbbec9139e / work_ms_per_capacity|latency_ms|work_ms_per_capacity+own_budget_oracle|3|40.037|1.029|0.9894|115.601|
+|79fbbec9139e / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity|3|32.520|0.920|0.9897|123.144|
+|79fbbec9139e / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity+own_budget_oracle|3|40.043|1.029|0.9894|115.621|
+|79fbbec9139e / work_ms_per_capacity|wait_ms|work_ms_per_capacity|3|21.201|0.592|0.9896|134.430|
+|79fbbec9139e / work_ms_per_capacity|wait_ms|work_ms_per_capacity+own_budget_oracle|3|39.777|0.995|0.9894|115.854|
+|7eb251de2371 / burst_context_remaining|callback_ms|burst_context_remaining|3|25.106|0.497|0.9899|-21.954|
+|7eb251de2371 / burst_context_remaining|callback_ms|burst_context_remaining+own_budget_oracle|3|6.267|0.136|0.9891|-3.115|
+|7eb251de2371 / burst_context_remaining|latency_ms|burst_context_remaining|3|25.937|0.546|0.9899|-20.383|
+|7eb251de2371 / burst_context_remaining|latency_ms|burst_context_remaining+own_budget_oracle|3|8.568|0.260|0.9889|-3.014|
+|7eb251de2371 / burst_context_remaining|planned_latency_ms|burst_context_remaining|3|25.937|0.546|0.9898|-20.369|
+|7eb251de2371 / burst_context_remaining|planned_latency_ms|burst_context_remaining+own_budget_oracle|3|8.572|0.260|0.9891|-3.003|
+|7eb251de2371 / burst_context_remaining|wait_ms|burst_context_remaining|3|2.970|0.068|0.9891|1.303|
+|7eb251de2371 / burst_context_remaining|wait_ms|burst_context_remaining+own_budget_oracle|3|3.714|0.150|0.9888|0.559|
+|7eb251de2371 / outstanding_per_capacity|callback_ms|outstanding_per_capacity|3|25.105|0.497|0.9898|-21.954|
+|7eb251de2371 / outstanding_per_capacity|callback_ms|outstanding_per_capacity+own_budget_oracle|3|6.267|0.136|0.9892|-3.116|
+|7eb251de2371 / outstanding_per_capacity|latency_ms|outstanding_per_capacity|3|26.040|0.568|0.9898|-20.487|
+|7eb251de2371 / outstanding_per_capacity|latency_ms|outstanding_per_capacity+own_budget_oracle|3|8.541|0.283|0.9889|-2.987|
+|7eb251de2371 / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity|3|26.042|0.568|0.9898|-20.473|
+|7eb251de2371 / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity+own_budget_oracle|3|8.545|0.283|0.9886|-2.977|
+|7eb251de2371 / outstanding_per_capacity|wait_ms|outstanding_per_capacity|3|3.340|0.095|0.9891|0.932|
+|7eb251de2371 / outstanding_per_capacity|wait_ms|outstanding_per_capacity+own_budget_oracle|3|3.819|0.176|0.9887|0.453|
+|7eb251de2371 / queue|callback_ms|queue|3|25.103|0.496|0.9898|-21.951|
+|7eb251de2371 / queue|callback_ms|queue+own_budget_oracle|3|6.265|0.136|0.9893|-3.114|
+|7eb251de2371 / queue|latency_ms|queue|3|26.302|0.915|0.9899|-20.748|
+|7eb251de2371 / queue|latency_ms|queue+own_budget_oracle|3|8.350|0.653|0.9898|-2.796|
+|7eb251de2371 / queue|planned_latency_ms|queue|3|26.312|0.918|0.9899|-20.744|
+|7eb251de2371 / queue|planned_latency_ms|queue+own_budget_oracle|3|8.363|0.655|0.9898|-2.794|
+|7eb251de2371 / queue|wait_ms|queue|3|4.273|0.611|0.9901|-0.001|
+|7eb251de2371 / queue|wait_ms|queue+own_budget_oracle|3|4.274|0.612|0.9900|-0.002|
+|7eb251de2371 / queue_per_capacity|callback_ms|queue_per_capacity|3|25.103|0.496|0.9898|-21.951|
+|7eb251de2371 / queue_per_capacity|callback_ms|queue_per_capacity+own_budget_oracle|3|6.265|0.136|0.9893|-3.114|
+|7eb251de2371 / queue_per_capacity|latency_ms|queue_per_capacity|3|26.302|0.915|0.9899|-20.748|
+|7eb251de2371 / queue_per_capacity|latency_ms|queue_per_capacity+own_budget_oracle|3|8.350|0.653|0.9898|-2.796|
+|7eb251de2371 / queue_per_capacity|planned_latency_ms|queue_per_capacity|3|26.312|0.918|0.9899|-20.744|
+|7eb251de2371 / queue_per_capacity|planned_latency_ms|queue_per_capacity+own_budget_oracle|3|8.363|0.655|0.9898|-2.794|
+|7eb251de2371 / queue_per_capacity|wait_ms|queue_per_capacity|3|4.273|0.611|0.9901|-0.001|
+|7eb251de2371 / queue_per_capacity|wait_ms|queue_per_capacity+own_budget_oracle|3|4.274|0.612|0.9900|-0.002|
+|7eb251de2371 / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity|3|25.105|0.497|0.9898|-21.954|
+|7eb251de2371 / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity+own_budget_oracle|3|6.267|0.136|0.9892|-3.116|
+|7eb251de2371 / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity|3|26.040|0.568|0.9898|-20.487|
+|7eb251de2371 / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|8.541|0.283|0.9889|-2.987|
+|7eb251de2371 / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity|3|26.042|0.568|0.9898|-20.473|
+|7eb251de2371 / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|8.545|0.283|0.9886|-2.977|
+|7eb251de2371 / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity|3|3.340|0.095|0.9891|0.932|
+|7eb251de2371 / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity+own_budget_oracle|3|3.819|0.176|0.9887|0.453|
+|7eb251de2371 / work_ms_per_capacity|callback_ms|work_ms_per_capacity|3|25.105|0.497|0.9898|-21.954|
+|7eb251de2371 / work_ms_per_capacity|callback_ms|work_ms_per_capacity+own_budget_oracle|3|6.267|0.136|0.9892|-3.116|
+|7eb251de2371 / work_ms_per_capacity|latency_ms|work_ms_per_capacity|3|26.040|0.568|0.9898|-20.487|
+|7eb251de2371 / work_ms_per_capacity|latency_ms|work_ms_per_capacity+own_budget_oracle|3|8.541|0.283|0.9889|-2.987|
+|7eb251de2371 / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity|3|26.042|0.568|0.9898|-20.473|
+|7eb251de2371 / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity+own_budget_oracle|3|8.545|0.283|0.9886|-2.977|
+|7eb251de2371 / work_ms_per_capacity|wait_ms|work_ms_per_capacity|3|3.340|0.095|0.9891|0.932|
+|7eb251de2371 / work_ms_per_capacity|wait_ms|work_ms_per_capacity+own_budget_oracle|3|3.819|0.176|0.9887|0.453|
+|c383f86cfb2e / burst_context_remaining|callback_ms|burst_context_remaining|3|94.614|2.013|0.9897|-16.956|
+|c383f86cfb2e / burst_context_remaining|callback_ms|burst_context_remaining+own_budget_oracle|3|68.446|1.586|0.9896|9.212|
+|c383f86cfb2e / burst_context_remaining|latency_ms|burst_context_remaining|3|94.506|1.957|0.9899|4.863|
+|c383f86cfb2e / burst_context_remaining|latency_ms|burst_context_remaining+own_budget_oracle|3|68.892|1.540|0.9900|30.477|
+|c383f86cfb2e / burst_context_remaining|planned_latency_ms|burst_context_remaining|3|94.534|1.963|0.9896|4.871|
+|c383f86cfb2e / burst_context_remaining|planned_latency_ms|burst_context_remaining+own_budget_oracle|3|68.937|1.540|0.9898|30.468|
+|c383f86cfb2e / burst_context_remaining|wait_ms|burst_context_remaining|3|11.726|0.381|0.9899|73.942|
+|c383f86cfb2e / burst_context_remaining|wait_ms|burst_context_remaining+own_budget_oracle|3|19.911|0.574|0.9897|65.757|
+|c383f86cfb2e / outstanding_per_capacity|callback_ms|outstanding_per_capacity|3|94.757|2.015|0.9896|-17.099|
+|c383f86cfb2e / outstanding_per_capacity|callback_ms|outstanding_per_capacity+own_budget_oracle|3|68.258|1.591|0.9897|9.400|
+|c383f86cfb2e / outstanding_per_capacity|latency_ms|outstanding_per_capacity|3|94.592|1.957|0.9895|4.777|
+|c383f86cfb2e / outstanding_per_capacity|latency_ms|outstanding_per_capacity+own_budget_oracle|3|68.530|1.537|0.9898|30.839|
+|c383f86cfb2e / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity|3|94.619|1.962|0.9897|4.786|
+|c383f86cfb2e / outstanding_per_capacity|planned_latency_ms|outstanding_per_capacity+own_budget_oracle|3|68.578|1.537|0.9899|30.827|
+|c383f86cfb2e / outstanding_per_capacity|wait_ms|outstanding_per_capacity|3|11.830|0.381|0.9897|73.838|
+|c383f86cfb2e / outstanding_per_capacity|wait_ms|outstanding_per_capacity+own_budget_oracle|3|20.369|0.577|0.9895|65.298|
+|c383f86cfb2e / queue|callback_ms|queue|3|94.913|2.036|0.9893|-17.255|
+|c383f86cfb2e / queue|callback_ms|queue+own_budget_oracle|3|68.544|1.610|0.9894|9.114|
+|c383f86cfb2e / queue|latency_ms|queue|3|94.867|1.965|0.9896|4.502|
+|c383f86cfb2e / queue|latency_ms|queue+own_budget_oracle|3|68.900|1.550|0.9894|30.469|
+|c383f86cfb2e / queue|planned_latency_ms|queue|3|94.894|1.970|0.9898|4.511|
+|c383f86cfb2e / queue|planned_latency_ms|queue+own_budget_oracle|3|68.940|1.550|0.9894|30.465|
+|c383f86cfb2e / queue|wait_ms|queue|3|14.141|0.520|0.9837|71.527|
+|c383f86cfb2e / queue|wait_ms|queue+own_budget_oracle|3|21.329|0.683|0.9856|64.338|
+|c383f86cfb2e / queue_per_capacity|callback_ms|queue_per_capacity|3|94.913|2.036|0.9893|-17.255|
+|c383f86cfb2e / queue_per_capacity|callback_ms|queue_per_capacity+own_budget_oracle|3|68.544|1.610|0.9894|9.114|
+|c383f86cfb2e / queue_per_capacity|latency_ms|queue_per_capacity|3|94.867|1.965|0.9896|4.502|
+|c383f86cfb2e / queue_per_capacity|latency_ms|queue_per_capacity+own_budget_oracle|3|68.900|1.550|0.9894|30.469|
+|c383f86cfb2e / queue_per_capacity|planned_latency_ms|queue_per_capacity|3|94.894|1.970|0.9898|4.511|
+|c383f86cfb2e / queue_per_capacity|planned_latency_ms|queue_per_capacity+own_budget_oracle|3|68.940|1.550|0.9894|30.465|
+|c383f86cfb2e / queue_per_capacity|wait_ms|queue_per_capacity|3|14.141|0.520|0.9837|71.527|
+|c383f86cfb2e / queue_per_capacity|wait_ms|queue_per_capacity+own_budget_oracle|3|21.329|0.683|0.9856|64.338|
+|c383f86cfb2e / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity|3|94.757|2.015|0.9896|-17.099|
+|c383f86cfb2e / remaining_ms_per_capacity|callback_ms|remaining_ms_per_capacity+own_budget_oracle|3|68.258|1.591|0.9897|9.400|
+|c383f86cfb2e / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity|3|94.592|1.957|0.9895|4.777|
+|c383f86cfb2e / remaining_ms_per_capacity|latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|68.530|1.537|0.9898|30.839|
+|c383f86cfb2e / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity|3|94.619|1.962|0.9897|4.786|
+|c383f86cfb2e / remaining_ms_per_capacity|planned_latency_ms|remaining_ms_per_capacity+own_budget_oracle|3|68.578|1.537|0.9899|30.827|
+|c383f86cfb2e / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity|3|11.830|0.381|0.9897|73.838|
+|c383f86cfb2e / remaining_ms_per_capacity|wait_ms|remaining_ms_per_capacity+own_budget_oracle|3|20.369|0.577|0.9895|65.298|
+|c383f86cfb2e / work_ms_per_capacity|callback_ms|work_ms_per_capacity|3|94.757|2.015|0.9896|-17.099|
+|c383f86cfb2e / work_ms_per_capacity|callback_ms|work_ms_per_capacity+own_budget_oracle|3|68.258|1.591|0.9897|9.400|
+|c383f86cfb2e / work_ms_per_capacity|latency_ms|work_ms_per_capacity|3|94.592|1.957|0.9895|4.777|
+|c383f86cfb2e / work_ms_per_capacity|latency_ms|work_ms_per_capacity+own_budget_oracle|3|68.530|1.537|0.9898|30.839|
+|c383f86cfb2e / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity|3|94.619|1.962|0.9897|4.786|
+|c383f86cfb2e / work_ms_per_capacity|planned_latency_ms|work_ms_per_capacity+own_budget_oracle|3|68.578|1.537|0.9899|30.827|
+|c383f86cfb2e / work_ms_per_capacity|wait_ms|work_ms_per_capacity|3|11.830|0.381|0.9897|73.838|
+|c383f86cfb2e / work_ms_per_capacity|wait_ms|work_ms_per_capacity+own_budget_oracle|3|20.369|0.577|0.9895|65.298|
+
+## 固定工作量的观测成本
+
+仅cost、home、iterations模式比较；相同seed/预算序列/资源，允许观测开关变化。routing收益表仍要求观测配置一致。
+
+|case|有效对|CPU/completed task差 ms|planned均值差 ms|planned p99差 ms|
+|---|---:|---:|---:|---:|
+
+检测到work与outstanding仅为同一信号的常数缩放：79fbbec9139e, c383f86cfb2e, 408bfb50e646, 7eb251de2371, 505461e65f13, 3725bd8c8c3b。这不构成两个独立指标发现。
+
+## 口径与限制
+
+- Only routing=home observations enter metric-quality comparisons; selected pools after routing are selection-biased.
+- Queue is Folly telemetry, not Linux runq. Outstanding includes callbacks already started but not completed.
+- Capacity normalizes by configured min(threads, allowed logical CPUs) or an explicit override; it is not measured CPU throughput. Overlapping masks do not provide independent capacities.
+- Work retains estimated full budgets until completion. Remaining subtracts periodically published progress; neither is exact future service demand. Synthetic exact estimates are oracle information.
+- W=start-submit; X=end-start; L=end-submit; planned=end-planned. Submit precedes routing so W/L include routing. End precedes callback cleanup, so X excludes counter-cleanup tail. Their per-task sums hold, but quantiles do not add.
+- A cohort is selected by planned arrival in [start,end); slow completions after end remain included. Rejections/cancellations/failures remain in the denominators.
+- Inspect planned-time quartiles and submission lag for growing overload before treating a correlation as steady behavior.
+- Correlation is per-task observational association, not a task-level p99, linear law or causal proof. Constant/missing metrics produce NA.
+- Buckets and own-budget boundaries are fitted on training seeds only. Test units are entire unseen seeds; all tasks of a burst remain together.
+- Prediction reports mean-predictor MAE plus conditional-p99 pinball loss and coverage. Predicted conditional p99 is not a whole-run p99. The own-budget baseline uses known synthetic CPU budgets and is labelled oracle.
+- LOW_TAIL means fewer than 1000 tasks or 100 distinct bursts; p99 is still printed descriptively, not treated as a precise tail estimate.
+- Pairing checks full planned task/burst/budget/estimate sequences plus resources and instrumentation. Invalid runs never contribute to a claimed gain.
+- Benefits use per-run means and per-run p99 differences, never an average of per-second p99 or a pooled task bootstrap. At least 7 independent seeds are needed for a paired seed bootstrap CI.
+- Constant estimates make work proportional to outstanding; this is a rescaled signal, not an independent discovery. Batch ordinal/context is synthetic workload information, not a production pool-load counter.
+- Threshold curves expose all candidates. No automatic winner is declared. Tune/observe and evaluate seeds must be disjoint to avoid selection leakage.
+- Process CPU/completed task includes process work during the entire run and drain; it is not worker-only CPU or the analysis-window CPU.
+[root@localhost executor_demo-stage3-balance]#
+
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/balance_matrix.py plan \
+  --phase tune --preset target --metrics queue,outstanding,remaining \
+  --output results/balance-arm/tune.json
+taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+  --config results/balance-arm/tune.json --output results/balance-arm/tune \
+  --binary build-independent-balance/independent_load
+python3 experiments/independent/scripts/analyze_balance.py \
+  --manifest results/balance-arm/tune/manifest.json --output results/balance-arm/tune-analysis
+cat results/balance-arm/tune-analysis/report.md
+split=tune; cases=16; seeds=[21000, 21001, 21002]; runs=48
+offered hours=0.800, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+results/balance-arm/tune.json
+split=tune; cases=16; seeds=[21000, 21001, 21002]; runs=48
+offered hours=0.800, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+main-t256-local-queue-h2-s21000: completed, 60.15s
+main-t16-local-remaining-h200-s21000: completed, 59.95s
+main-t16-local-spread-policy-s21000: completed, 59.86s
+main-t256-local-spread-policy-s21000: completed, 59.93s
+main-t16-local-outstanding-h0.5-s21000: completed, 59.86s
+main-t256-local-remaining-h50-s21000: completed, 59.98s
+main-t16-local-home-s21000: completed, 60.35s
+main-t256-local-outstanding-h2-s21000: completed, 60.01s
+main-t16-local-queue-h2-s21000: completed, 60.06s
+main-t16-local-queue-h0.5-s21000: completed, 59.90s
+main-t256-local-queue-h0.5-s21000: completed, 60.00s
+
+
+
+
+
+
+
+
+
+
+python3 experiments/independent/scripts/balance_matrix.py freeze \
+  --manifest results/balance-arm/tune/manifest.json \
+  --metric outstanding --threshold 2 --queue-threshold 2 \
+  --reason '填写实际tune结论和选择理由' --output results/balance-arm/selection.json
+python3 experiments/independent/scripts/balance_matrix.py plan \
+  --phase evaluate --preset target --selection results/balance-arm/selection.json \
+  --repeats 7 --output results/balance-arm/evaluate.json
+taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+  --config results/balance-arm/evaluate.json --output results/balance-arm/evaluate \
+  --binary build-independent-balance/independent_load
+python3 experiments/independent/scripts/analyze_balance.py \
+  --manifest results/balance-arm/evaluate/manifest.json --output results/balance-arm/evaluate-analysis
+cat results/balance-arm/evaluate-analysis/report.md
+
+python3 experiments/independent/scripts/balance_matrix.py plan \
+  --phase evaluate --preset target --selection results/balance-arm/selection.json \
+  --observation minimal --seeds 32000,32001,32002,32003,32004,32005,32006 \
+  --output results/balance-arm/minimal.json
+taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+  --config results/balance-arm/minimal.json --output results/balance-arm/minimal \
+  --binary build-independent-balance/independent_load
+python3 experiments/independent/scripts/analyze_balance.py \
+  --manifest results/balance-arm/minimal/manifest.json --output results/balance-arm/minimal-analysis
+
+python3 experiments/independent/scripts/balance_matrix.py plan \
+  --phase cost --preset target --threads 16 --metrics outstanding,remaining \
+  --iterations-per-us 64 --output results/balance-arm/cost.json
+taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+  --config results/balance-arm/cost.json --output results/balance-arm/cost \
+  --binary build-independent-balance/independent_load
+python3 experiments/independent/scripts/analyze_balance.py \
+  --manifest results/balance-arm/cost/manifest.json --output results/balance-arm/cost-analysis
+
+cat results/balance-arm/evaluate-analysis/report.md
+python3 -m json.tool results/balance-arm/selection.json
+python3 - <<'PY'
+import json
+from pathlib import Path
+p=Path('results/balance-arm/evaluate/manifest.json')
+m=json.loads(p.read_text())
+print('binary_sha256',m['binary_sha256'])
+print('config_sha256',m['config_sha256'])
+print('split',m['split'],'seeds',m['seeds'])
+for r in m['runs']:
+    print(r['case'],r['seed'],r['status'],r['returncode'],r['path'])
+PY
+
+
+
+main-t256-local-home-s21000: completed, 60.46s
+main-t256-local-remaining-h200-s21000: completed, 60.07s
+main-t256-local-outstanding-h0.5-s21000: completed, 59.98s
+main-t16-local-outstanding-h2-s21000: completed, 59.95s
+main-t16-local-remaining-h50-s21000: completed, 59.86s
+main-t256-local-home-s21001: completed, 60.47s
+main-t16-local-remaining-h200-s21001: completed, 59.96s
+main-t16-local-spread-policy-s21001: completed, 59.86s
+main-t256-local-remaining-h50-s21001: completed, 59.94s
+main-t256-local-queue-h0.5-s21001: completed, 60.01s
+main-t16-local-remaining-h50-s21001: completed, 59.87s
+main-t16-local-outstanding-h2-s21001: completed, 59.96s
+main-t256-local-outstanding-h2-s21001: completed, 60.05s
+main-t256-local-queue-h2-s21001: completed, 60.15s
+main-t256-local-remaining-h200-s21001: completed, 60.03s
+main-t256-local-spread-policy-s21001: completed, 59.94s
+main-t16-local-queue-h0.5-s21001: completed, 59.93s
+main-t256-local-outstanding-h0.5-s21001: completed, 59.98s
+main-t16-local-queue-h2-s21001: completed, 60.03s
+main-t16-local-home-s21001: completed, 60.36s
+main-t16-local-outstanding-h0.5-s21001: completed, 59.87s
+main-t256-local-remaining-h50-s21002: completed, 59.94s
+main-t256-local-home-s21002: completed, 60.50s
+main-t256-local-outstanding-h0.5-s21002: completed, 59.99s
+main-t256-local-queue-h2-s21002: completed, 60.16s
+main-t16-local-home-s21002: completed, 60.37s
+main-t16-local-queue-h0.5-s21002: completed, 59.92s
+main-t256-local-queue-h0.5-s21002: completed, 60.02s
+main-t256-local-outstanding-h2-s21002: completed, 60.05s
+main-t16-local-remaining-h200-s21002: completed, 59.97s
+main-t16-local-remaining-h50-s21002: completed, 59.87s
+main-t256-local-remaining-h200-s21002: completed, 60.06s
+main-t256-local-spread-policy-s21002: completed, 59.96s
+main-t16-local-queue-h2-s21002: completed, 60.07s
+main-t16-local-outstanding-h2-s21002: completed, 59.97s
+main-t16-local-spread-policy-s21002: completed, 59.88s
+main-t16-local-outstanding-h0.5-s21002: completed, 59.88s
+manifest=/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/tune/manifest.json
+runs=48 invalid_runs=0 excluded=0 quality_groups=0
+case split seed valid completed/planned planned_mean_ms planned_p99_ms W_mean_ms X_mean_ms spill
+main-t256-local-queue-h2 tune 21000 True 12000/12000 169.646 344.386 9.952 159.513 0.512
+main-t16-local-remaining-h200 tune 21000 True 12000/12000 117.618 266.613 17.257 100.168 0.670
+main-t16-local-spread-policy tune 21000 True 12000/12000 102.793 180.390 2.253 100.224 0.830
+main-t256-local-spread-policy tune 21000 True 12000/12000 102.885 166.319 0.127 102.425 0.830
+main-t16-local-outstanding-h0.5 tune 21000 True 12000/12000 102.728 179.384 2.250 100.206 0.830
+main-t256-local-remaining-h50 tune 21000 True 12000/12000 102.795 166.670 0.124 102.401 0.830
+main-t16-local-home tune 21000 True 12000/12000 360.385 690.247 260.116 100.143 0.000
+main-t256-local-outstanding-h2 tune 21000 True 12000/12000 123.503 247.105 1.902 121.406 0.670
+main-t16-local-queue-h2 tune 21000 True 12000/12000 149.678 370.780 49.340 100.163 0.512
+main-t16-local-queue-h0.5 tune 21000 True 12000/12000 108.220 220.172 7.784 100.193 0.752
+main-t256-local-queue-h0.5 tune 21000 True 12000/12000 109.774 200.718 0.548 108.985 0.751
+main-t256-local-home tune 21000 True 12000/12000 469.485 669.700 106.359 362.104 0.000
+main-t256-local-remaining-h200 tune 21000 True 12000/12000 123.525 248.829 1.849 121.484 0.670
+main-t256-local-outstanding-h0.5 tune 21000 True 12000/12000 102.799 166.169 0.123 102.408 0.830
+main-t16-local-outstanding-h2 tune 21000 True 12000/12000 117.654 266.613 17.268 100.193 0.670
+main-t16-local-remaining-h50 tune 21000 True 12000/12000 102.740 179.399 2.251 100.208 0.830
+main-t256-local-home tune 21001 True 12000/12000 469.705 668.347 106.675 362.141 0.000
+main-t16-local-remaining-h200 tune 21001 True 12000/12000 117.674 265.844 17.302 100.174 0.670
+main-t16-local-spread-policy tune 21001 True 12000/12000 102.758 179.656 2.242 100.210 0.830
+main-t256-local-remaining-h50 tune 21001 True 12000/12000 102.798 165.136 0.127 102.407 0.830
+main-t256-local-queue-h0.5 tune 21001 True 12000/12000 109.696 201.939 0.526 108.922 0.752
+main-t16-local-remaining-h50 tune 21001 True 12000/12000 102.726 179.011 2.233 100.217 0.830
+main-t16-local-outstanding-h2 tune 21001 True 12000/12000 117.696 266.228 17.314 100.189 0.670
+main-t256-local-outstanding-h2 tune 21001 True 12000/12000 123.481 246.714 1.881 121.400 0.670
+main-t256-local-queue-h2 tune 21001 True 12000/12000 170.169 347.124 9.728 160.257 0.512
+main-t256-local-remaining-h200 tune 21001 True 12000/12000 123.378 246.317 1.962 121.218 0.670
+main-t256-local-spread-policy tune 21001 True 12000/12000 102.831 163.938 0.117 102.399 0.830
+main-t16-local-queue-h0.5 tune 21001 True 12000/12000 108.214 222.828 7.765 100.209 0.752
+main-t256-local-outstanding-h0.5 tune 21001 True 12000/12000 102.836 165.540 0.130 102.408 0.830
+main-t16-local-queue-h2 tune 21001 True 12000/12000 149.610 367.457 49.243 100.189 0.512
+main-t16-local-home tune 21001 True 12000/12000 360.508 692.458 260.241 100.151 0.000
+main-t16-local-outstanding-h0.5 tune 21001 True 12000/12000 102.727 178.980 2.236 100.220 0.830
+main-t256-local-remaining-h50 tune 21002 True 12000/12000 102.911 165.997 0.128 102.490 0.830
+main-t256-local-home tune 21002 True 12000/12000 469.290 669.975 106.008 362.520 0.000
+main-t256-local-outstanding-h0.5 tune 21002 True 12000/12000 102.855 165.465 0.124 102.461 0.830
+main-t256-local-queue-h2 tune 21002 True 12000/12000 169.992 347.565 9.868 159.951 0.512
+main-t16-local-home tune 21002 True 12000/12000 360.029 691.261 259.720 100.195 0.000
+main-t16-local-queue-h0.5 tune 21002 True 12000/12000 108.300 222.587 7.793 100.261 0.752
+main-t256-local-queue-h0.5 tune 21002 True 12000/12000 109.885 199.013 0.525 109.116 0.752
+main-t256-local-outstanding-h2 tune 21002 True 12000/12000 123.617 248.434 1.932 121.491 0.670
+main-t16-local-remaining-h200 tune 21002 True 12000/12000 117.589 267.654 17.145 100.237 0.670
+main-t16-local-remaining-h50 tune 21002 True 12000/12000 102.781 181.536 2.256 100.257 0.830
+main-t256-local-remaining-h200 tune 21002 True 12000/12000 123.548 247.068 1.931 121.394 0.670
+main-t256-local-spread-policy tune 21002 True 12000/12000 102.894 166.591 0.117 102.466 0.830
+main-t16-local-queue-h2 tune 21002 True 12000/12000 149.555 367.617 49.139 100.240 0.512
+main-t16-local-outstanding-h2 tune 21002 True 12000/12000 117.540 267.344 17.130 100.214 0.670
+main-t16-local-spread-policy tune 21002 True 12000/12000 102.821 181.521 2.250 100.263 0.830
+main-t16-local-outstanding-h0.5 tune 21002 True 12000/12000 102.800 181.525 2.259 100.273 0.830
+PAIRED: case split valid_pairs invalid_pairs planned_mean_delta_ms planned_p99_delta_ms status
+main-t16-local-outstanding-h0.5 tune 3 0 -257.555 -511.359 descriptive_only
+main-t16-local-outstanding-h2 tune 3 0 -242.677 -424.594 descriptive_only
+main-t16-local-queue-h0.5 tune 3 0 -252.063 -469.460 descriptive_only
+main-t16-local-queue-h2 tune 3 0 -210.693 -322.704 descriptive_only
+main-t16-local-remaining-h200 tune 3 0 -242.680 -424.618 descriptive_only
+main-t16-local-remaining-h50 tune 3 0 -257.558 -511.340 descriptive_only
+main-t16-local-spread-policy tune 3 0 -257.517 -510.800 descriptive_only
+main-t256-local-outstanding-h0.5 tune 3 0 -366.664 -503.616 descriptive_only
+main-t256-local-outstanding-h2 tune 3 0 -345.960 -421.923 descriptive_only
+main-t256-local-queue-h0.5 tune 3 0 -359.708 -468.784 descriptive_only
+main-t256-local-queue-h2 tune 3 0 -299.558 -322.983 descriptive_only
+main-t256-local-remaining-h200 tune 3 0 -346.010 -421.936 descriptive_only
+main-t256-local-remaining-h50 tune 3 0 -366.659 -503.406 descriptive_only
+main-t256-local-spread-policy tune 3 0 -366.624 -503.725 descriptive_only
+OBSERVER_COST: case pairs CPU_per_completed_delta_ms planned_mean_delta_ms planned_p99_delta_ms
+QUALITY: config metric target folds mean_MAE_ms p99_pinball_ms p99_coverage MAE_reduction_vs_budget_ms
+No automatic winning metric/threshold. Positive correlation alone is insufficient; see held-out error, tail coverage, validity and cost.
+results/balance-arm/tune-analysis/report.md
+# 阶段3：指标质量与阈值均衡
+
+读取 48 轮，文件缺失/损坏等排除 0 条。原始 CSV 保留在各运行目录；本报告不重新解释失败为性能收益。
+
+## 逐轮原始摘要
+
+|case / seed / split|valid|完成/计划|planned均值 ms|planned p99 ms|W均值 ms|X均值 ms|spill|
+|---|---|---:|---:|---:|---:|---:|---:|
+|main-t256-local-queue-h2 / 21000 / tune|True|12000/12000|169.646|344.386|9.952|159.513|0.512|
+|main-t16-local-remaining-h200 / 21000 / tune|True|12000/12000|117.618|266.613|17.257|100.168|0.670|
+|main-t16-local-spread-policy / 21000 / tune|True|12000/12000|102.793|180.390|2.253|100.224|0.830|
+|main-t256-local-spread-policy / 21000 / tune|True|12000/12000|102.885|166.319|0.127|102.425|0.830|
+|main-t16-local-outstanding-h0.5 / 21000 / tune|True|12000/12000|102.728|179.384|2.250|100.206|0.830|
+|main-t256-local-remaining-h50 / 21000 / tune|True|12000/12000|102.795|166.670|0.124|102.401|0.830|
+|main-t16-local-home / 21000 / tune|True|12000/12000|360.385|690.247|260.116|100.143|0.000|
+|main-t256-local-outstanding-h2 / 21000 / tune|True|12000/12000|123.503|247.105|1.902|121.406|0.670|
+|main-t16-local-queue-h2 / 21000 / tune|True|12000/12000|149.678|370.780|49.340|100.163|0.512|
+|main-t16-local-queue-h0.5 / 21000 / tune|True|12000/12000|108.220|220.172|7.784|100.193|0.752|
+|main-t256-local-queue-h0.5 / 21000 / tune|True|12000/12000|109.774|200.718|0.548|108.985|0.751|
+|main-t256-local-home / 21000 / tune|True|12000/12000|469.485|669.700|106.359|362.104|0.000|
+|main-t256-local-remaining-h200 / 21000 / tune|True|12000/12000|123.525|248.829|1.849|121.484|0.670|
+|main-t256-local-outstanding-h0.5 / 21000 / tune|True|12000/12000|102.799|166.169|0.123|102.408|0.830|
+|main-t16-local-outstanding-h2 / 21000 / tune|True|12000/12000|117.654|266.613|17.268|100.193|0.670|
+|main-t16-local-remaining-h50 / 21000 / tune|True|12000/12000|102.740|179.399|2.251|100.208|0.830|
+|main-t256-local-home / 21001 / tune|True|12000/12000|469.705|668.347|106.675|362.141|0.000|
+|main-t16-local-remaining-h200 / 21001 / tune|True|12000/12000|117.674|265.844|17.302|100.174|0.670|
+|main-t16-local-spread-policy / 21001 / tune|True|12000/12000|102.758|179.656|2.242|100.210|0.830|
+|main-t256-local-remaining-h50 / 21001 / tune|True|12000/12000|102.798|165.136|0.127|102.407|0.830|
+|main-t256-local-queue-h0.5 / 21001 / tune|True|12000/12000|109.696|201.939|0.526|108.922|0.752|
+|main-t16-local-remaining-h50 / 21001 / tune|True|12000/12000|102.726|179.011|2.233|100.217|0.830|
+|main-t16-local-outstanding-h2 / 21001 / tune|True|12000/12000|117.696|266.228|17.314|100.189|0.670|
+|main-t256-local-outstanding-h2 / 21001 / tune|True|12000/12000|123.481|246.714|1.881|121.400|0.670|
+|main-t256-local-queue-h2 / 21001 / tune|True|12000/12000|170.169|347.124|9.728|160.257|0.512|
+|main-t256-local-remaining-h200 / 21001 / tune|True|12000/12000|123.378|246.317|1.962|121.218|0.670|
+|main-t256-local-spread-policy / 21001 / tune|True|12000/12000|102.831|163.938|0.117|102.399|0.830|
+|main-t16-local-queue-h0.5 / 21001 / tune|True|12000/12000|108.214|222.828|7.765|100.209|0.752|
+|main-t256-local-outstanding-h0.5 / 21001 / tune|True|12000/12000|102.836|165.540|0.130|102.408|0.830|
+|main-t16-local-queue-h2 / 21001 / tune|True|12000/12000|149.610|367.457|49.243|100.189|0.512|
+|main-t16-local-home / 21001 / tune|True|12000/12000|360.508|692.458|260.241|100.151|0.000|
+|main-t16-local-outstanding-h0.5 / 21001 / tune|True|12000/12000|102.727|178.980|2.236|100.220|0.830|
+|main-t256-local-remaining-h50 / 21002 / tune|True|12000/12000|102.911|165.997|0.128|102.490|0.830|
+|main-t256-local-home / 21002 / tune|True|12000/12000|469.290|669.975|106.008|362.520|0.000|
+|main-t256-local-outstanding-h0.5 / 21002 / tune|True|12000/12000|102.855|165.465|0.124|102.461|0.830|
+|main-t256-local-queue-h2 / 21002 / tune|True|12000/12000|169.992|347.565|9.868|159.951|0.512|
+|main-t16-local-home / 21002 / tune|True|12000/12000|360.029|691.261|259.720|100.195|0.000|
+|main-t16-local-queue-h0.5 / 21002 / tune|True|12000/12000|108.300|222.587|7.793|100.261|0.752|
+|main-t256-local-queue-h0.5 / 21002 / tune|True|12000/12000|109.885|199.013|0.525|109.116|0.752|
+|main-t256-local-outstanding-h2 / 21002 / tune|True|12000/12000|123.617|248.434|1.932|121.491|0.670|
+|main-t16-local-remaining-h200 / 21002 / tune|True|12000/12000|117.589|267.654|17.145|100.237|0.670|
+|main-t16-local-remaining-h50 / 21002 / tune|True|12000/12000|102.781|181.536|2.256|100.257|0.830|
+|main-t256-local-remaining-h200 / 21002 / tune|True|12000/12000|123.548|247.068|1.931|121.394|0.670|
+|main-t256-local-spread-policy / 21002 / tune|True|12000/12000|102.894|166.591|0.117|102.466|0.830|
+|main-t16-local-queue-h2 / 21002 / tune|True|12000/12000|149.555|367.617|49.139|100.240|0.512|
+|main-t16-local-outstanding-h2 / 21002 / tune|True|12000/12000|117.540|267.344|17.130|100.214|0.670|
+|main-t16-local-spread-policy / 21002 / tune|True|12000/12000|102.821|181.521|2.250|100.263|0.830|
+|main-t16-local-outstanding-h0.5 / 21002 / tune|True|12000/12000|102.800|181.525|2.259|100.273|0.830|
+
+## 同种子配对收益
+
+下表为候选减home的逐轮差值再取均值；负值表示时延下降。p99没有跨轮合并。
+
+|case / split|有效/无效对|planned均值差 ms|planned p99差 ms|95% CI（p99差）|说明|
+|---|---:|---:|---:|---|---|
+|main-t16-local-outstanding-h0.5 / tune|3/0|-257.555|-511.359|NA|descriptive_only|
+|main-t16-local-outstanding-h2 / tune|3/0|-242.677|-424.594|NA|descriptive_only|
+|main-t16-local-queue-h0.5 / tune|3/0|-252.063|-469.460|NA|descriptive_only|
+|main-t16-local-queue-h2 / tune|3/0|-210.693|-322.704|NA|descriptive_only|
+|main-t16-local-remaining-h200 / tune|3/0|-242.680|-424.618|NA|descriptive_only|
+|main-t16-local-remaining-h50 / tune|3/0|-257.558|-511.340|NA|descriptive_only|
+|main-t16-local-spread-policy / tune|3/0|-257.517|-510.800|NA|descriptive_only|
+|main-t256-local-outstanding-h0.5 / tune|3/0|-366.664|-503.616|NA|descriptive_only|
+|main-t256-local-outstanding-h2 / tune|3/0|-345.960|-421.923|NA|descriptive_only|
+|main-t256-local-queue-h0.5 / tune|3/0|-359.708|-468.784|NA|descriptive_only|
+|main-t256-local-queue-h2 / tune|3/0|-299.558|-322.983|NA|descriptive_only|
+|main-t256-local-remaining-h200 / tune|3/0|-346.010|-421.936|NA|descriptive_only|
+|main-t256-local-remaining-h50 / tune|3/0|-366.659|-503.406|NA|descriptive_only|
+|main-t256-local-spread-policy / tune|3/0|-366.624|-503.725|NA|descriptive_only|
+
+## 留出整轮的指标预测
+
+下表每行固定配置、指标、目标和模型，数值为留出seed各折等权均值；所有折明细见prediction.csv。MAE越小越好，p99 pinball越小越好，coverage需结合0.99目标和尾样本量判断。buckets.csv边界来自训练seed，p99及LOW_TAIL以独立burst数伴随报告。
+
+|配置 / 指标|目标|模型|折数|mean MAE ms|p99 pinball ms|p99 coverage|相对自身预算基线MAE减少 ms|
+|---|---|---|---:|---:|---:|---:|---:|
+
+## 固定工作量的观测成本
+
+仅cost、home、iterations模式比较；相同seed/预算序列/资源，允许观测开关变化。routing收益表仍要求观测配置一致。
+
+|case|有效对|CPU/completed task差 ms|planned均值差 ms|planned p99差 ms|
+|---|---:|---:|---:|---:|
+
+## 口径与限制
+
+- Only routing=home observations enter metric-quality comparisons; selected pools after routing are selection-biased.
+- Queue is Folly telemetry, not Linux runq. Outstanding includes callbacks already started but not completed.
+- Capacity normalizes by configured min(threads, allowed logical CPUs) or an explicit override; it is not measured CPU throughput. Overlapping masks do not provide independent capacities.
+- Work retains estimated full budgets until completion. Remaining subtracts periodically published progress; neither is exact future service demand. Synthetic exact estimates are oracle information.
+- W=start-submit; X=end-start; L=end-submit; planned=end-planned. Submit precedes routing so W/L include routing. End precedes callback cleanup, so X excludes counter-cleanup tail. Their per-task sums hold, but quantiles do not add.
+- A cohort is selected by planned arrival in [start,end); slow completions after end remain included. Rejections/cancellations/failures remain in the denominators.
+- Inspect planned-time quartiles and submission lag for growing overload before treating a correlation as steady behavior.
+- Correlation is per-task observational association, not a task-level p99, linear law or causal proof. Constant/missing metrics produce NA.
+- Buckets and own-budget boundaries are fitted on training seeds only. Test units are entire unseen seeds; all tasks of a burst remain together.
+- Prediction reports mean-predictor MAE plus conditional-p99 pinball loss and coverage. Predicted conditional p99 is not a whole-run p99. The own-budget baseline uses known synthetic CPU budgets and is labelled oracle.
+- LOW_TAIL means fewer than 1000 tasks or 100 distinct bursts; p99 is still printed descriptively, not treated as a precise tail estimate.
+- Pairing checks full planned task/burst/budget/estimate sequences plus resources and instrumentation. Invalid runs never contribute to a claimed gain.
+- Benefits use per-run means and per-run p99 differences, never an average of per-second p99 or a pooled task bootstrap. At least 7 independent seeds are needed for a paired seed bootstrap CI.
+- Constant estimates make work proportional to outstanding; this is a rescaled signal, not an independent discovery. Batch ordinal/context is synthetic workload information, not a production pool-load counter.
+- Threshold curves expose all candidates. No automatic winner is declared. Tune/observe and evaluate seeds must be disjoint to avoid selection leakage.
+- Process CPU/completed task includes process work during the entire run and drain; it is not worker-only CPU or the analysis-window CPU.
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/balance_matrix.py freeze \
+>   --manifest results/balance-arm/tune/manifest.json \
+>   --metric outstanding --threshold 2 --queue-threshold 2 \
+>   --reason '填写实际tune结论和选择理由' --output results/balance-arm/selection.json
+results/balance-arm/selection.json
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/balance_matrix.py plan \
+>   --phase evaluate --preset target --selection results/balance-arm/selection.json \
+>   --repeats 7 --output results/balance-arm/evaluate.json
+split=evaluate; cases=8; seeds=[31000, 31001, 31002, 31003, 31004, 31005, 31006]; runs=56
+offered hours=0.933, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+results/balance-arm/evaluate.json
+[root@localhost executor_demo-stage3-balance]# taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+>   --config results/balance-arm/evaluate.json --output results/balance-arm/evaluate \
+>   --binary build-independent-balance/independent_load
+split=evaluate; cases=8; seeds=[31000, 31001, 31002, 31003, 31004, 31005, 31006]; runs=56
+offered hours=0.933, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+main-t256-local-spread-policy-s31000: completed, 59.92s
+main-t16-local-home-s31000: completed, 60.34s
+main-t256-local-outstanding-h2-s31000: completed, 60.07s
+main-t16-local-spread-policy-s31000: completed, 59.86s
+main-t256-local-home-s31000: completed, 60.44s
+main-t256-local-queue-h2-s31000: completed, 60.14s
+main-t16-local-outstanding-h2-s31000: completed, 59.96s
+main-t16-local-queue-h2-s31000: completed, 60.06s
+main-t16-local-queue-h2-s31001: completed, 60.11s
+main-t256-local-queue-h2-s31001: completed, 60.16s
+main-t16-local-spread-policy-s31001: completed, 59.86s
+main-t16-local-outstanding-h2-s31001: completed, 59.95s
+main-t256-local-home-s31001: completed, 60.49s
+main-t256-local-spread-policy-s31001: completed, 59.95s
+main-t16-local-home-s31001: completed, 60.41s
+main-t256-local-outstanding-h2-s31001: completed, 60.02s
+main-t256-local-home-s31002: completed, 60.50s
+main-t16-local-queue-h2-s31002: completed, 60.11s
+main-t256-local-outstanding-h2-s31002: completed, 60.07s
+main-t256-local-queue-h2-s31002: completed, 60.17s
+main-t256-local-spread-policy-s31002: completed, 59.93s
+main-t16-local-spread-policy-s31002: completed, 59.86s
+main-t16-local-home-s31002: completed, 60.36s
+main-t16-local-outstanding-h2-s31002: completed, 59.97s
+main-t256-local-outstanding-h2-s31003: completed, 60.03s
+main-t16-local-queue-h2-s31003: completed, 60.06s
+main-t256-local-home-s31003: completed, 60.47s
+main-t256-local-spread-policy-s31003: completed, 59.96s
+main-t256-local-queue-h2-s31003: completed, 60.15s
+main-t16-local-home-s31003: completed, 60.37s
+main-t16-local-outstanding-h2-s31003: completed, 59.95s
+main-t16-local-spread-policy-s31003: completed, 59.87s
+main-t16-local-spread-policy-s31004: completed, 59.92s
+main-t256-local-spread-policy-s31004: completed, 59.98s
+main-t16-local-home-s31004: completed, 60.39s
+main-t256-local-queue-h2-s31004: completed, 60.13s
+main-t16-local-outstanding-h2-s31004: completed, 59.96s
+main-t256-local-outstanding-h2-s31004: completed, 60.06s
+main-t16-local-queue-h2-s31004: completed, 60.07s
+main-t256-local-home-s31004: completed, 60.45s
+main-t256-local-home-s31005: completed, 60.42s
+main-t16-local-outstanding-h2-s31005: completed, 59.98s
+main-t256-local-outstanding-h2-s31005: completed, 60.03s
+main-t256-local-queue-h2-s31005: completed, 60.10s
+main-t16-local-queue-h2-s31005: completed, 60.08s
+main-t16-local-spread-policy-s31005: completed, 59.82s
+main-t256-local-spread-policy-s31005: completed, 59.98s
+main-t16-local-home-s31005: completed, 60.33s
+main-t256-local-queue-h2-s31006: completed, 60.17s
+main-t256-local-outstanding-h2-s31006: completed, 60.06s
+main-t256-local-home-s31006: completed, 60.49s
+main-t16-local-spread-policy-s31006: completed, 59.89s
+main-t16-local-home-s31006: completed, 60.42s
+main-t16-local-outstanding-h2-s31006: completed, 59.98s
+main-t256-local-spread-policy-s31006: completed, 59.95s
+main-t16-local-queue-h2-s31006: completed, 60.08s
+manifest=/home/bty/rank_demo/executor_demo-stage3-balance/results/balance-arm/evaluate/manifest.json
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/analyze_balance.py \
+>   --manifest results/balance-arm/evaluate/manifest.json --output results/balance-arm/evaluate-analysis
+runs=56 invalid_runs=0 excluded=0 quality_groups=0
+case split seed valid completed/planned planned_mean_ms planned_p99_ms W_mean_ms X_mean_ms spill
+main-t256-local-spread-policy evaluate 31000 True 12000/12000 102.892 166.083 0.118 102.455 0.830
+main-t16-local-home evaluate 31000 True 12000/12000 359.344 691.222 259.016 100.203 0.000
+main-t256-local-outstanding-h2 evaluate 31000 True 12000/12000 123.511 248.204 1.900 121.419 0.670
+main-t16-local-spread-policy evaluate 31000 True 12000/12000 102.840 179.898 2.245 100.284 0.830
+main-t256-local-home evaluate 31000 True 12000/12000 468.711 667.449 106.406 361.421 0.000
+main-t256-local-queue-h2 evaluate 31000 True 12000/12000 169.634 347.002 9.889 159.567 0.512
+main-t16-local-outstanding-h2 evaluate 31000 True 12000/12000 117.486 266.015 17.065 100.226 0.670
+main-t16-local-queue-h2 evaluate 31000 True 12000/12000 149.279 368.843 48.896 100.213 0.512
+main-t16-local-queue-h2 evaluate 31001 True 12000/12000 149.946 366.366 49.559 100.196 0.511
+main-t256-local-queue-h2 evaluate 31001 True 12000/12000 170.426 347.922 9.892 160.361 0.512
+main-t16-local-spread-policy evaluate 31001 True 12000/12000 102.799 180.739 2.245 100.247 0.830
+main-t16-local-outstanding-h2 evaluate 31001 True 12000/12000 117.856 267.536 17.431 100.231 0.670
+main-t256-local-home evaluate 31001 True 12000/12000 470.452 671.597 106.575 362.681 0.000
+main-t256-local-spread-policy evaluate 31001 True 12000/12000 102.848 166.157 0.115 102.433 0.830
+main-t16-local-home evaluate 31001 True 12000/12000 360.527 691.453 260.218 100.190 0.000
+main-t256-local-outstanding-h2 evaluate 31001 True 12000/12000 123.734 248.289 1.954 121.588 0.670
+main-t256-local-home evaluate 31002 True 12000/12000 468.552 672.389 106.879 360.875 0.000
+main-t16-local-queue-h2 evaluate 31002 True 12000/12000 149.727 367.089 49.449 100.097 0.512
+main-t256-local-outstanding-h2 evaluate 31002 True 12000/12000 123.417 247.332 1.939 121.285 0.670
+main-t256-local-queue-h2 evaluate 31002 True 12000/12000 169.661 348.137 9.913 159.579 0.512
+main-t256-local-spread-policy evaluate 31002 True 12000/12000 102.734 167.271 0.120 102.309 0.830
+main-t16-local-spread-policy evaluate 31002 True 12000/12000 102.697 182.857 2.240 100.145 0.830
+main-t16-local-home evaluate 31002 True 12000/12000 359.743 689.900 259.561 100.061 0.000
+main-t16-local-outstanding-h2 evaluate 31002 True 12000/12000 117.658 266.075 17.366 100.096 0.670
+main-t256-local-outstanding-h2 evaluate 31003 True 12000/12000 123.197 246.480 1.834 121.173 0.670
+main-t16-local-queue-h2 evaluate 31003 True 12000/12000 149.259 369.057 49.124 99.945 0.512
+main-t256-local-home evaluate 31003 True 12000/12000 467.881 665.792 106.812 360.209 0.000
+main-t256-local-spread-policy evaluate 31003 True 12000/12000 102.622 166.733 0.119 102.194 0.830
+main-t256-local-queue-h2 evaluate 31003 True 12000/12000 169.759 346.690 9.664 159.922 0.512
+main-t16-local-home evaluate 31003 True 12000/12000 359.317 689.299 259.252 99.942 0.000
+main-t16-local-outstanding-h2 evaluate 31003 True 12000/12000 117.381 265.384 17.213 99.968 0.670
+main-t16-local-spread-policy evaluate 31003 True 12000/12000 102.542 180.349 2.242 99.995 0.830
+main-t16-local-spread-policy evaluate 31004 True 12000/12000 102.672 178.793 2.239 100.127 0.830
+main-t256-local-spread-policy evaluate 31004 True 12000/12000 102.722 166.296 0.116 102.301 0.830
+main-t16-local-home evaluate 31004 True 12000/12000 360.650 690.822 260.481 100.064 0.000
+main-t256-local-queue-h2 evaluate 31004 True 12000/12000 170.126 347.669 9.802 160.153 0.512
+main-t16-local-outstanding-h2 evaluate 31004 True 12000/12000 117.671 268.903 17.380 100.091 0.670
+main-t256-local-outstanding-h2 evaluate 31004 True 12000/12000 123.784 249.252 1.866 121.725 0.670
+main-t16-local-queue-h2 evaluate 31004 True 12000/12000 149.922 370.155 49.656 100.095 0.512
+main-t256-local-home evaluate 31004 True 12000/12000 467.834 669.134 107.845 358.894 0.000
+main-t256-local-home evaluate 31005 True 12000/12000 468.852 669.997 107.228 360.534 0.000
+main-t16-local-outstanding-h2 evaluate 31005 True 12000/12000 117.677 267.645 17.312 100.171 0.670
+main-t256-local-outstanding-h2 evaluate 31005 True 12000/12000 123.519 247.408 2.016 121.281 0.670
+main-t256-local-queue-h2 evaluate 31005 True 12000/12000 171.222 349.517 9.813 161.222 0.510
+main-t16-local-queue-h2 evaluate 31005 True 12000/12000 149.525 368.178 49.220 100.131 0.512
+main-t16-local-spread-policy evaluate 31005 True 12000/12000 102.749 180.912 2.253 100.181 0.830
+main-t256-local-spread-policy evaluate 31005 True 12000/12000 102.805 165.868 0.120 102.379 0.830
+main-t16-local-home evaluate 31005 True 12000/12000 360.027 691.938 259.800 100.120 0.000
+main-t256-local-queue-h2 evaluate 31006 True 12000/12000 170.780 349.534 9.878 160.728 0.511
+main-t256-local-outstanding-h2 evaluate 31006 True 12000/12000 123.771 248.908 1.899 121.667 0.670
+main-t256-local-home evaluate 31006 True 12000/12000 470.318 671.911 106.705 362.724 0.000
+main-t16-local-spread-policy evaluate 31006 True 12000/12000 102.810 180.285 2.259 100.251 0.830
+main-t16-local-home evaluate 31006 True 12000/12000 360.754 694.404 260.448 100.192 0.000
+main-t16-local-outstanding-h2 evaluate 31006 True 12000/12000 117.812 266.524 17.362 100.237 0.670
+main-t256-local-spread-policy evaluate 31006 True 12000/12000 102.892 166.760 0.117 102.472 0.830
+main-t16-local-queue-h2 evaluate 31006 True 12000/12000 149.796 369.967 49.391 100.224 0.512
+PAIRED: case split valid_pairs invalid_pairs planned_mean_delta_ms planned_p99_delta_ms status
+main-t16-local-outstanding-h2 evaluate 4 0 -242.137 -424.216 descriptive_only
+main-t16-local-queue-h2 evaluate 4 0 -210.180 -322.630 descriptive_only
+main-t16-local-spread-policy evaluate 5 0 -257.206 -510.012 descriptive_only
+main-t16-local-outstanding-h2 evaluate 2 1 -242.646 -426.086 incomplete_evidence_descriptive_only
+main-t16-local-queue-h2 evaluate 2 1 -210.730 -324.098 incomplete_evidence_descriptive_only
+main-t16-local-spread-policy evaluate 2 0 -257.611 -512.573 descriptive_only
+main-t256-local-outstanding-h2 evaluate 3 0 -345.310 -421.825 descriptive_only
+main-t256-local-queue-h2 evaluate 3 0 -298.292 -321.441 descriptive_only
+main-t256-local-spread-policy evaluate 2 0 -366.737 -504.641 descriptive_only
+main-t256-local-outstanding-h2 evaluate 4 0 -345.434 -421.730 descriptive_only
+main-t256-local-queue-h2 evaluate 4 0 -299.029 -321.869 descriptive_only
+main-t256-local-spread-policy evaluate 4 1 -366.125 -502.746 incomplete_evidence_descriptive_only
+OBSERVER_COST: case pairs CPU_per_completed_delta_ms planned_mean_delta_ms planned_p99_delta_ms
+QUALITY: config metric target folds mean_MAE_ms p99_pinball_ms p99_coverage MAE_reduction_vs_budget_ms
+INVALID_PAIR main-t16-local-outstanding-h2 31004 missing_or_ambiguous_matched_home
+INVALID_PAIR main-t16-local-queue-h2 31004 missing_or_ambiguous_matched_home
+INVALID_PAIR main-t256-local-spread-policy 31004 missing_or_ambiguous_matched_home
+No automatic winning metric/threshold. Positive correlation alone is insufficient; see held-out error, tail coverage, validity and cost.
+results/balance-arm/evaluate-analysis/report.md
+[root@localhost executor_demo-stage3-balance]# cat results/balance-arm/evaluate-analysis/report.md
+# 阶段3：指标质量与阈值均衡
+
+读取 56 轮，文件缺失/损坏等排除 0 条。原始 CSV 保留在各运行目录；本报告不重新解释失败为性能收益。
+
+## 逐轮原始摘要
+
+|case / seed / split|valid|完成/计划|planned均值 ms|planned p99 ms|W均值 ms|X均值 ms|spill|
+|---|---|---:|---:|---:|---:|---:|---:|
+|main-t256-local-spread-policy / 31000 / evaluate|True|12000/12000|102.892|166.083|0.118|102.455|0.830|
+|main-t16-local-home / 31000 / evaluate|True|12000/12000|359.344|691.222|259.016|100.203|0.000|
+|main-t256-local-outstanding-h2 / 31000 / evaluate|True|12000/12000|123.511|248.204|1.900|121.419|0.670|
+|main-t16-local-spread-policy / 31000 / evaluate|True|12000/12000|102.840|179.898|2.245|100.284|0.830|
+|main-t256-local-home / 31000 / evaluate|True|12000/12000|468.711|667.449|106.406|361.421|0.000|
+|main-t256-local-queue-h2 / 31000 / evaluate|True|12000/12000|169.634|347.002|9.889|159.567|0.512|
+|main-t16-local-outstanding-h2 / 31000 / evaluate|True|12000/12000|117.486|266.015|17.065|100.226|0.670|
+|main-t16-local-queue-h2 / 31000 / evaluate|True|12000/12000|149.279|368.843|48.896|100.213|0.512|
+|main-t16-local-queue-h2 / 31001 / evaluate|True|12000/12000|149.946|366.366|49.559|100.196|0.511|
+|main-t256-local-queue-h2 / 31001 / evaluate|True|12000/12000|170.426|347.922|9.892|160.361|0.512|
+|main-t16-local-spread-policy / 31001 / evaluate|True|12000/12000|102.799|180.739|2.245|100.247|0.830|
+|main-t16-local-outstanding-h2 / 31001 / evaluate|True|12000/12000|117.856|267.536|17.431|100.231|0.670|
+|main-t256-local-home / 31001 / evaluate|True|12000/12000|470.452|671.597|106.575|362.681|0.000|
+|main-t256-local-spread-policy / 31001 / evaluate|True|12000/12000|102.848|166.157|0.115|102.433|0.830|
+|main-t16-local-home / 31001 / evaluate|True|12000/12000|360.527|691.453|260.218|100.190|0.000|
+|main-t256-local-outstanding-h2 / 31001 / evaluate|True|12000/12000|123.734|248.289|1.954|121.588|0.670|
+|main-t256-local-home / 31002 / evaluate|True|12000/12000|468.552|672.389|106.879|360.875|0.000|
+|main-t16-local-queue-h2 / 31002 / evaluate|True|12000/12000|149.727|367.089|49.449|100.097|0.512|
+|main-t256-local-outstanding-h2 / 31002 / evaluate|True|12000/12000|123.417|247.332|1.939|121.285|0.670|
+|main-t256-local-queue-h2 / 31002 / evaluate|True|12000/12000|169.661|348.137|9.913|159.579|0.512|
+|main-t256-local-spread-policy / 31002 / evaluate|True|12000/12000|102.734|167.271|0.120|102.309|0.830|
+|main-t16-local-spread-policy / 31002 / evaluate|True|12000/12000|102.697|182.857|2.240|100.145|0.830|
+|main-t16-local-home / 31002 / evaluate|True|12000/12000|359.743|689.900|259.561|100.061|0.000|
+|main-t16-local-outstanding-h2 / 31002 / evaluate|True|12000/12000|117.658|266.075|17.366|100.096|0.670|
+|main-t256-local-outstanding-h2 / 31003 / evaluate|True|12000/12000|123.197|246.480|1.834|121.173|0.670|
+|main-t16-local-queue-h2 / 31003 / evaluate|True|12000/12000|149.259|369.057|49.124|99.945|0.512|
+|main-t256-local-home / 31003 / evaluate|True|12000/12000|467.881|665.792|106.812|360.209|0.000|
+|main-t256-local-spread-policy / 31003 / evaluate|True|12000/12000|102.622|166.733|0.119|102.194|0.830|
+|main-t256-local-queue-h2 / 31003 / evaluate|True|12000/12000|169.759|346.690|9.664|159.922|0.512|
+|main-t16-local-home / 31003 / evaluate|True|12000/12000|359.317|689.299|259.252|99.942|0.000|
+|main-t16-local-outstanding-h2 / 31003 / evaluate|True|12000/12000|117.381|265.384|17.213|99.968|0.670|
+|main-t16-local-spread-policy / 31003 / evaluate|True|12000/12000|102.542|180.349|2.242|99.995|0.830|
+|main-t16-local-spread-policy / 31004 / evaluate|True|12000/12000|102.672|178.793|2.239|100.127|0.830|
+|main-t256-local-spread-policy / 31004 / evaluate|True|12000/12000|102.722|166.296|0.116|102.301|0.830|
+|main-t16-local-home / 31004 / evaluate|True|12000/12000|360.650|690.822|260.481|100.064|0.000|
+|main-t256-local-queue-h2 / 31004 / evaluate|True|12000/12000|170.126|347.669|9.802|160.153|0.512|
+|main-t16-local-outstanding-h2 / 31004 / evaluate|True|12000/12000|117.671|268.903|17.380|100.091|0.670|
+|main-t256-local-outstanding-h2 / 31004 / evaluate|True|12000/12000|123.784|249.252|1.866|121.725|0.670|
+|main-t16-local-queue-h2 / 31004 / evaluate|True|12000/12000|149.922|370.155|49.656|100.095|0.512|
+|main-t256-local-home / 31004 / evaluate|True|12000/12000|467.834|669.134|107.845|358.894|0.000|
+|main-t256-local-home / 31005 / evaluate|True|12000/12000|468.852|669.997|107.228|360.534|0.000|
+|main-t16-local-outstanding-h2 / 31005 / evaluate|True|12000/12000|117.677|267.645|17.312|100.171|0.670|
+|main-t256-local-outstanding-h2 / 31005 / evaluate|True|12000/12000|123.519|247.408|2.016|121.281|0.670|
+|main-t256-local-queue-h2 / 31005 / evaluate|True|12000/12000|171.222|349.517|9.813|161.222|0.510|
+|main-t16-local-queue-h2 / 31005 / evaluate|True|12000/12000|149.525|368.178|49.220|100.131|0.512|
+|main-t16-local-spread-policy / 31005 / evaluate|True|12000/12000|102.749|180.912|2.253|100.181|0.830|
+|main-t256-local-spread-policy / 31005 / evaluate|True|12000/12000|102.805|165.868|0.120|102.379|0.830|
+|main-t16-local-home / 31005 / evaluate|True|12000/12000|360.027|691.938|259.800|100.120|0.000|
+|main-t256-local-queue-h2 / 31006 / evaluate|True|12000/12000|170.780|349.534|9.878|160.728|0.511|
+|main-t256-local-outstanding-h2 / 31006 / evaluate|True|12000/12000|123.771|248.908|1.899|121.667|0.670|
+|main-t256-local-home / 31006 / evaluate|True|12000/12000|470.318|671.911|106.705|362.724|0.000|
+|main-t16-local-spread-policy / 31006 / evaluate|True|12000/12000|102.810|180.285|2.259|100.251|0.830|
+|main-t16-local-home / 31006 / evaluate|True|12000/12000|360.754|694.404|260.448|100.192|0.000|
+|main-t16-local-outstanding-h2 / 31006 / evaluate|True|12000/12000|117.812|266.524|17.362|100.237|0.670|
+|main-t256-local-spread-policy / 31006 / evaluate|True|12000/12000|102.892|166.760|0.117|102.472|0.830|
+|main-t16-local-queue-h2 / 31006 / evaluate|True|12000/12000|149.796|369.967|49.391|100.224|0.512|
+
+## 同种子配对收益
+
+下表为候选减home的逐轮差值再取均值；负值表示时延下降。p99没有跨轮合并。
+
+|case / split|有效/无效对|planned均值差 ms|planned p99差 ms|95% CI（p99差）|说明|
+|---|---:|---:|---:|---|---|
+|main-t16-local-outstanding-h2 / evaluate|4/0|-242.137|-424.216|NA|descriptive_only|
+|main-t16-local-queue-h2 / evaluate|4/0|-210.180|-322.630|NA|descriptive_only|
+|main-t16-local-spread-policy / evaluate|5/0|-257.206|-510.012|NA|descriptive_only|
+|main-t16-local-outstanding-h2 / evaluate|2/1|-242.646|-426.086|NA|incomplete_evidence_descriptive_only|
+|main-t16-local-queue-h2 / evaluate|2/1|-210.730|-324.098|NA|incomplete_evidence_descriptive_only|
+|main-t16-local-spread-policy / evaluate|2/0|-257.611|-512.573|NA|descriptive_only|
+|main-t256-local-outstanding-h2 / evaluate|3/0|-345.310|-421.825|NA|descriptive_only|
+|main-t256-local-queue-h2 / evaluate|3/0|-298.292|-321.441|NA|descriptive_only|
+|main-t256-local-spread-policy / evaluate|2/0|-366.737|-504.641|NA|descriptive_only|
+|main-t256-local-outstanding-h2 / evaluate|4/0|-345.434|-421.730|NA|descriptive_only|
+|main-t256-local-queue-h2 / evaluate|4/0|-299.029|-321.869|NA|descriptive_only|
+|main-t256-local-spread-policy / evaluate|4/1|-366.125|-502.746|NA|incomplete_evidence_descriptive_only|
+
+## 留出整轮的指标预测
+
+下表每行固定配置、指标、目标和模型，数值为留出seed各折等权均值；所有折明细见prediction.csv。MAE越小越好，p99 pinball越小越好，coverage需结合0.99目标和尾样本量判断。buckets.csv边界来自训练seed，p99及LOW_TAIL以独立burst数伴随报告。
+
+|配置 / 指标|目标|模型|折数|mean MAE ms|p99 pinball ms|p99 coverage|相对自身预算基线MAE减少 ms|
+|---|---|---|---:|---:|---:|---:|---:|
+
+## 固定工作量的观测成本
+
+仅cost、home、iterations模式比较；相同seed/预算序列/资源，允许观测开关变化。routing收益表仍要求观测配置一致。
+
+|case|有效对|CPU/completed task差 ms|planned均值差 ms|planned p99差 ms|
+|---|---:|---:|---:|---:|
+
+## 无效配对
+
+- main-t16-local-outstanding-h2 seed=31004: missing_or_ambiguous_matched_home
+- main-t16-local-queue-h2 seed=31004: missing_or_ambiguous_matched_home
+- main-t256-local-spread-policy seed=31004: missing_or_ambiguous_matched_home
+
+## 口径与限制
+
+- Only routing=home observations enter metric-quality comparisons; selected pools after routing are selection-biased.
+- Queue is Folly telemetry, not Linux runq. Outstanding includes callbacks already started but not completed.
+- Capacity normalizes by configured min(threads, allowed logical CPUs) or an explicit override; it is not measured CPU throughput. Overlapping masks do not provide independent capacities.
+- Work retains estimated full budgets until completion. Remaining subtracts periodically published progress; neither is exact future service demand. Synthetic exact estimates are oracle information.
+- W=start-submit; X=end-start; L=end-submit; planned=end-planned. Submit precedes routing so W/L include routing. End precedes callback cleanup, so X excludes counter-cleanup tail. Their per-task sums hold, but quantiles do not add.
+- A cohort is selected by planned arrival in [start,end); slow completions after end remain included. Rejections/cancellations/failures remain in the denominators.
+- Inspect planned-time quartiles and submission lag for growing overload before treating a correlation as steady behavior.
+- Correlation is per-task observational association, not a task-level p99, linear law or causal proof. Constant/missing metrics produce NA.
+- Buckets and own-budget boundaries are fitted on training seeds only. Test units are entire unseen seeds; all tasks of a burst remain together.
+- Prediction reports mean-predictor MAE plus conditional-p99 pinball loss and coverage. Predicted conditional p99 is not a whole-run p99. The own-budget baseline uses known synthetic CPU budgets and is labelled oracle.
+- LOW_TAIL means fewer than 1000 tasks or 100 distinct bursts; p99 is still printed descriptively, not treated as a precise tail estimate.
+- Pairing checks full planned task/burst/budget/estimate sequences plus resources and instrumentation. Invalid runs never contribute to a claimed gain.
+- Benefits use per-run means and per-run p99 differences, never an average of per-second p99 or a pooled task bootstrap. At least 7 independent seeds are needed for a paired seed bootstrap CI.
+- Constant estimates make work proportional to outstanding; this is a rescaled signal, not an independent discovery. Batch ordinal/context is synthetic workload information, not a production pool-load counter.
+- Threshold curves expose all candidates. No automatic winner is declared. Tune/observe and evaluate seeds must be disjoint to avoid selection leakage.
+- Process CPU/completed task includes process work during the entire run and drain; it is not worker-only CPU or the analysis-window CPU.
+[root@localhost executor_demo-stage3-balance]#
+[root@localhost executor_demo-stage3-balance]# python3 experiments/independent/scripts/balance_matrix.py plan \
+>   --phase evaluate --preset target --selection results/balance-arm/selection.json \
+>   --observation minimal --seeds 32000,32001,32002,32003,32004,32005,32006 \
+>   --output results/balance-arm/minimal.json
+split=evaluate; cases=10; seeds=[32000, 32001, 32002, 32003, 32004, 32005, 32006]; runs=70
+offered hours=1.167, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+results/balance-arm/minimal.json
+[root@localhost executor_demo-stage3-balance]# taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
+>   --config results/balance-arm/minimal.json --output results/balance-arm/minimal \
+>   --binary build-independent-balance/independent_load
+split=evaluate; cases=10; seeds=[32000, 32001, 32002, 32003, 32004, 32005, 32006]; runs=70
+offered hours=1.167, excluding drain/startup; logical CPUs=96
+CPU union=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239
+This is a plan/pilot, not an empirical performance conclusion.
+main-t16-local-outstanding-h2-s32000: completed, 59.94s

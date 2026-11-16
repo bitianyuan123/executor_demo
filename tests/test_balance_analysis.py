@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Adversarial analysis checks: censoring, plan mismatch and train/test leakage."""
 import copy
+import contextlib
 import csv
 import importlib.util
+import io
 import json
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -276,6 +280,127 @@ class EvidenceGuards(unittest.TestCase):
             a.emit(report, root/'analysis')
             self.assertTrue((root/'analysis/report.json').is_file())
             self.assertTrue((root/'analysis/threshold_curve.csv').is_file())
+
+
+class HostnameAliases(unittest.TestCase):
+    ALIASES = {'localhost.localdomain':'localhost'}
+    REASON = 'Continuous run on the same host; only hostname changed.'
+
+    def test_56_run_hostname_change_is_strict_by_default_and_explicitly_recoverable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entries = []
+            for seed in range(31000, 31007):
+                for threads in (16, 256):
+                    for policy in ('home', 'outstanding', 'queue', 'spread'):
+                        hostname = 'localhost.localdomain' if seed < 31004 else 'localhost'
+                        # A name change during this seed leaves exactly three
+                        # existing home records in a different strict config.
+                        if seed == 31004 and ((threads == 16 and policy in ('home', 'spread')) or
+                                              (threads == 256 and policy == 'spread')):
+                            hostname = 'localhost.localdomain'
+                        entry, _ = fixture(root, f't{threads}-{policy}', seed=seed, split='evaluate',
+                            routing=policy if policy in ('home', 'spread') else 'threshold',
+                            mutate_metadata={'hostname':hostname, 'threads_per_pool':threads,
+                                             'load_metric':'queue' if policy == 'queue' else 'outstanding'})
+                        entry['comparison_group'] = f'main-t{threads}'
+                        entries.append(entry)
+            manifest = write_manifest(root, entries, selection={'source_split':'tune', 'source_seeds':[30000],
+                'metric':'outstanding', 'threshold':1, 'queue_threshold':1})
+            original_files = {Path(e['path'])/'metadata.json':(Path(e['path'])/'metadata.json').read_bytes()
+                              for e in entries}
+            strict = a.analyze([manifest])
+            self.assertEqual(len(strict['runs']), 56)
+            invalid = [p for p in strict['pairs'] if not p['valid']]
+            self.assertEqual(len(invalid), 3)
+            self.assertTrue(all(p['seed'] == 31004 for p in invalid))
+            self.assertTrue(all('home_config_mismatch' in p['reasons'] for p in invalid))
+            for pair in invalid:
+                homes = pair['baseline_match']['same_seed_homes']
+                self.assertEqual(len(homes), 1)
+                self.assertEqual(set(homes[0]['config_differences']), {'hostname'})
+            self.assertEqual(len(strict['comparisons']), 12)
+            self.assertTrue(all(set(g['differences']) == {'hostname'} for g in strict['config_variants']))
+            self.assertEqual(strict['normalization']['hostname_aliases'], {})
+            normalized = a.analyze([manifest], hostname_aliases=self.ALIASES, hostname_alias_reason=self.REASON)
+            self.assertEqual(len(normalized['comparisons']), 6)
+            for comparison in normalized['comparisons']:
+                self.assertEqual(comparison['n_pairs'], 7)
+                self.assertEqual(comparison['n_invalid'], 0)
+                self.assertEqual(comparison['status'], 'paired_seed_bootstrap')
+                self.assertIsNotNone(comparison['planned_latency_ms_p99_delta_ci95'])
+            self.assertTrue(all(not g['differences'] for g in normalized['config_variants']))
+            self.assertEqual(normalized['normalization']['reason'], self.REASON)
+            self.assertGreater(normalized['normalization']['applied_runs'], 0)
+            self.assertEqual(normalized['manifests'][0]['sha256'], strict['manifests'][0]['sha256'])
+            for raw, fixed in zip(strict['runs'], normalized['runs']):
+                self.assertEqual(fixed['metadata'], raw['metadata'])
+                self.assertEqual(fixed['raw_config_id'], raw['config_id'])
+                self.assertEqual(fixed['config']['hostname'], 'localhost')
+            self.assertTrue(all(path.read_bytes() == original for path, original in original_files.items()))
+            rendered = a.report_markdown(normalized)
+            self.assertIn('config_id', rendered)
+            self.assertIn(self.REASON, rendered)
+            json.dumps(normalized, allow_nan=False)
+            printed = io.StringIO()
+            with contextlib.redirect_stdout(printed):
+                a.emit(normalized, root/'normalized-analysis')
+            self.assertIn('PAIRING_SUMMARY comparison_groups=6 valid_pairs=42 invalid_pairs=0', printed.getvalue())
+            self.assertIn('config_ids=2 raw_metadata_preserved=true', printed.getvalue())
+
+    def test_alias_does_not_relax_resource_matching(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            home, _ = fixture(root, split='tune', mutate_metadata={'hostname':'localhost.localdomain'})
+            candidate, _ = fixture(root, 'threshold', routing='threshold', split='tune',
+                mutate_metadata={'hostname':'localhost', 'effective_masks':[[0, 1], [4, 5]]})
+            report = a.analyze([write_manifest(root, [home, candidate])],
+                hostname_aliases=self.ALIASES, hostname_alias_reason=self.REASON)
+            pair = report['pairs'][0]
+            self.assertFalse(pair['valid'])
+            differences = pair['baseline_match']['same_seed_homes'][0]['config_differences']
+            self.assertEqual(set(differences), {'effective_masks'})
+            self.assertEqual(set(report['config_variants'][0]['differences']), {'effective_masks'})
+
+    def test_missing_home_is_distinct_from_config_mismatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            candidate, _ = fixture(root, 'threshold', routing='threshold', split='tune')
+            report = a.analyze([write_manifest(root, [candidate])])
+            self.assertIn('missing_home', report['pairs'][0]['reasons'])
+            self.assertEqual(report['pairs'][0]['baseline_match']['same_seed_homes'], [])
+
+    def test_ambiguous_home_remains_invalid_after_aliasing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first, _ = fixture(root, 'first-home', split='tune', mutate_metadata={'hostname':'localhost.localdomain'})
+            second, _ = fixture(root, 'second-home', split='tune', mutate_metadata={'hostname':'localhost'})
+            candidate, _ = fixture(root, 'threshold', routing='threshold', split='tune', mutate_metadata={'hostname':'localhost'})
+            report = a.analyze([write_manifest(root, [first, second, candidate])],
+                hostname_aliases=self.ALIASES, hostname_alias_reason=self.REASON)
+            self.assertIn('ambiguous_matched_home', report['pairs'][0]['reasons'])
+            self.assertEqual(report['comparisons'][0]['n_pairs'], 0)
+
+    def test_alias_parser_rejects_malformed_conflicting_or_chained_names(self):
+        for values in (['host'], ['=host'], ['host='], ['old=two words'], ['old=new=other'],
+                       ['old=new', 'old=other'], ['old=new', 'new=canonical'], ['old=new', 'new=old']):
+            with self.subTest(values=values), self.assertRaises(ValueError):
+                a.parse_hostname_aliases(values)
+        self.assertEqual(a.parse_hostname_aliases(['first=canonical', 'second=canonical']),
+                         {'first':'canonical', 'second':'canonical'})
+
+    def test_alias_requires_explanation_in_api_and_cli(self):
+        for reason in (None, '', '  '):
+            with self.subTest(reason=reason), self.assertRaisesRegex(ValueError, 'hostname-alias-reason'):
+                a.analyze([], hostname_aliases=self.ALIASES, hostname_alias_reason=reason)
+        with self.assertRaisesRegex(ValueError, 'requires hostname-alias'):
+            a.analyze([], hostname_alias_reason=self.REASON)
+        result = subprocess.run([sys.executable, str(ROOT/'experiments/independent/scripts/analyze_balance.py'),
+            '--manifest', 'unused.json', '--output', 'unused-output', '--hostname-alias', 'old=new'],
+            text=True, capture_output=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('hostname-alias-reason', result.stderr)
+        self.assertNotIn('Traceback', result.stderr)
 
 
 if __name__ == '__main__':

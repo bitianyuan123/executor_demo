@@ -361,6 +361,89 @@ def make_schedule(spec):
     return result
 
 
+def select_schedule(spec, only_cases=None, only_seeds=None):
+    """Filter the original schedule; never mutate its plan or reshuffle a seed block."""
+    names = [case['name'] for case in spec['cases']]
+    if only_cases is not None:
+        if not only_cases or len(only_cases) != len(set(only_cases)):
+            raise ValueError('--only-case names must be nonempty and unique')
+        unknown = set(only_cases) - set(names)
+        if unknown:
+            raise ValueError('unknown --only-case: ' + ', '.join(sorted(unknown)))
+    chosen_seeds = int_list(only_seeds) if only_seeds is not None else list(spec['seeds'])
+    unknown_seeds = set(chosen_seeds) - set(spec['seeds'])
+    if unknown_seeds:
+        raise ValueError('unknown --only-seeds: ' + ', '.join(map(str, sorted(unknown_seeds))))
+    chosen_names = set(only_cases if only_cases is not None else names)
+    selected_cases = [case for case in spec['cases'] if case['name'] in chosen_names]
+    for case in selected_cases:
+        if dict(spec['base'], **case['options'])['routing'] == 'home':
+            continue
+        homes = [home for home in spec['cases']
+                 if dict(spec['base'], **home['options'])['routing'] == 'home'
+                 and home['comparison_group'] == case['comparison_group']
+                 and home['pair_workload_sha256'] == case['pair_workload_sha256']]
+        if len(homes) != 1:
+            raise ValueError(f"{case['name']}: expected exactly one home with the same comparison group/workload")
+        if homes[0]['name'] not in chosen_names:
+            raise ValueError(f"{case['name']}: selection must include matching home {homes[0]['name']}")
+    schedule = [item for item in make_schedule(spec)
+                if item[1] in chosen_seeds and item[2]['name'] in chosen_names]
+    selection = {'only_cases': only_cases, 'only_seeds': chosen_seeds if only_seeds is not None else None,
+                 'cases': [case['name'] for case in selected_cases],
+                 'seeds': [seed for seed in spec['seeds'] if seed in chosen_seeds],
+                 'selected_runs': len(schedule), 'full_plan_runs': spec['planned_runs'],
+                 'selected_offered_hours': sum(float(dict(spec['base'], **case['options'])['duration'])
+                                               for _, _, case in schedule) / 3600,
+                 'full_plan_offered_hours': spec['planned_offered_hours']}
+    return schedule, selection
+
+
+def successful_counts(manifest, spec, schedule):
+    successful = {row['run_id'] for row in manifest['runs']
+                  if row.get('status') == 'completed' and row.get('returncode') == 0}
+    selected_ids = {f"{case['name']}-s{seed}" for _, seed, case in schedule}
+    full_ids = {f"{case['name']}-s{seed}" for _, seed, case in make_schedule(spec)}
+    return {'selected_successful': len(successful & selected_ids), 'selected_total': len(selected_ids),
+            'matrix_successful': len(successful & full_ids), 'matrix_total': len(full_ids)}
+
+
+@contextlib.contextmanager
+def record_invocation(manifest, manifest_path, spec, schedule, selection, args):
+    record = {'started_at_unix': time.time(), 'host': socket.gethostname(), 'pid': os.getpid(),
+              'resume': args.resume, 'selection': selection,
+              'keep_going': args.keep_going, 'timeout_slack': args.timeout_slack,
+              'config_sha256': manifest['config_sha256'], 'binary_sha256': manifest['binary_sha256'],
+              'status': 'running', 'before': successful_counts(manifest, spec, schedule)}
+    manifest.setdefault('invocations', []).append(record)
+    atomic_json(manifest_path, manifest)
+    print(f"retained selected successes={record['before']['selected_successful']}; "
+          f"remaining selected runs={record['before']['selected_total'] - record['before']['selected_successful']}", flush=True)
+    failure = None
+    try:
+        yield
+    except BaseException as error:
+        failure = error
+        raise
+    finally:
+        counts = successful_counts(manifest, spec, schedule)
+        complete = counts['matrix_successful'] == counts['matrix_total']
+        selected_complete = counts['selected_successful'] == counts['selected_total']
+        record.update(finished_at_unix=time.time(), after=counts, selected_complete=selected_complete,
+                      matrix_complete=complete,
+                      status=('interrupted' if isinstance(failure, KeyboardInterrupt) else 'failed')
+                      if failure else ('completed' if selected_complete else 'incomplete'))
+        manifest['matrix_complete'] = complete
+        if complete:
+            manifest.setdefault('finished_at_unix', record['finished_at_unix'])
+        else:
+            manifest.pop('finished_at_unix', None)
+        atomic_json(manifest_path, manifest)
+        print(f"selected successful={counts['selected_successful']}/{counts['selected_total']}; "
+              f"whole matrix successful={counts['matrix_successful']}/{counts['matrix_total']}; "
+              f"matrix_complete={str(complete).lower()}", flush=True)
+
+
 def summary(spec):
     print(f"split={spec['split']}; cases={len(spec['cases'])}; seeds={spec['seeds']}; runs={spec['planned_runs']}")
     print(f"offered hours={spec['planned_offered_hours']:.3f}, excluding drain/startup; logical CPUs={len(spec['launcher_cpu_union'])}")
@@ -455,10 +538,14 @@ def stop_process(process):
 def execute(args):
     spec = json.loads(args.config.read_text())
     validate_spec(spec)
+    schedule, selection = select_schedule(spec, args.only_case, args.only_seeds)
     summary(spec)
+    print(f"selected runs={selection['selected_runs']}/{selection['full_plan_runs']}; "
+          f"selected offered hours={selection['selected_offered_hours']:.3f}/"
+          f"{selection['full_plan_offered_hours']:.3f} full plan, excluding drain/startup")
     binary = args.binary.resolve()
     if args.action == 'dry-run':
-        for repetition, seed, case in make_schedule(spec):
+        for repetition, seed, case in schedule:
             options = dict(spec['base'], **case['options'], seed=seed)
             print(json.dumps({'case': case['name'], 'seed': seed, 'options': options}, sort_keys=True))
         return
@@ -482,6 +569,10 @@ def execute(args):
                 raise ValueError('resume refuses changed binary/config; use a new output directory')
             if manifest['binary'] != str(binary):
                 raise ValueError('resume requires the original binary path')
+            # A restricted selection must not bypass an orphaned child from an unselected case.
+            for row in manifest['runs']:
+                if row.get('status') == 'running' and row.get('child_pid') and alive(row['child_pid']):
+                    raise ValueError(f'old child may still be running, PID={row["child_pid"]}; inspect before resume')
         else:
             manifest = {'schema_version': SCHEMA, 'family': 'stage3-balance', 'split': spec['split'],
                         'binary': str(binary), 'binary_sha256': binary_hash, 'config_sha256': config_hash,
@@ -491,77 +582,81 @@ def execute(args):
             write_new(output / 'config.json', spec)
             atomic_json(manifest_path, manifest)
         by_id = {r['run_id']: r for r in manifest['runs']}
-        for repetition, seed, case in make_schedule(spec):
-            if file_digest(binary) != binary_hash:
-                raise ValueError('binary changed during the matrix; stop and use a new output directory')
-            run_id = f"{case['name']}-s{seed}"
-            entry = by_id.get(run_id)
-            if entry and entry.get('status') == 'completed' and entry.get('returncode') == 0:
-                if not (Path(entry['path']) / 'summary.json').exists():
-                    raise ValueError(f'completed result is missing: {entry["path"]}')
-                print(f'{run_id}: retained completed result', flush=True)
-                continue
-            if entry and entry.get('status') == 'running' and entry.get('child_pid') and alive(entry['child_pid']):
-                raise ValueError(f'old child may still be running, PID={entry["child_pid"]}; inspect before resume')
-            if entry and entry.get('status') == 'running':
-                entry['attempts'][-1].update(status='interrupted', returncode='runner-lost', recovered_at_unix=time.time())
-                entry.update(status='interrupted', returncode='runner-lost')
-                entry.pop('child_pid', None)
-            if not entry:
-                entry = {'run_id': run_id, 'case': case['name'], 'seed': seed, 'repetition': repetition,
-                         'split': spec['split'], 'comparison_group': case['comparison_group'], 'attempts': []}
-                manifest['runs'].append(entry)
-                by_id[run_id] = entry
-            attempt_id = len(entry['attempts']) + 1
-            attempt = output / run_id / f'attempt-{attempt_id:03d}'
-            attempt.mkdir(parents=True, exist_ok=False)
-            run_path = attempt / 'run'
-            options = dict(spec['base'], **case['options'], seed=seed)
-            command = [str(binary), '--output', str(run_path)]
-            for key, value in options.items():
-                command += ['--' + key, str(value)]
-            timeout = float(options['duration']) + float(options['drain-seconds']) + args.timeout_slack
-            record = {'attempt': attempt_id, 'path': str(run_path), 'log': str(attempt / 'stdout.log'),
-                      'command': command, 'started_at_unix': time.time(), 'timeout_seconds': timeout,
-                      'status': 'running', 'returncode': None}
-            entry['attempts'].append(record)
-            entry.update(record, options=options, layout=case['layout'], evaluation_scope=case.get('evaluation_scope'), pair_workload_sha256=case['pair_workload_sha256'])
-            atomic_json(manifest_path, manifest)
-            process = None
-            interrupted = False
-            try:
-                with (attempt / 'stdout.log').open('x') as log:
-                    process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
-                                               start_new_session=True, preexec_fn=lambda: os.sched_setaffinity(0, union))
-                    entry['child_pid'] = process.pid
-                    atomic_json(manifest_path, manifest)
-                    code = process.wait(timeout=timeout)
-                status = 'completed' if code == 0 else 'failed'
-                if code == 0 and not (run_path / 'summary.json').is_file():
-                    code, status = 'missing-summary', 'failed'
-            except subprocess.TimeoutExpired:
-                stop_process(process)
-                code, status = 'timeout', 'timeout'
-            except KeyboardInterrupt:
-                if process:
-                    stop_process(process)
-                code, status, interrupted = 'interrupted', 'interrupted', True
-            except OSError as error:
-                code, status = f'launch-error: {error}', 'failed'
-            record.update(returncode=code, status=status, wall_seconds=time.time() - record['started_at_unix'])
-            entry.update(record)
-            entry.pop('child_pid', None)
-            if status == 'completed':
-                entry['summary'] = json.loads((run_path / 'summary.json').read_text())
-            atomic_json(manifest_path, manifest)
-            print(f'{run_id}: {status}, {record["wall_seconds"]:.2f}s', flush=True)
-            if interrupted:
-                raise KeyboardInterrupt
-            if status != 'completed' and not args.keep_going:
-                raise RuntimeError('run failed; original attempt retained; inspect manifest/log then --resume')
-        manifest['finished_at_unix'] = time.time()
-        atomic_json(manifest_path, manifest)
+        with record_invocation(manifest, manifest_path, spec, schedule, selection, args):
+            execute_schedule(args, spec, schedule, binary, binary_hash, output, manifest, manifest_path, by_id)
         print(f'manifest={manifest_path}')
+
+
+def execute_schedule(args, spec, schedule, binary, binary_hash, output, manifest, manifest_path, by_id):
+    union = spec['launcher_cpu_union']
+    for repetition, seed, case in schedule:
+        if file_digest(binary) != binary_hash:
+            raise ValueError('binary changed during the matrix; stop and use a new output directory')
+        run_id = f"{case['name']}-s{seed}"
+        entry = by_id.get(run_id)
+        if entry and entry.get('status') == 'completed' and entry.get('returncode') == 0:
+            if not (Path(entry['path']) / 'summary.json').exists():
+                raise ValueError(f'completed result is missing: {entry["path"]}')
+            print(f'{run_id}: retained completed result', flush=True)
+            continue
+        if entry and entry.get('status') == 'running' and entry.get('child_pid') and alive(entry['child_pid']):
+            raise ValueError(f'old child may still be running, PID={entry["child_pid"]}; inspect before resume')
+        if entry and entry.get('status') == 'running':
+            entry['attempts'][-1].update(status='interrupted', returncode='runner-lost', recovered_at_unix=time.time())
+            entry.update(status='interrupted', returncode='runner-lost')
+            entry.pop('child_pid', None)
+        if not entry:
+            entry = {'run_id': run_id, 'case': case['name'], 'seed': seed, 'repetition': repetition,
+                     'split': spec['split'], 'comparison_group': case['comparison_group'], 'attempts': []}
+            manifest['runs'].append(entry)
+            by_id[run_id] = entry
+        attempt_id = len(entry['attempts']) + 1
+        attempt = output / run_id / f'attempt-{attempt_id:03d}'
+        attempt.mkdir(parents=True, exist_ok=False)
+        run_path = attempt / 'run'
+        options = dict(spec['base'], **case['options'], seed=seed)
+        command = [str(binary), '--output', str(run_path)]
+        for key, value in options.items():
+            command += ['--' + key, str(value)]
+        timeout = float(options['duration']) + float(options['drain-seconds']) + args.timeout_slack
+        record = {'attempt': attempt_id, 'path': str(run_path), 'log': str(attempt / 'stdout.log'),
+                  'command': command, 'started_at_unix': time.time(), 'timeout_seconds': timeout,
+                  'status': 'running', 'returncode': None}
+        entry['attempts'].append(record)
+        entry.update(record, options=options, layout=case['layout'], evaluation_scope=case.get('evaluation_scope'), pair_workload_sha256=case['pair_workload_sha256'])
+        atomic_json(manifest_path, manifest)
+        process = None
+        interrupted = False
+        try:
+            with (attempt / 'stdout.log').open('x') as log:
+                process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
+                                           start_new_session=True, preexec_fn=lambda: os.sched_setaffinity(0, union))
+                entry['child_pid'] = process.pid
+                atomic_json(manifest_path, manifest)
+                code = process.wait(timeout=timeout)
+            status = 'completed' if code == 0 else 'failed'
+            if code == 0 and not (run_path / 'summary.json').is_file():
+                code, status = 'missing-summary', 'failed'
+        except subprocess.TimeoutExpired:
+            stop_process(process)
+            code, status = 'timeout', 'timeout'
+        except KeyboardInterrupt:
+            if process:
+                stop_process(process)
+            code, status, interrupted = 'interrupted', 'interrupted', True
+        except OSError as error:
+            code, status = f'launch-error: {error}', 'failed'
+        record.update(returncode=code, status=status, wall_seconds=time.time() - record['started_at_unix'])
+        entry.update(record)
+        entry.pop('child_pid', None)
+        if status == 'completed':
+            entry['summary'] = json.loads((run_path / 'summary.json').read_text())
+        atomic_json(manifest_path, manifest)
+        print(f'{run_id}: {status}, {record["wall_seconds"]:.2f}s', flush=True)
+        if interrupted:
+            raise KeyboardInterrupt
+        if status != 'completed' and not args.keep_going:
+            raise RuntimeError('run failed; original attempt retained; inspect manifest/log then --resume')
 
 
 def parser():
@@ -589,6 +684,8 @@ def parser():
         run = sub.add_parser(action)
         run.add_argument('--config', type=Path, required=True)
         run.add_argument('--binary', type=Path, default=Path('build-independent-balance/independent_load'))
+        run.add_argument('--only-case', action='append', help='repeat to select exact case names; include each matching home')
+        run.add_argument('--only-seeds', help='comma list of existing plan seeds; preserve the original schedule order')
         if action == 'run':
             run.add_argument('--output', type=Path, required=True)
             run.add_argument('--resume', action='store_true')

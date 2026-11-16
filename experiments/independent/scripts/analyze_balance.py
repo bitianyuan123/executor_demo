@@ -91,6 +91,55 @@ def digest(value):
     return hashlib.sha256(canonical(value).encode()).hexdigest()
 
 
+def parse_hostname_aliases(values):
+    """Explicit, one-step name aliases; never infer that two hosts are the same."""
+    aliases = {}
+    for value in values:
+        if not isinstance(value, str) or value.count('=') != 1:
+            raise ValueError('hostname-alias must be OLD=CANONICAL')
+        old, new = value.split('=')
+        if not old or not new or any(c.isspace() for c in old+new):
+            raise ValueError('hostname-alias names must be nonempty and contain no whitespace')
+        if old in aliases and aliases[old] != new:
+            raise ValueError(f'conflicting hostname-alias for {old}')
+        aliases[old] = new
+    for old, new in aliases.items():
+        if new in aliases and aliases[new] != new:
+            raise ValueError(f'hostname-alias chains/cycles are not allowed: {old}={new}; use one canonical name')
+    return aliases
+
+
+def config_differences(candidate, home):
+    return {key:{'candidate':candidate.get(key), 'home':home.get(key)}
+            for key in sorted(set(candidate) | set(home))
+            if canonical(candidate.get(key)) != canonical(home.get(key))}
+
+
+def configuration_variants(runs):
+    """Keep config splits inspectable even when strict pairing cannot proceed."""
+    grouped = defaultdict(list)
+    for run in runs:
+        grouped[(run['group'], run['split'])].append(run)
+    result = []
+    for (group, split), members in sorted(grouped.items()):
+        variants = defaultdict(list)
+        for run in members:
+            variants[run['config_id']].append(run)
+        configs = {key:values[0]['config'] for key, values in variants.items()}
+        keys = set().union(*(config.keys() for config in configs.values()))
+        differences = {key:{cid:config.get(key) for cid, config in sorted(configs.items())}
+                       for key in sorted(keys)
+                       if len({canonical(config.get(key)) for config in configs.values()}) > 1}
+        result.append({'group':group, 'split':split, 'differences':differences,
+            'variants':[{'config_id':cid, 'config':configs[cid],
+                         'run_ids':[r['id'] for r in values],
+                         'seeds':sorted({r['seed'] for r in values}),
+                         'raw_config_ids':sorted({r['raw_config_id'] for r in values}),
+                         'raw_hostnames':sorted({r['metadata'].get('hostname') for r in values}, key=str)}
+                        for cid, values in sorted(variants.items())]})
+    return result
+
+
 def get(metadata, entry, key, default=None):
     if key in metadata:
         return metadata[key]
@@ -117,7 +166,7 @@ def resolve_run(manifest, value):
     raise ValueError(f'cannot resolve run directory: {value}')
 
 
-def load_run(path, entry, manifest, window_start=0., window_end=None):
+def load_run(path, entry, manifest, window_start=0., window_end=None, hostname_aliases=None):
     path = Path(path)
     meta = json.loads((path/'metadata.json').read_text())
     summary = json.loads((path/'summary.json').read_text())
@@ -149,6 +198,13 @@ def load_run(path, entry, manifest, window_start=0., window_end=None):
     config['minimal_load_metric'] = get(meta, entry, 'load_metric') if observation == 'minimal' else None
     config['binary_sha256'] = manifest.get('binary_sha256')
     config['window'] = [window_start, end]
+    raw_config_id = digest(config)[:12]
+    hostname = config.get('hostname')
+    normalized_hostname = (hostname_aliases or {}).get(hostname, hostname)
+    hostname_normalization = None
+    if normalized_hostname != hostname:
+        config['hostname'] = normalized_hostname
+        hostname_normalization = {'original':hostname, 'canonical':normalized_hostname}
     capacities = meta.get('capacities', [])
     if capacities and (len(capacities) != meta.get('pools') or
             any(not isinstance(c, (int, float)) or not math.isfinite(c) or c <= 0 for c in capacities)):
@@ -266,12 +322,13 @@ def load_run(path, entry, manifest, window_start=0., window_end=None):
             'evaluation_scope':entry.get('evaluation_scope'),
             'metric':get(meta, entry, 'load_metric', 'queue'), 'threshold':get(meta, entry, 'load_threshold'),
             'min_improvement':get(meta, entry, 'min_improvement'), 'observation':observation,
-            'config':config, 'config_id':digest(config)[:12], 'sequence_sha256':sequence_hash,
+            'config':config, 'config_id':digest(config)[:12], 'raw_config_id':raw_config_id,
+            'hostname_normalization':hostname_normalization, 'sequence_sha256':sequence_hash,
             'valid':not reasons, 'invalid_reasons':reasons, 'statistics':stats,
             'metadata':meta, 'summary':summary, 'planned_time_quartiles':trends, 'rows':rows}
 
 
-def read_manifests(paths, start=None, end=None):
+def read_manifests(paths, start=None, end=None, hostname_aliases=None):
     runs, excluded, manifests, seen = [], [], [], set()
     for source in paths:
         source = Path(source).resolve()
@@ -287,7 +344,7 @@ def read_manifests(paths, start=None, end=None):
                 if str(path) in seen:
                     raise ValueError('duplicate run path')
                 seen.add(str(path))
-                runs.append(load_run(path, entry, manifest, begin, finish))
+                runs.append(load_run(path, entry, manifest, begin, finish, hostname_aliases))
             except (ValueError, KeyError, OSError, TypeError) as exc:
                 excluded.append({'manifest':str(source), 'entry':entry.get('path'), 'case':entry.get('case'),
                                  'group':entry.get('comparison_group', 'default'),
@@ -460,12 +517,20 @@ def compare_runs(runs, selection_seeds=()):
         for candidate in group_runs:
             if candidate['routing'] == 'home':
                 continue
-            baseline = [r for r in homes if r['seed'] == candidate['seed'] and r['split'] == candidate['split'] and r['config_id'] == candidate['config_id']]
+            same_seed_homes = [r for r in homes if r['seed'] == candidate['seed'] and r['split'] == candidate['split']]
+            baseline = [r for r in same_seed_homes if r['config_id'] == candidate['config_id']]
+            baseline_match = {'status':'matched', 'same_seed_homes':[
+                {'run':r['id'], 'config_id':r['config_id'],
+                 'config_differences':config_differences(candidate['config'], r['config'])}
+                for r in same_seed_homes]}
             reasons = list(candidate['invalid_reasons'])
             if candidate['split'] == 'evaluate' and candidate['seed'] in discovery:
                 reasons.append('selection_seed_leakage')
             if len(baseline) != 1:
                 reasons.append('missing_or_ambiguous_matched_home')
+                baseline_match['status'] = ('ambiguous_matched_home' if baseline else
+                    'home_config_mismatch' if same_seed_homes else 'missing_home')
+                reasons.append(baseline_match['status'])
                 baseline = None
             else:
                 baseline = baseline[0]
@@ -478,6 +543,7 @@ def compare_runs(runs, selection_seeds=()):
                 'split':candidate['split'], 'routing':candidate['routing'], 'metric':candidate['metric'],
                 'threshold':candidate['threshold'], 'min_improvement':candidate['min_improvement'],
                 'evaluation_scope':candidate.get('evaluation_scope'),
+                'baseline_match':baseline_match,
                 'valid':not reasons, 'reasons':sorted(set(reasons)), 'deltas':{},
                 'candidate':candidate['statistics'], 'baseline':baseline['statistics'] if baseline else None}
             if baseline:
@@ -562,20 +628,33 @@ def report_markdown(report):
         f"读取 {len(report['runs'])} 轮，文件缺失/损坏等排除 {len(report['excluded_entries'])} 条。"
         '原始 CSV 保留在各运行目录；本报告不重新解释失败为性能收益。', '',
         '## 逐轮原始摘要', '',
-        '|case / seed / split|valid|完成/计划|planned均值 ms|planned p99 ms|W均值 ms|X均值 ms|spill|',
-        '|---|---|---:|---:|---:|---:|---:|---:|']
+        '|case / seed / split|config_id|valid|完成/计划|planned均值 ms|planned p99 ms|W均值 ms|X均值 ms|spill|',
+        '|---|---|---|---:|---:|---:|---:|---:|---:|']
     for run in report['runs']:
         s = run['statistics']
-        out.append(f"|{run['case']} / {run['seed']} / {run['split']}|{run['valid']}|{s['cohort_completed']}/{s['cohort_planned']}|"
+        out.append(f"|{run['case']} / {run['seed']} / {run['split']}|{run['config_id']}|{run['valid']}|{s['cohort_completed']}/{s['cohort_planned']}|"
             f"{fmt(s['planned_latency_ms_mean'])}|{fmt(s['planned_latency_ms_p99'])}|{fmt(s['wait_ms_mean'])}|{fmt(s['callback_ms_mean'])}|{fmt(s['spill_fraction'])}|")
     out += ['', '## 同种子配对收益', '', '下表为候选减home的逐轮差值再取均值；负值表示时延下降。p99没有跨轮合并。', '',
-        '|case / split|有效/无效对|planned均值差 ms|planned p99差 ms|95% CI（p99差）|说明|',
-        '|---|---:|---:|---:|---|---|']
+        '|case / split|config_id|有效/无效对|planned均值差 ms|planned p99差 ms|95% CI（p99差）|说明|',
+        '|---|---|---:|---:|---:|---|---|']
     for item in report['comparisons']:
-        out.append(f"|{item['case']} / {item['split']}|{item['n_pairs']}/{item['n_invalid']}|{fmt(item['planned_mean_delta_ms'])}|"
+        out.append(f"|{item['case']} / {item['split']}|{item['config_id']}|{item['n_pairs']}/{item['n_invalid']}|{fmt(item['planned_mean_delta_ms'])}|"
                    f"{fmt(item['planned_p99_delta_ms'])}|{fmt(item['planned_latency_ms_p99_delta_ci95'])}|{item['status']}|")
     if not report['comparisons']:
         out += ['没有可比较的routing候选；观测阶段不产生均衡收益结论。']
+    normalization = report.get('normalization', {})
+    if normalization.get('hostname_aliases'):
+        out += ['', '## 显式主机名归一化', '',
+            '以下别名由操作者显式指定，仅影响分析配置身份；原始metadata、manifest和CSV未修改。'
+            '别名表示操作者确认这些名称属于同一台实验主机，不会放宽CPU、线程、负载或二进制的配对要求。', '',
+            f"- 别名：`{canonical(normalization['hostname_aliases'])}`",
+            f"- 操作者说明：{normalization['reason']}",
+            f"- 实际变更配置身份的运行数：{normalization['applied_runs']}。原始名称、raw_config_id及逐轮归一化记录见report.json。"]
+    split_configs = [group for group in report.get('config_variants', []) if group['differences']]
+    if split_configs:
+        out += ['', '## 配置拆组诊断', '', '同一comparison_group/split中不同config_id仍分别统计；下列差异不会自动忽略。', '']
+        for group in split_configs:
+            out.append(f"- {group['group']} / {group['split']}: `{canonical(group['differences'])}`")
     out += ['', '## 留出整轮的指标预测', '',
         '下表每行固定配置、指标、目标和模型，数值为留出seed各折等权均值；所有折明细见prediction.csv。'
         'MAE越小越好，p99 pinball越小越好，coverage需结合0.99目标和尾样本量判断。'
@@ -593,10 +672,10 @@ def report_markdown(report):
                    f"{fmt(avg([r['mean_mae_reduction_vs_budget_ms'] for r in rows]))}|")
     out += ['', '## 固定工作量的观测成本', '',
         '仅cost、home、iterations模式比较；相同seed/预算序列/资源，允许观测开关变化。routing收益表仍要求观测配置一致。', '',
-        '|case|有效对|CPU/completed task差 ms|planned均值差 ms|planned p99差 ms|',
-        '|---|---:|---:|---:|---:|']
+        '|case|config_id|有效对|CPU/completed task差 ms|planned均值差 ms|planned p99差 ms|',
+        '|---|---|---:|---:|---:|---:|']
     for row in report['observer_cost_comparisons']:
-        out.append(f"|{row['case']}|{row['n_pairs']}|{fmt(row['process_cpu_per_completed_task_ms_delta'])}|{fmt(row['planned_mean_delta_ms'])}|{fmt(row['planned_p99_delta_ms'])}|")
+        out.append(f"|{row['case']}|{row['config_id']}|{row['n_pairs']}|{fmt(row['process_cpu_per_completed_task_ms_delta'])}|{fmt(row['planned_mean_delta_ms'])}|{fmt(row['planned_p99_delta_ms'])}|")
     redundant = [(g['config_id'], x) for g in report['quality_groups'] for x in g['redundant_signals']]
     if redundant:
         out += ['', '检测到work与outstanding仅为同一信号的常数缩放：'+', '.join(config for config, _ in redundant)+'。这不构成两个独立指标发现。']
@@ -604,7 +683,11 @@ def report_markdown(report):
         out += ['', '## 未纳入记录', '', *[f"- {r['entry']}: {r['reason']}" for r in report['excluded_entries']]]
     bad = [r for r in report['pairs'] if not r['valid']]
     if bad:
-        out += ['', '## 无效配对', '', *[f"- {r['case']} seed={r['seed']}: {', '.join(r['reasons'])}" for r in bad]]
+        out += ['', '## 无效配对', '']
+        for r in bad:
+            out.append(f"- {r['case']} seed={r['seed']} config_id={r['config_id']}: {', '.join(r['reasons'])}")
+            if r['baseline_match']['status'] != 'matched':
+                out.append(f"  配对诊断：`{canonical(r['baseline_match'])}`")
     out += ['', '## 口径与限制', '', *['- '+note for note in NOTES], '']
     return '\n'.join(out)
 
@@ -618,8 +701,13 @@ def csv_write(path, rows):
             writer.writerow({k:canonical(v) if isinstance(v, (dict, list, tuple)) else v for k, v in row.items()})
 
 
-def analyze(paths, start=None, end=None, bins=8):
-    runs, excluded, manifests = read_manifests(paths, start, end)
+def analyze(paths, start=None, end=None, bins=8, hostname_aliases=None, hostname_alias_reason=None):
+    aliases = parse_hostname_aliases([f'{old}={new}' for old, new in (hostname_aliases or {}).items()])
+    if aliases and (not isinstance(hostname_alias_reason, str) or not hostname_alias_reason.strip()):
+        raise ValueError('hostname-alias requires a nonempty hostname-alias-reason asserting the same experiment host')
+    if not aliases and hostname_alias_reason is not None:
+        raise ValueError('hostname-alias-reason requires hostname-alias')
+    runs, excluded, manifests = read_manifests(paths, start, end, aliases)
     quality_groups, correlations, buckets, prediction = metric_analysis(runs, bins)
     selection_seeds = set()
     for source in manifests:
@@ -638,6 +726,11 @@ def analyze(paths, start=None, end=None, bins=8):
                 comparison[field+'_delta_ci95'] = None
     return {'schema':1, 'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'method':'whole-seed holdout, training-only bins; strict paired routing comparisons',
+        'normalization':{'hostname_aliases':aliases, 'applied_runs':sum(r['hostname_normalization'] is not None for r in runs),
+                         'reason':hostname_alias_reason,
+                         'scope':'analysis config identity only; raw input files and metadata are preserved',
+                         'authority':'explicit operator assertion that aliased names identify the same experiment host'},
+        'config_variants':configuration_variants(runs),
         'notes':NOTES, 'manifests':manifests, 'excluded_entries':excluded,
         'runs':[{k:v for k,v in r.items() if k != 'rows'} for r in runs],
         'quality_groups':quality_groups, 'correlations':correlations, 'buckets':buckets,
@@ -649,7 +742,7 @@ def emit(report, output):
     output.mkdir(parents=True, exist_ok=True)
     (output/'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False)+'\n')
     (output/'report.md').write_text(report_markdown(report))
-    csv_write(output/'runs.csv', [{**{k:r[k] for k in ('id', 'case', 'group', 'split', 'seed', 'routing', 'metric', 'threshold', 'config_id', 'valid', 'invalid_reasons', 'sequence_sha256')}, **r['statistics']} for r in report['runs']])
+    csv_write(output/'runs.csv', [{**{k:r[k] for k in ('id', 'case', 'group', 'split', 'seed', 'routing', 'metric', 'threshold', 'config_id', 'raw_config_id', 'hostname_normalization', 'valid', 'invalid_reasons', 'sequence_sha256')}, **r['statistics']} for r in report['runs']])
     for name in ('correlations', 'buckets', 'prediction'):
         csv_write(output/(name+'.csv'), report[name])
     csv_write(output/'paired.csv', [{**{k:v for k,v in row.items() if k not in ('candidate', 'baseline', 'deltas')}, **{k+'_delta':v for k,v in row['deltas'].items()}} for row in report['pairs']])
@@ -657,17 +750,28 @@ def emit(report, output):
     csv_write(output/'observer_cost_pairs.csv', report['observer_cost_pairs'])
     csv_write(output/'observer_cost_comparisons.csv', report['observer_cost_comparisons'])
     print(f"runs={len(report['runs'])} invalid_runs={sum(not r['valid'] for r in report['runs'])} excluded={len(report['excluded_entries'])} quality_groups={len(report['quality_groups'])}")
-    print('case split seed valid completed/planned planned_mean_ms planned_p99_ms W_mean_ms X_mean_ms spill')
+    if report['normalization']['hostname_aliases']:
+        print('HOSTNAME_ALIASES', canonical(report['normalization']['hostname_aliases']),
+              'applied_runs='+str(report['normalization']['applied_runs']),
+              'config_ids='+str(len({r['config_id'] for r in report['runs']})), 'raw_metadata_preserved=true')
+        print('HOSTNAME_ALIAS_REASON', report['normalization']['reason'])
+    for group in report['config_variants']:
+        if group['differences']:
+            print('CONFIG_DIFFERENCES', group['group'], group['split'], canonical(group['differences']))
+    print('case split seed config_id valid completed/planned planned_mean_ms planned_p99_ms W_mean_ms X_mean_ms spill')
     for run in report['runs']:
         s = run['statistics']
-        print(run['case'], run['split'], run['seed'], run['valid'], f"{s['cohort_completed']}/{s['cohort_planned']}",
+        print(run['case'], run['split'], run['seed'], run['config_id'], run['valid'], f"{s['cohort_completed']}/{s['cohort_planned']}",
               *(fmt(s[k]) for k in ('planned_latency_ms_mean', 'planned_latency_ms_p99', 'wait_ms_mean', 'callback_ms_mean', 'spill_fraction')))
-    print('PAIRED: case split valid_pairs invalid_pairs planned_mean_delta_ms planned_p99_delta_ms status')
+    print('PAIRED: case split config_id valid_pairs invalid_pairs planned_mean_delta_ms planned_p99_delta_ms status')
     for row in report['comparisons']:
-        print(row['case'], row['split'], row['n_pairs'], row['n_invalid'], fmt(row['planned_mean_delta_ms']), fmt(row['planned_p99_delta_ms']), row['status'])
-    print('OBSERVER_COST: case pairs CPU_per_completed_delta_ms planned_mean_delta_ms planned_p99_delta_ms')
+        print(row['case'], row['split'], row['config_id'], row['n_pairs'], row['n_invalid'], fmt(row['planned_mean_delta_ms']), fmt(row['planned_p99_delta_ms']), row['status'])
+    print('PAIRING_SUMMARY', 'comparison_groups='+str(len(report['comparisons'])),
+          'valid_pairs='+str(sum(row['n_pairs'] for row in report['comparisons'])),
+          'invalid_pairs='+str(sum(row['n_invalid'] for row in report['comparisons'])))
+    print('OBSERVER_COST: case config_id pairs CPU_per_completed_delta_ms planned_mean_delta_ms planned_p99_delta_ms')
     for row in report['observer_cost_comparisons']:
-        print(row['case'], row['n_pairs'], fmt(row['process_cpu_per_completed_task_ms_delta']), fmt(row['planned_mean_delta_ms']), fmt(row['planned_p99_delta_ms']))
+        print(row['case'], row['config_id'], row['n_pairs'], fmt(row['process_cpu_per_completed_task_ms_delta']), fmt(row['planned_mean_delta_ms']), fmt(row['planned_p99_delta_ms']))
     for group in report['quality_groups']:
         if group['redundant_signals']:
             print('REDUNDANT_SIGNAL', group['config_id'], 'constant work estimate rescales outstanding; not an independent signal')
@@ -680,7 +784,9 @@ def emit(report, output):
         print(*key, len(values), *(fmt(avg([r[k] for r in values]), 4) for k in ('mean_mae_ms', 'p99_pinball_ms', 'p99_coverage', 'mean_mae_reduction_vs_budget_ms')))
     for row in report['pairs']:
         if not row['valid']:
-            print('INVALID_PAIR', row['case'], row['seed'], ','.join(row['reasons']))
+            print('INVALID_PAIR', row['case'], row['seed'], row['config_id'], ','.join(row['reasons']))
+            if row['baseline_match']['status'] != 'matched':
+                print('BASELINE_MATCH', row['case'], row['seed'], canonical(row['baseline_match']))
     for row in report['excluded_entries']:
         print('EXCLUDED', row['entry'], row['reason'])
     print('No automatic winning metric/threshold. Positive correlation alone is insufficient; see held-out error, tail coverage, validity and cost.')
@@ -694,6 +800,10 @@ def main():
     parser.add_argument('--window-start', type=float)
     parser.add_argument('--window-end', type=float)
     parser.add_argument('--bins', type=int, default=8)
+    parser.add_argument('--hostname-alias', action='append', default=[], metavar='OLD=CANONICAL',
+                        help='explicitly identify names of the same host for analysis pairing only; repeatable, raw inputs preserved')
+    parser.add_argument('--hostname-alias-reason',
+                        help='required with hostname-alias: explain why the names identify the same experiment host')
     args = parser.parse_args()
     if args.window_start is not None and (not math.isfinite(args.window_start) or args.window_start < 0):
         parser.error('window-start must be finite and nonnegative')
@@ -701,7 +811,15 @@ def main():
         parser.error('window-end must be finite and after window-start')
     if not 2 <= args.bins <= 32:
         parser.error('bins must be between 2 and 32')
-    report = analyze(args.manifest, args.window_start, args.window_end, args.bins)
+    try:
+        aliases = parse_hostname_aliases(args.hostname_alias)
+        if aliases and (not args.hostname_alias_reason or not args.hostname_alias_reason.strip()):
+            raise ValueError('hostname-alias requires a nonempty hostname-alias-reason asserting the same experiment host')
+        if not aliases and args.hostname_alias_reason is not None:
+            raise ValueError('hostname-alias-reason requires hostname-alias')
+    except ValueError as exc:
+        parser.error(str(exc))
+    report = analyze(args.manifest, args.window_start, args.window_end, args.bins, aliases, args.hostname_alias_reason)
     emit(report, args.output)
     # Exclusions remain explicit evidence, not a reason to hide other completed runs.
     return 0 if report['runs'] else 2

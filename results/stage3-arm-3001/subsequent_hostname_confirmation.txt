@@ -1,0 +1,17 @@
+Source: later user terminal output supplied in this conversation, relayed by the
+parent agent on 2026-11-16. This is a transcription of the confirmed fields,
+not bytes from the original 3001.log and not an independent raw ARM capture.
+
+GROUP main-t256-local
+CONFIGS ['c383f86cfb2e', '590ac4e7825a']
+hostname {"c383f86cfb2e": "localhost.localdomain", "590ac4e7825a": "localhost"}
+
+GROUP main-t16-local
+CONFIGS ['79fbbec9139e', 'b4e75135d0d7']
+hostname {"79fbbec9139e": "localhost.localdomain", "b4e75135d0d7": "localhost"}
+
+The user confirmed hostname is the only differing config field in each group.
+The original report correctly exposed a config mismatch, but the hostname alias
+needs explicit normalization before re-pairing the seven evaluation seeds.
+No CPU mask, thread count, workload, observer, or binary differences may be
+silently ignored. Formal reanalysis must read the existing ARM raw run files.

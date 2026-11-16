@@ -4,7 +4,9 @@
 
 目标不是事先指定一个“最好指标”，而是完成两个独立检验：在新种子上，哪个指标更能预测等待/完成时延；冻结指标和阈值后，简单分流是否改善完成时延且收益覆盖计量成本。历史 queue=0 仍可能完成很晚的现象，只能否定 queue 的充分性，不能直接证明某个替代量有效。
 
-已完成的169轮开发验证、原始证据和适用限制见[开发结果报告](BALANCE_RESULTS.md)。其中outstanding已在queue恒为0的观测组提供更多信息；ARM最优指标和阈值仍需按下述流程确定。
+已完成的169轮开发验证、原始证据和适用限制见[开发结果报告](BALANCE_RESULTS.md)。ARM `3001.log` 已完成 observe 18、tune 48、evaluate 56 轮，见[ARM复核报告](ARM_3001_REVIEW.md)。**已经执行到这里的测试机，请直接按[3001收尾步骤](ARM_3001_CLOSEOUT.md)重算已有数据，不要从下面重新展开矩阵。** 现有结果不要求先找到普适最优指标，才允许进入 DAG。
+
+下文保留各类实验的参考配方，不是需要依次全部执行的清单。当前主线停止扩展；minimal 最多只补选定的 9 轮（含已完成），成本与外推暂缓。未执行的扩展不自动变成当前阶段欠缺的测试。
 
 ## 1. 观测、分流和实验边界
 
@@ -56,7 +58,8 @@ flowchart LR
     B --> C[tune: 少数候选指标和阈值配对比较]
     C --> D[人工审阅后freeze并保存证据SHA]
     D --> E[evaluate: 新seed运行冻结策略与home/spread]
-    E --> F[minimal观测与固定工作量成本验证]
+    E --> F[归档主结果并进入DAG]
+    E -.按新问题单独立项.-> G[minimal或固定工作量成本验证]
 ```
 
 默认seed分别为 `11000…`、`21000…`、`31000…`，cost为 `41000…`。四个集合互斥；自定义seed也检查互斥。同一个seed内随机打乱case顺序，各case串行执行，减小持续频率/温度漂移的固定顺序偏差。分流不能影响预生成的到达或任务预算。
@@ -88,13 +91,13 @@ git fetch origin experiment/stage3-load-balance-20261115
 git worktree add ../executor_demo-stage3-balance origin/experiment/stage3-load-balance-20261115
 cd ../executor_demo-stage3-balance
 cmake -S experiments/independent -B build-independent-balance -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=../folly/_install
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/home/bty/rank_demo/folly/_install
 cmake --build build-independent-balance -j2
 ctest --test-dir build-independent-balance --output-on-failure
 python3 tests/test_balance_matrix.py
 ```
 
-`CMAKE_PREFIX_PATH`须改成现有Folly安装的真实路径；独立子项目不编译DAG，也不要求重新开发Folly。4GB环境建议 `-j2`，避免与其他构建抢内存。
+`CMAKE_PREFIX_PATH`须改成现有Folly安装的真实**绝对路径**（上例为已验证的测试机路径）；独立子项目不编译DAG，也不要求重新开发Folly。4GB环境建议 `-j2`，避免与其他构建抢内存。只更新分析/运行脚本时无需重编译；已有矩阵恢复应保留原二进制 SHA。
 
 开发机默认最多选择当前allowed中的4个CPU，按真实NUMA节点建立人工分区；它不声称这些分区是硬件cluster。单NUMA的两个分区使用相同NUMA标签。若当前允许范围只有一个CPU，程序退化到单池，不能验证跨池收益。可显式设置 `--cpus '0;1' --numa '0,0' --threads 1,16`，但CPU必须确实可用。
 
@@ -179,23 +182,26 @@ freeze要求该候选在tune配置中的所有case×seed均已成功完成且存
 
 ## 5. minimal净收益、固定工作量成本和外推
 
-主比较统一progress观测，避免某个策略因为少做观测而天然占优；最终还必须量测部署时只收集一个指标的净收益：
+主比较统一progress观测，避免某个策略因为少做观测而天然占优。生产推广前仍需量测低成本观测和策略净收益，但它不阻塞简单任务阶段的机制结论。**3001这次不要再创建下面的计划，应复用已有70轮计划并按收尾指南只选择9轮。** 新实验需要 minimal 时，下面给出同样限定为256线程、3策略、3种子的配方：
 
 ```bash
 python3 experiments/independent/scripts/balance_matrix.py plan \
   --phase evaluate --preset target --selection results/balance-arm/selection.json \
-  --observation minimal --seeds 32000,32001,32002,32003,32004,32005,32006 \
+  --threads 256 --observation minimal --seeds 32000,32001,32002 \
   --output results/balance-arm/minimal.json
 taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.py run \
   --config results/balance-arm/minimal.json --output results/balance-arm/minimal \
-  --binary build-independent-balance/independent_load
+  --binary build-independent-balance/independent_load \
+  --only-case main-t256-local-home \
+  --only-case main-t256-local-outstanding-h2 \
+  --only-case main-t256-local-spread-policy --only-seeds 32000,32001,32002
 python3 experiments/independent/scripts/analyze_balance.py \
   --manifest results/balance-arm/minimal/manifest.json --output results/balance-arm/minimal-analysis
 ```
 
-minimal evaluate同时将原有instrumentation改为none，避免full继续维护其他旧计数；home、spread和候选均使用相同模式。minimal的home基线也维护同一个指标；如果同时冻结了queue参照，会给queue另建自己的home基线。观察配置改变在manifest标为外推，不能和progress行直接合并成更多“同配置重复”。这里其他任务日志仍存在，不等于生产零日志版本。
+上面的 case 名对应3001已冻结的outstanding阈值2；其他冻结策略应使用计划里的实际名称。筛选保留原计划，不能把未选择的case算作已经完成。3个种子是方向性复核，不能输出正式bootstrap区间或声称微小差异；到达预设9轮后停止，不自动追加到7种子。minimal evaluate同时将原有instrumentation改为none，避免full继续维护其他旧计数；home、spread和候选均使用相同模式。minimal的home基线也维护同一个指标；如果同时冻结了queue参照，会给queue另建自己的home基线。观察配置改变在manifest标为外推，不能和progress行直接合并成更多“同配置重复”。这里其他任务日志仍存在，不等于生产零日志版本。
 
-另做固定迭代工作量成本组，避免CPU预算模式把计量CPU消耗吸收到固定100ms内，掩盖有效计算量下降：
+以下成本与外推配方仅作后续参考，3001本次暂停执行。若未来单独研究观测成本，应使用固定迭代工作量，避免CPU预算模式把计量CPU消耗吸收到固定100ms内，掩盖有效计算量下降；先限定选中指标、轮数和停止标准，不直接照抄完整cost矩阵：
 
 ```bash
 python3 experiments/independent/scripts/balance_matrix.py plan \
@@ -257,4 +263,4 @@ taskset -c 0-47,192-239 python3 experiments/independent/scripts/balance_matrix.p
 
 resume验证配置规范化SHA和二进制SHA；完成的轮次保留，失败或超时新增attempt，不覆盖旧文件。若上一次runner或其子进程仍可能活着，会拒绝启动；先检查实际PID再操作，不要删除活进程锁。改二进制、改配置或换CPU范围应新开结果目录。不要用反复重跑只保留最快一轮的方式改善数字。
 
-判断结果时，按以下顺序：守恒/错误/截断 → 相同工作序列和资源 → 稳态趋势、发生器迟到 → 分配置整seed预测误差和尾覆盖 → 新seed配对mean/p99收益 → minimal与固定工作量成本 → 新负载外推。三次重复不支持小于1%的稳定收益结论；过载、丢任务或采样不完整的结果可以用于诊断，不能作为“更快”的成功证据。
+主线判断顺序：守恒/错误/截断 → 相同工作序列和资源 → 稳态趋势、发生器迟到 → 分配置整seed预测误差和尾覆盖 → 新seed配对mean/p99收益 → 如实归档并结束当前问题。minimal、固定工作量成本和新负载外推按各自目的另设预算；没有普适赢家同样是有效结论。三次重复不支持小于1%的稳定收益结论；过载、丢任务或采样不完整的结果可以用于诊断，不能作为“更快”的成功证据。

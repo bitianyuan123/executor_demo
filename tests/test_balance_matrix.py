@@ -102,8 +102,8 @@ class MatrixTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             M.validate_spec(plan)
 
-    def tiny(self, root, phase='observe', fail_once=False):
-        plan = M.generate(self.args('--phase', phase, '--threads', '1', '--families', 'main', '--metrics', 'outstanding', '--thresholds', '1'))
+    def tiny(self, root, phase='observe', fail_once=False, extra=()):
+        plan = M.generate(self.args('--phase', phase, '--threads', '1', '--families', 'main', '--metrics', 'outstanding', '--thresholds', '1', *extra))
         config = root / 'config.json'
         M.write_new(config, plan)
         binary = root / 'fake_load'
@@ -155,6 +155,122 @@ class MatrixTests(unittest.TestCase):
             self.assertEqual('failed', row['attempts'][0]['status'])
             self.assertEqual('completed', row['attempts'][1]['status'])
             self.assertTrue(Path(row['attempts'][0]['log']).exists())
+
+    def test_minimal_target_subset_is_nine_of_seventy_without_replanning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            selection = root / 'selection.json'
+            M.write_new(selection, {'source_split': 'tune', 'source_seeds': [21000, 21001, 21002],
+                                   'split_seeds': M.seed_sets(3, 'tune'), 'metric': 'outstanding',
+                                   'threshold': 2, 'queue_threshold': 2})
+            spec = M.generate(self.args('--preset', 'target', '--phase', 'evaluate', '--observation', 'minimal',
+                                        '--selection', str(selection), '--repeats', '7',
+                                        '--seeds', '32000,32001,32002,32003,32004,32005,32006'))
+            original = json.dumps(spec, sort_keys=True)
+            cases = ['main-t256-local-home', 'main-t256-local-outstanding-h2', 'main-t256-local-spread-policy']
+            schedule, chosen = M.select_schedule(spec, list(reversed(cases)), '32002,32000,32001')
+            self.assertEqual(9, len(schedule))
+            self.assertEqual(70, chosen['full_plan_runs'])
+            self.assertEqual([32000, 32001, 32002], chosen['seeds'])
+            self.assertEqual(.15, chosen['selected_offered_hours'])
+            self.assertEqual([item for item in M.make_schedule(spec)
+                              if item[1] in (32000, 32001, 32002) and item[2]['name'] in cases], schedule)
+            self.assertEqual(original, json.dumps(spec, sort_keys=True))
+            config = root / 'config.json'
+            M.write_new(config, spec)
+            cli = ['dry-run', '--config', str(config), '--only-seeds', '32002,32000,32001']
+            for name in cases:
+                cli += ['--only-case', name]
+            capture = io.StringIO()
+            with contextlib.redirect_stdout(capture):
+                M.execute(M.parser().parse_args(cli))
+            rows = [json.loads(line) for line in capture.getvalue().splitlines() if line.startswith('{')]
+            self.assertEqual([(seed, case['name']) for _, seed, case in schedule], [(row['seed'], row['case']) for row in rows])
+            self.assertIn('selected runs=9/70', capture.getvalue())
+
+    def test_selection_rejects_unknown_duplicate_and_unpaired_cases(self):
+        spec = M.generate(self.args('--phase', 'tune', '--threads', '1,2', '--families', 'main',
+                                    '--metrics', 'outstanding', '--thresholds', '1'))
+        home, other_home = 'main-t1-local-home', 'main-t2-local-home'
+        route = 'main-t1-local-outstanding-h1'
+        for cases, seeds in [(['missing'], None), ([home, home], None), ([], None),
+                             ([route], None), ([route, other_home], None),
+                             ([home], '99999'), ([home], '21000,21000'), ([home], '')]:
+            with self.subTest(cases=cases, seeds=seeds), self.assertRaises(ValueError):
+                M.select_schedule(spec, cases, seeds)
+        original_home = next(case for case in spec['cases'] if case['name'] == home)
+        spec['cases'].append(dict(original_home, name=home + '-duplicate'))
+        with self.assertRaisesRegex(ValueError, 'exactly one home'):
+            M.select_schedule(spec, [home, route])
+
+    def test_subset_resume_preserves_failures_and_later_full_resume(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan, config, binary, output, args = self.tiny(Path(tmp), phase='tune', fail_once=True,
+                                                          extra=('--repeats', '2'))
+            original_config = config.read_bytes()
+            args.only_case = ['main-t1-local-home', 'main-t1-local-outstanding-h1']
+            args.only_seeds = '21000'
+            with self.assertRaises(RuntimeError):
+                self.quiet(args)
+            first = json.loads((output / 'manifest.json').read_text())
+            failed = first['runs'][0]
+            self.assertEqual('failed', first['invocations'][0]['status'])
+            self.assertNotIn('finished_at_unix', first)
+            args.resume = True
+            self.quiet(args)
+            selected = json.loads((output / 'manifest.json').read_text())
+            self.assertEqual(2, len(selected['runs']))
+            self.assertEqual(2, selected['invocations'][-1]['after']['selected_successful'])
+            self.assertEqual(6, selected['invocations'][-1]['after']['matrix_total'])
+            self.assertFalse(selected['matrix_complete'])
+            self.assertNotIn('finished_at_unix', selected)
+            retained = {r['run_id']: (r['path'], (Path(r['path']) / 'summary.json').stat().st_mtime_ns,
+                                      len(r['attempts'])) for r in selected['runs']}
+            # Unfiltered resume completes the original matrix, retaining the partial selection's results.
+            args.only_case = None
+            args.only_seeds = None
+            self.quiet(args)
+            complete = json.loads((output / 'manifest.json').read_text())
+            self.assertTrue(complete['matrix_complete'])
+            self.assertIn('finished_at_unix', complete)
+            self.assertEqual(6, len(complete['runs']))
+            self.assertEqual(3, len(complete['invocations']))
+            self.assertEqual(plan, complete['spec'])
+            self.assertEqual(original_config, config.read_bytes())
+            self.assertEqual(M.digest(plan), complete['config_sha256'])
+            for row in complete['runs']:
+                if row['run_id'] in retained:
+                    self.assertEqual(retained[row['run_id']], (row['path'], (Path(row['path']) / 'summary.json').stat().st_mtime_ns,
+                                                              len(row['attempts'])))
+            retried = next(row for row in complete['runs'] if row['run_id'] == failed['run_id'])
+            self.assertEqual(['failed', 'completed'], [a['status'] for a in retried['attempts']])
+            self.assertTrue(Path(retried['attempts'][0]['log']).is_file())
+
+    def test_keep_going_failure_never_marks_full_matrix_finished(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, _, _, output, args = self.tiny(Path(tmp), fail_once=True)
+            args.keep_going = True
+            self.quiet(args)
+            manifest = json.loads((output / 'manifest.json').read_text())
+            self.assertFalse(manifest['matrix_complete'])
+            self.assertNotIn('finished_at_unix', manifest)
+            self.assertEqual('incomplete', manifest['invocations'][-1]['status'])
+
+    def test_subset_cannot_bypass_live_child_in_unselected_case(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, _, _, output, args = self.tiny(Path(tmp), phase='tune')
+            self.quiet(args)
+            path = output / 'manifest.json'
+            manifest = json.loads(path.read_text())
+            row = next(row for row in manifest['runs'] if row['options']['routing'] == 'spread')
+            row.update(status='running', child_pid=os.getpid())
+            path.write_text(json.dumps(manifest))
+            original = path.read_bytes()
+            args.resume = True
+            args.only_case = ['main-t1-local-home']
+            with self.assertRaisesRegex(ValueError, 'old child may still be running'):
+                self.quiet(args)
+            self.assertEqual(original, path.read_bytes())
 
     def test_freeze_requires_complete_pairs_and_records_scope(self):
         with tempfile.TemporaryDirectory() as tmp:
