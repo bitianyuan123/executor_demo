@@ -72,6 +72,7 @@ def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--suite", choices=SUITES, default="routing")
     parser.add_argument("--cases", help="comma-separated case names from the selected suite; default: all cases")
+    parser.add_argument("--thread-counts", help="signals only: comma-separated distinct positive thread counts per pool; expand selected policies in each seed block")
     parser.add_argument("--seeds", default="101,102,103")
     parser.add_argument("--timeout-seconds", type=float, default=900)
     parser.add_argument("--run", action="store_true", help="without this flag only write a plan")
@@ -97,6 +98,25 @@ def main():
         base[key] = value
     if "--output" in base or "--seed" in base:
         parser.error("output and seed are managed by the matrix")
+    thread_counts = None
+    if args.thread_counts is not None:
+        if args.suite != "signals":
+            parser.error("thread-counts is supported only by the signals suite")
+        if "--threads" in base:
+            parser.error("thread-counts and base --threads cannot be combined")
+        try:
+            thread_counts = [int(value.strip()) for value in args.thread_counts.split(",")]
+        except ValueError:
+            parser.error("thread-counts must be distinct positive integers")
+        if any(value <= 0 for value in thread_counts) or len(set(thread_counts)) != len(thread_counts):
+            parser.error("thread-counts must be distinct positive integers")
+        selected = [(f"threads-{count}-{name}", {**changes, "threads": str(count)})
+                    for count in thread_counts for name, changes in selected]
+    # Validate before creating output, including when a signals thread sweep is
+    # requested. Count and work scores deliberately retain their own defaults.
+    if args.suite in ("routing", "signals", "blocking") and any(
+            key in base for key in ("--busy-high", "--return-low", "--min-gain")):
+        parser.error("routing/signals/blocking suites use policy-specific threshold defaults; tune thresholds in separate single-policy runs")
     if args.suite == "cluster-baseline":
         if base.get("--affinity") != "cluster":
             parser.error("cluster-baseline requires explicit --base-args --affinity cluster; affinity is not silently overridden")
@@ -147,6 +167,8 @@ def main():
                 "sources_sha256": {name: digest(source_root / name) for name in sources},
                 "machine": platform.machine(), "kernel": platform.release(),
                 "caller_allowed_cpus": sorted(os.sched_getaffinity(0)), "argv": sys.argv[1:]}
+    if thread_counts is not None:
+        metadata["thread_counts"] = thread_counts
     if args.run and metadata["binary_sha256"] is None:
         parser.error("binary is missing; build the affinity stage first")
     (root / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
@@ -157,10 +179,6 @@ def main():
         for case, changes in order:
             directory = root / f"seed-{seed}-{case}"
             options = dict(base)
-            # A work score uses CPU-us/capacity, while count scores use tasks/
-            # capacity. Leave policy defaults in effect for the routing sweep.
-            if args.suite in ("routing", "signals", "blocking") and ("--busy-high" in base or "--return-low" in base or "--min-gain" in base):
-                parser.error("routing suite uses policy-specific threshold defaults; tune thresholds in separate single-policy runs")
             options.update({"--" + key: str(value) for key, value in changes.items()})
             options.update({"--seed": str(seed), "--output": str(directory)})
             command = [args.binary] + [part for pair in options.items() for part in pair]
@@ -182,8 +200,9 @@ def main():
                 print(f"FAILED rc={result.returncode}: {directory}/run.log", file=sys.stderr)
                 return result.returncode
             summary = json.loads((directory / "summary.json").read_text())
+            migrations = summary['migrations'] if summary['trace'] else 'unavailable'
             print(f"  completed={summary['completed']} mean_ms={summary['request_mean_ms']:.3f} "
-                  f"p99_ms={summary['request_p99_ms']:.3f} migrations={summary['migrations']} "
+                  f"p99_ms={summary['request_p99_ms']:.3f} migrations={migrations} "
                   f"request_peak={summary['peak_inflight']} process_cpu_s={summary['process_cpu_s']:.6f} "
                   f"arrival_hash={summary['arrival_hash']} fixed_iterations={summary.get('planned_total_iterations', 'unknown')}", flush=True)
     if args.run:

@@ -109,11 +109,11 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 [4001](TARGET_V2_4001_REVIEW.md)至[4004](TARGET_V2_4004_REVIEW.md)完成初筛、竞争与尺度校准；[4006](TARGET_V2_4006_REVIEW.md)完成24轮后继策略，[4008](TARGET_V2_4008_REVIEW.md)完成task异质性，[4009](TARGET_V2_4009_REVIEW.md)完成联合诊断与burst8。regular与burst下策略收益不同，不能自动外推生产；这些轮次不再列为待办。
 
-当前先执行[真实负载校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)和[离线提示词](WORKLOAD_CALIBRATION_PROMPT.md)，只在已有trace的分析环境定向补N/持续性口径；真实应用不可访问，executor到达、CPU/request、图/ready、RPC与数据归属的缺失值作为显式假设，不要求生产采样、源码或重采。旧trace缺少的request/operator身份不能靠更多sched统计补出，也不恢复四池为目标。
+4010有界补证与4011的18轮观测对照均已完成，见[阶段结论](TARGET_V2_4010_4011_REVIEW.md)。旧trace缺少的业务字段保持unknown，不继续以扫描作为工程前置。外部新增状态解析存在缺陷，0.85ms与3ms不能当已标定参数。
 
-分析期间可以独立执行[18轮观测扰动对照](PARALLEL_COVERAGE_PLAN.md)：固定4009负载，只交叉详细追踪开关与home/fork/all，检查小幅策略差是否依赖计量路径。它无需等待trace结论，也不扩展未经校准的负载；新增离线报告严格审计开关配对，不放宽原有report的同trace配对规则。
+当前测试入口为[24轮信号/线程对照](TARGET_V2_SIGNAL_THREAD_GUIDE.md)：固定burst合同、trace0、all-parent，同seed内home/Q/active/O与16/128线程统一交错；它回答净路由收益，不证明生产信号最优。模型仍保持固定工作与依赖，不为拟合旧四池改变负载。
 
-完成一次有界补证后即可继续使用[cluster实验指南](REAL_WORKLOAD_MATRIX.md)中的少量对照验证信号/线程、fork/all、NUMA和持续门控。每个模型变化须注明对应的旧trace现象或未知量敏感性假设；无需等待真实窗口或业务采样。支持生产推荐前，仍需后置的目标cluster业务验证与正式尾部重复。终端回传仍可推进，目标机保留CSV、metadata及原始观测，不能只保存精选性能行。
+真实业务接入另按[分阶段生产agent手册](PRODUCTION_AGENT_PLAYBOOK.md)推进；若只能复制文字，使用[纯prompt交接版](PRODUCTION_AGENT_PROMPTS_ONLY.md)。当地agent先确认源码/授权/资源，再设计、实现、验收、有限迭代。给候选初值与有界梯度，不直接指定生产阈值；不要求环境网络直通。阶段5继续负责组件归属与Folly最小扩展的必要性，当前无需修改Folly核心。
 
 ## 8. 本次覆盖审查的验证事实
 

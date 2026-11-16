@@ -49,7 +49,7 @@ def check_matrix_plans():
         root = Path(temporary)
         serial = 0
 
-        def plan(suite, base, success=True, case_filter=None, seeds='101'):
+        def plan(suite, base, success=True, case_filter=None, seeds='101', thread_counts=None):
             nonlocal serial
             serial += 1
             output = root / f'{serial}-{suite}'
@@ -57,6 +57,8 @@ def check_matrix_plans():
                        '--seeds', seeds]
             if case_filter is not None:
                 command.extend(['--cases', case_filter])
+            if thread_counts is not None:
+                command.extend(['--thread-counts', thread_counts])
             command.append('--base-args')
             command.extend(part for pair in base.items() for part in pair)
             process = subprocess.run(command, text=True, stdout=subprocess.PIPE,
@@ -64,8 +66,7 @@ def check_matrix_plans():
             if not success:
                 check(process.returncode != 0, f'{suite}: invalid target plan accepted')
                 check(not (output / 'plan.json').exists(), 'invalid target left a runnable plan')
-                if case_filter is not None:
-                    check(not output.exists(), 'invalid case filter created an output directory')
+                check(not output.exists(), 'invalid arguments created an output directory')
                 return None
             check(process.returncode == 0, f'{suite}: plan failed: {process.stderr}')
             metadata = json.loads((output / 'metadata.json').read_text())
@@ -81,6 +82,13 @@ def check_matrix_plans():
                   f'{suite}: research target metadata missing')
             selected = [name for name, _ in matrix.cases(suite)
                         if case_filter is None or name in {part.strip() for part in case_filter.split(',')}]
+            if thread_counts is not None:
+                counts = [int(part) for part in thread_counts.split(',')]
+                check(metadata.get('thread_counts') == counts,
+                      'thread-count metadata differs from the requested dimension')
+                selected = [f'threads-{count}-{name}' for count in counts for name in selected]
+            else:
+                check('thread_counts' not in metadata, 'default suite unexpectedly injects a thread dimension')
             check(metadata['selected_cases'] == selected,
                   f'{suite}: selected-case metadata differs from the intended cases')
             expected_order = []
@@ -109,6 +117,41 @@ def check_matrix_plans():
               'case filter changed the selected policy configuration')
         options, _ = plan('signals', base, case_filter='cpu')
         check(set(options) == {'cpu'}, 'single-case filter did not select its suite case')
+        signal_base = {key: value for key, value in base.items() if key != '--threads'}
+        signal_base.update({'--arrival': 'burst', '--burst-size': '8', '--burst-spacing-us': '100',
+                            '--trace': '0', '--balance-at': 'all', '--continuation': 'parent'})
+        options, _ = plan('signals', signal_base, case_filter='outstanding, home,active,queue',
+                          seeds='420,421,422', thread_counts='16,128')
+        expected = {f'threads-{count}-{policy}': (str(count), policy)
+                    for count in (16, 128) for policy in ('home', 'queue', 'active', 'outstanding')}
+        check(set(options) == set(expected), 'signals sweep must contain exactly eight selected cells')
+        for name, (count, policy) in expected.items():
+            case = options[name]
+            check((case['--threads'], case['--policy']) == (count, policy),
+                  f'{name}: signals thread/policy cell changed')
+            check(all(case[key] == value for key, value in signal_base.items()),
+                  f'{name}: signals thread sweep changed caller workload/resources')
+            check('--pool-count' not in case and all(key not in case for key in
+                  ('--busy-high', '--return-low', '--min-gain')),
+                  f'{name}: signals thread sweep injected resources/thresholds')
+        options, _ = plan('signals', signal_base, case_filter='queue', thread_counts=' 128 , 16 ')
+        check(set(options) == {'threads-128-queue', 'threads-16-queue'},
+              'single-policy thread sweep failed to normalize whitespace')
+        options, _ = plan('signals', signal_base)
+        check(all('--threads' not in case and '--pool-count' not in case for case in options.values()),
+              'signals without thread-counts injected resource defaults')
+        for invalid in ('', ' ', ',', '16,', ',16', '16,,128', '0', '-1', '16,0',
+                        '16,-128', '16.0', 'foo', '16,16', '16, 16', '016,16'):
+            plan('signals', signal_base, success=False, thread_counts=invalid)
+        plan('signals', base, success=False, thread_counts='16,128')
+        for suite in matrix.SUITES:
+            if suite != 'signals':
+                plan(suite, signal_base, success=False, thread_counts='16,128')
+        for threshold in ('--busy-high', '--return-low', '--min-gain'):
+            plan('signals', {**signal_base, threshold: '1'}, success=False,
+                 case_filter='home,queue,active,outstanding', thread_counts='16,128')
+            for suite in ('routing', 'blocking'):
+                plan(suite, {**base, threshold: '1'}, success=False)
         options, _ = plan('follow-overhead', {**base, '--policy': 'work',
                           '--continuation': 'home', '--balance-at': 'fork', '--trace': '9'},
                           seeds='420,421,422')
@@ -180,7 +223,7 @@ def check_matrix_plans():
                 check('deprecated' not in diagnostics, 'explicit historical alias was deprecated')
             alias_plans.append(options)
         check(alias_plans[0] == alias_plans[1], 'historical aliases produce different commands')
-    print('affinity matrix: target cluster baseline, historical aliases, case selection/shuffle, '
+    print('affinity matrix: target cluster baseline, historical aliases, case/thread selection/shuffle, '
           'generic resource contracts and metadata passed')
 
 
@@ -360,6 +403,12 @@ def main(binary):
             with contextlib.redirect_stdout(stream):
                 report.print_report(runs, 1000, 0, None)
             return stream.getvalue()
+
+        no_trace = next(run for run in results if run['path'].name == 'no-trace')
+        no_trace_table = next(line for line in rendered(no_trace).splitlines()
+                              if line.startswith('| no-trace |'))
+        check(no_trace_table.endswith(' | - | - |'),
+              'trace=0 must show unavailable migrations/cross-NUMA, not measured zeros')
 
         resource_report = rendered(four_pools, results[2])
         check('not paired (0 eligible home runs' in resource_report,

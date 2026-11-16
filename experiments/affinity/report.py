@@ -331,12 +331,14 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
     print('|---|---|---:|---:|---:|---:|---:|---:|---:|---:|')
     for run in runs:
         summary, metric = run['summary'], run['metrics']
+        migrations = f'{metric["migrations"]}/{metric["tasks"]}' if summary['trace'] else '-'
+        cross_numa = str(metric['cross_numa']) if summary['trace'] else '-'
         print(f'| {run["path"].name} | {summary["model"]}/{summary["policy"]}/{summary["continuation"]} | '
               f'{metric["n"]}/{metric["offered"]} | {format_value(metric["mean_ms"])} | '
               f'{format_value(metric["p95_ms"])} | {format_value(metric["p99_ms"])} | '
               f'{format_value(metric["wait_p99_ms"])} | '
               f'{format_value(metric["operator_cpu_mean_ms"])}/{format_value(metric["operator_wall_mean_ms"])} | '
-              f'{metric["migrations"]}/{metric["tasks"]} | {metric["cross_numa"]} |')
+              f'{migrations} | {cross_numa} |')
         flags = []
         if metric['n'] < min_tail_samples:
             flags.append(f'tail sample screen: n<{min_tail_samples} (nominal top 1%={metric["n"] * .01:.1f} requests)')
