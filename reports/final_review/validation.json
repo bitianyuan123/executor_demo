@@ -2,11 +2,12 @@
   "schema": "final-review-validation-v1",
   "passed": true,
   "checks": {
-    "artifacts": 88,
+    "artifacts": 100,
     "baseline": 12,
+    "cpu_supplement": 19306,
     "data": 3905,
     "independent": 36,
-    "links": 46,
+    "links": 53,
     "mechanisms": 273,
     "pairs": 2485,
     "scenarios": 5142,
@@ -17,13 +18,14 @@
   "scope": "reviewed source/dataset consistency and offline artifact integrity; no new performance measurements",
   "artifact_sha256": {
     ".gitattributes": "dffd873724f40e2e2d991d4f179a22fe2da8e5ce0ef22b32cf6ed165e73b58c1",
-    "CPU_CAPTURE_GUIDE.md": "fdf1bc7e16bceb6007452767fab98271de4530303f8c62a1fa32880dd9e99330",
-    "README.md": "acb5528348c71dc5de4bbe311d4c27a4d8d8463a168589906f56ee8fae37087d",
-    "REPORT.md": "df03aad120baa55112e7396a65f412e396a653f230f6dfeb67453ff9b359c96e",
+    "CPU_CAPTURE_GUIDE.md": "0ab36177e3a3e467828bae8e5a5eb60dd77b85a1652b806f3a49475bcf43b478",
+    "README.md": "ed66e48ebf9c328c8685b31f2df5ac1fe50cbeaed3c1eab7e1797e3ebc8debea",
+    "REPORT.md": "81c3ef2b77b6e19afa09267f6d02e5e039df0b09a17c39fd18983efd2cbb5cf6",
     "build_data.py": "a729aad0559a16057374557ca84e184d6aff72e687b1e3a577aae0da687476d6",
     "build_report.py": "8f77e15245d2e0dddb69b39b100b1b75d740a30185421e3aa75b3066939d281e",
     "build_scenario_data.py": "b1273694fa5c0a3e97d3547416832cc0858d396866d47a9aa06fb4d4cc503ce8",
     "cpu_capture_validation.json": "f45f15344f52bd60e01f8a6f8d13b374af66479707421d6303915afacd8b91c9",
+    "cpu_window_metrics.py": "9f371f216e0b7d093c22153a37003539fc3dc6a09baff2067472d2e766e9bd46",
     "data/4011_routing_evidence.json": "a73260f8ab6d9a706396ed684187f5c8e89dcebb3464c1f97b4677b7877436f0",
     "data/affinity_baseline_evidence.json": "1ef2486f1ca165191122d5d549e6cd2aea5152abe1354e5da3ba174f66567c1b",
     "data/comparisons.json": "9ff42f2deca235f446d1829bad60c1ebef7bc29984fcac5db0d920d5b95605a7",
@@ -32,8 +34,8 @@
     "data/runs.csv": "34f36bdd48160ebbe2953b7739e87447b90838df0d968e319f5f7fb0873d7ded",
     "data/scenario_results.json": "796b999370106fbf690f5fe48e1868c05be8ca7d5cb7c61edab4c075e204f26c",
     "data/trace_evidence.json": "a4ff488f4e452728911a16c032b8074cea490b289ff9ab151b4b8e358ccfa485",
-    "executor_affinity_report.html": "75ccc23c0652b1c9e2f590f541db27f57bb3f41a1b36251a568c12a30f91aff8",
-    "executor_affinity_report.pdf": "008bc77444595065bad29702380fc5f6222b435a15781740c19f707a10caacb4",
+    "executor_affinity_report.html": "aa99d9451504920957fe203ba2f7e6e8d2fe4a7b7dc624677cfad342b4dd88af",
+    "executor_affinity_report.pdf": "10c7a38200610fdd92bcafa2615865fe6108908d623d6f5bf10b70e540de6dd5",
     "figures/01_arrivals.png": "eb5d03fc9772c2c30f5a8ec00086d6d921350fcfa90914a242478aecec765973",
     "figures/01_arrivals.svg": "13aadc55a6893bdd82e36d792fd6568491862cc67ed1b3d86345b0b17dcde0fc",
     "figures/02_request_dag.png": "25fb2338ba3ee76ed0dde443ea0c9c70d4b7f27893cf6dbc3583d7951ebf2843",
@@ -60,8 +62,16 @@
     "figures/12_async_roles.svg": "e22dfa2779d5126c8c7055d11e481c59f1f00062cc12ff3004f2a6ccb1ef1b82",
     "figures/13_trace_mean_peak.png": "5b1e4d902bdd2a424fad9ed131d6991b9a84008c9f3b4a503a8fcb53b68f34ef",
     "figures/13_trace_mean_peak.svg": "9456bb8b310b6784b88665930b6022ae19752b50d4212c67b9821ec38b3f7eb9",
-    "figures/manifest.json": "b0fba8bbd5e105192126ca567ef09ba0eecb41e22ff08791d0917c1dd115871c",
-    "render_figures.py": "45fe25639b9fc4f398e8646d8da3110169d95f3795ca6e11093528805377ed91",
-    "validate_report.py": "3bd897201580b4973bfffb0430d2b7184c9874291d5ded19b9c8b6ddf4db5568"
+    "figures/14_cpu_windows.png": "9213cf8c15264df811938a83258b2326a86ddafbb2814493165b654425128de7",
+    "figures/14_cpu_windows.svg": "77918214487631c9aafd420aaf7d0ccb602edc1b62d80719ba8938c05d71c654",
+    "figures/15_cpu_latency_routing.png": "750c222990a55498181139c4ab13dea5dad40acce809853692f9e3dd98bf580e",
+    "figures/15_cpu_latency_routing.svg": "611a61e3986b60f7fa1d70d87c5ff620f87f5b2cf0a0ec03145f362da2550ed4",
+    "figures/manifest.json": "3cf02fa00a9ef021cb2203478787af29a18fdd944867938c867505af76a00d27",
+    "render_figures.py": "eb68ba099e1eea5a0e510071008be6d3efe812ec418aaa0718decfd6381c4bf4",
+    "validate_report.py": "660ba99fdd613332ce5f79a5b136a911389d1d43a3cdfda626bbc7c81af52aac"
+  },
+  "additional_evidence_sha256": {
+    "results/review/4021_summary.json": "e9d7b9b23fba1befcea9e5c2859fac673c092c9e881ccf36192db48bcdb742f0",
+    "results/review/4021_cpu_windows.csv": "dda0c90717a43e0ea518a32d863d740156b78edce43c9dc0d721497299c8cf26"
   }
 }

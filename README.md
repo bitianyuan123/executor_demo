@@ -1,6 +1,6 @@
 # Folly线程池：五阶段分析与独立实验
 
-**阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从一条请求的量化到达、80路扇出与后继执行开始，逐点标出Q/I/O/R的读写位置和算子选池过程；用13张图按六种明确负载比较时延、CPU/请求和改投率，再解释旧trace如何指导每cluster一池；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。已有主要运行缺少实时CPU曲线；[可选CPU补采指南](reports/final_review/CPU_CAPTURE_GUIDE.md)只针对这项新证据需求，不把缺失数据冒充已完成比较。
+**阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从一条请求的量化到达、80路扇出与后继执行开始，逐点标出Q/I/O/R的读写位置和算子选池过程；用15张图按六种明确负载比较时延、CPU/请求和改投率，再解释旧trace如何指导每cluster一池；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。新增[4021同轮CPU审阅](docs/TARGET_V2_4021_REVIEW.md)已补齐均匀12QPS、首波80算子、每池16线程的六轮CPU窗口与时延/改投对照：平均CPU约17%不变，局部热点和请求等待显著下降。[CPU采集指南](reports/final_review/CPU_CAPTURE_GUIDE.md)保留复现命令，无需为同目的重跑。
 
 按业务理解 → Folly机制 → 独立任务负载 → 复杂DAG → 能力归属逐步验证。**一个仓库管理五个阶段，但简单任务实验、DAG实验和成本探针是独立CMake工程**，无需一次运行所有实验。阶段2～4仅依赖原版Folly；阶段5才需要实验扩展。
 
@@ -20,7 +20,7 @@
 
 当前总览见[总目标、实现难点与验收覆盖](docs/GOALS_AND_COVERAGE.md)：集中区分已实现、已验证和待目标机证据，并说明阶段3条件时延如何接到阶段4策略干预。v2性能摘要用`report.py`，负载分桶、首波扇出与积压趋势用`diagnose.py`，实际burst跨度、请求均值分解与后继角色用`flow_report.py`；这些工具不输出生产最优策略或统一的负载→request p99公式。
 
-[截至4020的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前机制结论、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；下一步以交接和当地实现核实为主。
+[截至4021的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前机制结论、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；下一步以交接和当地实现核实为主。
 
 - [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
 - [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。
@@ -97,7 +97,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前已完成阶段3、截至4017的cluster机制与到达核查、异步功能验收、4018八轮对照及[4020四轮机制补证](docs/TARGET_V2_4020_REVIEW.md)。冻结合成模型、计数评分与阈值，不自动追加性能批次或生产trace；新模式使用affinity-v3-async，旧v2结果继续支持。下一步优先按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)交给当地agent只读核实、设计，再在已有授权和预定预算内实施与验收。生产访问不足可止于离线交接；生产代表性和正式多轮性能验收仍未完成。本次仅文档更新，不需重编。
+当前已完成阶段3、截至4017的cluster机制与到达核查、异步功能验收、4018八轮对照、[4020四轮机制补证](docs/TARGET_V2_4020_REVIEW.md)及[4021六轮CPU对照](docs/TARGET_V2_4021_REVIEW.md)。冻结合成模型、计数评分与阈值，不自动追加性能批次或生产trace；新模式使用affinity-v3-async，旧v2结果继续支持。下一步优先按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)交给当地agent只读核实、设计，再在已有授权和预定预算内实施与验收。生产访问不足可止于离线交接；生产代表性和正式多轮性能验收仍未完成。此次更新分析工具、结果与文档，不修改C++，无需重编。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 

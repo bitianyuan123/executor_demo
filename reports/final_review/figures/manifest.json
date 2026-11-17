@@ -105,5 +105,23 @@
       "data/trace_evidence.json"
     ],
     "caption": "逻辑CPU时间当量，不是当前测试实时利用率。"
+  },
+  {
+    "name": "14_cpu_windows",
+    "title": "同一负载的逐cluster CPU实测时间窗",
+    "sources": [
+      "results/review/4021_summary.json",
+      "results/review/4021_cpu_windows.csv"
+    ],
+    "caption": "6轮独立执行，固定颜色范围0–100%，按真实采样起止画格，不把callback占用当CPU。"
+  },
+  {
+    "name": "15_cpu_latency_routing",
+    "title": "同轮时延CPU与改投",
+    "sources": [
+      "results/review/4021_summary.json",
+      "results/review/4021_cpu_windows.csv"
+    ],
+    "caption": "分别展示两组三策略比较，不平均p99，不用总CPU成本代替窗口利用率。"
   }
 ]

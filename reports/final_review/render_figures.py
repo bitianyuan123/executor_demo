@@ -193,6 +193,71 @@ fig.subplots_adjust(top=.81,bottom=.21,wspace=.23)
 footer(fig,'历史4池仅为无绑定采集配置；目标仍按cluster分组。各池峰不同时，不能相加；运行区间匹配与采集覆盖有缺失。')
 save(fig,'13_trace_mean_peak','历史峰值服务与cluster限制',['data/trace_evidence.json'],'逻辑CPU时间当量，不是当前测试实时利用率。')
 
+# A new, independently captured contract. Do not backfill its CPU into 4014.
+from cpu_window_metrics import derive, load_rounds
+CPU_REVIEW=HERE.parents[1]/'results/review/4021_summary.json'
+cpu_review=json.loads(CPU_REVIEW.read_text())
+cpu_rounds={r['round_id']:r for r in cpu_review['rounds']}
+cpu_rows=load_rounds(CPU_REVIEW.with_name('4021_cpu_windows.csv'))
+cpu_metrics={name:derive(rows) for name,rows in cpu_rows.items()}
+blocks=[['01-home','02-queue','03-outstanding'],
+        ['06-home','05-queue','04-outstanding']]
+fig,axs=plt.subplots(3,2,figsize=(15,8.5),sharex=True,sharey=True)
+fig.suptitle('图14  每83.333ms一请求、首波80算子：实测六cluster的CPU时间分布',
+             x=.06,ha='left',fontsize=17)
+fig.text(.06,.925,'每池16线程；168算子/请求，基准300万迭代+10万访问；parent/all、同NUMA、trace1。颜色为实际约100ms窗口平均。',fontsize=10)
+for bi,block in enumerate(blocks):
+ for pi,name in enumerate(block):
+  ax=axs[pi,bi]
+  grouped={}
+  for r in cpu_rows[name]:
+   bounds=(float(r['relative_start_ms'])/1000,float(r['relative_end_ms'])/1000)
+   grouped.setdefault(bounds,{})[int(r['cluster'])]=float(r['util_percent'])
+  for (start,end),members in sorted(grouped.items()):
+   # Preserve real time edges and any boundary gaps; no interpolation.
+   mesh=ax.pcolormesh([start,end],np.arange(7)-.5,
+       np.array([members[i] for i in range(6)]).reshape(6,1),
+       vmin=0,vmax=100,cmap='YlOrRd',shading='flat',rasterized=True)
+  ax.axhline(2.5,color='#25384a',lw=.9)
+  ax.set_title(f'比较块{bi+1} · {name}',loc='left',fontsize=12)
+  ax.set_yticks(range(6),['C0','C1','C2','C3','C4','C5'])
+  ax.set_ylim(5.5,-.5);ax.set_xlim(2,18)
+  if bi==0:ax.set_ylabel('NUMA 0: C0–2\nNUMA 2: C3–5',fontsize=10)
+  if pi==2:ax.set_xlabel('相对本轮origin的时间（s）')
+fig.subplots_adjust(top=.86,bottom=.17,right=.9,wspace=.12,hspace=.40)
+cax=fig.add_axes([.92,.21,.015,.61]);fig.colorbar(mesh,cax=cax,label='cluster逻辑CPU利用率（%）')
+footer(fig,'每轮159个完整窗口；六轮独立执行，横轴各自从origin计时，不能逐像素作同步因果比较。C0–2和C3–5分别共享同一NUMA。\n原始采样目标100ms，实际92.8–107.2ms；未画入不足完整窗口的边界。不能从此图推断1ms峰值或30ms持续时间。')
+save(fig,'14_cpu_windows','同一负载的逐cluster CPU实测时间窗',
+     ['results/review/4021_summary.json','results/review/4021_cpu_windows.csv'],
+     '6轮独立执行，固定颜色范围0–100%，按真实采样起止画格，不把callback占用当CPU。')
+
+fig,axs=plt.subplots(2,3,figsize=(15,8.6))
+fig.suptitle('图15  同轮比较：局部排队减少，整体CPU消耗基本不变',x=.05,ha='left',fontsize=17)
+fig.text(.05,.925,'均匀12QPS；80×2+4×2算子；300万迭代+10万访问/基准算子；6×16线程；同seed421、trace1、100ms外采。',fontsize=10)
+panels=[('请求均值（ms）',lambda r,m:r['report']['mean_ms']),
+        ('请求p99（ms）',lambda r,m:r['report']['p99_ms']),
+        ('整轮进程CPU/请求（ms）',lambda r,m:r['whole_run']['process_cpu_per_request_ms']),
+        ('新callback改投率（%）',lambda r,m:100*r['report']['migrations']/r['report']['tasks']),
+        ('每窗最忙cluster利用率的p95（%）',lambda r,m:m['max_cluster_util_percent']['p95']),
+        ('同NUMA内利用率极差均值（百分点）',lambda r,m:m['mean_local_span_pp'])]
+for ax,(label,get) in zip(axs.flat,panels):
+ for bi,block in enumerate(blocks):
+  for pi,name in enumerate(block):
+   r=cpu_rounds[name];v=get(r,cpu_metrics[name]);x=pi+(-.12 if bi==0 else .12)
+   ax.scatter(x,v,s=53,color=COL[r['policy']],marker=['o','s'][bi],zorder=3)
+   other=blocks[1-bi][pi]
+   ov=get(cpu_rounds[other],cpu_metrics[other])
+   above=v>ov or (v==ov and bi==0)
+   ax.annotate(f'{v:.2f}',(x,v),xytext=(0,9 if above else -16),
+               textcoords='offset points',ha='center',fontsize=9)
+ ax.set_xticks(range(3),['固定home','Q选池','O选池']);ax.set_title(label,fontsize=12)
+ ax.set_xlim(-.45,2.45);ax.margins(y=.32);grid(ax)
+fig.subplots_adjust(top=.84,bottom=.16,hspace=.48,wspace=.27)
+footer(fig,'圆点=比较块1，方点=比较块2；各192请求，p99各自取第191顺位，不合并或平均。CPU/请求为整轮240请求口径，纵轴放大约0.4%的差异。\n同NUMA极差：每窗分别算两个NUMA的max-min，取两者平均，再按窗长加权。图中下排CPU指标均来自159个实际窗口。')
+save(fig,'15_cpu_latency_routing','同轮时延CPU与改投',
+     ['results/review/4021_summary.json','results/review/4021_cpu_windows.csv'],
+     '分别展示两组三策略比较，不平均p99，不用总CPU成本代替窗口利用率。')
+
 (OUT/'manifest.json').write_text(json.dumps(sorted(MANIFEST,key=lambda item:item['name']),ensure_ascii=False,indent=2)+'\n')
 # Remove only earlier generated files tracked in the old report; no user results.
 legacy=['01_scene','02_sequence','03_routing','04_queue_latency','05_signal_tradeoffs','06_thread_budget','07_continuation','08_async_contracts','09_async_mechanism','10_observation','11_historical_trace']

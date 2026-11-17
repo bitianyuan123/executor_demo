@@ -384,7 +384,233 @@ def validate_scenarios():
           audit['runtime_series_recoverable_from_existing_selected_target_csv'] is False and
           audit['existing_summary_average_cpu_possible'] is False,
           'Unsupported CPU time-series/average recovery claim', 'scenarios')
-    print(f'Scenario evidence: {len(rows)} runs, {len(extra_parsed)} retained routing excerpts, CPU series explicitly unavailable')
+    print(f'Historical scenario evidence: {len(rows)} runs, {len(extra_parsed)} retained routing excerpts, original CPU series explicitly unavailable')
+
+
+def validate_cpu_supplement(source_log=None):
+    """Keep the new CPU supplement separate from the 97 historical run summaries."""
+    from cpu_window_metrics import derive, load_rounds
+
+    category = 'cpu_supplement'
+
+    def audit(condition, message):
+        check(condition, '4021: ' + message, category)
+
+    def close(actual, expected, message, tolerance=1e-6):
+        audit(isinstance(actual, (float, int)) and isinstance(expected, (float, int)) and
+              math.isfinite(actual) and math.isfinite(expected) and
+              abs(actual - expected) <= tolerance, message)
+
+    def quantile(values, p):
+        return sorted(values)[max(0, math.ceil(len(values) * p) - 1)]
+
+    path = ROOT / 'results/review/4021_summary.json'
+    audit(path.is_file(), 'summary missing')
+    if not path.is_file():
+        return
+    data = read_json(path)
+    source = data['source']
+    audit(source['name'] == '4021.log' and bool(re.fullmatch(r'[0-9a-f]{64}', source['sha256'])),
+          'missing or invalid original log digest')
+    audit(source['bytes'] > 0 and source['line_count'] > 0, 'missing original log extent')
+    # The retained report is portable: an original attachment is optional. When
+    # explicitly supplied, verify it without storing its machine-specific path.
+    if source_log is not None:
+        audit(source_log.is_file(), 'optional original log not found')
+        if source_log.is_file():
+            audit(digest(source_log) == source['sha256'], 'original log digest differs')
+            audit(source_log.stat().st_size == source['bytes'], 'original log byte count differs')
+            audit(len(source_log.read_text().splitlines()) == source['line_count'],
+                  'original log line count differs')
+    csv_source = data['cpu_windows_file']
+    csv_name = Path(csv_source['name'])
+    audit(csv_name.name == str(csv_name) and csv_name.suffix == '.csv', 'CSV path is not a local basename')
+    csv_path = path.parent / csv_name
+    audit(csv_path.is_file(), 'CPU windows CSV missing')
+    if not csv_path.is_file():
+        return
+    audit(digest(csv_path) == csv_source['sha256'], 'CPU windows CSV digest differs')
+    grouped = load_rounds(csv_path)
+    expected_ids = ['01-home', '02-queue', '03-outstanding', '04-outstanding', '05-queue', '06-home']
+    expected_policies = ['home', 'queue', 'outstanding', 'outstanding', 'queue', 'home']
+    rounds = data['rounds']
+    audit([r['round_id'] for r in rounds] == expected_ids, 'six-round sequence differs')
+    audit([r['policy'] for r in rounds] == expected_policies, 'six-round policies differ')
+    audit(set(grouped) == set(expected_ids), 'CPU CSV round coverage differs')
+    audit(data['audit']['status'] == 'passed' and data['audit']['executed_rounds'] == 6,
+          'upstream six-round audit is not successful')
+    row_count = sum(len(rows) for rows in grouped.values())
+    audit(row_count == csv_source['rows'] == data['audit']['cpu_rows'] == 5724,
+          'total CPU CSV row count differs')
+    metadata = data['metadata']
+    audit(metadata['policies'] == ','.join(expected_policies), 'declared policy sequence differs')
+    audit(bool(re.fullmatch(r'[0-9a-f]{40}', metadata['repository_commit'])), 'missing repository revision')
+    audit(bool(re.match(r'[0-9a-f]{64}\s+', metadata['binary_sha256'])), 'missing binary digest')
+    common = metadata['common_demo_options']
+    contract = dict(affinity='cluster', threads='16', capacity_scale='1', requests='240',
+                    qps='12', arrival='regular', widths='80,4', depths='2,2',
+                    iterations='3000000', accesses='100000', model='branch-rw',
+                    branch_kb='64', shared_kb='0', jitter_percent='25', long_every='8',
+                    long_factor='4', work_scale_scope='task', estimate_mode='constant',
+                    home_policy='rr', continuation='parent', balance_at='all', batch_chunk='1',
+                    busy_high='1', return_low='0.5', min_gain='0', cross_numa='0',
+                    cross_numa_penalty='0', max_hops='4', max_outstanding='0',
+                    cpu_sampling='0', trace='1', page_sample='0', max_inflight='16',
+                    memory_mb='512', seed='421', sync_block_percent='0', sync_block_us='0',
+                    async_percent='0', async_delay_us='0', async_align_us='0', async_capacity='4096')
+    for key, value in contract.items():
+        audit(common.get(key) == value, 'changed workload/resource contract: ' + key)
+    partitions = [list(range(0, 16)), list(range(16, 32)), list(range(32, 48)),
+                  list(range(192, 208)), list(range(208, 224)), list(range(224, 240))]
+    approved_cpus = [cpu for partition in partitions for cpu in partition]
+    audit(metadata['cpu_set'] == '0-47,192-239', 'wrong selected CPU set')
+    audit(metadata['partitions'] == common['cpus'] == '0-15;16-31;32-47;192-207;208-223;224-239',
+          'wrong cluster partitions')
+    role_counts = {'init': 192, 'first-wave stage0': 15360, 'later-wave stage0': 768,
+                   'ordinary successors': 16128, 'join': 384}
+    first_work = rounds[0]['work']
+    for run in rounds:
+        label = run['round_id']
+        rows = grouped.get(label, [])
+        audit(bool(rows), label + ': missing CPU rows')
+        if not rows:
+            continue
+        metrics = derive(rows)
+        scope, capture = run['cpu_scope'], run['cpu_capture']
+        report, whole = run['report'], run['whole_run']
+        commands = metadata['commands'][label]
+        demo, capture_options = commands['demo_options'], commands['capture_options']
+        audit({k: v for k, v in demo.items() if k not in ['policy', 'output']} == common,
+              label + ': command differs from common workload')
+        audit(demo['policy'] == run['policy'] == report['policy'], label + ': command policy differs')
+        argv = commands['argv']
+        audit('--' in argv, label + ': launch delimiter missing')
+        split = argv.index('--')
+        for options, tokens in [(capture_options, argv[:split]), (demo, argv[split+1:])]:
+            for key, value in options.items():
+                flag = '--' + key.replace('_', '-')
+                audit(flag in tokens and tokens.index(flag) + 1 < len(tokens) and
+                      tokens[tokens.index(flag)+1] == value, label + ': normalized option differs: ' + flag)
+        for key, value in dict(partitions=metadata['partitions'], interval_ms='100',
+                               timeout_seconds='120', warmup_seconds='2', window_seconds='16').items():
+            audit(capture_options[key] == value, label + ': capture option differs: ' + key)
+        audit(capture['status'] == 'complete' and capture['child_returncode'] == 0 and
+              capture['exit_reason'] == 'completed' and capture['capture_errors'] == [] and
+              capture['summary_error'] is None, label + ': unsuccessful capture')
+        audit(capture['controller_allowed_cpus'] == approved_cpus, label + ': collector CPU mask differs')
+        audit(capture['interval_ms'] == 100 and capture['clock_ticks_per_second'] == 100,
+              label + ': capture interval/tick contract differs')
+        audit(0 <= capture['collector_sampling_cpu_seconds'] <= capture['collector_cpu_seconds'],
+              label + ': invalid collector CPU accounting')
+        audit(scope['available'] and scope['warmup_seconds'] == 2 and scope['window_seconds'] == 16,
+              label + ': formal scope differs')
+        audit(scope['scope_start_ns'] == scope['origin_ns'] + 2_000_000_000 and
+              scope['scope_end_ns'] == scope['origin_ns'] + 18_000_000_000,
+              label + ': formal scope origin mismatch')
+        audit(metrics['row_count'] == run['audit']['cpu_rows'] == run['derived']['cpu_windows_csv_rows'] == 954,
+              label + ': per-round CPU row count differs')
+        audit(metrics['window_count'] == metrics['valid_window_count'] ==
+              run['audit']['complete_six_cluster_windows'] == 159 and metrics['invalid_window_count'] == 0,
+              label + ': incomplete/invalid simultaneous CPU windows')
+        audit(metrics['first_start_ms'] >= 2000 and metrics['last_end_ms'] <= 18000,
+              label + ': CPU windows outside formal scope')
+        close(metrics['valid_seconds'], (metrics['last_end_ms'] - metrics['first_start_ms']) / 1000,
+              label + ': nonconsecutive CPU windows', 1e-7)
+        close(metrics['global_mean_percent'], run['derived']['selected_96_cpu_util_time_weighted_mean_percent'],
+              label + ': global CPU percentage differs')
+        close(metrics['global_mean_cpu_equiv'], run['derived']['cluster_cpu_equivalent_total_time_weighted_mean'],
+              label + ': global CPU equivalents differ')
+        audit(len(scope['clusters']) == len(run['cpu_groups']) == 6, label + ': cluster count differs')
+        for index, cluster in enumerate(scope['clusters']):
+            cpu_group = run['cpu_groups'][index]
+            audit(cluster['cluster'] == index and cluster['cpus'] == cpu_group['cpus'] == partitions[index],
+                  label + ': cluster CPU membership differs')
+            audit(cpu_group['capacity'] == 16 and cpu_group['numa'] == (0 if index < 3 else 2),
+                  label + ': cluster capacity/NUMA differs')
+            selected = [r for r in rows if int(r['cluster']) == index]
+            audit(len(selected) == cluster['complete_windows'] == cluster['valid_windows'] == 159,
+                  label + ': cluster window count differs')
+            audit(cluster['invalid_reasons'] == {} and cluster['invalid_seconds'] == 0 and
+                  cluster['outside_nominal_windows'] == 0, label + ': invalid cluster summary')
+            durations = [(float(r['relative_end_ms']) - float(r['relative_start_ms'])) / 1000 for r in selected]
+            util = [float(r['util_percent']) for r in selected]
+            close(sum(durations), cluster['valid_seconds'], label + ': cluster valid duration differs', 1e-7)
+            close(100 * sum(durations) / 16, cluster['valid_coverage_percent'],
+                  label + ': cluster coverage differs')
+            close(sum(t * u for t, u in zip(durations, util)) / sum(durations),
+                  cluster['util_time_weighted_mean_percent'], label + ': cluster weighted mean differs')
+            for suffix, expected in [('p50', quantile(util, .5)), ('p95', quantile(util, .95)),
+                                     ('p99', quantile(util, .99)), ('max', max(util))]:
+                close(expected, cluster['window_util_' + suffix + '_percent'],
+                      label + ': cluster window percentile differs: ' + suffix)
+        windows = {}
+        for row in rows:
+            audit(row['policy'] == run['policy'] and row['valid'] in ('1', 1) and row['invalid_reason'] == '',
+                  label + ': invalid CSV row state')
+            source_line = int(row['source_line'])
+            audit(run['source_lines']['cpu_series'][0] <= source_line <= run['source_lines']['cpu_series'][1],
+                  label + ': CPU row source line outside retained block')
+            close(float(row['util_percent']), float(row['busy_cpu_equivalent']) * 100 / 16,
+                  label + ': CPU row units disagree', 4e-6)
+            windows.setdefault((row['relative_start_ms'], row['relative_end_ms']), []).append(row)
+        for members in windows.values():
+            audit(len({r['process_cpu_equivalent'] for r in members}) == 1,
+                  label + ': process value differs between simultaneous cluster rows')
+        process = scope['process']
+        audit(process['invalid_reasons'] == {} and process['valid_windows'] == 159,
+              label + ': process scope is invalid')
+        close(process['cpu_seconds'] / process['valid_seconds'], process['cpu_equivalent'],
+              label + ': process own-window CPU arithmetic differs')
+        close(100 * process['valid_seconds'] / 16, process['valid_coverage_percent'],
+              label + ': process own-window coverage differs')
+        audit(run['resources'] == dict(seed=421, pool_count=6, affinity='cluster', threads_per_pool=16),
+              label + ': report resources differ')
+        audit(run['work'] == first_work and bool(run['same_work_audit']), label + ': work identity differs')
+        audit(report['model'] == 'branch-rw' and report['continuation'] == 'parent' and
+              report['completed'] == report['offered'] == 192 and report['tasks'] == 32832 and
+              report['cross_numa'] == 0, label + ': request cohort/graph contract differs')
+        audit(whole['completed'] == 240 and whole['rejected_or_failed'] == 0,
+              label + ': whole completion/failed counts differ')
+        close(whole['process_cpu_seconds'] * 1000 / whole['completed'], whole['process_cpu_per_request_ms'],
+              label + ': whole process CPU/request denominator differs', .00051)
+        arrival = run['arrival']
+        audit(arrival['kind'] == 'regular' and arrival['burst_size_spacing_us'] == 'not applicable',
+              label + ': arrival kind differs')
+        audit(arrival['whole_iterations'] == 168026400000 and arrival['whole_accesses'] == 5600880000,
+              label + ': fixed work counts differ')
+        for field in ['iterations', 'accesses']:
+            close(arrival['whole_' + field] / 240, arrival['per_request_mean_' + field],
+                  label + ': work/request arithmetic differs')
+        close(arrival['mean_attempt_lag_ms'] + arrival['mean_attempt_to_finish_ms'],
+              arrival['mean_planned_latency_ms'], label + ': arrival mean decomposition differs', .0011)
+        close(arrival['mean_planned_latency_ms'], report['mean_ms'], label + ': arrival/report means differ')
+        roles = {r['role']: r for r in run['roles']}
+        exact = {r['role']: r for r in run['role_csv']}
+        audit(set(roles) == set(exact) == set(role_counts), label + ': role coverage differs')
+        audit(sum(role['n'] for role in roles.values()) == report['tasks'] == run['audit']['role_callbacks'],
+              label + ': callback role conservation failure')
+        audit(sum(role['changed_pool'] for role in roles.values()) == report['migrations'],
+              label + ': migration role conservation failure')
+        close(100 * report['migrations'] / report['tasks'], run['derived']['routing_changed_pool_percent'],
+              label + ': routing percentage differs')
+        for name, count in role_counts.items():
+            role, precise = roles[name], exact[name]
+            audit(role['n'] == precise['n'] == count and role['changed_pool'] == precise['changed_pool'],
+                  label + ': printed/exact role counts differ: ' + name)
+            audit(0 <= role['back_to_home'] <= role['changed_pool'] <= count,
+                  label + ': invalid migration bounds: ' + name)
+            audit(sum(role['reasons'].values()) == count, label + ': routing reason conservation failure: ' + name)
+            close(role['wait_mean_ms'], precise['wait_mean_ms'], label + ': role wait rounding differs: ' + name, .00051)
+            close(100 * precise['changed_pool'] / count, precise['changed_pool_percent'],
+                  label + ': exact role migration percentage differs: ' + name)
+        audit(roles['init']['changed_pool'] == 0, label + ': init was not pinned home')
+        if run['policy'] == 'home':
+            audit(report['migrations'] == 0, label + ': home changed a task pool')
+        audit(run['audit']['status'] == 'passed', label + ': retained upstream audit failed')
+    historical = read_json(HERE / 'data/comparisons.json')['runs']
+    audit(len(historical) == 97 and all(row['batch'] != '4021' for row in historical),
+          'CPU supplement was mixed into the old historical population')
+    print(f'CPU supplement: {len(rounds)} rounds, {row_count} CPU rows, full-window metrics and role conservation verified')
 
 
 def validate_independent():
@@ -513,9 +739,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--require-artifacts", action="store_true", help="Fail unless final Markdown, embedded HTML and PDF exist")
     parser.add_argument("--report", type=Path, action="append", default=[], help="Also validate this report outside the default folder; repeatable")
+    parser.add_argument("--cpu-source-log", type=Path, help="Optionally verify the original 4021.log attachment hash and extent; not required for portable validation")
     args = parser.parse_args()
     validate_comparisons()
     validate_scenarios()
+    validate_cpu_supplement(args.cpu_source_log)
     validate_independent()
     validate_baseline_and_trace()
     validate_artifacts([p.resolve() for p in args.report], args.require_artifacts)
@@ -527,7 +755,9 @@ def main():
     output = {"schema": "final-review-validation-v1", "passed": not ERRORS,
               "checks": dict(sorted(CHECKS.items())), "errors": ERRORS,
               "scope": "reviewed source/dataset consistency and offline artifact integrity; no new performance measurements",
-              "artifact_sha256": {str(p.relative_to(HERE)): digest(p) for p in sorted(files)}}
+              "artifact_sha256": {str(p.relative_to(HERE)): digest(p) for p in sorted(files)},
+              "additional_evidence_sha256": {str(p.relative_to(ROOT)): digest(p) for p in
+                  [ROOT / "results/review/4021_summary.json", ROOT / "results/review/4021_cpu_windows.csv"] if p.is_file()}}
     (HERE / "validation.json").write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n")
     return bool(ERRORS)
 
