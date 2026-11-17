@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline figures: reviewed aggregates only, never invented raw observations."""
+"""Concrete execution diagrams and within-workload comparisons from reviewed data."""
 from pathlib import Path
 import json
 import numpy as np
@@ -7,233 +7,197 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Polygon
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 HERE=Path(__file__).resolve().parent
 FONT=Path('/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc')
-if not FONT.exists(): raise SystemExit('Install fonts-wqy-zenhei or supply this font path before rendering.')
 font_manager.fontManager.addfont(str(FONT))
 plt.rcParams.update({'font.family':font_manager.FontProperties(fname=str(FONT)).get_name(),
  'font.size':11,'axes.unicode_minus':False,'axes.spines.top':False,'axes.spines.right':False,
- 'axes.labelcolor':'#25384a','text.color':'#25384a','axes.titleweight':'bold','svg.fonttype':'path',
- 'savefig.facecolor':'white','figure.facecolor':'white'})
-COL={'home':'#355C83','queue':'#C37C1E','active':'#8764AC','outstanding':'#188B83',
- 'fork-parent':'#C37C1E','all-parent':'#188B83'}
-D=json.loads((HERE/'data/comparisons.json').read_text())
-RUNS=D['runs']; IDX={r['id']:r for r in RUNS}; PAIRS=D['paired_comparisons']
-OUT=HERE/'figures'; OUT.mkdir(exist_ok=True)
-MANIFEST=[]
-
+ 'axes.labelcolor':'#25384a','text.color':'#25384a','svg.fonttype':'path','savefig.facecolor':'white'})
+COL={'home':'#355C83','queue':'#C37C1E','active':'#8764AC','outstanding':'#188B83','fork-parent':'#C37C1E','all-parent':'#188B83'}
+RUNS=json.loads((HERE/'data/comparisons.json').read_text())['runs']
+OUT=HERE/'figures';OUT.mkdir(exist_ok=True);MANIFEST=[]
 def save(fig,name,title,sources,caption):
- for ext in ('png','svg'): fig.savefig(OUT/f'{name}.{ext}',dpi=170,bbox_inches='tight',pad_inches=.18)
- svg=OUT/f'{name}.svg'; svg.write_text('\n'.join(line.rstrip() for line in svg.read_text().splitlines())+'\n')
- MANIFEST.append({'name':name,'title':title,'sources':sources,'caption':caption})
- plt.close(fig)
-def setup(title,subtitle='',size=(13,6)):
- fig,ax=plt.subplots(figsize=size)
- fig.suptitle(title,x=.06,y=.98,ha='left',fontsize=17)
- if subtitle:fig.text(.06,.918,subtitle,fontsize=10,color='#596a78')
+ for ext in ['png','svg']:fig.savefig(OUT/f'{name}.{ext}',dpi=180,bbox_inches='tight',pad_inches=.2)
+ p=OUT/f'{name}.svg';p.write_text('\n'.join(l.rstrip() for l in p.read_text().splitlines())+'\n')
+ MANIFEST.append(dict(name=name,title=title,sources=sources,caption=caption));plt.close(fig)
+def diagram(title,sub='',size=(14,7)):
+ fig,ax=plt.subplots(figsize=size);ax.set_xlim(-2,102);ax.set_ylim(-3,103);ax.axis('off')
+ fig.suptitle(title,x=.045,ha='left',fontsize=17,y=.98)
+ fig.text(.045,.917,sub,fontsize=10,color='#506678');fig.subplots_adjust(top=.86,bottom=.08)
  return fig,ax
-
-def canvas(title,sub='',height=7):
- fig,ax=setup(title,sub,(14,height));ax.set_xlim(-3,103);ax.set_ylim(-3,101);ax.axis('off');fig.subplots_adjust(top=.86,bottom=.06)
- return fig,ax
-
-def box(ax,x,y,w,h,label,color='#eaf0f6',fs=11,edge='#a7b6c4'):
- ax.add_patch(FancyBboxPatch((x,y),w,h,boxstyle='round,pad=0.45,rounding_size=1',facecolor=color,edgecolor=edge,lw=1.2))
- ax.text(x+w/2,y+h/2,label,ha='center',va='center',fontsize=fs,linespacing=1.5)
-def arrow(ax,a,b,label='',color='#526b80',style='-',offset=(0,2)):
- ax.add_patch(FancyArrowPatch(a,b,arrowstyle='-|>',mutation_scale=14,color=color,lw=1.5,linestyle=style))
- if label:ax.text((a[0]+b[0])/2+offset[0],(a[1]+b[1])/2+offset[1],label,ha='center',va='bottom',fontsize=10,color=color,bbox={'facecolor':'white','edgecolor':'none','pad':1})
-def foot(fig,text):fig.text(.06,.018,text,fontsize=9,color='#5b6976',va='bottom')
+def box(ax,x,y,w,h,text,color='#e9f0f6',fs=11):
+ ax.add_patch(FancyBboxPatch((x,y),w,h,boxstyle='round,pad=.35,rounding_size=.7',fc=color,ec='#9bacbb'))
+ ax.text(x+w/2,y+h/2,text,ha='center',va='center',fontsize=fs,linespacing=1.5)
+def arrow(ax,a,b,label='',color='#536e84',offset=(0,1)):
+ ax.add_patch(FancyArrowPatch(a,b,arrowstyle='-|>',mutation_scale=13,color=color,lw=1.5))
+ if label:ax.text((a[0]+b[0])/2+offset[0],(a[1]+b[1])/2+offset[1],label,ha='center',va='bottom',fontsize=10,bbox=dict(fc='white',ec='none',pad=1))
+def footer(fig,t):fig.text(.045,.015,t,fontsize=9,color='#546878')
 def pick(batch,**kwargs):return [r for r in RUNS if r['batch']==str(batch) and all(r.get(k)==v for k,v in kwargs.items())]
-def pct(c,b,k):return 100*(c[k]/b[k]-1)
-def grid(ax):ax.grid(axis='y',color='#e7ecf0');ax.set_axisbelow(True)
+def grid(ax):ax.grid(axis='y',color='#e5ecf1');ax.set_axisbelow(True)
 
-# 1. Scenario architecture. Diagram is explanatory, not measured timing.
-fig,ax=canvas('图1  场景视图：一个业务总池，按实际 cluster 分组','蓝色为计算路径；绿色为可借资源；橙色为外部等待。六池只是本次资源选择。')
-for x,lab in [(3,'客户端请求'),(28,'IO接收'),(53,'worker构图'),(78,'总池入口\n固定 request home')]: box(ax,x,82,19,12,lab,fs=11)
-for x in (22,47,72):arrow(ax,(x,88),(x+6,88))
-ax.text(36,76,'业务背景；IO与构图并未完整复刻',fontsize=10,ha='center',color='#687b8a')
-box(ax,33,62,34,11,'图依赖满足 → 新 ready callback\nL2 按亲和与压力选池',color='#e3f3ef',fs=11)
-arrow(ax,(87,82),(66,69));arrow(ax,(42,62),(25,55));arrow(ax,(58,62),(75,55))
-for x,lab in [(3,'NUMA A（本次节点0）'),(53,'NUMA B（本次节点2）')]:
- box(ax,x,24,44,31,'',color='#f5f8fa');ax.text(x+22,51,lab,ha='center',fontsize=12,fontweight='bold')
- for j in range(3):box(ax,x+2+j*14,33,12,12,f'cluster {j+1}\nFolly子池',color='#e4efed' if j else '#e7edf5',fs=10)
- ax.text(x+22,27,'worker仅在本cluster允许CPU上运行',ha='center',fontsize=9)
- arrow(ax,(x+14,39),(x+16,39),color='#188b83');arrow(ax,(x+28,39),(x+30,39),color='#188b83')
-arrow(ax,(47,39),(53,39),style='--');ax.text(50,44,'跨域\n默认关',ha='center',fontsize=9)
-box(ax,34,3,32,12,'外部完成源模型（替代真实网络）\n等待结束后恢复保存的上下文',color='#fff0d8',fs=10)
-arrow(ax,(25,24),(34,10),'发起等待',offset=(-3,0));arrow(ax,(66,10),(94,10));arrow(ax,(94,10),(94,67));arrow(ax,(94,67),(67,67),'恢复重新进入L2')
-foot(fig,'图示架构已实现于研究工程；CPU绑定不等于绑定数据页；业务仍负责依赖、共享写安全和最终完成。')
-save(fig,'01_scene','场景视图',['RequestExecutor.h','AsyncCompletionSource.h'],'示意图，不是生产部署实测拓扑。')
+# Planned arrivals, deliberately not pretending to be observed timelines.
+fig,axs=plt.subplots(3,1,figsize=(13,6.2));fig.suptitle('图1  请求何时进入demo：三种明确的计划到达',x=.06,ha='left',fontsize=17)
+for ax,q,burst,title in [(axs[0],12,False,'12 QPS均匀：每83.333ms一个请求；同home每500ms一次'),(axs[1],12,True,'12 QPS成组：8个请求相隔100µs；每666.667ms一组'),(axs[2],96,False,'96 QPS均匀：每10.417ms一个请求；同home每62.5ms一次')]:
+ x=np.arange(8)*(.1 if burst else 1000/q)
+ ax.hlines(0,-.03*x[-1],x[-1]*1.03,color='#9aabb8')
+ ax.vlines(x,-.12,.12,color=COL['outstanding'],lw=2)
+ for i,v in enumerate(x):ax.text(v,.2,f'R{i}→池{i%6}',ha='center',fontsize=10)
+ ax.set_title(title,fontsize=12,loc='left');ax.set_ylim(-.3,.7);ax.set_yticks([]);ax.set_xticks(x,[f'{v:.3f}' if not burst else f'{v:.1f}' for v in x]);ax.set_xlabel('相对首请求的计划时间（ms）');ax.spines['left'].set_visible(False)
+fig.subplots_adjust(top=.83,bottom=.13,hspace=1.15)
+footer(fig,'只画前8个计划到达；真实投递可能落后。RR仅确定home；它没有决定该请求全部算子的最终执行池。')
+save(fig,'01_arrivals','请求计划到达',['experiments/affinity/main.cpp run'],'计划示意，不是从真实CPU或投递时间序列重建。')
 
-# 2. Sequence with load lifetimes.
-fig,ax=canvas('图2  异步时序：等待释放 worker，恢复再次成为 CPU ready 工作','时序为因果示意，不按时间比例绘制；零延迟时 helper 可在注册者返回前派发。',height=8)
-xs=[9,35,64,91];labs=['当前worker','总池 / Folly','外部完成源','目标worker']
-for x,l in zip(xs,labs):
- box(ax,x-8,89,16,9,l,fs=11);ax.plot([x,x],[6,88],color='#b9c5ce',ls='--',lw=1)
-arrow(ax,(9,82),(35,82),'保存request、parent及续接令牌')
-arrow(ax,(9,73),(64,73),'业务算子完成；登记due')
-box(ax,0,56,20,11,'原callback返回\n当前 I / O 退出',color='#e3f3ef',fs=10)
-box(ax,45,53,37,10,'外部pending存在，worker已可做其他任务\n未就绪后继不计入CPU池负载',color='#fff0d8',fs=10)
-arrow(ax,(64,46),(35,46),'到期后实际fire：提交rpc_resume',offset=(0,2))
-ax.text(65,64,'issue→due\n配置等待',fontsize=9,ha='left');ax.text(66,43,'due→fire\n源延迟',fontsize=9,ha='left')
-box(ax,24,29,25,11,'选池 → R预留 → O接纳\n入队 / permit通知',color='#e7edf5',fs=10)
-arrow(ax,(35,28),(91,28),'worker获得CPU并领取闭包 → callback开始')
-box(ax,81,13,19,10,'恢复callback执行\nI开始 → 推进依赖',color='#e3f3ef',fs=10)
-arrow(ax,(91,9),(35,9),'提交下一业务算子，继承实际父池')
-foot(fig,'submitted在选池/预留之后，非完整add成本。活跃worker与被唤醒worker竞争任务；等待期间request与续接lease仍存活。')
-save(fig,'02_sequence','异步时序与计量边界',['main.cpp async path','RequestExecutor.h continuation'],'示意顺序；不保证zero-delay注册者先返回，不把不同阶段p99相加。')
+fig,ax=diagram('图2  展开一条请求：168个业务算子，并非一次提交168个','本图展示无异步基础路径。生产中的IO接收/worker构图被一个计划到达发生器替代。',size=(15,8))
+box(ax,1,84,21,14,'发生器到计划时间\nbeginRequest(R0)\nRR固定home=池0',fs=11)
+box(ax,29,84,30,14,'仅提交1个初始化callback\npinHome=true → 池0\n首次触碰84×64KiB = 5.25MiB',color='#e5f1ee',fs=11)
+box(ax,68,84,30,14,'初始化callback中 fork(0)\n生成80个第一段闭包\naddBatch；chunk=1逐个选池',color='#fff0d9',fs=11)
+arrow(ax,(22,91),(29,91));arrow(ax,(59,91),(68,91))
+arrow(ax,(83,84),(83,76));arrow(ax,(83,76),(-1,76));ax.plot([-1,-1],[29,76],color='#536e84',lw=1.5)
+for branch_y in [63,46,29]:arrow(ax,(-1,branch_y),(2,branch_y))
+for y,lab in [(58,'分支0'),(41,'分支1'),(24,'分支79')]:
+ box(ax,2,y,23,10,f'{lab} 第一段算子',fs=11)
+ box(ax,37,y,23,10,f'{lab} 第二段算子',fs=11)
+ arrow(ax,(25,y+5),(37,y+5),'单独add',offset=(0,2))
+ ax.text(31,y-3,'同一64KiB读写数据',ha='center',fontsize=9,color='#188b83')
+ arrow(ax,(60,y+5),(68,46))
+ax.text(12,37,'…',fontsize=18,ha='center');ax.text(48,37,'…',fontsize=18,ha='center')
+box(ax,69,35,29,22,'80条两段链全完成\n最后完成者提交join\njoin再fork(1)\n4条新的两段链',color='#fff0d9',fs=11)
+arrow(ax,(83,35),(83,18));box(ax,68,2,30,16,'4×2=8个算子 → 最终join\n读取各分支checksum\n标记请求完成',color='#e5f1ee',fs=11)
+box(ax,2,1,57,13,'第一段结束计算即可提交本分支第二段，不等其他79支。\n1初始化 + 160第一波算子 + 1join + 8第二波算子 + 1join = 171基础callback。',fs=10)
+footer(fig,'每个算子都通过总池add/addBatch；子callback可在父callback返回前开始。第二波用4个新buffer，只有控制依赖，不复用第一波payload。')
+save(fig,'02_request_dag','一个请求的完整DAG',['experiments/affinity/main.cpp fork/stage/advance','LocalityWorkload.h'],'80个首波第一段依次投递；深度2不构成跨分支的stage barrier。')
 
-# 3. Routing flow.
-fig,ax=canvas('图3  新 ready callback 的放置流程','这是提交时选池：不搬运队列中的任务，不抢占运行算子；负载提供者和评分器可替换。',height=8)
-box(ax,27,88,46,9,'固定home；偏好实际parent（无parent则home）',fs=11)
-box(ax,23,71,54,13,'home/pin-home → 直接home；fork-only非fork / hop耗尽 → 直接偏好池\n其余：仅ReturnHome模式，home≤low且同域或允许跨域时可改偏好',fs=9)
-arrow(ax,(23,77),(13,77));arrow(ax,(13,77),(13,51),'提前返回',offset=(-2,0))
-arrow(ax,(50,88),(50,84))
-box(ax,32,56,36,10,'偏好评分 > high ？',color='#fff0d8',fs=12);arrow(ax,(50,71),(50,66),'其余',offset=(5,0))
-box(ax,2,40,22,11,'直接指定池\n或保留偏好池',fs=11);arrow(ax,(32,61),(13,51),'否')
-box(ax,35,38,54,12,'是：同NUMA扫描\n严格更轻，且改善 > min-gain',color='#e3f3ef',fs=11);arrow(ax,(58,56),(58,50),'是',offset=(6,0))
-box(ax,35,19,54,12,'无本域合格目标且允许跨NUMA？\n才搜索远端，并加同单位罚项',fs=11);arrow(ax,(62,38),(62,31))
-box(ax,12,0,76,11,'选中目标 → chunk预留 → 逐个入队；无改善仍留偏好池\n“较轻”不保证idle；R/O是近似快照，并发提交可能选中同池',color='#e7edf5',fs=10)
-arrow(ax,(13,40),(13,11));arrow(ax,(90,43),(96,43));arrow(ax,(96,43),(96,5));arrow(ax,(96,5),(89,5));ax.text(95,48,'本域有解',ha='right',fontsize=9)
-arrow(ax,(62,19),(62,11))
-save(fig,'03_routing','放置决策流程',['RequestExecutor.h choose/searchDomain'],'high/gain使用严格比较；ReturnHome独立于普通借出。')
+fig,ax=diagram('图3  Q / I / O / R：沿一次算子提交逐点定位','橙色是总池/包装器维护；蓝色是Folly原生状态；绿色是callback生命周期。',size=(15,8.6))
+ax.text(24,98,'提交者：driver / 算子worker / helper',ha='center',fontsize=13)
+ax.text(77,98,'消费者：目标池worker',ha='center',fontsize=13)
+steps=[(81,'A. choose()读取候选池\nQ=getTaskQueueSize；I/O=包装计数；R=总池预留','#e8f0f7'),(65,'B. 选定目标j后：R[j] += chunk\n当前chunk=1，不预留整张图','#fff0d9'),(49,'C. trace=1时记Q/I/O_before及t_submit\n随后BusinessExecutor::add：O[j] += 1','#fff0d9'),(33,'D. Folly::add：闭包入队，再post\nQ是信号量/队列接口的近似量','#e8f0f7'),(14,'E. 底层add返回后：R[j] -= 1\n拒绝/异常走回滚，不遗留占用','#fff0d9')]
+for y,t,c in steps:box(ax,1,y,47,12,t,c,10.5)
+for a,b in [(81,77),(65,61),(49,45),(33,26)]:arrow(ax,(24,a),(24,b))
+box(ax,55,74,44,16,'worker被唤醒后由内核调度\n或已活跃worker继续取任务\n取得permit使原生Q变化，再dequeue',fs=11)
+arrow(ax,(48,39),(55,80),'通知/可取任务',offset=(0,3))
+box(ax,55,54,44,13,'F. 包装callback开始：I[j] += 1\n安装request/parent；记t_start',color='#e2f2ed',fs=11);arrow(ax,(77,74),(77,67))
+box(ax,55,30,44,17,'G. 执行本算子\n计算 → 提交本分支后继 / 注册异步等待\n即使被抢占或同步阻塞，I/O仍保留',color='#e2f2ed',fs=11);arrow(ax,(77,54),(77,47))
+box(ax,55,7,44,15,'H. 记t_finish，callback返回\nI[j] -= 1；O[j] -= 1\n异常也释放；外部pending另计',color='#e2f2ed',fs=11);arrow(ax,(77,30),(77,22))
+footer(fig,'D后左右两列并发：callback可能在E之前开始甚至结束。Q不是Linux runq；I不是on-CPU。submit→start不含A/B选池预留。')
+save(fig,'03_observation_sites','观测点定位',['RequestExecutor.h submit/batch/enqueue','BusinessExecutor.h add/readLoad'],'R在底层add返回后释放，可与O短时重叠；I/O可同时包含父子callback。')
 
-# 4. Stage-3 conditional quantile ranges, not CI.
-independent=json.loads((HERE/'data/independent_evidence.json').read_text())
-independent_rows=independent['rows']
-fig,axs=plt.subplots(1,2,figsize=(13,5.2));fig.suptitle('图4  Q能描述积压，但Q=0不能保证完成快',x=.06,ha='left',fontsize=17)
-x=np.arange(len(independent_rows))
-labels=[r['queue_bin'].replace('～','–')+'\n'+(str(r['tasks_per_run_range'][0]) if r['tasks_per_run_range'][0]==r['tasks_per_run_range'][1] else '–'.join(str(v) for v in r['tasks_per_run_range']))+'条/轮' for r in independent_rows]
-lo=[[r[k][0] for r in independent_rows] for k in ['wait_p99_ms_range','submit_to_finish_p99_ms_range']]
-hi=[[r[k][1] for r in independent_rows] for k in ['wait_p99_ms_range','submit_to_finish_p99_ms_range']]
-for ax,a,b,title in zip(axs,lo,hi,['提交→开始 p99（ms）','提交→完成 p99（ms）']):
- for i,(l,h) in enumerate(zip(a,b)):
-  ax.plot([i,i],[l,h],color=COL['home'],lw=5,solid_capstyle='round');ax.scatter([i,i],[l,h],color=COL['home'],s=22)
-  ax.annotate(f'{l:.3f}–{h:.3f}' if i==0 and title.startswith('提交→开始') else f'{l:.1f}–{h:.1f}',(i,h),xytext=(0,10),textcoords='offset points',ha='center',fontsize=9)
- ax.set_xticks(x,labels);ax.set_xlabel('提交前Q分桶');ax.set_title(title,fontsize=12);grid(ax);ax.margins(x=.15,y=.22)
- ax.axvspan(-.4,.4,color='#fff0d8',zorder=0)
-fig.subplots_adjust(bottom=.24,top=.82,wspace=.25)
-foot(fig,'独立任务：cluster / 每池256线程 / local burst100；线段为3个seed各自p99的范围，不是置信区间。Q=0桶尾样本少，仅作盲区例证。')
-save(fig,'04_queue_latency','队列条件分位数',['data/independent_evidence.json'],'各桶为独立任务结果，不能用来预测DAG请求p99。')
+# Frozen-state teaching example, not a performance simulation.
+loads=[1,0,0];history=[loads.copy()];dest=[]
+for j in range(80):
+ selected=0
+ if loads[0]>16:
+  for candidate in [1,2]:
+   if loads[candidate]<loads[selected] and loads[0]-loads[candidate]>0:selected=candidate
+ loads[selected]+=1;dest.append(selected);history.append(loads.copy())
+assert [dest.count(j) for j in range(3)]==[26,27,27]
+fig,axs=plt.subplots(1,2,figsize=(14,5.6));fig.suptitle('图4  同一个请求的80个首波算子确实会跨池分配',x=.055,ha='left',fontsize=17)
+for i,col in enumerate([COL['home'],COL['outstanding'],COL['active']]):axs[0].step(range(81),np.array(history)[:,i],where='post',label=f'池{i}',color=col)
+axs[0].axhline(16,ls='--',color='#8a9cab');axs[0].set_xlabel('已投递的首波算子数');axs[0].set_ylabel('未完成callback O（含初始化）');axs[0].legend(frameon=False);grid(axs[0])
+for i,col in enumerate([COL['home'],COL['outstanding'],COL['active']]):
+ xs=[j+1 for j,g in enumerate(dest) if g==i];axs[1].scatter(xs,[i]*len(xs),color=col,s=26)
+axs[1].set_yticks([0,1,2],['池0：26个算子','池1：27个算子','池2：27个算子']);axs[1].set_xlabel('首波算子序号1～80');axs[1].set_ylim(2.5,-.5);axs[1].grid(axis='x',color='#e5ecf1')
+fig.subplots_adjust(top=.8,bottom=.25,wspace=.35)
+footer(fig,'教学演算：同NUMA三池、C16、high1、gain0、chunk1；只让home初始化继续提交，暂不消费子任务，无其他请求。实际运行不是这个固定分配。\n第1～16个留home；第17个开始借出；home不随算子改投而改变。R每次交接释放，图中显示交接后的O。')
+save(fig,'04_operator_placement','80算子逐次选池演算',['RequestExecutor.h choose/batch'],'明确假设下的教学状态机，不是测得的80任务分配或性能预测。')
 
-# 5. Signal choices across workload families, matched within each batch.
-fig,axs=plt.subplots(1,3,figsize=(15,6.8),sharey=True)
-fig.suptitle('图5  同批策略对照：收益随负载变化，计数信号没有通用赢家',x=.055,ha='left',fontsize=17)
-groups=[('4012',16,'L / burst8 / T16\n3 seed，n=192/格'),('4012',128,'L / burst8 / T128\n3 seed，n=192/格'),('4014',16,'L / regular / T16\n3 seed，n=192/格'),('4016',16,'SD / regular / T16\n1 seed，n=1536/格'),('4016',128,'SD / regular / T128\n1 seed，n=1536/格'),('4020',16,'A1异步 / regular / T16\n1 seed，n=1536/格')]
-metrics=[('mean_ms','请求mean变化（%）'),('p99_ms','每轮请求p99变化（%）'),('cpu_per_request_ms','整轮CPU/请求变化（%）')]
-for ax,(metric,label) in zip(axs,metrics):
- for gi,(batch,thr,_) in enumerate(groups):
-  for pi,policy in enumerate(['queue','active','outstanding']):
-   rows=pick(batch,threads=thr,trace=0,policy=policy)
-   for j,r in enumerate(rows):
-    bases=pick(batch,threads=thr,trace=0,policy='home',seed=r['seed'],scenario=r['scenario']);assert len(bases)==1
-    if r.get(metric) is None or bases[0].get(metric) is None:continue
-    ax.scatter(pct(r,bases[0],metric),gi+(pi-1)*.15+(j-(len(rows)-1)/2)*.035,color=COL[policy],s=30,alpha=.9)
- ax.axvline(0,c='#647887',lw=1);ax.grid(axis='x',color='#e7ecf0');ax.set_axisbelow(True);ax.set_xlabel(label);ax.set_ylim(len(groups)-.55,-.55)
-axs[0].set_yticks(range(len(groups)),[x[2] for x in groups],fontsize=10)
-for pol,label in [('queue','Q'),('active','Q+I'),('outstanding','O')]:axs[2].scatter([],[],c=COL[pol],label=label)
-axs[2].legend(loc='lower right',frameon=False)
-fig.subplots_adjust(left=.19,right=.98,top=.86,bottom=.17,wspace=.12)
-foot(fig,'每点=一个同批、同seed、同线程候选-home百分比；均值/尾延迟负值更低，CPU正值更耗。跨行不是到达形态因果对照；3 seed改变工作，不是同工作重复。')
-save(fig,'05_signal_tradeoffs','跨负载的信号选择',['4012','4014','4016','4020'],'仅画同批匹配差；不平均各轮p99，无置信区间。')
+fig,ax=diagram('图5  一条分支的续接：保留home，但parent跟随实际执行池','示例：request home=池0，第一段算子被借到同NUMA的池1。',size=(14,6.5))
+box(ax,2,75,29,17,'第一段算子在池1执行\n保存：home=0，source=1\n计算并修改本分支64KiB',color='#e2f2ed')
+box(ax,38,75,29,17,'直接路径：在callback内add\n第二段以parent=1为偏好\n再次按fork/all与负载判断',fs=10.5);arrow(ax,(31,84),(38,84))
+box(ax,75,75,24,17,'pool1不忙：仍池1\n忙且池2更轻：可池2\nhome仍是池0',fs=10.5);arrow(ax,(67,84),(75,84))
+box(ax,2,39,29,17,'异步路径：保存续接token\ndue=登记时刻+2ms\n注册事件；返回时退出I/O',color='#fff0d9',fs=10.5);arrow(ax,(16,75),(16,56))
+box(ax,38,39,29,17,'helper到期派发恢复callback\n恢复的是home0 / source1\n不会把helper所在CPU当parent',fs=10.5);arrow(ax,(31,47),(38,47))
+box(ax,75,39,24,17,'恢复callback经总池选池\n执行advance → add第二段\n第二段继承恢复实际池',fs=10.5);arrow(ax,(67,47),(75,47))
+box(ax,8,2,84,22,'parent：逐分支跟随实际前驱；不是给整个请求改一个“当前池”。\ncontinuation=home：未被fork/hop拦截且home≤low、域允许时，优先回home。\nfork-only：首波和第二波批量投递可借出，普通第二段/恢复/join保持parent；all：这些提交也可重新判断。',fs=11)
+footer(fig,'helper派发与原callback返回无先后保证。2ms不是请求总时延固定加2ms；外部pending不加入CPU池O。')
+save(fig,'05_successor_async','分支后继与异步续接',['main.cpp stage/awaitCompletion/advance','RequestExecutor.h choose'],'parent和ReturnHome不同；异步保存实际父池，不继承完成源线程位置。')
 
-# 6. Thread budget effect and mechanism.
-fig,axs=plt.subplots(1,3,figsize=(14,5.5));fig.suptitle('图6  更多worker不等于更快：callback墙钟增长而CPU接近',x=.055,ha='left',fontsize=17)
-for pi,policy in enumerate(['home','queue','active','outstanding']):
- for r in pick('4012',threads=16,trace=0,policy=policy):
-  b=pick('4012',threads=128,trace=0,policy=policy,seed=r['seed'])[0]
-  axs[0].scatter(pi+(r['seed']-421)*.1,pct(r,b,'mean_ms'),color=COL[policy],s=38)
-axs[0].axhline(0,c='#647887',lw=1);axs[0].set_xticks(range(4),['home','Q','Q+I','O']);axs[0].set_ylabel('16相对128线程：mean变化（%）');axs[0].set_title('长工作burst：3 seed，trace0',fontsize=11);grid(axs[0])
-for t,color,off in [(16,COL['home'],-.18),(128,COL['outstanding'],.18)]:
- rows=[pick('4013',threads=t,policy=p)[0] for p in ['home','queue','outstanding']]
- for ax,key in [(axs[1],'operator_cpu_mean_ms'),(axs[2],'operator_wall_mean_ms')]:
-  vals=[r[key] for r in rows]; bars=ax.bar(np.arange(3)+off,vals,.34,color=color,label=f'{t}线程')
-  ax.bar_label(bars,fmt='%.2f',fontsize=9,padding=3)
-for ax,title in [(axs[1],'业务callback CPU均值（ms）'),(axs[2],'业务callback墙钟均值（ms）')]:
- ax.set_title(title,fontsize=11);ax.set_xticks(range(3),['home','Q','O']);grid(ax);ax.margins(y=.25)
-axs[2].legend(frameon=False,loc='upper left',fontsize=9)
-fig.subplots_adjust(top=.83,bottom=.22,wspace=.3)
-foot(fig,'左：同批线程干预；右：另一批seed421、trace1机制诊断。CPU与墙钟均非独立runq分解；并非所有工作族或p99都随减线程改善。')
-save(fig,'06_thread_budget','线程预算及CPU墙钟',['4012','4013'],'不同批次分面展示，不把trace1机制数直接扣到trace0时延。')
+def scenario_chart(name,number,batch,title,sub,threads,policies):
+ fig,axs=plt.subplots(len(threads),3,figsize=(14,4.1*len(threads)+1),squeeze=False)
+ fig.suptitle(f'图{number}  '+title,x=.05,ha='left',fontsize=16);fig.text(.05,.91,sub,fontsize=10)
+ for ri,t in enumerate(threads):
+  for ci,(key,lab) in enumerate([('mean_ms','请求均值（ms）'),('p99_ms','每轮请求p99（ms）'),('cpu_per_request_ms','整轮CPU/请求（ms）')]):
+   ax=axs[ri,ci]
+   for pi,pol in enumerate(policies):
+    rr=pick(batch,threads=t,trace=0,strategy=pol) if pol.endswith('parent') else pick(batch,threads=t,trace=0,policy=pol)
+    for j,r in enumerate(rr):
+     dx=(j-(len(rr)-1)/2)*.12
+     ax.scatter(pi+dx,r[key],color=COL[pol],s=42,marker={420:'o',421:'s',422:'^'}[r['seed']])
+     if len(rr)==1:ax.annotate(f'{r[key]:.2f}',(pi,r[key]),xytext=(0,8),textcoords='offset points',ha='center',fontsize=9)
+   ax.set_xticks(range(len(policies)),[{'home':'固定home','queue':'Q选池','active':'Q+I选池','outstanding':'O选池','fork-parent':'仅fork','all-parent':'全部提交'}[p] for p in policies],fontsize=10)
+   ax.set_title(f'每池{t}线程 · {lab}',fontsize=11);grid(ax);ax.margins(x=.16,y=.2)
+ fig.subplots_adjust(top=.84 if len(threads)==1 else .85,bottom=.15 if len(threads)==1 else .11,wspace=.27,hspace=.45)
+ seed_note='仅seed421，每格一次。' if batch=='4016' else '圆/方/三角分别为seed420/421/422；各格一次、同seed配对。'
+ footer(fig,seed_note+'CPU/请求是计算消耗，不是实时CPU利用率。\n请求时延取计划到达[2,18)窗口，CPU取整轮；该批实时CPU未采集，迁移记录须看单独trace1对照。')
+ save(fig,name,title,[batch],'场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。')
+scenario_chart('06_burst12_3m',6,'4012','12 QPS：8请求一组，组内间隔100µs，批周期666.667ms','每请求80×2+4×2=168算子；基准300万迭代+10万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16,128],['home','queue','active','outstanding'])
+scenario_chart('07_regular12_3m',7,'4014','12 QPS，每83.333ms一请求：比较Q与O','每请求80×2+4×2=168算子；基准300万迭代+10万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16],['home','queue','outstanding'])
+scenario_chart('08_regular96_375k',8,'4016','96 QPS，每10.417ms一请求：比较Q与O','每请求80×2+4×2=168算子；基准37.5万迭代+1.25万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16,128],['home','queue','outstanding'])
+scenario_chart('09_fork_all',9,'4011','12 QPS、8请求成组、每池128线程：算子在哪些提交点均衡','每组跨度700µs、周期666.667ms；168算子/请求；300万迭代+10万读写/算子；trace0、O评分、parent、同NUMA借出。',[128],['home','fork-parent','all-parent'])
 
-# 7. Scope of follow-up rebalancing.
-fig,axs=plt.subplots(1,2,figsize=(12,5));fig.suptitle('图7  all与fork：小幅均值收益不保证尾部排名',x=.06,ha='left',fontsize=17)
-for tr,off,color in [(0,-.1,COL['home']),(1,.1,COL['outstanding'])]:
- for j,seed in enumerate([420,421,422]):
-  a=pick('4011',seed=seed,trace=tr,strategy='all-parent')[0];b=pick('4011',seed=seed,trace=tr,strategy='fork-parent')[0]
-  for ax,k in zip(axs,['mean_ms','p99_ms']):ax.scatter(j+off,pct(a,b,k),s=55,c=color,label=f'trace{tr}' if j==0 else None)
-for ax,lab in zip(axs,['请求mean变化（%）','每轮请求p99变化（%）']):
- ax.axhline(0,c='#647887',lw=1);ax.set_xticks(range(3),['seed420','seed421','seed422']);ax.set_ylabel(lab);grid(ax);ax.legend(frameon=False)
-fig.subplots_adjust(top=.82,bottom=.22,wspace=.28)
-foot(fig,'每点为同seed、同trace的all-fork；长工作burst8、T128、每格192请求/24个相关burst。负值表示all更低；不是总体p99或正式验收。')
-save(fig,'07_continuation','后继调度范围',['4011'],'all/fork的trace0/1配对；小样本尾部方向有反转。')
+# Mechanism: same batch/trace, including migration, not spliced into trace0.
+d13=json.loads((HERE.parents[1]/'results/review/4013_summary.json').read_text())['runs']
+fig,axs=plt.subplots(2,3,figsize=(14,8));fig.suptitle('图10  12 QPS、8请求成组：同一次trace1中的执行、等待和改投',x=.05,ha='left',fontsize=16)
+for ri,t in enumerate([16,128]):
+ rows=[next(r for r in d13 if r['threads']==t and r['policy']==p) for p in ['home','queue','outstanding']]
+ for ci,(key,lab) in enumerate([('operator_cpu_mean_ms','算子CPU / 墙钟均值（ms）'),('task_wait_p99_ms','所有callback提交→开始p99（ms）'),('cohort_migrations','改投次数 / 全部callback（%）')]):
+  ax=axs[ri,ci]
+  if ci==0:
+   for off,k,col,l in [(-.18,'operator_cpu_mean_ms',COL['home'],'CPU'),(.18,'operator_wall_mean_ms',COL['outstanding'],'墙钟')]:
+    bars=ax.bar(np.arange(3)+off,[r[k] for r in rows],.34,label=l,color=col);ax.bar_label(bars,fmt='%.2f',fontsize=9,padding=2)
+  else:
+   vals=[r[key] if ci==1 else r[key]*100/r['cohort_callbacks'] for r in rows]
+   bars=ax.bar(range(3),vals,color=[COL[p] for p in ['home','queue','outstanding']]);ax.bar_label(bars,fmt='%.2f',fontsize=9,padding=2)
+  ax.set_xticks(range(3),['固定home','Q选池','O选池']);ax.set_title(f'{t}线程 · {lab}',fontsize=11);grid(ax);ax.margins(y=.23)
+fig.legend(*axs[0,0].get_legend_handles_labels(),loc='upper center',bbox_to_anchor=(.5,.94),ncol=2,frameon=False)
+fig.subplots_adjust(top=.82,bottom=.13,wspace=.3,hspace=.45)
+footer(fig,'批内100µs、跨度700µs、批周期666.667ms。同seed421，192请求/32832个callback；300万迭代+10万读写/算子。改投=chosen≠保存的source，不是内核迁移。\n每点/柱来自本批trace1；它与图6的trace0为不同执行，不能把本图迁移率当作图6该轮的实测值。实时CPU未采集。')
+save(fig,'10_same_run_mechanism','同轮执行与迁移证据',['4013'],'同时比较CPU/墙钟、开始前等待及改投率；不同统计对象分别标出。')
 
-# 8. Direct/zero/delayed async.
-fig,axs=plt.subplots(1,3,figsize=(14,5.2));fig.suptitle('图8  同业务工作：异步结构与外部等待分别改变结果',x=.055,ha='left',fontsize=17)
-for ax,key,title in zip(axs,['mean_ms','p99_ms','cpu_per_request_ms'],['请求mean（ms）','请求p99（ms）','整轮CPU/请求（ms）']):
- for policy,offset in [('home',-.18),('outstanding',.18)]:
-  vals=[pick('4018',scenario=s,trace=0,policy=policy)[0][key] for s in ['D0','A0','A1']]
-  bars=ax.bar(np.arange(3)+offset,vals,.34,color=COL[policy],label='O' if policy=='outstanding' else 'home')
-  ax.bar_label(bars,fmt='%.2f',padding=3,fontsize=8)
- ax.set_xticks(range(3),['D0\n直接','A0\n50% / 0ms','A1\n50% / 2ms']);ax.set_title(title,fontsize=12);grid(ax);ax.margins(y=.23)
-axs[0].legend(frameon=False,ncol=2,fontsize=9)
-fig.subplots_adjust(top=.81,bottom=.23,wspace=.22)
-foot(fig,'同批seed421、T16、regular96QPS、trace0；每格1536请求。业务工作相同，执行合同不同；A0-D0不是纯add成本，A1-A0不是每请求固定2ms。')
-save(fig,'08_async_contracts','异步负载合同',['4018'],'每格一次；CPU统计范围为整轮；D0/A0/A1是有意干预，非重复。')
+# Async contracts, numeric labels rather than names alone.
+fig,axs=plt.subplots(1,3,figsize=(14,5.3));fig.suptitle('图11  均匀每10.417ms一请求（96 QPS）：外部等待如何改变同一张图',x=.05,ha='left',fontsize=16)
+for ax,key,lab in zip(axs,['mean_ms','p99_ms','cpu_per_request_ms'],['请求均值（ms）','请求p99（ms）','整轮CPU/请求（ms）']):
+ for p,off in [('home',-.18),('outstanding',.18)]:
+  vals=[pick('4018',scenario=s,trace=0,policy=p)[0][key] for s in ['D0','A0','A1']]
+  bars=ax.bar(np.arange(3)+off,vals,.34,color=COL[p],label='固定home' if p=='home' else 'O选池');ax.bar_label(bars,fmt='%.2f',fontsize=9,padding=3)
+ ax.set_xticks(range(3),['直接续接','50%位置\n源等待0ms','50%位置\n源等待2ms']);ax.set_title(lab,fontsize=12);grid(ax);ax.margins(y=.25)
+axs[0].legend(frameon=False,fontsize=9);fig.subplots_adjust(top=.81,bottom=.25,wspace=.25)
+footer(fig,'每池16线程、每请求168业务算子，基准37.5万迭代+1.25万读写，数据84×64KiB；同seed421、trace0、每格1536请求。\n50%为逐位置哈希选择，不保证每请求恰好84次；CPU/请求包含恢复控制和helper，非CPU利用率。')
+save(fig,'11_async_wait','异步等待对照',['4018'],'同业务工作，改变外部续接合同；每格单次。')
 
-# 9. Async detailed mechanism; imported exactly from recorded roles.
-r4020=json.loads((HERE.parent.parent/'results/review/4020_summary.json').read_text())['runs']
-fig,axs=plt.subplots(1,3,figsize=(14,5.8));fig.suptitle('图9  恢复排队减少，主要改投发生在首波业务工作',x=.055,ha='left',fontsize=17)
-role_names=['first-wave stage0','ordinary successors','rpc_resume']
-for policy,off in [('home',-.18),('outstanding',.18)]:
- flow=r4020[policy+'-trace1']['flow'];roles={r['role']:r for r in flow['roles']}
- vals=[roles[k]['wait_mean_ms'] for k in role_names]
- bars=axs[0].bar(np.arange(3)+off,vals,.34,color=COL[policy],label='O' if policy=='outstanding' else 'home');axs[0].bar_label(bars,fmt='%.3f',padding=3,fontsize=9)
- vals=[flow['async_timing_ms'][k]['p99'] for k in ['source_due_to_fire_ms','resume_executor_wait_ms']]
- bars=axs[1].bar(np.arange(2)+off,vals,.34,color=COL[policy]);axs[1].bar_label(bars,fmt='%.3f',padding=3,fontsize=9)
-roles={r['role']:r for r in r4020['outstanding-trace1']['flow']['roles']};vals=[100*roles[k]['source_ne_chosen']/roles[k]['n'] for k in role_names]
-bars=axs[2].bar(np.arange(3),vals,.55,color=COL['outstanding']);axs[2].bar_label(bars,fmt='%.2f%%',padding=3,fontsize=9)
+r20=json.loads((HERE.parents[1]/'results/review/4020_summary.json').read_text())['runs']
+fig,axs=plt.subplots(1,3,figsize=(14,5.6));fig.suptitle('图12  均匀每10.417ms一请求、50%位置等2ms：改善发生在哪里',x=.05,ha='left',fontsize=16)
+roles=['first-wave stage0','ordinary successors','rpc_resume']
+for p,off in [('home',-.18),('outstanding',.18)]:
+ flow=r20[p+'-trace1']['flow'];idx={r['role']:r for r in flow['roles']}
+ bars=axs[0].bar(np.arange(3)+off,[idx[k]['wait_mean_ms'] for k in roles],.34,color=COL[p],label='固定home' if p=='home' else 'O选池');axs[0].bar_label(bars,fmt='%.3f',fontsize=9,padding=2)
+ bars=axs[1].bar(np.arange(2)+off,[flow['async_timing_ms'][k]['p99'] for k in ['source_due_to_fire_ms','resume_executor_wait_ms']],.34,color=COL[p]);axs[1].bar_label(bars,fmt='%.3f',fontsize=9,padding=2)
+idx={r['role']:r for r in r20['outstanding-trace1']['flow']['roles']}
+bars=axs[2].bar(range(3),[idx[k]['source_ne_chosen']*100/idx[k]['n'] for k in roles],color=COL['outstanding']);axs[2].bar_label(bars,fmt='%.2f%%',fontsize=9,padding=2)
+axs[0].set_title('callback等待均值（ms）');axs[1].set_title('源/恢复各自p99（ms）');axs[2].set_title('O：各角色改投率（%）')
+axs[0].set_xticks(range(3),['首波第一段','普通第二段','恢复控制']);axs[1].set_xticks(range(2),['due→fire','恢复提交→开始']);axs[2].set_xticks(range(3),['首波第一段','普通第二段','恢复控制']);axs[0].legend(frameon=False,fontsize=9)
 for ax in axs:grid(ax);ax.margins(y=.22)
-axs[0].set_xticks(range(3),['首波','后继','恢复']);axs[0].set_title('callback等待均值（ms）',fontsize=11);axs[0].legend(frameon=False,ncol=2,fontsize=9)
-axs[1].set_xticks(range(2),['source lag','恢复排队']);axs[1].set_title('分别的事件p99（ms）',fontsize=11)
-axs[2].set_xticks(range(3),['首波','后继','恢复']);axs[2].set_title('O各角色直接换池比例（%）',fontsize=11)
-fig.subplots_adjust(top=.82,bottom=.24,wspace=.25)
-foot(fig,'仅展示三类角色，后波/join未全改善。完成源线程与executor共享CPU；路由source是保存的实际父池。各角色改投比例以本角色为分母。')
-save(fig,'09_async_mechanism','异步分段与迁移角色',['4020'],'两策略各128809恢复；恢复自身改池仅0.63%，parent因果作用尚未独立隔离。')
-
-# 10. End-to-end trace sensitivity, compared separately for each policy and batch.
-fig,axs=plt.subplots(1,2,figsize=(12,5.7));fig.suptitle('图10  观测开关的影响需要按工作族和策略分别测',x=.06,ha='left',fontsize=17)
-labels=['长burst / home','长burst / fork','长burst / all','短低密 / home T16','短低密 / home T128','A1 / home','A1 / O']
-selectors=[('4011','home',128),('4011','fork-parent',128),('4011','all-parent',128),('4015','home',16),('4015','home',128),('4020','home',16),('4020','outstanding',16)]
-for gi,(batch,strategy,thr) in enumerate(selectors):
- for r in pick(batch,strategy=strategy,threads=thr,trace=1):
-  bases=pick(batch,strategy=strategy,threads=thr,trace=0,seed=r['seed'],scenario=r['scenario']);assert len(bases)==1
-  for ax,key in zip(axs,['cpu_per_request_ms','p99_ms']):ax.scatter(pct(r,bases[0],key),gi+(r['seed']-421)*.07,c=COL.get(strategy,COL['home']),s=35)
-for ax,lab in zip(axs,['trace1-trace0：整轮CPU/请求（%）','trace1-trace0：请求p99（%）']):
- ax.axvline(0,c='#647887',lw=1);ax.set_ylim(6.5,-.5);ax.set_xlabel(lab);ax.grid(axis='x',color='#e7ecf0')
-axs[0].set_yticks(range(7),labels);axs[1].set_yticks([]);fig.subplots_adjust(left=.23,top=.83,bottom=.2,wspace=.16)
-foot(fig,'各点均为同批配对。trace0仍维护基础计数与生命周期；差值包含执行反馈和运行波动，不等于纯探针或整个总池开销。')
-save(fig,'10_observation','观测开关敏感性',['4011','4015','4020'],'展示所有匹配点，不把home观测比例直接套到O。')
-
-# 11. Historical trace: empirical means/peaks and shared-information correlations.
-t=json.loads((HERE/'data/trace_evidence.json').read_text());rows=t['per_pool']
-fig,axs=plt.subplots(1,2,figsize=(13,5.5));fig.suptitle('图11  历史轨迹支持短时集中性，不能给出cluster阈值',x=.06,ha='left',fontsize=17)
-x=np.arange(4)
-for k,off,col,lab in [('mean_oncpu_equivalents',-.18,COL['home'],'10s平均'),('peak_1ms_oncpu_equivalents',.18,COL['outstanding'],'各池1ms桶峰')]:
- bars=axs[0].bar(x+off,[r[k] for r in rows],.34,color=col,label=lab);axs[0].bar_label(bars,fmt='%.1f',fontsize=9,padding=2)
-axs[0].set_xticks(x,['历史池a','历史池b','历史池c','历史池d']);axs[0].set_ylabel('逻辑CPU时间当量');axs[0].legend(frameon=False,fontsize=9);axs[0].margins(y=.2);grid(axs[0])
-corr=t['full_window_pearson_lag_zero_ranges_across_pools'];labs=['waking→CPU','unique→CPU']
-for j,rel in enumerate([('waking','oncpu'),('unique_oncpu','oncpu')]):
- for bin_ms,off,col in [(1,-.12,COL['home']),(10,.12,COL['outstanding'])]:
-  r=next(r for r in corr if (r['x'],r['y'])==rel and r['bin_ms']==bin_ms)
-  axs[1].plot([r['min'],r['max']],[j+off,j+off],c=col,lw=6,solid_capstyle='round',label=f'{bin_ms}ms窗口' if j==0 else None)
-  axs[1].text(r['max']+.018,j+off,f"{r['min']:.3f}–{r['max']:.3f}",va='center',fontsize=9)
-axs[1].set_yticks(range(2),labs);axs[1].set_xlim(.4,1.13);axs[1].set_xticks([.4,.6,.8,1]);axs[1].set_ylim(1.5,-.5);axs[1].set_xlabel('同窗Pearson r；线段为四池范围');axs[1].legend(frameon=False,fontsize=9,loc='lower left');axs[1].grid(axis='x',color='#e7ecf0')
 fig.subplots_adjust(top=.81,bottom=.24,wspace=.3)
-foot(fig,'历史四池无CPU绑定，不是目标架构。各池峰值不同时，不可相加；unique与CPU共用运行区间信息。轨迹覆盖/时钟未知，缺request/operator标记。')
-save(fig,'11_historical_trace','历史真实轨迹的可用线索',['data/trace_evidence.json'],'原始trace未在本地重算；不按16 CPU换算绑定后时延，不据此设3ms门控。')
+footer(fig,'每池16线程，168业务算子/请求，37.5万迭代+1.25万读写/算子；同批trace1，每策略1536请求。\n改投率分别除以本角色数量；恢复仅812/128809改投。首波占全部改投75.66%，是另一分母。实时CPU未采集。')
+save(fig,'12_async_roles','异步角色与改投',['4020'],'源等待与CPU ready排队分开；不将恢复收益归为恢复自身大量改投。')
+
+# Trace diagram tied directly to concrete decision, not a correlation gallery.
+t=json.loads((HERE/'data/trace_evidence.json').read_text());rows=t['per_pool']
+fig,axs=plt.subplots(1,2,figsize=(13.5,5.3));fig.suptitle('图13  历史未绑核轨迹：平均CPU服务较低，峰值却集中在很短的窗口',x=.05,ha='left',fontsize=16)
+for off,k,col,label in [(-.18,'mean_oncpu_equivalents',COL['home'],'10s平均'),(.18,'peak_1ms_oncpu_equivalents',COL['outstanding'],'本池最忙1ms')]:
+ bars=axs[0].bar(np.arange(4)+off,[r[k] for r in rows],.34,color=col,label=label);axs[0].bar_label(bars,fmt='%.1f',fontsize=10,padding=2)
+axs[0].set_xticks(range(4),['历史池a','历史池b','历史池c','历史池d']);axs[0].set_ylabel('窗口内on-CPU时长 / 窗口长度');axs[0].legend(frameon=False,loc='upper center',bbox_to_anchor=(.5,1.15),ncol=2,fontsize=9);axs[0].margins(y=.2);grid(axs[0])
+axs[1].axis('off');axs[1].text(0,.93,'一个可直接理解的例子',fontsize=14,weight='bold');axs[1].text(0,.79,'历史池a：某1ms窗口累计获得78.4ms CPU时间。',fontsize=12);axs[1].text(0,.65,'若只允许16个逻辑CPU，1ms最多提供16ms CPU时间。',fontsize=11);axs[1].text(0,.51,'因此硬绑定会改变可获得的峰值并行能力。',fontsize=12,color=COL['outstanding']);axs[1].text(0,.35,'但：绑定后每算子CPU成本、竞争和缓存可能变化；',fontsize=11);axs[1].text(0,.23,'不能用78.4÷16直接预测请求时延，也不能据此选阈值。',fontsize=11)
+fig.subplots_adjust(top=.81,bottom=.21,wspace=.23)
+footer(fig,'历史4池仅为无绑定采集配置；目标仍按cluster分组。各池峰不同时，不能相加；运行区间匹配与采集覆盖有缺失。')
+save(fig,'13_trace_mean_peak','历史峰值服务与cluster限制',['data/trace_evidence.json'],'逻辑CPU时间当量，不是当前测试实时利用率。')
+
 (OUT/'manifest.json').write_text(json.dumps(MANIFEST,ensure_ascii=False,indent=2)+'\n')
-print(f'Rendered {len(MANIFEST)} figures to {OUT}')
+# Remove only earlier generated files tracked in the old report; no user results.
+legacy=['01_scene','02_sequence','03_routing','04_queue_latency','05_signal_tradeoffs','06_thread_budget','07_continuation','08_async_contracts','09_async_mechanism','10_observation','11_historical_trace']
+for stem in legacy:
+ for ext in ['png','svg']:
+  p=OUT/f'{stem}.{ext}'
+  if p.exists():p.unlink()
+print(f'Rendered {len(MANIFEST)} concrete figures')

@@ -26,7 +26,7 @@ def add_row(batch, index, raw, contract, **kw):
         "evidence": "reviewed_terminal_rounded_summary",
         "printed_rounding": True, "raw_target_csv_available": False,
         "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-        "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+        "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
         "metric_sources": {}, "contract": contract,
         "cpu_utilization_percent": None,
         "cpu_utilization_missing_reason": "no aligned CPU-time/wall-time utilization measurement in selected summary",

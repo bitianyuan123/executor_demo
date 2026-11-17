@@ -1,98 +1,109 @@
 [
   {
-    "name": "01_scene",
-    "title": "场景视图",
+    "name": "01_arrivals",
+    "title": "请求计划到达",
     "sources": [
-      "RequestExecutor.h",
-      "AsyncCompletionSource.h"
+      "experiments/affinity/main.cpp run"
     ],
-    "caption": "示意图，不是生产部署实测拓扑。"
+    "caption": "计划示意，不是从真实CPU或投递时间序列重建。"
   },
   {
-    "name": "02_sequence",
-    "title": "异步时序与计量边界",
+    "name": "02_request_dag",
+    "title": "一个请求的完整DAG",
     "sources": [
-      "main.cpp async path",
-      "RequestExecutor.h continuation"
+      "experiments/affinity/main.cpp fork/stage/advance",
+      "LocalityWorkload.h"
     ],
-    "caption": "示意顺序；不保证zero-delay注册者先返回，不把不同阶段p99相加。"
+    "caption": "80个首波第一段依次投递；深度2不构成跨分支的stage barrier。"
   },
   {
-    "name": "03_routing",
-    "title": "放置决策流程",
+    "name": "03_observation_sites",
+    "title": "观测点定位",
     "sources": [
-      "RequestExecutor.h choose/searchDomain"
+      "RequestExecutor.h submit/batch/enqueue",
+      "BusinessExecutor.h add/readLoad"
     ],
-    "caption": "high/gain使用严格比较；ReturnHome独立于普通借出。"
+    "caption": "R在底层add返回后释放，可与O短时重叠；I/O可同时包含父子callback。"
   },
   {
-    "name": "04_queue_latency",
-    "title": "队列条件分位数",
+    "name": "04_operator_placement",
+    "title": "80算子逐次选池演算",
     "sources": [
-      "data/independent_evidence.json"
+      "RequestExecutor.h choose/batch"
     ],
-    "caption": "各桶为独立任务结果，不能用来预测DAG请求p99。"
+    "caption": "明确假设下的教学状态机，不是测得的80任务分配或性能预测。"
   },
   {
-    "name": "05_signal_tradeoffs",
-    "title": "跨负载的信号选择",
+    "name": "05_successor_async",
+    "title": "分支后继与异步续接",
     "sources": [
-      "4012",
-      "4014",
-      "4016",
-      "4020"
+      "main.cpp stage/awaitCompletion/advance",
+      "RequestExecutor.h choose"
     ],
-    "caption": "仅画同批匹配差；不平均各轮p99，无置信区间。"
+    "caption": "parent和ReturnHome不同；异步保存实际父池，不继承完成源线程位置。"
   },
   {
-    "name": "06_thread_budget",
-    "title": "线程预算及CPU墙钟",
+    "name": "06_burst12_3m",
+    "title": "12 QPS：8请求一组，组内间隔100µs，批周期666.667ms",
     "sources": [
-      "4012",
-      "4013"
+      "4012"
     ],
-    "caption": "不同批次分面展示，不把trace1机制数直接扣到trace0时延。"
+    "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
   },
   {
-    "name": "07_continuation",
-    "title": "后继调度范围",
+    "name": "07_regular12_3m",
+    "title": "12 QPS，每83.333ms一请求：比较Q与O",
+    "sources": [
+      "4014"
+    ],
+    "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
+  },
+  {
+    "name": "08_regular96_375k",
+    "title": "96 QPS，每10.417ms一请求：比较Q与O",
+    "sources": [
+      "4016"
+    ],
+    "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
+  },
+  {
+    "name": "09_fork_all",
+    "title": "12 QPS、8请求成组、每池128线程：算子在哪些提交点均衡",
     "sources": [
       "4011"
     ],
-    "caption": "all/fork的trace0/1配对；小样本尾部方向有反转。"
+    "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
   },
   {
-    "name": "08_async_contracts",
-    "title": "异步负载合同",
+    "name": "10_same_run_mechanism",
+    "title": "同轮执行与迁移证据",
+    "sources": [
+      "4013"
+    ],
+    "caption": "同时比较CPU/墙钟、开始前等待及改投率；不同统计对象分别标出。"
+  },
+  {
+    "name": "11_async_wait",
+    "title": "异步等待对照",
     "sources": [
       "4018"
     ],
-    "caption": "每格一次；CPU统计范围为整轮；D0/A0/A1是有意干预，非重复。"
+    "caption": "同业务工作，改变外部续接合同；每格单次。"
   },
   {
-    "name": "09_async_mechanism",
-    "title": "异步分段与迁移角色",
+    "name": "12_async_roles",
+    "title": "异步角色与改投",
     "sources": [
       "4020"
     ],
-    "caption": "两策略各128809恢复；恢复自身改池仅0.63%，parent因果作用尚未独立隔离。"
+    "caption": "源等待与CPU ready排队分开；不将恢复收益归为恢复自身大量改投。"
   },
   {
-    "name": "10_observation",
-    "title": "观测开关敏感性",
-    "sources": [
-      "4011",
-      "4015",
-      "4020"
-    ],
-    "caption": "展示所有匹配点，不把home观测比例直接套到O。"
-  },
-  {
-    "name": "11_historical_trace",
-    "title": "历史真实轨迹的可用线索",
+    "name": "13_trace_mean_peak",
+    "title": "历史峰值服务与cluster限制",
     "sources": [
       "data/trace_evidence.json"
     ],
-    "caption": "原始trace未在本地重算；不按16 CPU换算绑定后时延，不据此设3ms门控。"
+    "caption": "逻辑CPU时间当量，不是当前测试实时利用率。"
   }
 ]

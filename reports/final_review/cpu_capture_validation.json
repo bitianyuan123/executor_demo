@@ -1,0 +1,52 @@
+{
+  "test_command": "python3 experiments/affinity/tests/cluster_cpu_capture_test.py",
+  "tests": 19,
+  "passed": 19,
+  "failed": 0,
+  "last_duration_seconds": 1.332,
+  "syntax_checks": [
+    "python3 -m py_compile experiments/affinity/cluster_cpu_capture.py experiments/affinity/tests/cluster_cpu_capture_test.py",
+    "bash -n scripts/run_cluster_cpu_comparison.sh"
+  ],
+  "guide_demo_flags_checked_against_main_cpp": 42,
+  "real_child_check": "bounded 0.18 process-CPU-second busy loop, surrounding sleeps; observed positive process CPU, valid aligned windows and all artifacts",
+  "failure_checks": [
+    "nonzero child exit 7",
+    "timeout 124 and descendant process-group cleanup",
+    "SIGINT 130",
+    "missing summary",
+    "missing executable",
+    "refuse existing output"
+  ],
+  "fixture_checks": [
+    "guest no double count",
+    "all CPU counters rollback invalidation",
+    "CPU missing",
+    "PID starttime identity",
+    "actual interval and no utilization cap",
+    "scope full-window boundaries and duration weighting"
+  ],
+  "scope": "development functional checks only; no target hardware workload or performance measurement; no C++ or Folly change",
+  "six_round_script": {
+    "bash_syntax": "passed",
+    "help": "passed",
+    "dry_run_commands": 6,
+    "creates_results_in_dry_run": false,
+    "policy_order": [
+      "home",
+      "queue",
+      "outstanding",
+      "outstanding",
+      "queue",
+      "home"
+    ],
+    "embedded_python_compile": "passed",
+    "demo_options_source_check": "passed"
+  },
+  "boundary_review": "formal CPU scope requires both complete /proc/stat read brackets inside scope; process uses its own read brackets; no final PID zero filling",
+  "file_sha256": {
+    "experiments/affinity/cluster_cpu_capture.py": "07b1c717b6067ae41472f2a5ae7a3f13c7b05a5cc6e979e60a180d00856d7740",
+    "experiments/affinity/tests/cluster_cpu_capture_test.py": "e29703ab0b4d78ea2f2607dea1a486375d200c93af09c46a260dbdf54374c5a5",
+    "scripts/run_cluster_cpu_comparison.sh": "c3da05e26261abdae75450993329856551484319d6d3155229696ddce4ce54ef"
+  }
+}

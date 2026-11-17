@@ -215,6 +215,178 @@ def validate_comparisons():
     print(f"Reviewed evidence: {len(rows)} runs from {len(expected_by_batch)} sources, {len(actual_pairs)} pairs, {len(seen)} mechanisms")
 
 
+def validate_scenarios():
+    """Audit new scenario fields against retained source rows, independently of the builder."""
+    d = read_json(HERE / 'data/scenario_results.json')
+    base = read_json(HERE / 'data/comparisons.json')
+    selected = {'4011', '4012', '4013', '4014', '4015', '4016', '4018', '4020'}
+    originals = {r['id']: r for r in base['runs'] if r['batch'] in selected}
+    documents = {}
+    for source in d['sources'].values():
+        relative = Path(source['file'])
+        path = ROOT / relative
+        check(not relative.is_absolute() and path.resolve().is_relative_to(ROOT),
+              f'Nonportable scenario source: {relative}', 'scenarios')
+        check(path.is_file(), f'Missing scenario source: {relative}', 'scenarios')
+        if not path.is_file():
+            continue
+        check(digest(path) == source['sha256'], f'Stale scenario source: {relative}', 'scenarios')
+        documents[source['file']] = read_json(path)
+    extra_file = 'reports/final_review/data/4011_routing_evidence.json'
+    extra = documents[extra_file]
+    summary = documents['results/review/4011_summary.json']
+    check(extra['source_log'] == '4011.log', 'Wrong retained routing log name', 'scenarios')
+    check(extra['source_sha256'] == summary['source_sha256']['4011.log'],
+          'Routing excerpt original SHA differs from reviewed summary', 'scenarios')
+    check(extra['source_summary_file'] == 'results/review/4011_summary.json',
+          'Wrong routing excerpt summary link', 'scenarios')
+    check(len(extra['runs']) == 9, 'Missing routing excerpt cells', 'scenarios')
+    # Parse the retained literal table cells rather than trust newly normalized values.
+    extra_parsed = {}
+    excerpt_line_numbers = []
+    for name, source in extra['runs'].items():
+        values = [v.strip() for v in source['request_summary']['text'].strip('|').split('|')]
+        check(values[0] == name and name.endswith('trace1'), f'Wrong routing row identity: {name}', 'scenarios')
+        check('/' + name + ':' in source['run_header']['text'], f'Wrong routing run context: {name}', 'scenarios')
+        check(source['run_header']['line'] < source['role_rows'][0]['line'],
+              f'Role lines precede routing run header: {name}', 'scenarios')
+        excerpt_line_numbers.extend([source['request_summary']['line'], source['run_header']['line']])
+        count, offered = map(int, values[2].split('/'))
+        cpu, wall = map(float, values[7].split('/'))
+        migrated, callbacks = map(int, values[8].split('/'))
+        expected = dict(mean_ms=float(values[3]), p99_ms=float(values[5]),
+                        cohort_completed=count, cohort_offered=offered,
+                        task_wait_p99_ms=float(values[6]), operator_cpu_mean_ms=cpu,
+                        operator_wall_mean_ms=wall, cohort_migrations=migrated,
+                        cohort_callbacks=callbacks, cohort_cross_numa=int(values[9]))
+        expected_roles = []
+        for row in source['role_rows']:
+            excerpt_line_numbers.append(row['line'])
+            c = [v.strip() for v in row['text'].strip('|').split('|')]
+            expected_roles.append({
+                'role': c[0], 'n': int(c[1]), 'source_ne_chosen': int(c[2]),
+                'source_not_home_chosen_home': int(c[3]), 'wait_mean_ms': float(c[4]),
+                'cpu_mean_ms': float(c[5]), 'wall_mean_ms': float(c[6]),
+                'routing_reasons': {key: int(value) for key, value in
+                                    (item.strip().split(':') for item in c[7].split(','))},
+                'source_line': row['line'],
+            })
+        check(len(expected_roles) == 5, f'Wrong routing role count: {name}', 'scenarios')
+        extra_parsed[name] = (expected, expected_roles)
+    check(all(isinstance(n, int) and n > 0 for n in excerpt_line_numbers),
+          'Invalid original log line number', 'scenarios')
+    check(len(excerpt_line_numbers) == len(set(excerpt_line_numbers)),
+          'Duplicate original routing excerpt line numbers', 'scenarios')
+
+    rows = d['runs']
+    indexed = {r['id']: r for r in rows}
+    check(len(indexed) == len(rows) == 79, 'Wrong scenario run count or duplicate IDs', 'scenarios')
+    check(set(indexed) == set(originals), 'Scenario coverage differs from reviewed source selection', 'scenarios')
+    for r in rows:
+        label = r['id']
+        b = originals[label]
+        overridden = set()
+        if r['batch'] == '4011' and r['trace']:
+            overridden.update(['task_wait_p99_ms', 'operator_cpu_mean_ms', 'operator_wall_mean_ms'])
+        if r['batch'] == '4020' and r['trace']:
+            overridden.update(['task_wait_p99_ms', 'operator_cpu_mean_ms'])
+        for field, value in b.items():
+            if field not in overridden:
+                check(same(r.get(field), value), f'Scenario changes reviewed base field: {label}.{field}', 'scenarios')
+        raw = pointer(documents[r['source_file']], r['source_pointer'])
+        s = d['scenarios'][r['scenario_id']]
+        for field, expected in [('qps', s['qps']), ('arrival', s['arrival']),
+                                ('whole_completed', s['whole_requests']),
+                                ('cohort_completed', s['cohort_requests'])]:
+            check(r[field] == expected, f'Scenario contract mismatch: {label}.{field}', 'scenarios')
+        check(r['threads'] in s['threads'], f'Scenario thread budget mismatch: {label}', 'scenarios')
+        for field, flag in [('iterations_base', '--iterations'), ('accesses_base', '--accesses')]:
+            if flag in r['contract']:
+                check(s[field] == int(r['contract'][flag]), f'Work units mismatch: {label}.{field}', 'scenarios')
+        if s['arrival'] == 'regular':
+            check(same(s['request_interval_ms'], 1000 / s['qps']), f'Arrival interval mismatch: {label}', 'scenarios')
+        else:
+            check(same(s['batch_period_ms'], 1000 * s['batch_size'] / s['qps']), f'Burst period mismatch: {label}', 'scenarios')
+            check(s['nominal_batch_span_us'] == (s['batch_size']-1) * s['within_batch_spacing_us'],
+                  f'Burst span mismatch: {label}', 'scenarios')
+        # Missing instrumentation never silently becomes zero or utilization.
+        check(r['real_time_cpu_utilization'] is None and r['cpu_utilization_percent'] is None,
+              f'Invented CPU utilization: {label}', 'scenarios')
+        if '--cpu-sampling' in r['contract']:
+            check(r['contract']['--cpu-sampling'] == '0', f'Unexpected sampled target run: {label}', 'scenarios')
+        if r['trace'] == 0:
+            check(r['roles'] is None and r['cohort_callbacks'] is None and
+                  r['cohort_migrations'] is None and r['cohort_migration_rate_percent'] is None,
+                  f'Invented trace0 migration/role evidence: {label}', 'scenarios')
+        if r['batch'] == '4018':
+            source = r['whole_process_average_cpu_source']
+            check(source['file'] == r['source_file'], f'CPU denominator source differs: {label}', 'scenarios')
+            check(same(pointer(documents[source['file']], source['cpu_pointer']), r['process_cpu_s']),
+                  f'CPU source pointer mismatch: {label}', 'scenarios')
+            check(same(pointer(documents[source['file']], source['wall_pointer']), r['whole_duration_with_drain_s']),
+                  f'Wall source pointer mismatch: {label}', 'scenarios')
+            check(source['formula'] is None and r['whole_process_average_cpu_percent_of_96'] is None,
+                  f'Used mismatched CPU/wall endpoints as utilization: {label}', 'scenarios')
+
+        expected_roles = raw.get('roles')
+        if r['batch'] == '4011' and r['trace']:
+            name = f"seed-{r['seed']}-{r['strategy']}-trace1"
+            expected, expected_roles = extra_parsed[name]
+            for field, value in expected.items():
+                check(same(r[field], value), f'Routing excerpt metric mismatch: {label}.{field}', 'scenarios')
+            source = r['additional_metric_source']
+            check(source['file'] == extra_file and source['pointer'] == f'/runs/{name}/request_summary',
+                  f'Routing row pointer mismatch: {label}', 'scenarios')
+            check(source['original_log_sha256'] == extra['source_sha256'] and
+                  source['original_line'] == extra['runs'][name]['request_summary']['line'],
+                  f'Routing excerpt provenance mismatch: {label}', 'scenarios')
+        elif r['batch'] == '4020' and r['trace']:
+            expected_roles = raw['flow']['roles']
+            check(r['task_wait_p99_ms'] == raw['cohort']['task_wait_p99_ms'], f'A1 task wait mismatch: {label}', 'scenarios')
+            business_roles = ['first-wave stage0', 'later-wave stage0', 'ordinary successors']
+            weighted = sum(x['n'] * x['cpu_mean_ms'] for x in expected_roles if x['role'] in business_roles)
+            check(same(r['operator_cpu_mean_ms'], weighted/(168*r['cohort_completed'])),
+                  f'Weighted operator CPU mismatch: {label}', 'scenarios')
+        else:
+            for field in ['cohort_migrations', 'cohort_callbacks', 'cohort_cross_numa']:
+                check(r[field] == raw.get(field), f'Changed source count: {label}.{field}', 'scenarios')
+        if expected_roles is None:
+            check(r['roles'] is None and r['roles_source_file'] is None and r['roles_source_pointer'] is None,
+                  f'Invented roles/source pointer: {label}', 'scenarios')
+            continue
+        actual_roles = [{k: v for k, v in role.items() if k != 'migration_percent_derived'} for role in r['roles']]
+        check(actual_roles == expected_roles, f'Role source values differ: {label}', 'scenarios')
+        check(r['roles_source_file'] in documents and bool(r['roles_source_pointer']),
+              f'Missing role source: {label}', 'scenarios')
+        if r['roles_source_file'] != extra_file:
+            check(pointer(documents[r['roles_source_file']], r['roles_source_pointer']) == expected_roles,
+                  f'Role source pointer mismatch: {label}', 'scenarios')
+        else:
+            check(r['roles_source_pointer'] == f'/runs/{name}/role_rows', f'Role excerpt pointer mismatch: {label}', 'scenarios')
+        callbacks = sum(row['n'] for row in r['roles'])
+        migrations = sum(row['source_ne_chosen'] for row in r['roles'])
+        check(callbacks == r['cohort_callbacks'] and migrations == r['cohort_migrations'],
+              f'Role count/migration conservation failure: {label}', 'scenarios')
+        resumes = sum(row['n'] for row in r['roles'] if row['role'] == 'rpc_resume')
+        check(callbacks == 171*r['cohort_completed'] + resumes, f'Graph callback denominator mismatch: {label}', 'scenarios')
+        check(same(r['cohort_migration_rate_percent'], 100*migrations/callbacks),
+              f'Wrong total migration ratio: {label}', 'scenarios')
+        for role in r['roles']:
+            check(0 <= role['source_ne_chosen'] <= role['n'], f'Invalid role migration bounds: {label}', 'scenarios')
+            check(same(role['migration_percent_derived'], 100*role['source_ne_chosen']/role['n']),
+                  f'Wrong role migration ratio: {label}/{role["role"]}', 'scenarios')
+            check(sum(role['routing_reasons'].values()) == role['n'], f'Role chooser reasons do not conserve: {label}', 'scenarios')
+    check(d['common']['business_operators_per_request'] == 80*2+4*2 and
+          d['common']['base_callbacks_per_request'] == 1+80*2+1+4*2+1,
+          'Common graph contract mismatch', 'scenarios')
+    audit = d['cpu_time_series_audit']
+    check(audit['cpu_sampling_enabled'] is False and
+          audit['runtime_series_recoverable_from_existing_selected_target_csv'] is False and
+          audit['existing_summary_average_cpu_possible'] is False,
+          'Unsupported CPU time-series/average recovery claim', 'scenarios')
+    print(f'Scenario evidence: {len(rows)} runs, {len(extra_parsed)} retained routing excerpts, CPU series explicitly unavailable')
+
+
 def validate_independent():
     d = read_json(HERE / "data/independent_evidence.json")
     path = ROOT / d["source_file"]
@@ -343,6 +515,7 @@ def main():
     parser.add_argument("--report", type=Path, action="append", default=[], help="Also validate this report outside the default folder; repeatable")
     args = parser.parse_args()
     validate_comparisons()
+    validate_scenarios()
     validate_independent()
     validate_baseline_and_trace()
     validate_artifacts([p.resolve() for p in args.report], args.require_artifacts)

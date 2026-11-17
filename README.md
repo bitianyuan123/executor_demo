@@ -1,6 +1,6 @@
 # Folly线程池：五阶段分析与独立实验
 
-**阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从场景、流程/时序和 IPO 解释负载、观测与两层调度，再用 11 张图比较多轮时延与 CPU 代价，最后映射历史真实轨迹并给出场景化候选初值；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。
+**阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从一条请求的量化到达、80路扇出与后继执行开始，逐点标出Q/I/O/R的读写位置和算子选池过程；用13张图按六种明确负载比较时延、CPU/请求和改投率，再解释旧trace如何指导每cluster一池；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。已有主要运行缺少实时CPU曲线；[可选CPU补采指南](reports/final_review/CPU_CAPTURE_GUIDE.md)只针对这项新证据需求，不把缺失数据冒充已完成比较。
 
 按业务理解 → Folly机制 → 独立任务负载 → 复杂DAG → 能力归属逐步验证。**一个仓库管理五个阶段，但简单任务实验、DAG实验和成本探针是独立CMake工程**，无需一次运行所有实验。阶段2～4仅依赖原版Folly；阶段5才需要实验扩展。
 
@@ -20,7 +20,7 @@
 
 当前总览见[总目标、实现难点与验收覆盖](docs/GOALS_AND_COVERAGE.md)：集中区分已实现、已验证和待目标机证据，并说明阶段3条件时延如何接到阶段4策略干预。v2性能摘要用`report.py`，负载分桶、首波扇出与积压趋势用`diagnose.py`，实际burst跨度、请求均值分解与后继角色用`flow_report.py`；这些工具不输出生产最优策略或统一的负载→request p99公式。
 
-[截至4020的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前为何无需追加实验、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；下一步以交接和当地实现核实为主。
+[截至4020的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前机制结论、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；下一步以交接和当地实现核实为主。
 
 - [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
 - [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。

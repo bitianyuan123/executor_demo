@@ -287,7 +287,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/0/cohort_completed",
         "cohort_offered": "/runs/0/cohort_offered",
@@ -361,7 +361,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/1/cohort_completed",
         "cohort_offered": "/runs/1/cohort_offered",
@@ -435,7 +435,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/2/cohort_completed",
         "cohort_offered": "/runs/2/cohort_offered",
@@ -509,7 +509,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/3/cohort_completed",
         "cohort_offered": "/runs/3/cohort_offered",
@@ -583,7 +583,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/4/cohort_completed",
         "cohort_offered": "/runs/4/cohort_offered",
@@ -657,7 +657,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/5/cohort_completed",
         "cohort_offered": "/runs/5/cohort_offered",
@@ -731,7 +731,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/6/cohort_completed",
         "cohort_offered": "/runs/6/cohort_offered",
@@ -805,7 +805,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/7/cohort_completed",
         "cohort_offered": "/runs/7/cohort_offered",
@@ -879,7 +879,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/8/cohort_completed",
         "cohort_offered": "/runs/8/cohort_offered",
@@ -953,7 +953,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/9/cohort_completed",
         "cohort_offered": "/runs/9/cohort_offered",
@@ -1027,7 +1027,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/10/cohort_completed",
         "cohort_offered": "/runs/10/cohort_offered",
@@ -1101,7 +1101,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/11/cohort_completed",
         "cohort_offered": "/runs/11/cohort_offered",
@@ -1175,7 +1175,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/12/cohort_completed",
         "cohort_offered": "/runs/12/cohort_offered",
@@ -1249,7 +1249,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/13/cohort_completed",
         "cohort_offered": "/runs/13/cohort_offered",
@@ -1323,7 +1323,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/14/cohort_completed",
         "cohort_offered": "/runs/14/cohort_offered",
@@ -1397,7 +1397,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/15/cohort_completed",
         "cohort_offered": "/runs/15/cohort_offered",
@@ -1471,7 +1471,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/16/cohort_completed",
         "cohort_offered": "/runs/16/cohort_offered",
@@ -1545,7 +1545,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/17/cohort_completed",
         "cohort_offered": "/runs/17/cohort_offered",
@@ -1619,7 +1619,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/0/cohort_completed",
         "cohort_offered": "/runs/0/cohort_offered",
@@ -1713,7 +1713,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/1/cohort_completed",
         "cohort_offered": "/runs/1/cohort_offered",
@@ -1807,7 +1807,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/2/cohort_completed",
         "cohort_offered": "/runs/2/cohort_offered",
@@ -1901,7 +1901,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/3/cohort_completed",
         "cohort_offered": "/runs/3/cohort_offered",
@@ -1995,7 +1995,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/4/cohort_completed",
         "cohort_offered": "/runs/4/cohort_offered",
@@ -2089,7 +2089,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/5/cohort_completed",
         "cohort_offered": "/runs/5/cohort_offered",
@@ -2183,7 +2183,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/6/cohort_completed",
         "cohort_offered": "/runs/6/cohort_offered",
@@ -2277,7 +2277,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/7/cohort_completed",
         "cohort_offered": "/runs/7/cohort_offered",
@@ -2371,7 +2371,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/8/cohort_completed",
         "cohort_offered": "/runs/8/cohort_offered",
@@ -2465,7 +2465,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/9/cohort_completed",
         "cohort_offered": "/runs/9/cohort_offered",
@@ -2559,7 +2559,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/10/cohort_completed",
         "cohort_offered": "/runs/10/cohort_offered",
@@ -2653,7 +2653,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/11/cohort_completed",
         "cohort_offered": "/runs/11/cohort_offered",
@@ -2747,7 +2747,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/12/cohort_completed",
         "cohort_offered": "/runs/12/cohort_offered",
@@ -2841,7 +2841,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/13/cohort_completed",
         "cohort_offered": "/runs/13/cohort_offered",
@@ -2935,7 +2935,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/14/cohort_completed",
         "cohort_offered": "/runs/14/cohort_offered",
@@ -3029,7 +3029,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/15/cohort_completed",
         "cohort_offered": "/runs/15/cohort_offered",
@@ -3123,7 +3123,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/16/cohort_completed",
         "cohort_offered": "/runs/16/cohort_offered",
@@ -3217,7 +3217,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/17/cohort_completed",
         "cohort_offered": "/runs/17/cohort_offered",
@@ -3311,7 +3311,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/18/cohort_completed",
         "cohort_offered": "/runs/18/cohort_offered",
@@ -3405,7 +3405,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/19/cohort_completed",
         "cohort_offered": "/runs/19/cohort_offered",
@@ -3499,7 +3499,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/20/cohort_completed",
         "cohort_offered": "/runs/20/cohort_offered",
@@ -3593,7 +3593,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/21/cohort_completed",
         "cohort_offered": "/runs/21/cohort_offered",
@@ -3687,7 +3687,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/22/cohort_completed",
         "cohort_offered": "/runs/22/cohort_offered",
@@ -3781,7 +3781,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/23/cohort_completed",
         "cohort_offered": "/runs/23/cohort_offered",
@@ -3875,7 +3875,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/0/cohort_completed",
         "cohort_offered": "/runs/0/cohort_offered",
@@ -3970,7 +3970,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/1/cohort_completed",
         "cohort_offered": "/runs/1/cohort_offered",
@@ -4065,7 +4065,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/2/cohort_completed",
         "cohort_offered": "/runs/2/cohort_offered",
@@ -4160,7 +4160,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/3/cohort_completed",
         "cohort_offered": "/runs/3/cohort_offered",
@@ -4255,7 +4255,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/4/cohort_completed",
         "cohort_offered": "/runs/4/cohort_offered",
@@ -4350,7 +4350,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/5/cohort_completed",
         "cohort_offered": "/runs/5/cohort_offered",
@@ -4445,7 +4445,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/0/cohort_completed",
         "cohort_offered": "/runs/0/cohort_offered",
@@ -4540,7 +4540,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/1/cohort_completed",
         "cohort_offered": "/runs/1/cohort_offered",
@@ -4635,7 +4635,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/2/cohort_completed",
         "cohort_offered": "/runs/2/cohort_offered",
@@ -4730,7 +4730,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/3/cohort_completed",
         "cohort_offered": "/runs/3/cohort_offered",
@@ -4825,7 +4825,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/4/cohort_completed",
         "cohort_offered": "/runs/4/cohort_offered",
@@ -4920,7 +4920,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/5/cohort_completed",
         "cohort_offered": "/runs/5/cohort_offered",
@@ -5015,7 +5015,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/6/cohort_completed",
         "cohort_offered": "/runs/6/cohort_offered",
@@ -5110,7 +5110,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/7/cohort_completed",
         "cohort_offered": "/runs/7/cohort_offered",
@@ -5205,7 +5205,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/8/cohort_completed",
         "cohort_offered": "/runs/8/cohort_offered",
@@ -5300,7 +5300,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/0/cohort_completed",
         "cohort_offered": "/runs/0/cohort_offered",
@@ -5398,7 +5398,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/1/cohort_completed",
         "cohort_offered": "/runs/1/cohort_offered",
@@ -5496,7 +5496,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/2/cohort_completed",
         "cohort_offered": "/runs/2/cohort_offered",
@@ -5594,7 +5594,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/3/cohort_completed",
         "cohort_offered": "/runs/3/cohort_offered",
@@ -5692,7 +5692,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/0/cohort_completed",
         "cohort_offered": "/runs/0/cohort_offered",
@@ -5790,7 +5790,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/1/cohort_completed",
         "cohort_offered": "/runs/1/cohort_offered",
@@ -5888,7 +5888,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/2/cohort_completed",
         "cohort_offered": "/runs/2/cohort_offered",
@@ -5986,7 +5986,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/3/cohort_completed",
         "cohort_offered": "/runs/3/cohort_offered",
@@ -6084,7 +6084,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/4/cohort_completed",
         "cohort_offered": "/runs/4/cohort_offered",
@@ -6182,7 +6182,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "cohort_completed": "/runs/5/cohort_completed",
         "cohort_offered": "/runs/5/cohort_offered",
@@ -6280,7 +6280,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/0/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/0/cohort/scheduled_to_finish_ms/p95",
@@ -6375,7 +6375,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/1/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/1/cohort/scheduled_to_finish_ms/p95",
@@ -6470,7 +6470,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/2/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/2/cohort/scheduled_to_finish_ms/p95",
@@ -6565,7 +6565,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/3/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/3/cohort/scheduled_to_finish_ms/p95",
@@ -6660,7 +6660,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/4/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/4/cohort/scheduled_to_finish_ms/p95",
@@ -6755,7 +6755,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/5/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/5/cohort/scheduled_to_finish_ms/p95",
@@ -6850,7 +6850,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/6/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/6/cohort/scheduled_to_finish_ms/p95",
@@ -6945,7 +6945,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/7/cohort/scheduled_to_finish_ms/mean",
         "p95_ms": "/runs/7/cohort/scheduled_to_finish_ms/p95",
@@ -7040,7 +7040,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/home-trace0/cohort/mean_ms",
         "p95_ms": "/runs/home-trace0/cohort/p95_ms",
@@ -7132,7 +7132,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/outstanding-trace1/cohort/mean_ms",
         "p95_ms": "/runs/outstanding-trace1/cohort/p95_ms",
@@ -7224,7 +7224,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/home-trace1/cohort/mean_ms",
         "p95_ms": "/runs/home-trace1/cohort/p95_ms",
@@ -7316,7 +7316,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "/runs/outstanding-trace0/cohort/mean_ms",
         "p95_ms": "/runs/outstanding-trace0/cohort/p95_ms",
@@ -7408,7 +7408,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 420, home mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 420, home mean/p99 table",
@@ -7452,7 +7452,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 420, fork-parent mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 420, fork-parent mean/p99 table",
@@ -7496,7 +7496,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 420, all-parent mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 420, all-parent mean/p99 table",
@@ -7540,7 +7540,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 421, home mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 421, home mean/p99 table",
@@ -7584,7 +7584,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 421, fork-parent mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 421, fork-parent mean/p99 table",
@@ -7628,7 +7628,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 421, all-parent mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 421, all-parent mean/p99 table",
@@ -7672,7 +7672,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 422, home mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 422, home mean/p99 table",
@@ -7716,7 +7716,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 422, fork-parent mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 422, fork-parent mean/p99 table",
@@ -7760,7 +7760,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "2. 4008新实验: seed 422, all-parent mean/p99 table",
         "p99_ms": "2. 4008新实验: seed 422, all-parent mean/p99 table",
@@ -7804,7 +7804,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 420, home mean/p99 table",
         "p99_ms": "3. 新burst8: seed 420, home mean/p99 table",
@@ -7848,7 +7848,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 420, fork-parent mean/p99 table",
         "p99_ms": "3. 新burst8: seed 420, fork-parent mean/p99 table",
@@ -7892,7 +7892,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 420, all-parent mean/p99 table",
         "p99_ms": "3. 新burst8: seed 420, all-parent mean/p99 table",
@@ -7936,7 +7936,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 421, home mean/p99 table",
         "p99_ms": "3. 新burst8: seed 421, home mean/p99 table",
@@ -7980,7 +7980,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 421, fork-parent mean/p99 table",
         "p99_ms": "3. 新burst8: seed 421, fork-parent mean/p99 table",
@@ -8024,7 +8024,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 421, all-parent mean/p99 table",
         "p99_ms": "3. 新burst8: seed 421, all-parent mean/p99 table",
@@ -8068,7 +8068,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 422, home mean/p99 table",
         "p99_ms": "3. 新burst8: seed 422, home mean/p99 table",
@@ -8112,7 +8112,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 422, fork-parent mean/p99 table",
         "p99_ms": "3. 新burst8: seed 422, fork-parent mean/p99 table",
@@ -8156,7 +8156,7 @@
       "printed_rounding": true,
       "raw_target_csv_available": false,
       "request_latency_scope": "planned arrivals [2,18) s; late completions retained",
-      "cpu_scope": "whole execution incl. warmup/drain, excluding pool/buffer construction and export",
+      "cpu_scope": "whole execution incl. warmup/drain, including per-request payload initialization; excluding pool/trace-buffer construction and export",
       "metric_sources": {
         "mean_ms": "3. 新burst8: seed 422, all-parent mean/p99 table",
         "p99_ms": "3. 新burst8: seed 422, all-parent mean/p99 table",

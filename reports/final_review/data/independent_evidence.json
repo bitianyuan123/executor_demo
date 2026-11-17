@@ -4,7 +4,6 @@
   "source_sha256": "c76be4b9877dc6454911da59fef550625f9c576cd129f66b3611fa917c8e29f9",
   "upstream_log": "0005.log",
   "evidence": "published review of printed target terminal results; no target raw CSV locally",
-  "figure": "04_queue_latency",
   "scope": {
     "stage": "independent tasks, not DAG requests",
     "affinity": "cluster",
@@ -141,5 +140,6 @@
       "source_line": 22,
       "source_table_row": "|64+|229.364～232.695|297.951～300.791|313.930～316.825|582.240～583.437|676.422～679.841|3549～3831|"
     }
-  ]
+  ],
+  "report_location": "REPORT.md section 4.9 conditional distribution table"
 }

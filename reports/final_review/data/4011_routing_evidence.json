@@ -1,0 +1,297 @@
+{
+  "schema": "reviewed-terminal-excerpt-v1",
+  "source_log": "4011.log",
+  "source_sha256": "70ab795bd6088682d655ce1c8f9f599b05d8a31742826ec57260ecf74519153d",
+  "source_summary_file": "results/review/4011_summary.json",
+  "scope": "Only nine trace1 request summary rows and their five callback-role rows. Text and one-based original log line numbers retained; this is not raw target CSV. Reported rounding is unchanged.",
+  "runs": {
+    "seed-420-all-parent-trace1": {
+      "request_summary": {
+        "line": 75,
+        "text": "| seed-420-all-parent-trace1 | branch-rw/outstanding/parent | 192/192 | 149.278 | 183.447 | 190.822 | 56.823 | 8.063/14.124 | 15531/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 164,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-420/seed-420-all-parent-trace1: policy=outstanding, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 179,
+          "text": "| init | 192 | 0 | 0 | 0.016 | 3.162 | 3.287 | PinnedHome:192 |"
+        },
+        {
+          "line": 180,
+          "text": "| first-wave stage0 | 15360 | 9589 | 0 | 20.335 | 8.150 | 13.483 | BelowBusyThreshold:806, InsufficientGain:4965, LocalSpill:9589 |"
+        },
+        {
+          "line": 181,
+          "text": "| later-wave stage0 | 768 | 0 | 0 | 0.026 | 7.541 | 7.595 | BelowBusyThreshold:768 |"
+        },
+        {
+          "line": 182,
+          "text": "| ordinary successors | 16128 | 5941 | 1898 | 37.255 | 8.005 | 15.047 | BelowBusyThreshold:912, InsufficientGain:9275, LocalSpill:5941 |"
+        },
+        {
+          "line": 183,
+          "text": "| join | 384 | 1 | 1 | 0.007 | 0.005 | 0.006 | BelowBusyThreshold:383, LocalSpill:1 |"
+        }
+      ]
+    },
+    "seed-420-fork-parent-trace1": {
+      "request_summary": {
+        "line": 94,
+        "text": "| seed-420-fork-parent-trace1 | branch-rw/outstanding/parent | 192/192 | 150.573 | 184.448 | 197.389 | 58.040 | 8.074/14.229 | 9224/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 201,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-420/seed-420-fork-parent-trace1: policy=outstanding, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 216,
+          "text": "| init | 192 | 0 | 0 | 0.017 | 3.113 | 3.261 | PinnedHome:192 |"
+        },
+        {
+          "line": 217,
+          "text": "| first-wave stage0 | 15360 | 9212 | 0 | 20.574 | 8.162 | 13.522 | BelowBusyThreshold:877, InsufficientGain:5271, LocalSpill:9212 |"
+        },
+        {
+          "line": 218,
+          "text": "| later-wave stage0 | 768 | 12 | 7 | 0.037 | 7.580 | 7.653 | BelowBusyThreshold:756, LocalSpill:12 |"
+        },
+        {
+          "line": 219,
+          "text": "| ordinary successors | 16128 | 0 | 0 | 37.340 | 8.013 | 15.216 | NonFork:16128 |"
+        },
+        {
+          "line": 220,
+          "text": "| join | 384 | 0 | 0 | 0.006 | 0.006 | 0.006 | NonFork:384 |"
+        }
+      ]
+    },
+    "seed-420-home-trace1": {
+      "request_summary": {
+        "line": 113,
+        "text": "| seed-420-home-trace1 | branch-rw/home/parent | 192/192 | 158.781 | 211.055 | 224.678 | 70.582 | 8.066/14.754 | 0/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 238,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-420/seed-420-home-trace1: policy=home, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 253,
+          "text": "| init | 192 | 0 | 0 | 0.016 | 2.972 | 3.076 | PinnedHome:192 |"
+        },
+        {
+          "line": 254,
+          "text": "| first-wave stage0 | 15360 | 0 | 0 | 22.748 | 8.159 | 13.848 | Home:15360 |"
+        },
+        {
+          "line": 255,
+          "text": "| later-wave stage0 | 768 | 0 | 0 | 0.048 | 7.472 | 7.509 | Home:768 |"
+        },
+        {
+          "line": 256,
+          "text": "| ordinary successors | 16128 | 0 | 0 | 41.169 | 8.005 | 15.962 | Home:16128 |"
+        },
+        {
+          "line": 257,
+          "text": "| join | 384 | 0 | 0 | 0.005 | 0.004 | 0.005 | Home:384 |"
+        }
+      ]
+    },
+    "seed-421-all-parent-trace1": {
+      "request_summary": {
+        "line": 289,
+        "text": "| seed-421-all-parent-trace1 | branch-rw/outstanding/parent | 192/192 | 150.585 | 188.549 | 201.001 | 58.672 | 8.173/14.473 | 15560/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 378,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-421/seed-421-all-parent-trace1: policy=outstanding, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 393,
+          "text": "| init | 192 | 0 | 0 | 0.017 | 3.157 | 3.273 | PinnedHome:192 |"
+        },
+        {
+          "line": 394,
+          "text": "| first-wave stage0 | 15360 | 9532 | 0 | 20.398 | 8.261 | 13.832 | BelowBusyThreshold:788, InsufficientGain:5040, LocalSpill:9532 |"
+        },
+        {
+          "line": 395,
+          "text": "| later-wave stage0 | 768 | 8 | 2 | 0.066 | 7.707 | 7.791 | BelowBusyThreshold:760, LocalSpill:8 |"
+        },
+        {
+          "line": 396,
+          "text": "| ordinary successors | 16128 | 6019 | 1860 | 37.623 | 8.111 | 15.401 | BelowBusyThreshold:925, InsufficientGain:9184, LocalSpill:6019 |"
+        },
+        {
+          "line": 397,
+          "text": "| join | 384 | 1 | 1 | 0.012 | 0.005 | 0.006 | BelowBusyThreshold:383, LocalSpill:1 |"
+        }
+      ]
+    },
+    "seed-421-fork-parent-trace1": {
+      "request_summary": {
+        "line": 308,
+        "text": "| seed-421-fork-parent-trace1 | branch-rw/outstanding/parent | 192/192 | 152.574 | 189.971 | 200.537 | 59.369 | 8.178/14.572 | 9196/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 415,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-421/seed-421-fork-parent-trace1: policy=outstanding, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 430,
+          "text": "| init | 192 | 0 | 0 | 0.016 | 3.068 | 3.362 | PinnedHome:192 |"
+        },
+        {
+          "line": 431,
+          "text": "| first-wave stage0 | 15360 | 9176 | 0 | 20.764 | 8.267 | 13.843 | BelowBusyThreshold:906, InsufficientGain:5278, LocalSpill:9176 |"
+        },
+        {
+          "line": 432,
+          "text": "| later-wave stage0 | 768 | 20 | 11 | 0.047 | 7.793 | 7.901 | BelowBusyThreshold:748, LocalSpill:20 |"
+        },
+        {
+          "line": 433,
+          "text": "| ordinary successors | 16128 | 0 | 0 | 37.686 | 8.112 | 15.585 | NonFork:16128 |"
+        },
+        {
+          "line": 434,
+          "text": "| join | 384 | 0 | 0 | 0.015 | 0.005 | 0.014 | NonFork:384 |"
+        }
+      ]
+    },
+    "seed-421-home-trace1": {
+      "request_summary": {
+        "line": 327,
+        "text": "| seed-421-home-trace1 | branch-rw/home/parent | 192/192 | 160.111 | 215.359 | 225.258 | 72.065 | 8.178/15.154 | 0/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 452,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-421/seed-421-home-trace1: policy=home, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 467,
+          "text": "| init | 192 | 0 | 0 | 0.016 | 2.953 | 3.100 | PinnedHome:192 |"
+        },
+        {
+          "line": 468,
+          "text": "| first-wave stage0 | 15360 | 0 | 0 | 23.150 | 8.273 | 14.227 | Home:15360 |"
+        },
+        {
+          "line": 469,
+          "text": "| later-wave stage0 | 768 | 0 | 0 | 0.045 | 7.661 | 7.697 | Home:768 |"
+        },
+        {
+          "line": 470,
+          "text": "| ordinary successors | 16128 | 0 | 0 | 41.518 | 8.111 | 16.391 | Home:16128 |"
+        },
+        {
+          "line": 471,
+          "text": "| join | 384 | 0 | 0 | 0.005 | 0.005 | 0.005 | Home:384 |"
+        }
+      ]
+    },
+    "seed-422-all-parent-trace1": {
+      "request_summary": {
+        "line": 503,
+        "text": "| seed-422-all-parent-trace1 | branch-rw/outstanding/parent | 192/192 | 150.886 | 183.928 | 191.133 | 56.809 | 8.113/14.181 | 15438/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 592,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-422/seed-422-all-parent-trace1: policy=outstanding, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 607,
+          "text": "| init | 192 | 0 | 0 | 0.016 | 3.113 | 3.247 | PinnedHome:192 |"
+        },
+        {
+          "line": 608,
+          "text": "| first-wave stage0 | 15360 | 9211 | 0 | 20.529 | 8.166 | 13.522 | BelowBusyThreshold:810, InsufficientGain:5339, LocalSpill:9211 |"
+        },
+        {
+          "line": 609,
+          "text": "| later-wave stage0 | 768 | 3 | 3 | 0.032 | 7.962 | 7.996 | BelowBusyThreshold:765, LocalSpill:3 |"
+        },
+        {
+          "line": 610,
+          "text": "| ordinary successors | 16128 | 6222 | 1875 | 37.400 | 8.070 | 15.102 | BelowBusyThreshold:944, InsufficientGain:8962, LocalSpill:6222 |"
+        },
+        {
+          "line": 611,
+          "text": "| join | 384 | 2 | 0 | 0.006 | 0.006 | 0.007 | BelowBusyThreshold:382, LocalSpill:2 |"
+        }
+      ]
+    },
+    "seed-422-fork-parent-trace1": {
+      "request_summary": {
+        "line": 522,
+        "text": "| seed-422-fork-parent-trace1 | branch-rw/outstanding/parent | 192/192 | 153.091 | 187.939 | 198.219 | 56.831 | 8.102/14.411 | 9184/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 629,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-422/seed-422-fork-parent-trace1: policy=outstanding, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 644,
+          "text": "| init | 192 | 0 | 0 | 0.016 | 3.088 | 3.281 | PinnedHome:192 |"
+        },
+        {
+          "line": 645,
+          "text": "| first-wave stage0 | 15360 | 9163 | 0 | 20.473 | 8.160 | 13.640 | BelowBusyThreshold:884, InsufficientGain:5313, LocalSpill:9163 |"
+        },
+        {
+          "line": 646,
+          "text": "| later-wave stage0 | 768 | 21 | 6 | 0.051 | 7.940 | 8.027 | BelowBusyThreshold:747, LocalSpill:21 |"
+        },
+        {
+          "line": 647,
+          "text": "| ordinary successors | 16128 | 0 | 0 | 37.230 | 8.055 | 15.448 | NonFork:16128 |"
+        },
+        {
+          "line": 648,
+          "text": "| join | 384 | 0 | 0 | 0.018 | 0.005 | 0.006 | NonFork:384 |"
+        }
+      ]
+    },
+    "seed-422-home-trace1": {
+      "request_summary": {
+        "line": 541,
+        "text": "| seed-422-home-trace1 | branch-rw/home/parent | 192/192 | 159.840 | 211.926 | 229.882 | 70.754 | 8.100/14.818 | 0/32832 | 0 |"
+      },
+      "run_header": {
+        "line": 666,
+        "text": "RUN results/local/v2-burst-trace-cost-01/seed-block-422/seed-422-home-trace1: policy=home, continuation=parent, model=branch-rw"
+      },
+      "role_rows": [
+        {
+          "line": 681,
+          "text": "| init | 192 | 0 | 0 | 0.016 | 2.926 | 2.968 | PinnedHome:192 |"
+        },
+        {
+          "line": 682,
+          "text": "| first-wave stage0 | 15360 | 0 | 0 | 22.859 | 8.155 | 13.761 | Home:15360 |"
+        },
+        {
+          "line": 683,
+          "text": "| later-wave stage0 | 768 | 0 | 0 | 0.047 | 7.851 | 7.893 | Home:768 |"
+        },
+        {
+          "line": 684,
+          "text": "| ordinary successors | 16128 | 0 | 0 | 41.139 | 8.060 | 16.153 | Home:16128 |"
+        },
+        {
+          "line": 685,
+          "text": "| join | 384 | 0 | 0 | 0.005 | 0.004 | 0.005 | Home:384 |"
+        }
+      ]
+    }
+  }
+}

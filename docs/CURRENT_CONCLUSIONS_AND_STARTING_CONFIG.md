@@ -2,7 +2,7 @@
 
 完整解释与跨场景图表请优先阅读[自包含阶段总报告](../reports/final_review/REPORT.md)（[离线 HTML](../reports/final_review/executor_affinity_report.html) / [PDF](../reports/final_review/executor_affinity_report.pdf)）；本页保留为简明操作参考。
 
-**当前无需继续追加合成性能实验、目标机报告或历史调度trace解析。** 已有证据足以收束本轮机制研究，并交接可复用的总池、观测与候选策略。生产部署、真实负载下的稳健性和正式p99验收尚未完成；这些应由当地事实和明确决策触发，不能靠无限扩大现有合成矩阵替代。
+**既有机制问题可以收束；用户进一步要求的逐cluster实时CPU对比仍有证据缺口。** 原合成模型无需继续扩大全矩阵，也不要求重采生产trace；若要完成新增CPU时间序列视图，可按[有限补采指南](../reports/final_review/CPU_CAPTURE_GUIDE.md)运行独立观测对照。 已有证据足以收束本轮机制研究，并交接可复用的总池、观测与候选策略。生产部署、真实负载下的稳健性和正式p99验收尚未完成；这些应由当地事实和明确决策触发，不能靠无限扩大现有合成矩阵替代。
 
 本页汇总已实现、已测试和仍是假设的内容。最新证据见[4020报告](TARGET_V2_4020_REVIEW.md)，当地执行见[分阶段手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯提示词](PRODUCTION_AGENT_PROMPTS_ONLY.md)。无需传输文件、连通三个环境或新增生产trace才能使用这些结论。
 
@@ -16,7 +16,7 @@
 2. request内部：开始宽扇出，分支串行依赖，波间join，再产生后续fork。迭代/访问次数在策略间固定，task/request级长短扰动可配置。后继真实消费前驱修改的分支数据，不以额外sleep假装cache损失。
 3. 外部等待：D0直接推进；A0通过外部完成源但配置等待为0；A1增加固定到期等待。算子返回释放worker，完成后重新提交轻量恢复callback，再推进图；等待中的事件不计入CPU池ready工作。
 
-已测机制包括regular/burst8、request/task异质性、branch-rw依赖、16/128 worker、长工作/短工作/密集到达、D0/A0/A1及观测开关。阶段3还覆盖保持同CPU并集的none/numa/cluster部署。各批只回答其受控问题，不把不同批次拼成同一轮因果对照。
+已测机制包括regular/burst8、request/task异质性、branch-rw依赖、16/128 worker、每算子基准300万/37.5万迭代及10万/1.25万访问、12/96 QPS、D0/A0/A1及观测开关。阶段3还覆盖保持同CPU并集的none/numa/cluster部署。各批只回答其受控问题，不把不同批次拼成同一轮因果对照。
 
 4020冻结合同：96QPS、1920请求；widths=80,4，depths=2,2，共168个业务operator与3个原控制callback；branch64KiB、shared0；迭代375000、访问12500、task级±25%及约1/8四倍工作；50%选中位置增加2ms等待，align0、源容量4096。各池16线程，RR/all/parent，仅同NUMA借出。这里96QPS和约1ms业务callback是受控工作族，不是由历史trace的0.85ms推算的生产标定。
 
