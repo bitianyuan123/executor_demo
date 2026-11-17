@@ -1,6 +1,6 @@
 # 异步等待与恢复：实现合同及验收边界
 
-4017结束了既有CPU工作族的到达核查。本实现补上“算子释放worker、外部完成后重新进入ready调度”的结构，使用新的`affinity-v3-async`结果合同。原有直接推进仍输出`affinity-v2`，旧结果可继续分析。开发机与目标机小规模功能验收均已通过，尚未建立ARM异步性能排名或生产RPC代表性。当前执行入口为[异步首批八轮指南](TARGET_V2_ASYNC_PILOT_GUIDE.md)，功能验收合同保留在[原指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)。
+4017结束了既有CPU工作族的到达核查。本实现补上“算子释放worker、外部完成后重新进入ready调度”的结构，使用新的`affinity-v3-async`结果合同。原有直接推进仍输出`affinity-v2`，旧结果可继续分析。开发机与目标机功能验收、[4018异步首批八轮](TARGET_V2_4018_REVIEW.md)均已完成；当前A1合同下O的时延收益伴随CPU代价，尚未完成生产代表性或尾部验收。执行入口为[四轮A1机制指南](TARGET_V2_ASYNC_MECHANISM_GUIDE.md)，功能验收合同保留在[原指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)。
 
 目标仍为每个已核实硬件cluster一个子池，业务持有总池；request选择home，后续ready callback由总池按策略选池。六池仅属于现有目标机资源，代码不写死四池或六池。
 
@@ -78,7 +78,7 @@ trace0不产生逐事件/逐任务记录，但保留来源统计与失败守恒�
 
 小型端到端脚本覆盖D0/A0/A1、网格恢复、trace0/1、50%选择跨策略、parent/home与fork/all、容量拒绝，并核对固定工作、checksum、恢复数量和各分析入口。开发机人工CPU分区只验证功能，不代表ARM cluster、缓存或NUMA性能。
 
-目前没有按目标机生产规模验收异步性能、尾延迟或观测扰动，也未实现网络服务、随机下游分布、重试及独立超时竞争。目标机已回传3项CTest、8个成功场景和1个预期拒绝场景全部通过，见[终端验收摘录](../results/review/async_v3_target_functional_validation.json)。下一步仅执行固定资源、同NUMA的八轮先导合同。CPU族到达核查已由4017完成，不作为继续等待生产trace或扩大原矩阵的理由。
+目标机功能验收已通过，见[终端验收摘录](../results/review/async_v3_target_functional_validation.json)；4018完成了固定资源、同NUMA的八轮先导对照，见[结果摘录](../results/review/4018_summary.json)。这些是合成合同下的单次证据，尚未验收生产异步性能或尾部，也未实现网络服务、随机下游分布、重试及独立超时竞争。下一步仅补四轮A1的O机制及两策略观测敏感性。CPU族到达核查已由4017完成，不作为继续等待生产trace或扩大原矩阵的理由。
 
 首批D0/A0/A1各有home/O trace0对照，A0/A1另各有home trace1。O是未完成ready callback的计数，新增轻量rpc_resume与昂贵operator各按一个计数；异步后效果变化不能只归因等待。D0→A0包含额外源线程、控制callback及调度点；A0→A1保持选择集合但到期相对实际issue产生，并非冻结绝对完成流。两格home trace1只提供home的机制和观测敏感性，不能代替O路径诊断或直接扣除其成本。
 

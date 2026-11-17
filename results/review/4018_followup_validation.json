@@ -1,0 +1,57 @@
+{
+  "scope": "Development-host command compatibility and four-cell functional verification only; no target performance run or new runtime implementation.",
+  "resources": {
+    "artificial_cpu_partitions": "0;1",
+    "workers_per_pool": 1,
+    "requests_per_cell": 4
+  },
+  "cases": [
+    {
+      "case": "seed-421-home-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": null,
+      "checksum": "330129134726639472"
+    },
+    {
+      "case": "seed-421-home-trace1",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": 80,
+      "checksum": "330129134726639472"
+    },
+    {
+      "case": "seed-421-outstanding-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": null,
+      "checksum": "330129134726639472"
+    },
+    {
+      "case": "seed-421-outstanding-trace1",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": 80,
+      "checksum": "330129134726639472"
+    }
+  ],
+  "analysis_checks": {
+    "trace_cost_report_four_runs": "passed",
+    "report_four_runs": "passed",
+    "flow_report_two_trace1_runs": "passed"
+  },
+  "document_checks": {
+    "shell_syntax": "passed",
+    "target_four_cell_plan_only": "passed",
+    "local_links": "passed"
+  },
+  "no_cpp_or_python_implementation_changes": true
+}
