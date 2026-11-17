@@ -95,7 +95,7 @@ class CaptureTests(unittest.TestCase):
                     cap.preflight(args, cap.partitions(args.cpus))
             self.assertFalse(Path(args.output).exists())
 
-    def simulate(self, directory, failure=None, loss=False, bad_boundaries=False):
+    def simulate(self, directory, failure=None, loss=False, bad_boundaries=False, profile_stderr=''):
         args = self.args(directory)
         Path(args.binary).write_text('fake binary')
         phases = []
@@ -119,6 +119,7 @@ class CaptureTests(unittest.TestCase):
                 self.assertTrue(metadata['capture_completed'])
                 (Path(args.output) / 'profile_capture.sha256').write_text(cap.sha256(Path(args.output) / 'capture.json'))
                 Path(stdout).write_text('profile complete\n')
+                Path(stderr).write_text(profile_stderr)
             return (9 if failure == phase else 0), False
 
         commands, groups = cap.make_commands(args)
@@ -167,6 +168,17 @@ class CaptureTests(unittest.TestCase):
             self.assertEqual(execution['profile_returncode'], 9)
             self.assertIn('offline profile failed', execution['error'])
             self.assertEqual((output / 'profile_capture.sha256').read_text(), cap.sha256(output / 'capture.json'))
+
+    def test_profile_failure_prints_bounded_stderr(self):
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stderr(io.StringIO()) as printed:
+            self.simulate(directory, failure='profile',
+                          profile_stderr='line 1: malformed switch payload\n' + 'x' * 5000 + 'tail marker')
+            diagnostic = printed.getvalue()
+            self.assertIn('line 1: malformed switch payload', diagnostic)
+            self.assertIn('stderr truncated', diagnostic)
+            self.assertNotIn('tail marker', diagnostic)
+            self.assertLess(len(diagnostic), 4300)
+            self.assertTrue((Path(directory)/'new'/'profile.stderr.txt').read_text().endswith('tail marker'))
 
     def test_record_failure_stops_before_export(self):
         with tempfile.TemporaryDirectory() as directory:

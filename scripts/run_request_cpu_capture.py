@@ -263,6 +263,14 @@ def execute(args, commands, groups):
         # The report is compact and printable; raw scheduler events remain local.
         print((output / 'profile.stdout.txt').read_text(errors='replace'), end='')
         if code:
+            with (output / 'profile.stderr.txt').open(errors='replace') as stream:
+                diagnostic = stream.read(4097)
+            if diagnostic:
+                print('OFFLINE PROFILE STDERR (first 4096 characters):', file=sys.stderr)
+                print(diagnostic[:4096], end='' if diagnostic[:4096].endswith('\n') else '\n',
+                      file=sys.stderr)
+                if len(diagnostic) > 4096:
+                    print('[stderr truncated; full text retained in profile.stderr.txt]', file=sys.stderr)
             raise RuntimeError('offline profile failed with exit=%d; see %s' %
                                (code, output / 'profile.stderr.txt'))
         print('ONE CAPTURE COMPLETE: ' + str(output))

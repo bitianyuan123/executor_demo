@@ -1,0 +1,39 @@
+{
+  "scope": "4022 evidence reconciliation, parser compatibility and bounded graph-shape coverage; development functional tests only.",
+  "source_log_sha256": "80845d701901110dde84a7a7579c27b6350a122a0b54a4808db718d6558282e4",
+  "source_sha256": {
+    "experiments/affinity/request_sched_profile.py": "216c4104e4778b55584c48e790db209b38f2521c6e3eff1ee67878f424c2b154",
+    "experiments/affinity/run_matrix.py": "8709e3185e3cf9c07e63879b361ace4254d865e3f87e238ea5a57dc3c13a104d",
+    "scripts/run_request_cpu_capture.py": "bb4ccd1092def989b47b1611618163495127e215aa11981660a32f37ee84875e"
+  },
+  "evidence_checks": [
+    "Two REQUEST_CPU_SHAPE objects equal original log JSON at retained source lines",
+    "240-request whole summaries kept separate from 192-request prior cohort",
+    "No new target scheduler profiles or new-workload performance claimed",
+    "Follow-up compact perf samples identified as chat evidence separate from 4022.log"
+  ],
+  "unit_tests": {
+    "request_sched_profile": 18,
+    "request_cpu_capture": 22,
+    "shape_coverage_matrix": 11,
+    "ctest_selected_passed": 3
+  },
+  "regression_functional": {
+    "existing_complete_runs": 22,
+    "new_shape_cases": 6,
+    "requests_per_case": 4,
+    "operators_per_request": 168,
+    "callbacks_per_request": 171,
+    "same_shape_policy_pair_audits": 4,
+    "resources": "Two artificial CPU partitions, one worker per pool; 10000 iterations and100 accesses/operator, 20QPS; functionality only."
+  },
+  "parser_integration": "Development recorded scheduler intervals were unchanged after transforming named payloads to compact equivalents; target full traces remain on target machine.",
+  "documentation": {
+    "guide_bash_blocks_checked": 3,
+    "report_validation_checks": 31364,
+    "report_validation_errors": 0,
+    "pdf_pages": 42,
+    "pdf_new_page_visually_checked": 41
+  },
+  "target_next_action": "Recover existing captures offline and start 375k shape-coverage 12 rounds; neither depends on production access."
+}

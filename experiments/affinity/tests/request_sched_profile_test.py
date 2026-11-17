@@ -89,5 +89,69 @@ class ProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'nine decimal'):
             profile.intervals(['[000] 1.123456: sched:sched_switch: test'],{0},{42})
 
+    def test_compact_openeuler_perf_fixture(self):
+        lines = [
+            '[000] 128173.903316950: sched:sched_switch: perf:824058 [120] D ==> migration/0:17 [0]\n',
+            '[000] 128173.903326950: sched:sched_switch: migration/0:17 [0] S ==> swapper/0:0 [120]\n',
+            '[001] 128173.903336950: sched:sched_switch: perf:824058 [120] D ==> migration/1:20 [0]\n',
+            '[001] 128173.903346950: sched:sched_switch: migration/1:20 [0] S ==> swapper/1:0 [120]\n',
+        ]
+        spans, bounds, audit = profile.intervals(lines, {0, 1}, {17, 20})
+        self.assertEqual(spans[17], [(128173903316950, 128173903326950, 0)])
+        self.assertEqual(spans[20], [(128173903336950, 128173903346950, 1)])
+        self.assertEqual(audit['payload_format_compact'], 4)
+        self.assertEqual(audit.get('payload_format_named', 0), 0)
+
+    def test_names_with_spaces_and_colons_do_not_become_pids(self):
+        for payload, name in [
+            ('worker 7:phase:42 [120] R+ ==> other:8 pool:99 [0]', 'compact'),
+            ('worker 7:phase:42[120] R+ ==> other:8 pool:99[0]', 'compact'),
+            ('prev_comm=worker 7:phase prev_pid=42 prev_prio=120 prev_state=R+ '
+             '==> next_comm=other:8 pool next_pid=99 next_prio=0', 'named'),
+        ]:
+            with self.subTest(payload=payload):
+                self.assertEqual(profile.switch_payload(payload, 1), (42, 99, name))
+
+    def test_mixed_payload_formats_preserve_chain_and_count(self):
+        lines = [event(0, 0, 42),
+                 '[000] 0.001000000: sched:sched_switch: worker:42 [120] S ==> idle:0 [120]\n',
+                 event(2_000_000, 0, 0)]
+        spans, _, audit = profile.intervals(lines, {0}, {42})
+        self.assertEqual(spans[42], [(0, 1_000_000, 0)])
+        self.assertEqual(audit['payload_format_named'], 2)
+        self.assertEqual(audit['payload_format_compact'], 1)
+
+    def test_compact_format_retains_chain_loss_and_clock_guards(self):
+        first = '[000] 1.000000000: sched:sched_switch: idle:0 [120] R ==> worker:42 [120]\n'
+        for second, expected in [
+            ('[000] 1.001000000: sched:sched_switch: worker:7 [120] S ==> idle:0 [120]\n', 'broken CPU'),
+            ('[000] 0.999000000: sched:sched_switch: worker:42 [120] S ==> idle:0 [120]\n', 'backwards'),
+            ('PERF_RECORD_LOST: 2\n', 'lost event'),
+        ]:
+            with self.subTest(expected=expected), self.assertRaisesRegex(ValueError, expected):
+                profile.intervals([first, second], {0}, {42})
+
+    def test_compact_payload_requires_complete_structure(self):
+        for payload in (
+            'worker:42 [bad] S ==> idle:0 [120]',
+            'worker:no_pid [120] S ==> idle:0 [120]',
+            'worker:42 [120] ==> idle:0 [120]',
+            'worker:42 [120] S ==> idle:0',
+            'worker:42 [120] S ==> idle:0 [120] unexpected',
+        ):
+            with self.subTest(payload=payload), self.assertRaisesRegex(ValueError, 'malformed switch payload'):
+                profile.switch_payload(payload, 5)
+
+    def test_unknown_payload_diagnostic_bounded_and_escaped(self):
+        payload = 'unknown\x1b[31m ' + 'x' * 10000
+        with self.assertRaises(ValueError) as result:
+            profile.switch_payload(payload, 7)
+        diagnostic = str(result.exception)
+        self.assertIn('line 7: malformed switch payload', diagnostic)
+        self.assertIn('unknown\\u001b[31m', diagnostic)
+        self.assertNotIn('\x1b', diagnostic)
+        self.assertIn('(truncated)', diagnostic)
+        self.assertLess(len(diagnostic), 400)
+
 
 if __name__=='__main__':unittest.main()

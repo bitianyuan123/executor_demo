@@ -19,6 +19,10 @@ import report
 
 EVENT = re.compile(r'\[(\d+)\]\s+(\d+\.\d+):\s+sched:sched_switch:\s+(.*)')
 SWITCH = re.compile(r'prev_comm=.*?\s+prev_pid=(\d+)\s+prev_prio=\S+\s+prev_state=\S+\s+==>\s+next_comm=.*?\s+next_pid=(\d+)\s+next_prio=\S+')
+# perf can use either the tracepoint's named fields or its compact formatter.
+# Greedy comm matching takes the final :PID before [priority], so names such as
+# "worker 7:phase:42" retain their embedded spaces, digits and colons.
+COMPACT_SWITCH = re.compile(r'.+:(\d+)\s*\[-?\d+\]\s+\S+\s+==>\s+.+:(\d+)\s*\[-?\d+\]')
 LOST = re.compile(r'PERF_RECORD_LOST|\bLOST\s+\d+|\blost\s+\d+\s+events?', re.I)
 
 
@@ -41,13 +45,27 @@ def timestamp(value):
     return int(seconds) * 1_000_000_000 + int(fraction)
 
 
+def switch_payload(payload, line_no):
+    payload = payload.strip()
+    for name, pattern in (('named', SWITCH), ('compact', COMPACT_SWITCH)):
+        match = pattern.fullmatch(payload)
+        if match is not None:
+            return int(match[1]), int(match[2]), name
+    # Preserve enough evidence to diagnose a different perf formatter without
+    # flooding the terminal or printing control characters from task names.
+    preview = json.dumps(payload[:240], ensure_ascii=True)
+    suffix = ' (truncated)' if len(payload) > 240 else ''
+    raise ValueError(f'line {line_no}: malformed switch payload: {preview}{suffix}')
+
+
 def intervals(lines, cpus, tracked_tids, busy_out=None, extent=None):
     """Stream all CPUs' records, retaining only tracked TID intervals.
 
     The first switch only establishes state. The final open interval is not
     extended. A mismatch cannot be repaired by inventing an idle interval.
     """
-    state, bounds, selected, audit = {}, {}, collections.defaultdict(list), collections.Counter()
+    state, bounds, selected = {}, {}, collections.defaultdict(list)
+    audit = collections.Counter(payload_format_named=0, payload_format_compact=0)
     for line_no, line in enumerate(lines, 1):
         require(not LOST.search(line), f'line {line_no}: lost event indication')
         if 'sched_switch:' not in line:
@@ -56,9 +74,8 @@ def intervals(lines, cpus, tracked_tids, busy_out=None, extent=None):
         require(match is not None, f'line {line_no}: unsupported switch format')
         cpu, at, payload = int(match[1]), timestamp(match[2]), match[3]
         require(cpu in cpus, f'line {line_no}: CPU {cpu} outside declared capture')
-        switch = SWITCH.fullmatch(payload.strip())
-        require(switch is not None, f'line {line_no}: malformed switch payload')
-        prev, nxt = int(switch[1]), int(switch[2])
+        prev, nxt, payload_format = switch_payload(payload, line_no)
+        audit['payload_format_' + payload_format] += 1
         if cpu in state:
             before, running = state[cpu]
             require(at >= before, f'line {line_no}: CPU clock moved backwards')

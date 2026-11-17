@@ -15,16 +15,36 @@ import sys
 
 SUITES = ("routing", "signals", "arrival", "cluster-baseline", "real-baseline",
           "legacy-four-pool-replay", "blocking", "follow", "granularity",
-          "deployment", "threads", "overhead", "follow-overhead", "async-pilot")
+          "deployment", "threads", "overhead", "follow-overhead", "async-pilot",
+          "shape-coverage")
 HISTORICAL_SUITES = ("real-baseline", "legacy-four-pool-replay")
 ASYNC_PILOT_FIXED = {"async-align-us": "0", "async-capacity": "4096",
                      "balance-at": "all", "continuation": "parent",
                      "home-policy": "rr", "batch-chunk": "1", "max-hops": "4",
                      "cross-numa": "0", "cpu-sampling": "0", "page-sample": "0",
                      "sync-block-percent": "0", "sync-block-us": "0"}
+SHAPE_COVERAGE_FIXED = {
+    "affinity": "cluster", "threads": "16", "capacity-scale": "1",
+    "requests": "240", "max-inflight": "16", "memory-mb": "512",
+    "qps": "12", "arrival": "regular", "widths": "80,4",
+    "model": "branch-rw", "branch-kb": "64", "shared-kb": "0",
+    "jitter-percent": "0", "long-every": "0", "long-factor": "1",
+    "work-scale-scope": "task", "estimate-mode": "constant", "home-policy": "rr",
+    "continuation": "parent", "balance-at": "all", "batch-chunk": "1",
+    "busy-high": "1", "return-low": "0.5", "min-gain": "0",
+    "cross-numa": "0", "cross-numa-penalty": "0", "max-hops": "4",
+    "max-outstanding": "0", "cpu-sampling": "0", "trace": "1", "page-sample": "0",
+    "sync-block-percent": "0", "sync-block-us": "0", "async-percent": "0",
+    "async-delay-us": "0", "async-align-us": "0", "async-capacity": "4096",
+}
 
 
 def cases(suite):
+    if suite == "shape-coverage":
+        return [(f"{shape}-{policy}", {
+            **SHAPE_COVERAGE_FIXED, "depths": depths, "policy": policy})
+            for shape, depths in (("front80", "2,2"), ("tail4", "1,22"))
+            for policy in ("home", "queue", "outstanding")]
     if suite == "async-pilot":
         cells = [(mode, policy, 0) for mode in ("d0", "a0", "a1")
                  for policy in ("home", "outstanding")]
@@ -88,7 +108,7 @@ def main():
     parser.add_argument("--suite", choices=SUITES, default="routing")
     parser.add_argument("--cases", help="comma-separated case names from the selected suite; default: all cases")
     parser.add_argument("--thread-counts", help="signals only: comma-separated distinct positive thread counts per pool; expand selected policies in each seed block")
-    parser.add_argument("--seeds", default="101,102,103")
+    parser.add_argument("--seeds", help="default: 101,102,103; shape-coverage defaults to 421,422")
     parser.add_argument("--timeout-seconds", type=float, default=900)
     parser.add_argument("--run", action="store_true", help="without this flag only write a plan")
     parser.add_argument("--base-args", nargs=argparse.REMAINDER, default=[])
@@ -113,6 +133,19 @@ def main():
         base[key] = value
     if "--output" in base or "--seed" in base:
         parser.error("output and seed are managed by the matrix")
+    if args.suite == "shape-coverage":
+        if args.cases is not None:
+            parser.error("shape-coverage requires all six shape/policy cells; case filtering is not supported")
+        for key in ("policy", "depths"):
+            if "--" + key in base:
+                parser.error(f"shape-coverage manages --{key}; omit it from base-args")
+        for key, value in SHAPE_COVERAGE_FIXED.items():
+            if "--" + key in base and base["--" + key] != value:
+                parser.error(f"shape-coverage requires --{key} {value}")
+        for key in ("iterations", "accesses"):
+            value = base.get("--" + key, "")
+            if not value.isdecimal() or not 0 < int(value) <= 1000000000000:
+                parser.error(f"shape-coverage requires explicit positive --{key} <=1000000000000 in base-args")
     thread_counts = None
     if args.thread_counts is not None:
         if args.suite != "signals":
@@ -141,8 +174,8 @@ def main():
         for key, value in ASYNC_PILOT_FIXED.items():
             if "--" + key in base and base["--" + key] != value:
                 parser.error(f"async-pilot requires --{key} {value}")
-    if args.suite in ("cluster-baseline", "async-pilot"):
-        if base.get("--affinity") != "cluster":
+    if args.suite in ("cluster-baseline", "async-pilot", "shape-coverage"):
+        if args.suite != "shape-coverage" and base.get("--affinity") != "cluster":
             parser.error(f"{args.suite} requires explicit --base-args --affinity cluster; affinity is not silently overridden")
         partitions = base.get("--cpus", "").split(";")
         if not all(partition.strip() for partition in partitions):
@@ -158,7 +191,12 @@ def main():
               "(4 pools, 128 threads, affinity=none, 16 QPS), not the one-pool-per-cluster target. "
               "Use legacy-four-pool-replay for that replay or cluster-baseline for the target.",
               file=sys.stderr)
-    seeds = [int(x) for x in args.seeds.split(",")]
+    seed_spec = args.seeds if args.seeds is not None else (
+        "421,422" if args.suite == "shape-coverage" else "101,102,103")
+    try:
+        seeds = [int(x) for x in seed_spec.split(",")]
+    except ValueError:
+        parser.error("seeds must be distinct nonnegative integers")
     if not seeds or len(set(seeds)) != len(seeds) or any(x < 0 for x in seeds):
         parser.error("seeds must be distinct nonnegative integers")
     if args.suite == "async-pilot" and len(seeds) != 1:
@@ -196,9 +234,34 @@ def main():
                 "caller_allowed_cpus": sorted(os.sched_getaffinity(0)), "argv": sys.argv[1:]}
     if thread_counts is not None:
         metadata["thread_counts"] = thread_counts
+    if args.suite == "shape-coverage":
+        metadata["shape_coverage"] = {
+            "schema": "affinity-shape-coverage-v1",
+            "seeds": seeds, "rounds": 6 * len(seeds), "trace": 1,
+            "iterations_per_operator": int(base["--iterations"]),
+            "accesses_per_operator": int(base["--accesses"]),
+            "business_operators_per_request": 168, "callbacks_per_request": 171,
+            "branches_per_request": 84, "branch_payload_bytes_per_request": 84 * 64 * 1024,
+            "iterations_per_request": 168 * int(base["--iterations"]),
+            "read_words_per_request": 168 * int(base["--accesses"]),
+            "write_words_per_request": 168 * int(base["--accesses"]),
+            "scope": "Graph-shape comparison, not production replay or equal measured CPU work. "
+                     "Uniform trace=1 instrumentation without perf, not zero-overhead performance. "
+                     "Policy pairing is within each shape and seed; graph checksums may differ. "
+                     "Repeated seed blocks screen direction, not production p99 or SLO certification.",
+        }
     if args.run and metadata["binary_sha256"] is None:
         parser.error("binary is missing; build the affinity stage first")
     (root / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    if args.suite == "shape-coverage":
+        print(f"SHAPE COVERAGE: six cells x {len(seeds)} seed blocks = {6 * len(seeds)} rounds; "
+              "one pool per explicit cluster partition; "
+              "16 workers/pool; regular 12 QPS; 240 requests/round; trace=1, no perf.\n"
+              "front80=80x2+4x2; tail4=80x1+4x22; both 168 operators, 84 branches, "
+              "171 callbacks and 5.25 MiB branch payload per request.\n"
+              "Controlled work counts, NOT equal measured CPU time or production replay; "
+              "no-perf is NOT zero-overhead. Compare policies within each shape; "
+              "seed blocks do not certify production p99.", flush=True)
     plan = []
     for seed in seeds:
         order = list(selected)

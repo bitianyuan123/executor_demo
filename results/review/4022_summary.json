@@ -1,0 +1,806 @@
+{
+  "schema": "affinity_4022_shape_review_v1",
+  "source_file": "4022.log",
+  "source_sha256": "80845d701901110dde84a7a7579c27b6350a122a0b54a4808db718d6558282e4",
+  "source_scope": "User terminal report; two old 4021 CSV reanalyses; no original target CSV or scheduler text transferred.",
+  "shape_reports": [
+    {
+      "source_line": 13,
+      "result": {
+        "schema": "affinity_request_cpu_shape_v1",
+        "selection": "explicit request IDs; no representativeness claim",
+        "bin_ms": 1.0,
+        "selected_request_ids": [
+          6
+        ],
+        "run": "results/local/cluster-cpu-regular12-3m-t16-seed421-01/01-home/demo",
+        "resource": {
+          "pools": [
+            {
+              "pool": 0,
+              "cpus": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ],
+              "numa": 0,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 1,
+              "cpus": [
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31
+              ],
+              "numa": 0,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 2,
+              "cpus": [
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+              ],
+              "numa": 0,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 3,
+              "cpus": [
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207
+              ],
+              "numa": 2,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 4,
+              "cpus": [
+                208,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215,
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223
+              ],
+              "numa": 2,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 5,
+              "cpus": [
+                224,
+                225,
+                226,
+                227,
+                228,
+                229,
+                230,
+                231,
+                232,
+                233,
+                234,
+                235,
+                236,
+                237,
+                238,
+                239
+              ],
+              "numa": 2,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            }
+          ],
+          "union_logical_cpu_count": 96,
+          "union_cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207,
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223,
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "disjoint_cpu_sets": true,
+          "pool_service_maps_to_declared_cluster": true,
+          "attribution": "chosen pool maps to its declared CPU set; hardware cluster identity is not independently verified"
+        },
+        "completed_requests": 240,
+        "other_request_statuses": {},
+        "completed_request_statistics": {
+          "planned_latency_ms": {
+            "n": 240,
+            "mean": 120.27470666666666,
+            "p50": 120.445187,
+            "p95": 138.719957,
+            "p99": 145.858024,
+            "max": 152.37378
+          },
+          "profile_span_ms": {
+            "n": 240,
+            "mean": 120.20479929166666,
+            "p50": 120.39059,
+            "p95": 138.66534,
+            "p99": 145.80339,
+            "max": 152.31914
+          },
+          "timed_cpu_ms": {
+            "n": 240,
+            "mean": 1367.5599940833333,
+            "p50": 1361.99483,
+            "p95": 1508.93225,
+            "p99": 1562.61516,
+            "max": 1566.74572
+          },
+          "timed_cpu_average_cores_over_profile": {
+            "n": 240,
+            "mean": 11.433837099468642,
+            "p50": 11.336405810791888,
+            "p95": 12.720347050478013,
+            "p99": 13.044170478675062,
+            "max": 13.092109976846354
+          },
+          "first_wave_stage0_cpu_fraction_of_all_callbacks": {
+            "n": 240,
+            "mean": 0.48248678947173906,
+            "p50": 0.48243129113371824,
+            "p95": 0.5256257859105722,
+            "p99": 0.543596636089586,
+            "max": 0.5780889786717297
+          },
+          "first_wave_all_depths_operator_cpu_fraction": {
+            "n": 240,
+            "mean": 0.9573156945130941,
+            "p50": 0.9587740922076411,
+            "p95": 0.9709486809848341,
+            "p99": 0.9726664053835363,
+            "max": 0.9734452860054796
+          }
+        },
+        "measurement_contract": {
+          "quantity": "thread CPU time of timed(fn), bounded inside observer start/finish wall interval",
+          "formula": "overlap=l, callback wall=W, CPU=C: lower=max(0,C-(W-l)); upper=min(C,l)",
+          "uncertainty": "no uniform CPU allocation; bounds are independently valid per bin and not necessarily jointly attainable",
+          "wall_occupancy": "callbacks entered but not returned, including preemption and sleeping; NOT on-CPU or runnable count",
+          "exclusions": "CPU outside timed(fn), executor bookkeeping, producer/AIO threads and unrelated processes are not measured",
+          "clock_assumption": "0<=C<=W and sequential callback CPU rate<=1; every C>W is rejected without clipping",
+          "percent": "measured CPU service share of declared logical CPU count; NOT full machine/cluster CPU utilization",
+          "cumulative": "50/90/99% are earliest/latest cumulative timed CPU service crossings, not callback completion percentiles",
+          "profile_extent": "request attempt through max(request finish,last callback finish); includes observer tail after logical completion"
+        },
+        "selected_requests": [
+          {
+            "request": 6,
+            "status": "completed",
+            "scheduled_ns": 124938723871040,
+            "submitted_ns": 124938723925080,
+            "request_finished_ns": 124938851265370,
+            "profile_end_ns": 124938851265710,
+            "planned_latency_ms": 127.39433,
+            "attempt_to_request_finish_ms": 127.34029,
+            "profile_span_ms": 127.34063,
+            "last_callback_after_request_finish_ms": 0.00034,
+            "callbacks": 171,
+            "timed_cpu_ms": 1374.03038,
+            "operator_timed_cpu_ms": 1371.37458,
+            "sum_callback_wall_ms": 1382.07707,
+            "timed_cpu_average_cores_over_profile": 10.790196184831188,
+            "first_wave_stage0_cpu_fraction_of_all_callbacks": 0.4267165839520957,
+            "first_wave_all_depths_operator_cpu_fraction": 0.956747127396805,
+            "roles": {
+              "init": {
+                "callbacks": 1,
+                "cpu_ms": 2.64853
+              },
+              "first-wave stage0": {
+                "callbacks": 80,
+                "cpu_ms": 586.32155
+              },
+              "later-wave stage0": {
+                "callbacks": 4,
+                "cpu_ms": 39.939589999999995
+              },
+              "ordinary successors": {
+                "callbacks": 84,
+                "cpu_ms": 745.11344
+              },
+              "join": {
+                "callbacks": 2,
+                "cpu_ms": 0.00727
+              }
+            },
+            "cumulative_timed_cpu_crossing": {
+              "50": {
+                "earliest_possible_ms": 45.567944,
+                "latest_guaranteed_ms": 45.591406
+              },
+              "90": {
+                "earliest_possible_ms": 80.507999,
+                "latest_guaranteed_ms": 80.534461
+              },
+              "99": {
+                "earliest_possible_ms": 113.562227,
+                "latest_guaranteed_ms": 113.586587
+              }
+            }
+          }
+        ],
+        "source_sha256": {
+          "summary.json": "4f9e75feec0271d3cde1044a42df6225f551173f7d28fe91710e9fd751a6ce67",
+          "requests.csv": "1186e9a3ac0e4e70d5a0745fd6fbcd28eb005b7e9b672c6369e9e50bc21f252c",
+          "tasks.csv": "cadf807b42ba721e8e36c72b9fa0f9e9d95052abf024d1bd647a3e20854a7c59"
+        }
+      }
+    },
+    {
+      "source_line": 20,
+      "result": {
+        "schema": "affinity_request_cpu_shape_v1",
+        "selection": "explicit request IDs; no representativeness claim",
+        "bin_ms": 1.0,
+        "selected_request_ids": [
+          6
+        ],
+        "run": "results/local/cluster-cpu-regular12-3m-t16-seed421-01/03-outstanding/demo",
+        "resource": {
+          "pools": [
+            {
+              "pool": 0,
+              "cpus": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ],
+              "numa": 0,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 1,
+              "cpus": [
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31
+              ],
+              "numa": 0,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 2,
+              "cpus": [
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+              ],
+              "numa": 0,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 3,
+              "cpus": [
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207
+              ],
+              "numa": 2,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 4,
+              "cpus": [
+                208,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215,
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223
+              ],
+              "numa": 2,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            },
+            {
+              "pool": 5,
+              "cpus": [
+                224,
+                225,
+                226,
+                227,
+                228,
+                229,
+                230,
+                231,
+                232,
+                233,
+                234,
+                235,
+                236,
+                237,
+                238,
+                239
+              ],
+              "numa": 2,
+              "logical_cpu_count": 16,
+              "configured_score_capacity": 16
+            }
+          ],
+          "union_logical_cpu_count": 96,
+          "union_cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207,
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223,
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "disjoint_cpu_sets": true,
+          "pool_service_maps_to_declared_cluster": true,
+          "attribution": "chosen pool maps to its declared CPU set; hardware cluster identity is not independently verified"
+        },
+        "completed_requests": 240,
+        "other_request_statuses": {},
+        "completed_request_statistics": {
+          "planned_latency_ms": {
+            "n": 240,
+            "mean": 73.11874941666666,
+            "p50": 72.724224,
+            "p95": 93.313907,
+            "p99": 103.906604,
+            "max": 139.07446
+          },
+          "profile_span_ms": {
+            "n": 240,
+            "mean": 73.06195170833332,
+            "p50": 72.66803,
+            "p95": 93.25696,
+            "p99": 103.85013,
+            "max": 139.01636
+          },
+          "timed_cpu_ms": {
+            "n": 240,
+            "mean": 1371.8181927916667,
+            "p50": 1370.46784,
+            "p95": 1508.6821,
+            "p99": 1562.73942,
+            "max": 1583.65694
+          },
+          "timed_cpu_average_cores_over_profile": {
+            "n": 240,
+            "mean": 19.172252691123273,
+            "p50": 18.78229004688229,
+            "p95": 23.622488307685103,
+            "p99": 24.601736462300263,
+            "max": 26.564406600546032
+          },
+          "first_wave_stage0_cpu_fraction_of_all_callbacks": {
+            "n": 240,
+            "mean": 0.49304638463260203,
+            "p50": 0.49137824322138546,
+            "p95": 0.5364863983238476,
+            "p99": 0.5534481296967189,
+            "max": 0.585497554196393
+          },
+          "first_wave_all_depths_operator_cpu_fraction": {
+            "n": 240,
+            "mean": 0.9574364854995829,
+            "p50": 0.9589015540039885,
+            "p95": 0.9704363500394254,
+            "p99": 0.9726192922599901,
+            "max": 0.9748401277631706
+          }
+        },
+        "measurement_contract": {
+          "quantity": "thread CPU time of timed(fn), bounded inside observer start/finish wall interval",
+          "formula": "overlap=l, callback wall=W, CPU=C: lower=max(0,C-(W-l)); upper=min(C,l)",
+          "uncertainty": "no uniform CPU allocation; bounds are independently valid per bin and not necessarily jointly attainable",
+          "wall_occupancy": "callbacks entered but not returned, including preemption and sleeping; NOT on-CPU or runnable count",
+          "exclusions": "CPU outside timed(fn), executor bookkeeping, producer/AIO threads and unrelated processes are not measured",
+          "clock_assumption": "0<=C<=W and sequential callback CPU rate<=1; every C>W is rejected without clipping",
+          "percent": "measured CPU service share of declared logical CPU count; NOT full machine/cluster CPU utilization",
+          "cumulative": "50/90/99% are earliest/latest cumulative timed CPU service crossings, not callback completion percentiles",
+          "profile_extent": "request attempt through max(request finish,last callback finish); includes observer tail after logical completion"
+        },
+        "selected_requests": [
+          {
+            "request": 6,
+            "status": "completed",
+            "scheduled_ns": 124986176795520,
+            "submitted_ns": 124986176853220,
+            "request_finished_ns": 124986250857140,
+            "profile_end_ns": 124986250857540,
+            "planned_latency_ms": 74.06162,
+            "attempt_to_request_finish_ms": 74.00392,
+            "profile_span_ms": 74.00432,
+            "last_callback_after_request_finish_ms": 0.0004,
+            "callbacks": 171,
+            "timed_cpu_ms": 1358.91991,
+            "operator_timed_cpu_ms": 1356.12225,
+            "sum_callback_wall_ms": 1361.64812,
+            "timed_cpu_average_cores_over_profile": 18.36271058230114,
+            "first_wave_stage0_cpu_fraction_of_all_callbacks": 0.4390316644930164,
+            "first_wave_all_depths_operator_cpu_fraction": 0.9566632138068674,
+            "roles": {
+              "init": {
+                "callbacks": 1,
+                "cpu_ms": 2.7875
+              },
+              "first-wave stage0": {
+                "callbacks": 80,
+                "cpu_ms": 596.60887
+              },
+              "later-wave stage0": {
+                "callbacks": 4,
+                "cpu_ms": 39.4056
+              },
+              "ordinary successors": {
+                "callbacks": 84,
+                "cpu_ms": 720.10778
+              },
+              "join": {
+                "callbacks": 2,
+                "cpu_ms": 0.010159999999999999
+              }
+            },
+            "cumulative_timed_cpu_crossing": {
+              "50": {
+                "earliest_possible_ms": 16.945299,
+                "latest_guaranteed_ms": 16.966166
+              },
+              "90": {
+                "earliest_possible_ms": 34.612634,
+                "latest_guaranteed_ms": 34.645838
+              },
+              "99": {
+                "earliest_possible_ms": 60.393491,
+                "latest_guaranteed_ms": 60.411181
+              }
+            }
+          }
+        ],
+        "source_sha256": {
+          "summary.json": "4532d36d5520c780e8ea1451e5d3662844e60860e22750facd12d8d0300802ca",
+          "requests.csv": "9772746f1c4bd9f4d26c99677370fc8b93e2d57eb03070ff40be6379384c47c6",
+          "tasks.csv": "a9c47dfbb3b80b61ec04a1aa8fb57919f17a6aac36af90ae18f9900ac8ad73e5"
+        }
+      }
+    }
+  ],
+  "capture_status": {
+    "new_valid_scheduler_profiles": 0,
+    "profile_failures_reported": 4,
+    "directories": [
+      "request-cpu-3m-home",
+      "request-cpu-3m-home1",
+      "request-cpu-375k-home",
+      "request-cpu-375k-outstanding"
+    ],
+    "explicit_error_line": 75,
+    "error": "line 1: malformed switch payload"
+  },
+  "followup_user_reply": {
+    "separate_from_log": true,
+    "three_primary_directories_same_error_confirmed": true,
+    "perf_version": "6.6.0-145.3.13.143.20260530.1c4ae507d1ee.oe2403sp3.aarch64",
+    "payload_example": "[000] 128173.903316950: sched:sched_switch: perf:824058 [120] D ==> migration/0:17 [0]"
+  },
+  "limits": [
+    "All-request summaries use 240 requests, not the prior 192-request planned cohort.",
+    "Request 6 is explicit, not representative.",
+    "CPU crossing bounds do not establish continuous saturation or demand.",
+    "New 375k profiles have not been recovered or interpreted yet."
+  ]
+}
