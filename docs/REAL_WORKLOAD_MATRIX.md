@@ -2,7 +2,7 @@
 
 **改造目标：所选CPU范围内，每个已核实的硬件cluster对应一个Folly子池；业务只持有RequestExecutor总池。** 当前独立实验范围有6个cluster，因此创建6池。池数随实际选定cluster数变化，不能固定成4，也不能将6写成所有部署的常数。
 
-**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑CPU矩阵、到达诊断或追加trace/阈值。异步完成源与驱动已加入工程，当前按[异步功能指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)进行编译及小规模功能验收；等待期间释放worker，恢复callback再推进图。性能对照待功能验收后另立合同。目标始终每个已核实硬件cluster一个池。**
+**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑旧CPU矩阵，也不追加该批的到达诊断、trace或阈值扫描。异步完成源与驱动已通过开发机及目标机小规模功能验收；等待期间释放worker，恢复callback再推进图。当前仅执行[异步首批八轮指南](TARGET_V2_ASYNC_PILOT_GUIDE.md)，区分恢复结构、固定等待与同合同home/O候选；完成即分析，不自动扩展。目标始终每个已核实硬件cluster一个池。**
 
 研究核心是**单个request内部的大扇出**造成home cluster短时饱和，以及借出计算资源和数据亲和的权衡；请求入口微突发是补充变量，不是替代该核心负载。
 
@@ -12,7 +12,7 @@
 
 ## 1. 新增变量及其准确含义
 
-4005之后的复核见[trace到目标实验的分步计划](TRACE_TO_TARGET_PLAN.md)：4007窗口、4008异质性、4009burst、4010补证与[观测扰动18轮](PARALLEL_COVERAGE_PLAN.md)均已完成，其后4012完成有限信号/线程干预。4013六轮机制诊断、4014九轮regular守护、4015短工作S四轮及4016 SD六轮也已完成；4017已完成[既有SD结果的到达核查](TARGET_V2_4017_REVIEW.md)，暂停扩大CPU性能矩阵；当前按[异步功能指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)验收新增完成源。固定延迟及对齐恢复已实现，真实RPC/随机分布及更一般的内部ready释放节奏仍待独立设计，不能将本页所有变量组合都视为当前必跑矩阵。
+4005之后的复核见[trace到目标实验的分步计划](TRACE_TO_TARGET_PLAN.md)：4007窗口、4008异质性、4009burst、4010补证与[观测扰动18轮](PARALLEL_COVERAGE_PLAN.md)均已完成，其后4012完成有限信号/线程干预。4013六轮机制诊断、4014九轮regular守护、4015短工作S四轮及4016 SD六轮也已完成；4017已完成[既有SD结果的到达核查](TARGET_V2_4017_REVIEW.md)，暂停扩大CPU性能矩阵；新增完成源已通过目标机小型功能验收，当前仅执行[异步首批八轮](TARGET_V2_ASYNC_PILOT_GUIDE.md)。固定延迟及对齐恢复已实现，真实RPC/随机分布及更一般的内部ready释放节奏仍待独立设计，不能将本页所有变量组合都视为当前必跑矩阵。
 
 | 参数 | 作用 | 保持与变化 |
 |---|---|---|
@@ -21,7 +21,7 @@
 | `--arrival burst --burst-size B` | 每批B个请求，批次周期`B/QPS`秒 | 平均批次强度为QPS；默认B=4 |
 | `--burst-spacing-us U` | 同批第i个请求计划在`批起点+i×U`微秒到达 | 0为同时计划到达；`(B-1)×U`不能超过批周期 |
 | `--sync-block-percent P --sync-block-us U` | 由seed/request/tag确定P%的算子，执行固定计算后在callback内同步sleep | 默认0/0；保留线程，**不是异步RPC，也不是100ms CPU的模拟** |
-| `--async-percent P --async-delay-us U --async-align-us G --async-capacity N` | 单辅助完成源，算子返回释放worker，固定延迟或网格到期后通过Continuation恢复 | 新affinity-v3-async合同；当前仅功能验收，不模拟真实网络，未ready等待不计入子池Q/I/O |
+| `--async-percent P --async-delay-us U --async-align-us G --async-capacity N` | 单辅助完成源，算子返回释放worker，固定延迟或网格到期后通过Continuation恢复 | 新affinity-v3-async合同；功能验收已通过，首批八轮筛查待目标机执行；不模拟真实网络，未ready等待不计入子池Q/I/O |
 | `--pool-count N` | 令软件池数独立于硬件partition数 | 仅`affinity=none`可与partition数不同；原默认仍一partition一池 |
 | `--policy active` | queue +已开始callback计数的评分对照 | callback包括睡眠、抢占，不能称kernel runnable |
 | `--policy cpu` | 缓存的worker CPU/运行队列等待时间与queue组合评分 | 后台采样；无效或过期时明确回退到outstanding |

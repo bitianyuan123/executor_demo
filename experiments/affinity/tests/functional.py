@@ -34,7 +34,7 @@ def check_matrix_plans():
     matrix_spec.loader.exec_module(matrix)
     historical = ('real-baseline', 'legacy-four-pool-replay')
     generic = ('routing', 'signals', 'arrival', 'blocking', 'follow', 'granularity',
-               'deployment', 'threads', 'overhead', 'follow-overhead')
+               'deployment', 'threads', 'overhead', 'follow-overhead', 'async-pilot')
     check(matrix.cases(historical[0]) == matrix.cases(historical[1]),
           'historical replay aliases have different workloads')
     check({case['threads'] for _, case in matrix.cases('threads')} ==
@@ -49,12 +49,14 @@ def check_matrix_plans():
         root = Path(temporary)
         serial = 0
 
-        def plan(suite, base, success=True, case_filter=None, seeds='101', thread_counts=None):
+        def plan(suite, base, success=True, case_filter=None, seeds='101', thread_counts=None,
+                 extra_args=()):
             nonlocal serial
             serial += 1
             output = root / f'{serial}-{suite}'
             command = [sys.executable, str(MATRIX), '--suite', suite, '--output', str(output),
                        '--seeds', seeds]
+            command.extend(extra_args)
             if case_filter is not None:
                 command.extend(['--cases', case_filter])
             if thread_counts is not None:
@@ -80,6 +82,8 @@ def check_matrix_plans():
                   f'{suite}: experiment role metadata does not describe the plan')
             check(metadata['research_target'] == 'one_pool_per_cluster',
                   f'{suite}: research target metadata missing')
+            check(metadata['sources_sha256'].get('include/executor_demo/AsyncCompletionSource.h'),
+                  f'{suite}: async source digest missing from provenance')
             selected = [name for name, _ in matrix.cases(suite)
                         if case_filter is None or name in {part.strip() for part in case_filter.split(',')}]
             if thread_counts is not None:
@@ -115,6 +119,38 @@ def check_matrix_plans():
         check(set(options) == {'home', 'outstanding'}, 'case filter added or lost a selected policy')
         check(all(case['--policy'] == name for name, case in options.items()),
               'case filter changed the selected policy configuration')
+        options, _ = plan('async-pilot', base, seeds='421')
+        expected = {(mode, policy, 0) for mode in ('d0', 'a0', 'a1')
+                    for policy in ('home', 'outstanding')}
+        expected |= {('a0', 'home', 1), ('a1', 'home', 1)}
+        check(set(options) == {f'{mode}-{policy}-trace{trace}' for mode, policy, trace in expected},
+              'async-pilot must retain exactly its eight predeclared cells')
+        for mode, policy, trace in expected:
+            cell = options[f'{mode}-{policy}-trace{trace}']
+            check((cell['--policy'], cell['--trace'], cell['--async-percent'], cell['--async-delay-us']) ==
+                  (policy, str(trace), '0' if mode == 'd0' else '50', '2000' if mode == 'a1' else '0'),
+                  'async-pilot cell changed its contract')
+            check(all(cell['--' + key] == value for key, value in matrix.ASYNC_PILOT_FIXED.items()),
+                  'async-pilot changed a fixed scheduling/source parameter')
+        plan('async-pilot', base, success=False, seeds='421,422')
+        plan('async-pilot', base, success=False, case_filter='a0-home-trace0')
+        for key in ('policy', 'trace', 'async-percent', 'async-delay-us'):
+            plan('async-pilot', {**base, '--' + key: '0'}, success=False)
+        for key in matrix.ASYNC_PILOT_FIXED:
+            plan('async-pilot', {**base, '--' + key: 'different'}, success=False)
+        for override in ({'--affinity': 'none'}, {'--pool-count': '4'}, {'--cpus': '0;;1'},
+                         {'--busy-high': '1.5'}, {'--return-low': '.5'}, {'--min-gain': '0'}):
+            plan('async-pilot', {**base, **override}, success=False)
+        for timeout in ('nan', 'inf', '-inf', '0', '-1'):
+            plan('async-pilot', base, success=False, extra_args=['--timeout-seconds=' + timeout])
+        previous = root / 'previous-partial-result'
+        previous.mkdir()
+        (previous / 'metadata.json').write_text('preserve incomplete-run provenance\n')
+        process = subprocess.run([sys.executable, str(MATRIX), '--output', str(previous)],
+                                 text=True, capture_output=True, timeout=10)
+        check(process.returncode != 0 and not (previous / 'plan.json').exists() and
+              (previous / 'metadata.json').read_text() == 'preserve incomplete-run provenance\n',
+              'matrix replaced evidence in a nonempty output directory')
         options, _ = plan('signals', base, case_filter='cpu')
         check(set(options) == {'cpu'}, 'single-case filter did not select its suite case')
         signal_base = {key: value for key, value in base.items() if key != '--threads'}

@@ -1,0 +1,107 @@
+{
+  "scope": "Development-host functional verification only. Two artificial CPU partitions 0;1, one worker/pool, four requests/cell. No target or production performance conclusions.",
+  "target_performance_executed": false,
+  "checks": {
+    "focused_ctest": [
+      "affinity_functional",
+      "affinity_async_analysis",
+      "affinity_async_pilot_report",
+      "affinity_trace_cost"
+    ],
+    "passed": 4,
+    "failed": 0,
+    "pilot_report_test_methods": 13,
+    "matrix_only_passed": true,
+    "guide_shell_syntax_passed": true,
+    "guide_commands_generated_eight_target_plans_without_running": true,
+    "complete_scaled_eight_cell_report_passed": true
+  },
+  "cases": [
+    {
+      "case": "d0-home-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 0,
+      "observed_tasks": null,
+      "checksum": "330129134726639472",
+      "trace": false
+    },
+    {
+      "case": "a1-home-trace1",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": 80,
+      "checksum": "330129134726639472",
+      "trace": true
+    },
+    {
+      "case": "d0-outstanding-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 0,
+      "observed_tasks": null,
+      "checksum": "330129134726639472",
+      "trace": false
+    },
+    {
+      "case": "a0-home-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": null,
+      "checksum": "330129134726639472",
+      "trace": false
+    },
+    {
+      "case": "a1-outstanding-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": null,
+      "checksum": "330129134726639472",
+      "trace": false
+    },
+    {
+      "case": "a0-outstanding-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": null,
+      "checksum": "330129134726639472",
+      "trace": false
+    },
+    {
+      "case": "a0-home-trace1",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": 80,
+      "checksum": "330129134726639472",
+      "trace": true
+    },
+    {
+      "case": "a1-home-trace0",
+      "requests": 4,
+      "completed": 4,
+      "failed_or_rejected": 0,
+      "planned_resumes": 28,
+      "observed_tasks": null,
+      "checksum": "330129134726639472",
+      "trace": false
+    }
+  ],
+  "source_sha256": {
+    "experiments/affinity/run_matrix.py": "5bebf11e09dd9e899aada05eb96e4642e78d20b27a4b6926051e1bf860aeaffc",
+    "experiments/affinity/async_pilot_report.py": "c4bed53a6196c3b138dc38fcc8e20f1701bb9fe4607d75ca3279089da2fc546b",
+    "experiments/affinity/tests/async_pilot_report_test.py": "164b272da3ee7ad374a85f27241c1d0843a8da2721b616467774f49b1ea7f454",
+    "experiments/affinity/tests/functional.py": "b795c7f562efc1ab8f3b44fe424c57a5bc973633f1e193f32d78d536626678bd"
+  }
+}

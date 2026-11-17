@@ -1,0 +1,54 @@
+{
+  "scope": "Target-host compilation and bounded functional verification only; no six-cluster performance or production RPC claims.",
+  "evidence": {
+    "source": "User-pasted target terminal report following TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md",
+    "raw_target_csv_independently_read": false,
+    "target_binary_independently_executed": false,
+    "git_pull_reported": "Already up to date",
+    "expected_revision": "0c79108",
+    "target_git_sha_printed": false,
+    "target_revision_independently_verified": false,
+    "revision_limit": "0c79108 is the expected implementation revision from the supplied guide. The terminal report did not print a git SHA or binary hash, so it does not independently establish the target checkout or binary identity."
+  },
+  "build": {
+    "reported_success": true,
+    "targets": [
+      "affinity_demo",
+      "async_completion_source_test",
+      "request_executor_test"
+    ]
+  },
+  "ctest": {
+    "selected_tests": [
+      "async_completion_source_test",
+      "request_executor_test",
+      "affinity_async_analysis"
+    ],
+    "tests": 3,
+    "passed": 3,
+    "failed": 0,
+    "reported_real_seconds": 0.35
+  },
+  "async_functional": {
+    "reported_passed": true,
+    "total_cases": 9,
+    "successful_cases": 8,
+    "expected_capacity_rejection_cases": 1,
+    "requests_per_case": 4,
+    "successful_request_count": 32,
+    "resources": "Two artificial partitions selected from the process's allowed CPUs, one worker per partition; not six-cluster performance validation.",
+    "coverage": [
+      "D0 direct execution with the original affinity-v2 schema",
+      "A0 zero-configured-delay external completion and resume",
+      "A1 nonzero-delay external completion and resume",
+      "Aligned due times",
+      "Deterministic 50 percent selection across home, parent/home continuation and all/fork scheduling configurations",
+      "Trace disabled with aggregate source accounting",
+      "Capacity rejection, cancellation and drain",
+      "Analysis entry points accept successful and recorded-failure schemas"
+    ],
+    "failure_case_limit": "The ninth case is expected to return nonzero in the demo and is accepted by the functional harness only after failure accounting checks. It is not a successful performance sample."
+  },
+  "conclusion": "The user-reported target compilation, three selected CTests and nine-case functional harness passed. Proceed to the separately specified bounded eight-run async pilot; do not infer latency, CPU cost, preferred load signal, optimal worker count or production representativeness from these functional results.",
+  "next_guide": "docs/TARGET_V2_ASYNC_PILOT_GUIDE.md"
+}

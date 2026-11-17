@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 import pathlib
 import platform
@@ -14,11 +15,25 @@ import sys
 
 SUITES = ("routing", "signals", "arrival", "cluster-baseline", "real-baseline",
           "legacy-four-pool-replay", "blocking", "follow", "granularity",
-          "deployment", "threads", "overhead", "follow-overhead")
+          "deployment", "threads", "overhead", "follow-overhead", "async-pilot")
 HISTORICAL_SUITES = ("real-baseline", "legacy-four-pool-replay")
+ASYNC_PILOT_FIXED = {"async-align-us": "0", "async-capacity": "4096",
+                     "balance-at": "all", "continuation": "parent",
+                     "home-policy": "rr", "batch-chunk": "1", "max-hops": "4",
+                     "cross-numa": "0", "cpu-sampling": "0", "page-sample": "0",
+                     "sync-block-percent": "0", "sync-block-us": "0"}
 
 
 def cases(suite):
+    if suite == "async-pilot":
+        cells = [(mode, policy, 0) for mode in ("d0", "a0", "a1")
+                 for policy in ("home", "outstanding")]
+        cells += [(mode, "home", 1) for mode in ("a0", "a1")]
+        return [(f"{mode}-{policy}-trace{trace}", {
+            **ASYNC_PILOT_FIXED, "policy": policy, "trace": str(trace),
+            "async-percent": "0" if mode == "d0" else "50",
+            "async-delay-us": "2000" if mode == "a1" else "0"})
+            for mode, policy, trace in cells]
     if suite == "routing":
         return [("home", {"policy": "home"}), ("queue", {"policy": "queue"}),
                 ("outstanding", {"policy": "outstanding"}), ("work", {"policy": "work"})]
@@ -114,21 +129,30 @@ def main():
                     for count in thread_counts for name, changes in selected]
     # Validate before creating output, including when a signals thread sweep is
     # requested. Count and work scores deliberately retain their own defaults.
-    if args.suite in ("routing", "signals", "blocking") and any(
+    if args.suite in ("routing", "signals", "blocking", "async-pilot") and any(
             key in base for key in ("--busy-high", "--return-low", "--min-gain")):
-        parser.error("routing/signals/blocking suites use policy-specific threshold defaults; tune thresholds in separate single-policy runs")
-    if args.suite == "cluster-baseline":
+        parser.error("routing/signals/blocking/async-pilot suites use policy-specific threshold defaults; tune thresholds in separate single-policy runs")
+    if args.suite == "async-pilot":
+        if args.cases is not None:
+            parser.error("async-pilot requires all eight cells; case filtering is not supported")
+        for key in ("policy", "trace", "async-percent", "async-delay-us"):
+            if "--" + key in base:
+                parser.error(f"async-pilot manages --{key}; omit it from base-args")
+        for key, value in ASYNC_PILOT_FIXED.items():
+            if "--" + key in base and base["--" + key] != value:
+                parser.error(f"async-pilot requires --{key} {value}")
+    if args.suite in ("cluster-baseline", "async-pilot"):
         if base.get("--affinity") != "cluster":
-            parser.error("cluster-baseline requires explicit --base-args --affinity cluster; affinity is not silently overridden")
+            parser.error(f"{args.suite} requires explicit --base-args --affinity cluster; affinity is not silently overridden")
         partitions = base.get("--cpus", "").split(";")
         if not all(partition.strip() for partition in partitions):
-            parser.error("cluster-baseline requires explicit nonempty --cpus hardware-cluster partitions without empty segments")
+            parser.error(f"{args.suite} requires explicit nonempty --cpus hardware-cluster partitions without empty segments")
         try:
             pool_count = int(base.get("--pool-count", "0"))
         except ValueError:
-            parser.error("cluster-baseline pool-count must be omitted or 0")
+            parser.error(f"{args.suite} pool-count must be omitted or 0")
         if pool_count != 0:
-            parser.error("cluster-baseline pool-count must be omitted or 0; one pool is derived from each --cpus partition")
+            parser.error(f"{args.suite} pool-count must be omitted or 0; one pool is derived from each --cpus partition")
     if args.suite == "real-baseline":
         print("WARNING: real-baseline is deprecated and is only a historical capture replay "
               "(4 pools, 128 threads, affinity=none, 16 QPS), not the one-pool-per-cluster target. "
@@ -137,12 +161,14 @@ def main():
     seeds = [int(x) for x in args.seeds.split(",")]
     if not seeds or len(set(seeds)) != len(seeds) or any(x < 0 for x in seeds):
         parser.error("seeds must be distinct nonnegative integers")
-    if args.timeout_seconds <= 0:
-        parser.error("timeout must be positive")
+    if args.suite == "async-pilot" and len(seeds) != 1:
+        parser.error("async-pilot is one bounded eight-run block; specify exactly one seed")
+    if not math.isfinite(args.timeout_seconds) or args.timeout_seconds <= 0:
+        parser.error("timeout must be finite and positive")
     root = pathlib.Path(args.output)
+    if root.exists() and (not root.is_dir() or any(root.iterdir())):
+        parser.error("output is not an empty directory; preserve prior results and choose a new directory")
     root.mkdir(parents=True, exist_ok=True)
-    if (root / "plan.json").exists():
-        parser.error("output already has a plan; choose a new directory")
     def digest(path):
         if not path.is_file():
             return None
@@ -153,6 +179,7 @@ def main():
         return value.hexdigest()
     source_root = pathlib.Path(__file__).resolve().parent
     sources = ["main.cpp", "include/executor_demo/RequestExecutor.h",
+               "include/executor_demo/AsyncCompletionSource.h",
                "include/executor_demo/LocalityWorkload.h",
                "include/executor_demo/LoadPolicy.h", "include/executor_demo/LinuxSchedstatLoadProvider.h",
                "../dag/include/executor_demo/BusinessExecutor.h"]
@@ -206,7 +233,8 @@ def main():
                   f"request_peak={summary['peak_inflight']} process_cpu_s={summary['process_cpu_s']:.6f} "
                   f"arrival_hash={summary['arrival_hash']} fixed_iterations={summary.get('planned_total_iterations', 'unknown')}", flush=True)
     if args.run:
-        print("Report: " + shlex.join([sys.executable, str(pathlib.Path(__file__).with_name("report.py"))] + [p["directory"] for p in plan]))
+        report_name = "async_pilot_report.py" if args.suite == "async-pilot" else "report.py"
+        print("Report: " + shlex.join([sys.executable, str(pathlib.Path(__file__).with_name(report_name))] + [p["directory"] for p in plan]))
     return 0
 
 

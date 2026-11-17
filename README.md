@@ -36,7 +36,7 @@
 - [4015短工作校准](docs/TARGET_V2_4015_REVIEW.md)：短工作S四轮完成；trace0的16/128线程均值几乎相同，详细trace的CPU/请求增加1.83%/2.28%，四轮peak-inflight均1。
 - [4016密度结论](docs/TARGET_V2_4016_REVIEW.md)：SD六轮全部1920成功、零失败，正式cohort各1536、peak-inflight均3；同线程Q/O相对home请求均值下降33.36%～34.40%，CPU/请求增加6.01%～7.03%。Q/O排名随线程档变化，尚无统一赢家。
 - [4017最新结论](docs/TARGET_V2_4017_REVIEW.md)：一次到达核查完成；home高lag集中于序号相位但原因未知，Q/O响应更短同时重叠更少，不作为因果证明。CPU族结果冻结。
-- [当前异步功能验收](docs/TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)：有界单线程外部完成源、释放worker后恢复图、取消与排空已加入工程；先编译/小规模功能，不追加ARM性能矩阵。实现与计量合同见[异步设计](docs/ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)。
+- [当前异步首批八轮](docs/TARGET_V2_ASYNC_PILOT_GUIDE.md)：目标机编译及小规模功能验收已通过；固定每cluster一池、16线程，区分直接推进、零延迟恢复、固定等待，以及同合同home/O候选。八轮完成即分析。实现与计量合同见[异步设计](docs/ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)。
 - [真实应用agent分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)：只读探索、设计、实现、验收和有限迭代；候选初值与梯度由当地事实约束，不要求跨环境联网。另有[纯prompt交接版](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)，不需要给接收方传任何文件。
 - [持续压力门控候选审阅](docs/PERSISTENT_PRESSURE_REVIEW.md)：复核外部0.85ms/3ms说法，明确观测与状态机缺口；尚未修改运行策略。
 - [trace补证与后续目标实验](docs/TRACE_TO_TARGET_PLAN.md)：只读已有JSON分析同期压力与连续高桶；明确task异质性、线程/信号、异步RPC与正式尾部验证的顺序和实现缺口。
@@ -92,7 +92,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前已完成阶段3与截至4017的cluster机制、观测、线程/信号、短工作及到达核查。下一步按[异步功能指南](docs/TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)编译并进行小规模验收，不重跑CPU工作族；新模式使用affinity-v3-async，旧v2结果继续支持。真实应用当地agent仍按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)核实本地实现，生产代表性与尾部验收尚未完成。
+当前已完成阶段3、截至4017的cluster机制与到达核查，以及异步路径的目标机小规模功能验收。下一步按[异步首批八轮指南](docs/TARGET_V2_ASYNC_PILOT_GUIDE.md)做固定合同的结构与调度筛查，不扩大CPU工作族矩阵；新模式使用affinity-v3-async，旧v2结果继续支持。真实应用当地agent仍按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)核实本地实现，生产代表性与尾部验收尚未完成。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 
