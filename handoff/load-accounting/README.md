@@ -7,6 +7,7 @@
 |[business/](business/README.md)|无需修改Folly的业务统一提交包装器、示例、真实线程池测试|
 |[folly/](folly/README.md)|原生Folly补丁的独立使用示例与定向测试构建入口|
 |[FOLLY_PORTING.md](FOLLY_PORTING.md)|基于本地源码的改造点、生命周期与跨版本迁移说明|
+|[FOLLY_EXISTING_STATE_VS_N.md](FOLLY_EXISTING_STATE_VS_N.md)|独立分析现有队列、许可、线程状态、totalTaskCount与新增N的区别，附流程图和伪代码|
 |[PROMPT_ONLY.md](PROMPT_ONLY.md)|两个可独立复制的完整prompt；不能传文件时只需复制对应prompt|
 |[VALIDATION.md](VALIDATION.md)|开发机实际验证记录及真实环境最小验收要求|
 |`folly/native-outstanding.patch`|对明确基线生成的真实代码补丁；不同版本不能盲贴|
