@@ -26,6 +26,74 @@ def read_csv(name):
         return list(csv.DictReader(handle))
 
 
+def extract_request_completion():
+    """Supplementary offline output from the same two ARM runs, not a repeat."""
+    source = ROOT/'request_completion.log'
+    if not source.exists():
+        return
+    raw = source.read_bytes()
+    lines = raw.decode().splitlines()
+    assert lines.count('comparison_valid=true') == 1
+    assert lines.count('comparison_issues=') == 1
+    assert 'functional_only=false' in lines
+    assert 'request cohort: [10.0, 60.0) seconds by request_planned_ns; retain all releases and drain completions' in lines
+    tables = {}
+    for name, prefix in (
+        ('request_completion_summary', 'policy,status,observed_requests,'),
+        ('request_completion_comparisons', 'baseline,policy,metric,'),
+    ):
+        starts = [i for i, line in enumerate(lines) if line.startswith(prefix)]
+        assert len(starts) == 1, name
+        start = starts[0]
+        block = [lines[start].split(' (negative=')[0]]
+        for line in lines[start+1:]:
+            if not line:
+                break
+            block.append(line)
+        tables[name] = list(csv.DictReader(block))
+        (ROOT/(name+'.csv')).write_text('\n'.join(block)+'\n')
+    rows = tables['request_completion_summary']
+    metrics = ('request_planned_to_end', 'request_submit_to_end',
+               'initial_planned_to_end', 'last_planned_release_offset')
+    indexed = {(r['policy'], r['metric']): r for r in rows}
+    assert len(rows) == 8 and set(indexed) == {
+        (p, m) for p in ('home', 'source_only') for m in metrics}
+    assert all(r['status'] == 'ok' and r['observed_requests'] == r['request_samples'] == '600'
+               and r['tail_quality'] == 'LOW_TAIL' and float(r['nominal_top_1pct_requests']) == 6 for r in rows)
+    changes = tables['request_completion_comparisons']
+    assert len(changes) == 3 and {r['metric'] for r in changes} == set(metrics[:3])
+    derived = []
+    for row in changes:
+        assert row['baseline'] == 'home' and row['policy'] == 'source_only'
+        for kind in ('mean', 'p99'):
+            before = float(indexed['home', row['metric']][kind+'_ms'])
+            after = float(indexed['source_only', row['metric']][kind+'_ms'])
+            pct = float(row[kind+'_change_pct'])
+            # Both latency inputs and the printed percentage have been rounded.
+            lower = 100*((after-.0005)/(before+.0005)-1)
+            upper = 100*((after+.0005)/(before-.0005)-1)
+            assert lower-.0005 <= pct <= upper+.0005
+            derived.append({'metric': row['metric'], 'statistic': kind,
+                'change_ms_from_printed_values': round(after-before, 3),
+                'change_pct_reported': pct})
+    review = json.loads(next(line.split('=', 1)[1] for line in lines if line.startswith('home_waveform_review=')))
+    assert review == json.loads((ROOT/'review.json').read_text())
+    gate = json.loads(next(line.split('=', 1)[1] for line in lines if line.startswith('home_waveform_gate=')))
+    assert gate['passed'] is False and gate['status'] == 'failed'
+    assert gate['reasons'] == ['fragmented_onset_fraction_exceeds_10pct']
+    for policy in ('home', 'source_only'):
+        row = indexed[policy, 'last_planned_release_offset']
+        assert float(row['mean_ms']) == float(row['p99_ms']) == 494.75
+    metadata = {'source': source.name, 'source_sha256': hashlib.sha256(raw).hexdigest(),
+        'source_bytes': len(raw), 'new_workload_runs': 0,
+        'request_samples_per_policy': 600, 'comparison_reported_valid': True,
+        'review_matches_3007': True, 'strict_passed': False,
+        'summary_rows': len(rows), 'comparison_rows': len(changes),
+        'derived_changes': derived,
+        'evidence_scope': 'Printed offline request summaries from the existing ARM runs. No local raw-task p99 recomputation; differences from rounded values are approximate. No new replication.'}
+    (ROOT/'request_completion_evidence.json').write_text(json.dumps(metadata, indent=2)+'\n')
+
+
 def main():
     raw = (ROOT/'3007.log').read_bytes()
     lines = raw.decode().splitlines()
@@ -109,6 +177,7 @@ def main():
         'repeat_note': 'Two identical report prints and two home precheck/skip messages are not repeated workload trials.'}
     assert metadata['home_skip_messages'] == 2 and metadata['source_completed_messages'] == 1
     (ROOT/'extraction.json').write_text(json.dumps(metadata, indent=2)+'\n')
+    extract_request_completion()
     print(json.dumps(metadata, indent=2))
 
 

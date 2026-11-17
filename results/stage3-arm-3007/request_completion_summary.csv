@@ -1,0 +1,9 @@
+policy,status,observed_requests,request_samples,tail_quality,nominal_top_1pct_requests,metric,mean_ms,p99_ms
+home,ok,600,600,LOW_TAIL,6.000,request_planned_to_end,551.599,568.466
+home,ok,600,600,LOW_TAIL,6.000,request_submit_to_end,551.541,568.404
+home,ok,600,600,LOW_TAIL,6.000,initial_planned_to_end,10.291,13.642
+home,ok,600,600,LOW_TAIL,6.000,last_planned_release_offset,494.750,494.750
+source_only,ok,600,600,LOW_TAIL,6.000,request_planned_to_end,551.283,567.877
+source_only,ok,600,600,LOW_TAIL,6.000,request_submit_to_end,551.226,567.822
+source_only,ok,600,600,LOW_TAIL,6.000,initial_planned_to_end,3.310,4.784
+source_only,ok,600,600,LOW_TAIL,6.000,last_planned_release_offset,494.750,494.750

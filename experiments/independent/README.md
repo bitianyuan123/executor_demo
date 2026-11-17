@@ -1,6 +1,6 @@
 # 独立任务负载实验：工程与运行指南
 
-**当前短峰开关对照已完成发压，见[3007报告](../../stages/03-independent/ARM_3007_SHORT_PEAK_POLICY_REPORT.md)。** initial子任务提交到完成p99约降低80.4%，steady和全体子任务完成p99基本不变；整个请求全部完成的主指标仍待离线补算。[短峰指南顶部](../../stages/03-independent/SHORT_PEAK_GUIDE.md)给出只读已有任务数据的分析命令，不需补跑、重编译或扩大矩阵。
+**当前短峰对照及请求级离线补充已完成，见[3007报告](../../stages/03-independent/ARM_3007_SHORT_PEAK_POLICY_REPORT.md)。** 完整请求p99为568.466→567.877ms，基本不变；初始80项全部完成p99为13.642→4.784ms，下降64.930%。初始单项p99约降低80.4%是辅助诊断，不能替代请求收益。[短峰指南](../../stages/03-independent/SHORT_PEAK_GUIDE.md)保留复现命令，当前无需补跑或收集。
 
 这个项目只使用原版 Folly CPUThreadPoolExecutor。每次 arrival 提交一个或多个独立 CPU 任务；默认保留原来的 home 池投递，没有 DAG、RPC 或阶段5扩展。先阅读[阶段3设计与分析方案](../../stages/03-independent/README.md)。
 

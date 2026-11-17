@@ -1,0 +1,43 @@
+[root@localhost executor_demo-stage3-balance]# git pull --ff-only origin experiment/stage3-load-balance-20261115
+python3 experiments/independent/scripts/analyze_request_wave.py \
+  --plan results/short-peak-arm/plan.json \
+  --out results/short-peak-arm/request-analysis \
+  > results/short-peak-arm/request-analysis-console.txt
+cat results/short-peak-arm/request-analysis/request_completion.txt
+From [https://github.com/bitianyuan123/executor_demo](https://github.com/bitianyuan123/executor_demo)
+ * branch            experiment/stage3-load-balance-20261115 -> FETCH_HEAD
+Already up to date.
+REQUEST COMPLETION — OFFLINE, NO NEW WORKLOAD
+request cohort: [10.0, 60.0) seconds by request_planned_ns; retain all releases and drain completions
+One sample per complete request; all times in milliseconds; p99=nearest rank.
+comparison_valid=true
+comparison_issues=
+functional_only=false
+home_waveform_gate={"comparison_allowed": false, "home_request_waveform": {"alignment": "actual_first_initial_submit", "anchor_lag_ms": {"max": 0.147254, "median": 0.057197, "n": 600, "p90": 0.0612}, "applicable": true, "background": "30ms after actual first initial submit until min(anchor+home_period,next_same_home_actual_submit)", "background_mean_pct": {"max": 54.503091223404255, "median": 49.25509667553192, "n": 600, "p90": 51.36677792553191}, "clipped_by_next_request": 298, "complete_fraction": 1.0, "complete_requests": 600, "contract": {"background_high_fraction_p90_max": 0.1, "background_longest_high_p90_max_ms": 10.0, "background_median_range_pct": [35.0, 65.0], "extra_onset_high_tolerance_ms": 2.0, "high_pct": 90.0, "kind": "provisional_synthetic_profile_acceptance_not_business_calibration", "maximum_bin_ms": 2.0, "maximum_fragmented_fraction": 0.1, "median_peak_width_range_ms": [5.0, 20.0], "minimum_background_window_fraction": 0.9, "minimum_complete_fraction": 0.95, "minimum_complete_requests": 30, "minimum_onset_fraction": 0.9, "near_onset_start_by_ms": 5.0, "onset_region_end_ms": 30.0, "p90_peak_width_max_ms": 25.0, "sensitivity_high_pct": [80.0, 90.0, 95.0], "union_mean_range_pct": [45.0, 55.0], "version": 1}, "issues": ["fragmented_onset_fraction_exceeds_10pct"], "passed": false, "period_ms": 500.0, "reasons": ["fragmented_onset_fraction_exceeds_10pct"], "requests": 600, "sensitivity": {"80": {"background_high_fraction": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}, "background_longest_high_ms": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}, "fragmented_fraction": 0.07333333333333333, "onset_fraction": 1.0, "onset_width_ms": {"max": 13.0, "median": 9.0, "n": 600, "p90": 10.0}}, "90": {"background_high_fraction": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}, "background_longest_high_ms": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}, "fragmented_fraction": 0.13833333333333334, "onset_fraction": 0.995, "onset_width_ms": {"max": 12.0, "median": 8.0, "n": 597, "p90": 10.0}}, "95": {"background_high_fraction": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}, "background_longest_high_ms": {"max": 0.0, "median": 0.0, "n": 600, "p90": 0.0}, "fragmented_fraction": 0.13, "onset_fraction": 0.9416666666666667, "onset_width_ms": {"max": 12.0, "median": 7.0, "n": 565, "p90": 9.0}}}, "status": "failed", "union_mean_pct": 50.200528948333336}, "passed": false, "reasons": ["fragmented_onset_fraction_exceeds_10pct"], "status": "failed"}
+home_waveform_review={"background_high_fraction_max": 0.0, "fragmented_requests": 83, "home_identity_sha256": "1c871a3d45059f47f87c1caeee7068df87d403db983390e98b5a911c8d56a193", "home_trace_sha256": "6474abe4155245fa37318ca3fcbd3ed69025971dc1bf32c87424d5c71c1c4f1e", "inspection_path": "/home/bty/rank_demo/executor_demo-stage3-balance/results/short-peak-arm/short-peak-inspection/inspection.json", "inspection_sha256": "d6cdc89cc38ed93ce27e576be785b4e18823e141005958d3aa65a414f99c8e80", "last_high_end_max_ms": 13.0, "late_20_30_high_max_ms": 0.0, "plan_sha256": "65be70f3be943b00a1bda189e498dd53fde5b81a7bdea180c2e560cabb95074c", "reason": "Explicit post-result review: all observed >=90% segments end within 20ms; no late or background high occupancy. Fragmentation-only strict failure remains failed.", "requests": 600, "status": "accepted_posthoc"}
+request_planned_to_end=max(all task end_ns) - request_planned_ns; PRIMARY
+request_submit_to_end=max(all task end_ns) - min(all task submit_ns); secondary
+initial_planned_to_end=max(initial task end_ns) - request_planned_ns; initial set completion
+last_planned_release_offset=max(all task planned_ns) - request_planned_ns; input release schedule, NOT latency
+
+policy,status,observed_requests,request_samples,tail_quality,nominal_top_1pct_requests,metric,mean_ms,p99_ms
+home,ok,600,600,LOW_TAIL,6.000,request_planned_to_end,551.599,568.466
+home,ok,600,600,LOW_TAIL,6.000,request_submit_to_end,551.541,568.404
+home,ok,600,600,LOW_TAIL,6.000,initial_planned_to_end,10.291,13.642
+home,ok,600,600,LOW_TAIL,6.000,last_planned_release_offset,494.750,494.750
+source_only,ok,600,600,LOW_TAIL,6.000,request_planned_to_end,551.283,567.877
+source_only,ok,600,600,LOW_TAIL,6.000,request_submit_to_end,551.226,567.822
+source_only,ok,600,600,LOW_TAIL,6.000,initial_planned_to_end,3.310,4.784
+source_only,ok,600,600,LOW_TAIL,6.000,last_planned_release_offset,494.750,494.750
+
+baseline,policy,metric,mean_change_pct,p99_change_pct (negative=lower latency)
+home,source_only,request_planned_to_end,-0.057,-0.103
+home,source_only,request_submit_to_end,-0.057,-0.102
+home,source_only,initial_planned_to_end,-67.836,-64.930
+
+LOW_TAIL: fewer than 1000 requests; 600 requests provide about 6 nominal tail observations. Single-run descriptive comparison, no significance claim.
+Invalid runs have no request latency estimates; observed counts alone do not prove coverage.
+Steady releases are predetermined, independent of initial completion. Last planned release is an input lower bound, not scheduling wait.
+Initial set completion is not a DAG barrier or complete request. Pooled task p99 remains secondary and cannot reconstruct request p99.
+comparison_valid does not change the original home waveform verdict; any post-result review remains separate.
+[root@localhost executor_demo-stage3-balance]#

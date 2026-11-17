@@ -1,8 +1,8 @@
 # 阶段3修订：短CPU峰值与持续背景负载
 
-**3007已完成发压；当前只需离线补齐请求全部完成时延，不重编译、不重新运行负载。** [对照报告](ARM_3007_SHORT_PEAK_POLICY_REPORT.md)已明确：initial的单项S p99约降低80.4%，尚不能说明整个请求收益。CPU局部峰宽缩短但并集瞬时峰值提高。
+**3007及请求级离线补充均已完成，当前无需执行更多命令。** [对照报告](ARM_3007_SHORT_PEAK_POLICY_REPORT.md)主结论：完整请求p99为568.466→567.877ms，基本不变；初始80项全部完成p99为13.642→4.784ms，下降64.930%。CPU局部峰宽缩短但并集瞬时峰值提高，不能将初始收益替代完整请求收益。
 
-在原测试目录执行以下命令，只更新分析脚本并读取已有`tasks.csv`，输出放到新的`request-analysis`目录，保留原报告：
+以下仅保留离线复现命令，已有本次请求级结果时无需重做。命令更新分析脚本并读取已有`tasks.csv`，输出到`request-analysis`目录，保留原`analysis`报告：
 
 ```bash
 git pull --ff-only origin experiment/stage3-load-balance-20261115
@@ -13,9 +13,9 @@ python3 experiments/independent/scripts/analyze_request_wave.py \
 cat results/short-peak-arm/request-analysis/request_completion.txt
 ```
 
-只需贴回最后一份短摘要。`request_planned_to_end`是主指标：每请求的最后结束减计划到达；`request_submit_to_end`改用首项实际提交起表；`initial_planned_to_end`是初始80项**全部**完成；`last_planned_release_offset`仅说明输入释放窗口，不是调度等待。本次应为每策略600条请求样本，`LOW_TAIL`提示约6条名义尾部观测，不要求因此重复测试。校验无效时不输出成功者请求p99；摘要会保留无效原因与原home形态判定。
+回传摘要已归档，无需再次粘贴。`request_planned_to_end`是主指标：每请求的最后结束减计划到达；`request_submit_to_end`改用首项实际提交起表；`initial_planned_to_end`是初始80项**全部**完成；`last_planned_release_offset`仅说明输入释放窗口，不是调度等待。本次每策略600条请求样本，`LOW_TAIL`提示约6条名义尾部观测，不要求因此重复测试。校验无效时不输出成功者请求p99；摘要保留了原home严格失败及事后复核记录。
 
-请求完成可能仍受494.75ms最后释放时刻支配，不能以子任务p99或initial完成替代请求主指标。新增统计代码已通过31项分析测试、22项runner测试，并用已有开发数据完成离线验证；开发数值不外推ARM。下文为历史复现流程，已有3007结果时不要重新发压。
+完整请求结果与494.75ms固定末项释放及后段任务主导终点的解释相符，不能以子任务p99或initial完成替代请求主指标，也不能扣除这段输入时间来制造请求收益。统计代码已通过31项分析测试、22项runner测试，并用已有开发数据完成离线验证；开发数值不外推ARM。下文为历史复现流程，已有3007结果时不要重新发压。
 
 **3006后的历史续跑流程：复用home，仅补source_only一次（3007已执行）。** [完整分析与复核依据](ARM_3006_SHORT_PEAK_REPORT.md)：598波存在≥90%高位，全部最晚13ms结束；另2波未达到该阈值，20–30ms及后段高位max均为0。原碎峰83/600仍使严格判据失败；本次单独记录事后短包络复核，不篡改为严格通过。
 

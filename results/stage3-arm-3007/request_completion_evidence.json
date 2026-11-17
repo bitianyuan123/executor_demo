@@ -1,0 +1,51 @@
+{
+  "source": "request_completion.log",
+  "source_sha256": "fa25dd4e370471e79fe05abd43de0c9c9539a12f71b018088d582d7606b05ec4",
+  "source_bytes": 6250,
+  "new_workload_runs": 0,
+  "request_samples_per_policy": 600,
+  "comparison_reported_valid": true,
+  "review_matches_3007": true,
+  "strict_passed": false,
+  "summary_rows": 8,
+  "comparison_rows": 3,
+  "derived_changes": [
+    {
+      "metric": "request_planned_to_end",
+      "statistic": "mean",
+      "change_ms_from_printed_values": -0.316,
+      "change_pct_reported": -0.057
+    },
+    {
+      "metric": "request_planned_to_end",
+      "statistic": "p99",
+      "change_ms_from_printed_values": -0.589,
+      "change_pct_reported": -0.103
+    },
+    {
+      "metric": "request_submit_to_end",
+      "statistic": "mean",
+      "change_ms_from_printed_values": -0.315,
+      "change_pct_reported": -0.057
+    },
+    {
+      "metric": "request_submit_to_end",
+      "statistic": "p99",
+      "change_ms_from_printed_values": -0.582,
+      "change_pct_reported": -0.102
+    },
+    {
+      "metric": "initial_planned_to_end",
+      "statistic": "mean",
+      "change_ms_from_printed_values": -6.981,
+      "change_pct_reported": -67.836
+    },
+    {
+      "metric": "initial_planned_to_end",
+      "statistic": "p99",
+      "change_ms_from_printed_values": -8.858,
+      "change_pct_reported": -64.93
+    }
+  ],
+  "evidence_scope": "Printed offline request summaries from the existing ARM runs. No local raw-task p99 recomputation; differences from rounded values are approximate. No new replication."
+}
