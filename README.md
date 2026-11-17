@@ -18,6 +18,8 @@
 
 当前总览见[总目标、实现难点与验收覆盖](docs/GOALS_AND_COVERAGE.md)：集中区分已实现、已验证和待目标机证据，并说明阶段3条件时延如何接到阶段4策略干预。v2性能摘要用`report.py`，负载分桶、首波扇出与积压趋势用`diagnose.py`，实际burst跨度、请求均值分解与后继角色用`flow_report.py`；这些工具不输出生产最优策略或统一的负载→request p99公式。
 
+[截至4020的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前为何无需追加实验、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；下一步以交接和当地实现核实为主。
+
 - [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
 - [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。
 - [每cluster一池的实验矩阵](docs/REAL_WORKLOAD_MATRIX.md)：主线验证单request扇出、线程过配、NUMA借出与数据亲和；四池仅作可选历史重放。
