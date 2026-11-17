@@ -1,0 +1,71 @@
+{
+  "scope": "Development-host functional validation of request CPU shape diagnostics; no target ARM performance or workload-fidelity acceptance.",
+  "source_sha256": {
+    "experiments/affinity/main.cpp": "4799af0bb4fe1999c4ffea72adf03a8b31ae93d85929cc1d16b584d69f562879",
+    "experiments/affinity/request_cpu_shape.py": "1799936a45b9504449355f6c3398ba7f2f731d592201b3849c694dbed7fba81a",
+    "experiments/affinity/request_sched_profile.py": "abb266af2341ac4dea132947cd8d255a851a327a621ceba547487de940566b7c",
+    "scripts/run_request_cpu_capture.py": "74deaf38ea3a39100340aa0018a8048021e2f1a2f516aa0e98a713d97b838e29",
+    "scripts/request_cpu_capture_workload.py": "144f33c57281ae5f51418832ddd868228aa0b1481db3b74cd7c312a702ff00dc"
+  },
+  "build": {
+    "target": "affinity_demo",
+    "result": "passed",
+    "folly_rebuilt": false
+  },
+  "ctest": {
+    "result": "6/6 passed",
+    "selected": [
+      "affinity_functional",
+      "affinity_async_functional",
+      "affinity_async_analysis",
+      "affinity_request_cpu_shape",
+      "affinity_request_sched_profile",
+      "affinity_request_cpu_capture"
+    ],
+    "new_unit_tests": {
+      "request_cpu_shape": 12,
+      "request_sched_profile": 12,
+      "request_cpu_capture": 21
+    },
+    "functional_complete_runs": 22,
+    "async_successful_runs": 8,
+    "async_expected_rejections": 1,
+    "post_review_rerun": "affinity_request_cpu_capture passed after boundary helper changes; other implementation unchanged since 6/6 CTest pass."
+  },
+  "scheduler_capture_smoke": {
+    "result": "passed",
+    "resources": "Artificial two partitions 0;1, one worker per pool; functional only.",
+    "requests": 3,
+    "request_id": 1,
+    "qps": 10,
+    "iterations": 10000,
+    "accesses": 100,
+    "bin_ms": 1,
+    "capture_sha256": "596263451e24774e49125c6e10dcb36f3a96fae4d066d02ff3775f9bd4208936",
+    "source_trace_sha256": "bde1306890c68778bc62bc444fe68df96b44a552de7c870921ccdf5f82357ddf",
+    "capture_hash_stable_after_profile": true,
+    "offline_second_request_bin_ms": 5,
+    "offline_second_request_id": 2,
+    "offline_second_request_result": "passed",
+    "timings_are_performance_evidence": false,
+    "boundary_metadata_sha256": "f833351bffb23b4a8fe76aa8537dc186620e25356f44866b38b2ada6eb02384f",
+    "pre_and_post_cpu_boundaries_passed": true
+  },
+  "existing_csv_tool": {
+    "result": "passed on local synchronous and asynchronous result directories",
+    "target_4021_csv_available_locally": false
+  },
+  "report": {
+    "validation_checks": 31361,
+    "validation_errors": 0,
+    "pdf_pages": 41,
+    "figures": 15,
+    "new_section_page_visually_inspected": 40
+  },
+  "limits": [
+    "No new 96-CPU target capture was executed here.",
+    "The old CSV tool reports CPU service bounds, not measured fine-bin CPU.",
+    "Scheduler profiles report callback-associated residence with interrupt/accounting scope explicitly retained.",
+    "The new two-scale target runs are diagnostics, not p99 acceptance or proof of production workload fidelity."
+  ]
+}

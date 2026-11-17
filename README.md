@@ -2,6 +2,8 @@
 
 **阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从一条请求的量化到达、80路扇出与后继执行开始，逐点标出Q/I/O/R的读写位置和算子选池过程；用15张图按六种明确负载比较时延、CPU/请求和改投率，再解释旧trace如何指导每cluster一池；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。新增[4021同轮CPU审阅](docs/TARGET_V2_4021_REVIEW.md)已补齐均匀12QPS、首波80算子、每池16线程的六轮CPU窗口与时延/改投对照：平均CPU约17%不变，局部热点和请求等待显著下降。[CPU采集指南](reports/final_review/CPU_CAPTURE_GUIDE.md)保留复现命令，无需为同目的重跑。
 
+**新增代表性核查：** [请求内CPU形态指南](docs/REQUEST_CPU_SHAPE_GUIDE.md)说明80×2模型为何可能形成较长压力、历史未绑核短脉冲为何不能直接等同；提供旧CSV服务上下界和新sched_switch的1 ms请求归因。均衡机制已验证不代表生产收益或负载形状已验收。
+
 按业务理解 → Folly机制 → 独立任务负载 → 复杂DAG → 能力归属逐步验证。**一个仓库管理五个阶段，但简单任务实验、DAG实验和成本探针是独立CMake工程**，无需一次运行所有实验。阶段2～4仅依赖原版Folly；阶段5才需要实验扩展。
 
 | 阶段 | 独立交付 | 要回答的问题 | 验证入口 |
@@ -97,7 +99,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前已完成阶段3、截至4017的cluster机制与到达核查、异步功能验收、4018八轮对照、[4020四轮机制补证](docs/TARGET_V2_4020_REVIEW.md)及[4021六轮CPU对照](docs/TARGET_V2_4021_REVIEW.md)。冻结合成模型、计数评分与阈值，不自动追加性能批次或生产trace；新模式使用affinity-v3-async，旧v2结果继续支持。下一步优先按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)交给当地agent只读核实、设计，再在已有授权和预定预算内实施与验收。生产访问不足可止于离线交接；生产代表性和正式多轮性能验收仍未完成。此次更新分析工具、结果与文档，不修改C++，无需重编。
+当前已完成阶段3、截至4017的cluster机制与到达核查、异步功能验收、4018八轮对照、[4020四轮机制补证](docs/TARGET_V2_4020_REVIEW.md)及[4021六轮CPU对照](docs/TARGET_V2_4021_REVIEW.md)。冻结合成模型、计数评分与阈值，不自动追加性能批次或生产trace；新模式使用affinity-v3-async，旧v2结果继续支持。下一步优先按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)交给当地agent只读核实、设计，再在已有授权和预定预算内实施与验收。生产访问不足可止于离线交接；生产代表性和正式多轮性能验收仍未完成。4021本身无需重跑；新增请求形态分析可先读旧CSV，后续事件归因须重编affinity_demo以导出worker TID，调度逻辑不变。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 

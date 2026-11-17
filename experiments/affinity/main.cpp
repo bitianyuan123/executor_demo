@@ -20,6 +20,8 @@
 #include <sstream>
 #include <thread>
 #include <time.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 using Pool = executor_demo::RequestExecutor;
 using Work = executor_demo::LocalityWorkload;
@@ -434,6 +436,7 @@ struct TaskRow {
   Pool::Observation observation;
   uint64_t cpu = 0, iterations = 0, reads = 0, writes = 0, checksum = 0;
   uint64_t syncBlockUs = 0, syncBlockWallNs = 0;
+  int workerTid = 0; // Diagnostic join key; never used for routing.
   bool observed = false;
 };
 struct RequestRow {
@@ -469,6 +472,10 @@ public:
         if (observation.color >= c_.requests || observation.tag >= c_.taskSlots)
           throw std::logic_error("trace index");
         auto &row = tasks_[observation.color * c_.taskSlots + observation.tag];
+        // Observer runs on the callback's worker. Cache once per worker, rather
+        // than adding a syscall to every operator or to the trace=0 path.
+        static thread_local const int tid = static_cast<int>(::syscall(SYS_gettid));
+        row.workerTid = tid;
         row.observation = observation;
         row.observed = true;
       };
@@ -851,6 +858,29 @@ private:
                                                  registrationRejected_.load());
     }
     summary["origin_ns"] = origin_;
+    // Perf request profiles require the same clock as task wall timestamps.
+    // Retain a bracket check instead of silently assuming every C++ platform's
+    // steady_clock is CLOCK_MONOTONIC. This runs only during result export.
+    uint64_t bestSpan = UINT64_MAX, beforeMono = 0, mono = 0, afterMono = 0;
+    for (int i = 0; i < 8; ++i) {
+      const auto before = ns();
+      timespec t{};
+      if (clock_gettime(CLOCK_MONOTONIC, &t))
+        throw std::runtime_error("monotonic clock check failed");
+      const auto after = ns();
+      if (after - before < bestSpan) {
+        bestSpan = after - before;
+        beforeMono = before;
+        afterMono = after;
+        mono = uint64_t(t.tv_sec) * 1000000000 + t.tv_nsec;
+      }
+    }
+    summary["diagnostic_clock"] = folly::dynamic::object(
+        "task_clock", "std::chrono::steady_clock")(
+        "reference_clock", "CLOCK_MONOTONIC")(
+        "steady_before_ns", beforeMono)("monotonic_ns", mono)(
+        "steady_after_ns", afterMono)("bracket_ns", bestSpan)(
+        "compatible", beforeMono <= mono && mono <= afterMono);
     summary["balance_at"] = c_.balanceAt;
     summary["max_inflight"] = c_.maxInflight;
     summary["memory_mb"] = c_.memoryMiB;
@@ -1003,7 +1033,7 @@ private:
                "sampled_runnable,sampled_at_ns,sample_window_ns,cpu_valid,"
                "runqueue_valid,"
                "runnable_valid,score_evaluated,score_fallback,score_fallback_"
-               "reason";
+               "reason,worker_tid";
       if (completion_)
         trace << ",logical_tag";
       trace << '\n';
@@ -1049,7 +1079,8 @@ private:
               << o.sampleWindowNs << ',' << o.cpuValid << ',' << o.runqueueValid
               << ',' << o.runnableValid << ',' << o.scoreEvaluated << ','
               << o.scoreFallback << ','
-              << executor_demo::loadFallbackName(o.scoreFallbackReason);
+              << executor_demo::loadFallbackName(o.scoreFallbackReason) << ','
+              << row.workerTid;
         if (completion_)
           trace << ',' << (o.tag >= c_.nodes ? o.tag - c_.nodes : o.tag);
         trace << '\n';

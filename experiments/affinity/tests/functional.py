@@ -292,7 +292,13 @@ def main(binary):
             if not success:
                 check(process.returncode != 0, f'{name}: expected rejection/error')
                 return root / name
-            return report.load_run(root / name)
+            audited = report.load_run(root / name)
+            check(audited['summary']['diagnostic_clock']['compatible'],
+                  f'{name}: task timestamps do not bracket CLOCK_MONOTONIC')
+            if audited['summary']['trace']:
+                check(all(int(row.get('worker_tid', 0)) > 0 for row in audited['tasks']),
+                      f'{name}: callback lacks diagnostic worker TID')
+            return audited
 
         variants = [('home', {}), ('queue', {'policy': 'queue'}),
                     ('outstanding', {'policy': 'outstanding'}), ('work', {'policy': 'work'}),
