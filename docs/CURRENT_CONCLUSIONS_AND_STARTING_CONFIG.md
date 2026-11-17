@@ -1,5 +1,7 @@
 # 截至4020的阶段结论、停止条件与候选初值
 
+完整解释与跨场景图表请优先阅读[自包含阶段总报告](../reports/final_review/REPORT.md)（[离线 HTML](../reports/final_review/executor_affinity_report.html) / [PDF](../reports/final_review/executor_affinity_report.pdf)）；本页保留为简明操作参考。
+
 **当前无需继续追加合成性能实验、目标机报告或历史调度trace解析。** 已有证据足以收束本轮机制研究，并交接可复用的总池、观测与候选策略。生产部署、真实负载下的稳健性和正式p99验收尚未完成；这些应由当地事实和明确决策触发，不能靠无限扩大现有合成矩阵替代。
 
 本页汇总已实现、已测试和仍是假设的内容。最新证据见[4020报告](TARGET_V2_4020_REVIEW.md)，当地执行见[分阶段手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯提示词](PRODUCTION_AGENT_PROMPTS_ONLY.md)。无需传输文件、连通三个环境或新增生产trace才能使用这些结论。

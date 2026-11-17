@@ -1,0 +1,4 @@
+*.pdf binary
+*.png binary
+figures/*.svg linguist-generated=true
+executor_affinity_report.html linguist-generated=true

@@ -1,5 +1,7 @@
 # Folly线程池：五阶段分析与独立实验
 
+**阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从场景、流程/时序和 IPO 解释负载、观测与两层调度，再用 11 张图比较多轮时延与 CPU 代价，最后映射历史真实轨迹并给出场景化候选初值；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。
+
 按业务理解 → Folly机制 → 独立任务负载 → 复杂DAG → 能力归属逐步验证。**一个仓库管理五个阶段，但简单任务实验、DAG实验和成本探针是独立CMake工程**，无需一次运行所有实验。阶段2～4仅依赖原版Folly；阶段5才需要实验扩展。
 
 | 阶段 | 独立交付 | 要回答的问题 | 验证入口 |

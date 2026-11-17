@@ -1,0 +1,83 @@
+{
+  "schema": "final-review-trace-evidence-v1",
+  "evidence_type": "reviewed_terminal_summary_not_local_raw_trace_reanalysis",
+  "sources": [
+    {"id": "4005", "file": "docs/TRACE_4005_REVIEW.md", "section": "3–5", "role": "same-window exact-TID matched-interval summary", "attachment_sha256": "d834f28e8ecaf037375f68cb8812904dcad5d71784515f2bf4e3b28044863f08"},
+    {"id": "4007", "file": "docs/TARGET_V2_4008_REVIEW.md", "section": "4", "role": "derived fixed-window statistics on the same historical trace", "attachment_sha256": "fc3f16019ddfacd51272ab3ae1ec682f825e64cab73d60e0426b389f506c4c23"},
+    {"id": "4010", "file": "results/review/TRACE_4010_PARSER_AUDIT.md", "section": "1–5", "role": "limits and reproduced parser defects; not an independent production capture", "attachment_sha256": "107e1de3cf26b4007b6e32529140dec2d207fcf3d52410c2e6cb661a9bf08984"}
+  ],
+  "historical_capture": {
+    "normalized_window_seconds": 10,
+    "temporary_pool_count": 4,
+    "cpu_affinity": "none reported by user",
+    "reported_qps": 16,
+    "qps_measured_from_trace": false,
+    "mapped_tids": 404,
+    "tid_mapping": "thread-name inferred; not runtime registration",
+    "coverage": "unknown",
+    "clock": "unknown",
+    "visible_record_cpu_count": 384,
+    "events": ["sched_switch", "sched_wakeup", "sched_waking", "sched_migrate_task", "sched_wakeup_new"],
+    "request_operator_rpc_markers": false,
+    "target_architecture": "one pool per verified selected hardware cluster, independent of historical pool count"
+  },
+  "metric_definitions": {
+    "mean_oncpu_equivalents": "matched running-interval duration sum divided by the same 10 s window; logical-CPU time equivalent, not physical-core throughput or target-96-CPU utilization",
+    "observed_demand_equivalents": "matched on-CPU time plus retained closed wake/re-runnable waiting time, divided by the same window; incomplete observed demand, not complete runnable-state reconstruction",
+    "peak_1ms_oncpu_equivalents": "maximum matched on-CPU duration sum / 1 ms across trace-anchored fixed buckets",
+    "peak_1ms_unique_oncpu_tids": "maximum number of distinct mapped TIDs with matched on-CPU overlap in one 1 ms bucket; exact set cardinality, not simultaneous running or Folly callback I",
+    "waking": "sched_waking attempt count in each bucket; not callback/request count",
+    "wake_to_run_p99_ms": "approximate quantile over retained closed wakeup-to-run samples; not all wakes and not request latency",
+    "runnable_switch_to_run_p99_ms": "approximate quantile over retained runnable switch-out-to-next-run samples; not request latency"
+  },
+  "per_pool": [
+    {"pool": "a", "mapped_tids": 114, "mean_oncpu_equivalents": 7.093, "mean_observed_demand_equivalents": 7.454, "peak_1ms_oncpu_equivalents": 78.437, "peak_1ms_unique_oncpu_tids": 95, "wake_to_run_p99_ms": 0.312, "runnable_switch_to_run_p99_ms": 1.617},
+    {"pool": "b", "mapped_tids": 96, "mean_oncpu_equivalents": 4.364, "mean_observed_demand_equivalents": 4.572, "peak_1ms_oncpu_equivalents": 73.656, "peak_1ms_unique_oncpu_tids": 93, "wake_to_run_p99_ms": 0.333, "runnable_switch_to_run_p99_ms": 1.582},
+    {"pool": "c", "mapped_tids": 98, "mean_oncpu_equivalents": 6.620, "mean_observed_demand_equivalents": 6.956, "peak_1ms_oncpu_equivalents": 72.167, "peak_1ms_unique_oncpu_tids": 96, "wake_to_run_p99_ms": 0.340, "runnable_switch_to_run_p99_ms": 1.582},
+    {"pool": "d", "mapped_tids": 96, "mean_oncpu_equivalents": 6.569, "mean_observed_demand_equivalents": 6.904, "peak_1ms_oncpu_equivalents": 78.559, "peak_1ms_unique_oncpu_tids": 94, "wake_to_run_p99_ms": 0.333, "runnable_switch_to_run_p99_ms": 1.483}
+  ],
+  "same_window_pool_sum": {
+    "mean_oncpu_equivalents": 24.646,
+    "peak_1ms_oncpu_equivalents": 83.291,
+    "mean_observed_demand_equivalents": 25.886,
+    "peak_1ms_observed_demand_equivalents": 92.320,
+    "warning": "sum pools within each common time bucket before taking maximum; on-CPU and observed-demand maxima need not occur in the same bucket"
+  },
+  "full_window_pearson_lag_zero_ranges_across_pools": [
+    {"bin_ms": 1, "x": "waking", "y": "unique_oncpu", "min": 0.718, "max": 0.758},
+    {"bin_ms": 1, "x": "waking", "y": "oncpu", "min": 0.501, "max": 0.546},
+    {"bin_ms": 1, "x": "unique_oncpu", "y": "oncpu", "min": 0.926, "max": 0.933},
+    {"bin_ms": 10, "x": "waking", "y": "unique_oncpu", "min": 0.814, "max": 0.843},
+    {"bin_ms": 10, "x": "waking", "y": "oncpu", "min": 0.690, "max": 0.740},
+    {"bin_ms": 10, "x": "unique_oncpu", "y": "oncpu", "min": 0.848, "max": 0.857}
+  ],
+  "concentration_from_1ms_fixed_buckets": {
+    "top_10_percent_buckets_share_of_oncpu_percent_range_across_pools": [45.532, 54.827],
+    "high_service_definition": "on-CPU equivalent > 2 times that pool's complete-window mean",
+    "high_run_p50_ms_all_pools": 2,
+    "high_run_p95_ms_range_across_pools": [15, 20],
+    "high_run_max_ms_range_across_pools": [25, 55],
+    "segments_above_2x_mean_total": 1115,
+    "segments_above_4x_mean_total": 496,
+    "buckets_with_at_least_one_pool_above_2x_mean": 4280,
+    "buckets_with_exactly_one_pool_above_2x_mean": 3550,
+    "fraction_exactly_one_given_any_2x_percent": 82.94,
+    "fraction_exactly_one_given_any_4x_percent": 98.29,
+    "warning": "thresholds are pool-specific descriptive service thresholds, not common N>16 overload or runtime migration thresholds; fixed-bucket runs have boundary/censoring limits"
+  },
+  "do_not_use_as_calibration": [
+    "0.85 ms inferred from unspecified active N / wake rate is not operator CPU demand",
+    "1266 overload segments and 92 percent self-healing were not reproduced from available artifacts",
+    "3 ms / 0.9 C / 0.75 C / 2 C persistent-pressure thresholds are unvalidated candidates",
+    "windowed unique-onCPU is not instantaneous active callback I",
+    "historical four unbound pools do not validate target cluster binding",
+    "unknown or invalid intervals must not be silently filled with idle",
+    "the four per-pool maxima must not be summed as a concurrent peak",
+    "r and interval estimates do not establish cache benefits, causality, or production latency gains"
+  ],
+  "chart_recommendation": {
+    "primary": "paired bars: per-pool mean vs 1 ms peak matched on-CPU equivalents, with historical-unbound caption",
+    "secondary": "correlation range plot for three metric pairs at 1 and 10 ms; no inferred samples, error bars, or causal wording",
+    "avoid": "do not graph an invented time series, synthetic request arrivals, instantaneous active N, or 3 ms state machine as measured real data"
+  }
+}

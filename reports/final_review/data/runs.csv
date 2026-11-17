@@ -1,0 +1,98 @@
+id,batch,scenario,arrival,qps,threads,trace,seed,policy,strategy,balance_at,mean_ms,p95_ms,p99_ms,cpu_per_request_ms,process_cpu_s,cohort_completed,whole_completed,peak_inflight,source_file,source_pointer
+4011:0,4011,L,burst,12.0,128,0,420,outstanding,all-parent,all,149.34,182.278,194.629,1352.453,324.588826,192,240,8,results/review/4011_summary.json,/runs/0
+4011:1,4011,L,burst,12.0,128,1,420,outstanding,all-parent,all,149.278,183.447,190.822,1357.098,325.703586,192,240,8,results/review/4011_summary.json,/runs/1
+4011:2,4011,L,burst,12.0,128,0,420,outstanding,fork-parent,fork,150.233,184.334,198.073,1353.171,324.761019,192,240,8,results/review/4011_summary.json,/runs/2
+4011:3,4011,L,burst,12.0,128,1,420,outstanding,fork-parent,fork,150.573,184.448,197.389,1358.413,326.019113,192,240,8,results/review/4011_summary.json,/runs/3
+4011:4,4011,L,burst,12.0,128,0,420,home,home,all,157.322,213.371,223.515,1348.587,323.660836,192,240,8,results/review/4011_summary.json,/runs/4
+4011:5,4011,L,burst,12.0,128,1,420,home,home,all,158.781,211.055,224.678,1357.48,325.795202,192,240,8,results/review/4011_summary.json,/runs/5
+4011:6,4011,L,burst,12.0,128,0,421,outstanding,all-parent,all,150.408,186.199,202.228,1371.476,329.154171,192,240,8,results/review/4011_summary.json,/runs/6
+4011:7,4011,L,burst,12.0,128,1,421,outstanding,all-parent,all,150.585,188.549,201.001,1376.35,330.323936,192,240,8,results/review/4011_summary.json,/runs/7
+4011:8,4011,L,burst,12.0,128,0,421,outstanding,fork-parent,fork,152.308,193.95,209.136,1370.256,328.861467,192,240,8,results/review/4011_summary.json,/runs/8
+4011:9,4011,L,burst,12.0,128,1,421,outstanding,fork-parent,fork,152.574,189.971,200.537,1377.04,330.489529,192,240,8,results/review/4011_summary.json,/runs/9
+4011:10,4011,L,burst,12.0,128,0,421,home,home,all,159.173,217.253,226.813,1366.267,327.904194,192,240,8,results/review/4011_summary.json,/runs/10
+4011:11,4011,L,burst,12.0,128,1,421,home,home,all,160.111,215.359,225.258,1376.19,330.285689,192,240,8,results/review/4011_summary.json,/runs/11
+4011:12,4011,L,burst,12.0,128,0,422,outstanding,all-parent,all,149.929,183.64,193.503,1357.65,325.835992,192,240,8,results/review/4011_summary.json,/runs/12
+4011:13,4011,L,burst,12.0,128,1,422,outstanding,all-parent,all,150.886,183.928,191.133,1365.589,327.741316,192,240,8,results/review/4011_summary.json,/runs/13
+4011:14,4011,L,burst,12.0,128,0,422,outstanding,fork-parent,fork,150.765,181.492,190.655,1357.32,325.756828,192,240,8,results/review/4011_summary.json,/runs/14
+4011:15,4011,L,burst,12.0,128,1,422,outstanding,fork-parent,fork,153.091,187.939,198.219,1363.886,327.332716,192,240,8,results/review/4011_summary.json,/runs/15
+4011:16,4011,L,burst,12.0,128,0,422,home,home,all,159.056,211.06,222.871,1355.021,325.205047,192,240,8,results/review/4011_summary.json,/runs/16
+4011:17,4011,L,burst,12.0,128,1,422,home,home,all,159.84,211.926,229.882,1363.26,327.182305,192,240,8,results/review/4011_summary.json,/runs/17
+4012:0,4012,L,burst,12.0,16,0,420,active,active,all,143.51,181.533,190.349,1349.732,323.93568,192,240,8,results/review/4012_summary.json,/runs/0
+4012:1,4012,L,burst,12.0,16,0,420,home,home,all,155.238,212.908,224.039,1344.557,322.69365,192,240,8,results/review/4012_summary.json,/runs/1
+4012:2,4012,L,burst,12.0,16,0,420,outstanding,outstanding,all,143.588,180.511,193.648,1349.71,323.930311,192,240,8,results/review/4012_summary.json,/runs/2
+4012:3,4012,L,burst,12.0,16,0,420,queue,queue,all,143.573,179.763,190.378,1349.263,323.82307,192,240,8,results/review/4012_summary.json,/runs/3
+4012:4,4012,L,burst,12.0,128,0,420,active,active,all,148.903,182.844,189.719,1350.626,324.15027,192,240,8,results/review/4012_summary.json,/runs/4
+4012:5,4012,L,burst,12.0,128,0,420,home,home,all,156.996,215.196,222.325,1347.089,323.301364,192,240,8,results/review/4012_summary.json,/runs/5
+4012:6,4012,L,burst,12.0,128,0,420,outstanding,outstanding,all,149.233,185.857,198.529,1351.177,324.282447,192,240,8,results/review/4012_summary.json,/runs/6
+4012:7,4012,L,burst,12.0,128,0,420,queue,queue,all,149.529,184.5,192.494,1351.844,324.442636,192,240,8,results/review/4012_summary.json,/runs/7
+4012:8,4012,L,burst,12.0,16,0,421,active,active,all,145.58,184.696,190.968,1368.679,328.482994,192,240,8,results/review/4012_summary.json,/runs/8
+4012:9,4012,L,burst,12.0,16,0,421,home,home,all,157.432,215.067,225.164,1364.706,327.529332,192,240,8,results/review/4012_summary.json,/runs/9
+4012:10,4012,L,burst,12.0,16,0,421,outstanding,outstanding,all,145.527,184.788,190.521,1368.503,328.440613,192,240,8,results/review/4012_summary.json,/runs/10
+4012:11,4012,L,burst,12.0,16,0,421,queue,queue,all,146.114,185.146,195.303,1368.84,328.521623,192,240,8,results/review/4012_summary.json,/runs/11
+4012:12,4012,L,burst,12.0,128,0,421,active,active,all,150.266,186.329,197.571,1370.263,328.863055,192,240,8,results/review/4012_summary.json,/runs/12
+4012:13,4012,L,burst,12.0,128,0,421,home,home,all,159.332,214.523,231.121,1368.04,328.329641,192,240,8,results/review/4012_summary.json,/runs/13
+4012:14,4012,L,burst,12.0,128,0,421,outstanding,outstanding,all,151.459,189.637,198.984,1370.631,328.951448,192,240,8,results/review/4012_summary.json,/runs/14
+4012:15,4012,L,burst,12.0,128,0,421,queue,queue,all,150.519,186.534,195.385,1370.47,328.912861,192,240,8,results/review/4012_summary.json,/runs/15
+4012:16,4012,L,burst,12.0,16,0,422,active,active,all,145.567,181.454,188.053,1355.715,325.37162,192,240,8,results/review/4012_summary.json,/runs/16
+4012:17,4012,L,burst,12.0,16,0,422,home,home,all,157.008,205.498,222.89,1351.488,324.357162,192,240,8,results/review/4012_summary.json,/runs/17
+4012:18,4012,L,burst,12.0,16,0,422,outstanding,outstanding,all,145.135,181.428,190.227,1355.863,325.407215,192,240,8,results/review/4012_summary.json,/runs/18
+4012:19,4012,L,burst,12.0,16,0,422,queue,queue,all,145.143,178.25,190.767,1355.928,325.422781,192,240,8,results/review/4012_summary.json,/runs/19
+4012:20,4012,L,burst,12.0,128,0,422,active,active,all,150.486,184.196,190.091,1357.58,325.819158,192,240,8,results/review/4012_summary.json,/runs/20
+4012:21,4012,L,burst,12.0,128,0,422,home,home,all,159.382,210.59,223.75,1353.511,324.842533,192,240,8,results/review/4012_summary.json,/runs/21
+4012:22,4012,L,burst,12.0,128,0,422,outstanding,outstanding,all,151.233,183.142,194.563,1358.559,326.054064,192,240,8,results/review/4012_summary.json,/runs/22
+4012:23,4012,L,burst,12.0,128,0,422,queue,queue,all,150.619,180.562,200.235,1358.606,326.065471,192,240,8,results/review/4012_summary.json,/runs/23
+4013:0,4013,L,burst,12.0,16,1,421,home,home,all,157.53,214.795,227.492,1368.312,328.394902,192,240,8,results/review/4013_summary.json,/runs/0
+4013:1,4013,L,burst,12.0,16,1,421,outstanding,outstanding,all,145.379,183.362,190.936,1370.425,328.902076,192,240,8,results/review/4013_summary.json,/runs/1
+4013:2,4013,L,burst,12.0,16,1,421,queue,queue,all,146.024,184.647,197.57,1371.251,329.100212,192,240,8,results/review/4013_summary.json,/runs/2
+4013:3,4013,L,burst,12.0,128,1,421,home,home,all,160.173,218.904,226.132,1375.172,330.041332,192,240,8,results/review/4013_summary.json,/runs/3
+4013:4,4013,L,burst,12.0,128,1,421,outstanding,outstanding,all,151.492,188.082,205.922,1378.132,330.751672,192,240,8,results/review/4013_summary.json,/runs/4
+4013:5,4013,L,burst,12.0,128,1,421,queue,queue,all,151.277,187.24,198.169,1377.729,330.654969,192,240,8,results/review/4013_summary.json,/runs/5
+4014:0,4014,L,regular,12.0,16,0,420,home,home,all,119.033,139.114,147.989,1344.752,322.740514,192,240,2,results/review/4014_summary.json,/runs/0
+4014:1,4014,L,regular,12.0,16,0,420,outstanding,outstanding,all,72.633,93.409,106.183,1352.065,324.495636,192,240,2,results/review/4014_summary.json,/runs/1
+4014:2,4014,L,regular,12.0,16,0,420,queue,queue,all,73.196,93.754,106.096,1350.458,324.10981,192,240,2,results/review/4014_summary.json,/runs/2
+4014:3,4014,L,regular,12.0,16,0,421,home,home,all,120.613,137.624,148.814,1363.827,327.318393,192,240,3,results/review/4014_summary.json,/runs/3
+4014:4,4014,L,regular,12.0,16,0,421,outstanding,outstanding,all,73.418,94.222,106.183,1371.995,329.278855,192,240,2,results/review/4014_summary.json,/runs/4
+4014:5,4014,L,regular,12.0,16,0,421,queue,queue,all,74.247,93.817,108.796,1370.904,329.017079,192,240,2,results/review/4014_summary.json,/runs/5
+4014:6,4014,L,regular,12.0,16,0,422,home,home,all,120.632,138.0,151.622,1350.741,324.177882,192,240,2,results/review/4014_summary.json,/runs/6
+4014:7,4014,L,regular,12.0,16,0,422,outstanding,outstanding,all,74.415,93.678,106.492,1361.016,326.643779,192,240,2,results/review/4014_summary.json,/runs/7
+4014:8,4014,L,regular,12.0,16,0,422,queue,queue,all,74.927,96.508,110.563,1358.431,326.023334,192,240,2,results/review/4014_summary.json,/runs/8
+4015:0,4015,S,regular,12.0,16,0,421,home,home,all,17.952,20.441,21.458,178.817,42.916041,192,240,1,results/review/4015_summary.json,/runs/0
+4015:1,4015,S,regular,12.0,128,1,421,home,home,all,18.376,20.741,23.41,182.432,43.783716,192,240,1,results/review/4015_summary.json,/runs/1
+4015:2,4015,S,regular,12.0,16,1,421,home,home,all,18.245,21.071,23.42,182.09,43.701573,192,240,1,results/review/4015_summary.json,/runs/2
+4015:3,4015,S,regular,12.0,128,0,421,home,home,all,17.973,20.103,21.083,178.363,42.807077,192,240,1,results/review/4015_summary.json,/runs/3
+4016:0,4016,SD,regular,96.0,16,0,421,home,home,all,17.923,20.656,22.028,176.967,339.776683,1536,1920,3,results/review/4016_summary.json,/runs/0
+4016:1,4016,SD,regular,96.0,128,0,421,home,home,all,18.077,20.898,22.377,176.889,339.627294,1536,1920,3,results/review/4016_summary.json,/runs/1
+4016:2,4016,SD,regular,96.0,16,0,421,queue,queue,all,11.757,14.615,15.76,187.598,360.187287,1536,1920,3,results/review/4016_summary.json,/runs/2
+4016:3,4016,SD,regular,96.0,16,0,421,outstanding,outstanding,all,11.943,14.953,16.023,189.416,363.677996,1536,1920,3,results/review/4016_summary.json,/runs/3
+4016:4,4016,SD,regular,96.0,128,0,421,queue,queue,all,12.009,14.996,16.166,188.0,360.960958,1536,1920,3,results/review/4016_summary.json,/runs/4
+4016:5,4016,SD,regular,96.0,128,0,421,outstanding,outstanding,all,11.97,14.982,15.844,189.22,363.302804,1536,1920,3,results/review/4016_summary.json,/runs/5
+4018:0,4018,D0,regular,96.0,16,0,421,home,home,all,17.862,20.601,21.595,176.908,339.663507,1536,1920,3,results/review/4018_summary.json,/runs/0
+4018:1,4018,D0,regular,96.0,16,0,421,outstanding,outstanding,all,11.934,14.86,15.857,189.68,364.18523,1536,1920,3,results/review/4018_summary.json,/runs/1
+4018:2,4018,A0,regular,96.0,16,0,421,home,home,all,18.208,21.235,23.6,180.918,347.363274,1536,1920,4,results/review/4018_summary.json,/runs/2
+4018:3,4018,A0,regular,96.0,16,0,421,outstanding,outstanding,all,12.115,15.513,16.457,191.021,366.760332,1536,1920,3,results/review/4018_summary.json,/runs/3
+4018:4,4018,A1,regular,96.0,16,0,421,home,home,all,22.729,26.444,28.898,180.696,346.936301,1536,1920,4,results/review/4018_summary.json,/runs/4
+4018:5,4018,A1,regular,96.0,16,0,421,outstanding,outstanding,all,18.286,21.239,22.901,187.419,359.844617,1536,1920,4,results/review/4018_summary.json,/runs/5
+4018:6,4018,A0,regular,96.0,16,1,421,home,home,all,18.263,21.003,23.176,182.2,349.824456,1536,1920,4,results/review/4018_summary.json,/runs/6
+4018:7,4018,A1,regular,96.0,16,1,421,home,home,all,22.69,25.994,27.226,182.138,349.705671,1536,1920,4,results/review/4018_summary.json,/runs/7
+4020:home-trace0,4020,A1,regular,96.0,16,0,421,home,home,all,22.808,26.612,29.175,180.64,346.827883,1536,1920,4,results/review/4020_summary.json,/runs/home-trace0
+4020:outstanding-trace1,4020,A1,regular,96.0,16,1,421,outstanding,outstanding,all,18.273,21.397,23.039,188.117,361.185409,1536,1920,4,results/review/4020_summary.json,/runs/outstanding-trace1
+4020:home-trace1,4020,A1,regular,96.0,16,1,421,home,home,all,22.752,26.158,27.972,182.159,349.745192,1536,1920,4,results/review/4020_summary.json,/runs/home-trace1
+4020:outstanding-trace0,4020,A1,regular,96.0,16,0,421,outstanding,outstanding,all,18.277,21.333,22.947,187.401,359.810033,1536,1920,4,results/review/4020_summary.json,/runs/outstanding-trace0
+4008:0,4008,L,regular,12.0,128,1,420,home,home,all,121.817,,148.732,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:1,4008,L,regular,12.0,128,1,420,outstanding,fork-parent,fork,76.413,,107.875,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:2,4008,L,regular,12.0,128,1,420,outstanding,all-parent,all,76.472,,113.669,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:3,4008,L,regular,12.0,128,1,421,home,home,all,123.002,,156.351,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:4,4008,L,regular,12.0,128,1,421,outstanding,fork-parent,fork,76.565,,108.439,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:5,4008,L,regular,12.0,128,1,421,outstanding,all-parent,all,76.579,,111.726,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:6,4008,L,regular,12.0,128,1,422,home,home,all,123.483,,154.629,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:7,4008,L,regular,12.0,128,1,422,outstanding,fork-parent,fork,77.686,,106.019,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4008:8,4008,L,regular,12.0,128,1,422,outstanding,all-parent,all,77.384,,120.913,,,192,240,,docs/TARGET_V2_4008_REVIEW.md,2. 4008新实验
+4009:0,4009,L,burst,12.0,128,1,420,home,home,all,158.287,,229.761,1355.9609416666667,325.430626,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:1,4009,L,burst,12.0,128,1,420,outstanding,fork-parent,fork,151.661,,196.43,1358.9547416666667,326.149138,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:2,4009,L,burst,12.0,128,1,420,outstanding,all-parent,all,149.612,,192.428,1358.3553124999999,326.005275,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:3,4009,L,burst,12.0,128,1,421,home,home,all,160.029,,225.66,1376.1725250000002,330.281406,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:4,4009,L,burst,12.0,128,1,421,outstanding,fork-parent,fork,152.733,,210.335,1377.9836291666666,330.716071,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:5,4009,L,burst,12.0,128,1,421,outstanding,all-parent,all,151.054,,202.413,1378.5779,330.858696,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:6,4009,L,burst,12.0,128,1,422,home,home,all,159.594,,222.538,1363.5001791666666,327.240043,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:7,4009,L,burst,12.0,128,1,422,outstanding,fork-parent,fork,152.734,,198.713,1364.6230791666667,327.509539,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8
+4009:8,4009,L,burst,12.0,128,1,422,outstanding,all-parent,all,151.19,,187.664,1365.0258125,327.606195,192,240,8,docs/TARGET_V2_4009_REVIEW.md,3. 新burst8

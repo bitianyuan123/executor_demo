@@ -1,0 +1,98 @@
+[
+  {
+    "name": "01_scene",
+    "title": "场景视图",
+    "sources": [
+      "RequestExecutor.h",
+      "AsyncCompletionSource.h"
+    ],
+    "caption": "示意图，不是生产部署实测拓扑。"
+  },
+  {
+    "name": "02_sequence",
+    "title": "异步时序与计量边界",
+    "sources": [
+      "main.cpp async path",
+      "RequestExecutor.h continuation"
+    ],
+    "caption": "示意顺序；不保证zero-delay注册者先返回，不把不同阶段p99相加。"
+  },
+  {
+    "name": "03_routing",
+    "title": "放置决策流程",
+    "sources": [
+      "RequestExecutor.h choose/searchDomain"
+    ],
+    "caption": "high/gain使用严格比较；ReturnHome独立于普通借出。"
+  },
+  {
+    "name": "04_queue_latency",
+    "title": "队列条件分位数",
+    "sources": [
+      "data/independent_evidence.json"
+    ],
+    "caption": "各桶为独立任务结果，不能用来预测DAG请求p99。"
+  },
+  {
+    "name": "05_signal_tradeoffs",
+    "title": "跨负载的信号选择",
+    "sources": [
+      "4012",
+      "4014",
+      "4016",
+      "4020"
+    ],
+    "caption": "仅画同批匹配差；不平均各轮p99，无置信区间。"
+  },
+  {
+    "name": "06_thread_budget",
+    "title": "线程预算及CPU墙钟",
+    "sources": [
+      "4012",
+      "4013"
+    ],
+    "caption": "不同批次分面展示，不把trace1机制数直接扣到trace0时延。"
+  },
+  {
+    "name": "07_continuation",
+    "title": "后继调度范围",
+    "sources": [
+      "4011"
+    ],
+    "caption": "all/fork的trace0/1配对；小样本尾部方向有反转。"
+  },
+  {
+    "name": "08_async_contracts",
+    "title": "异步负载合同",
+    "sources": [
+      "4018"
+    ],
+    "caption": "每格一次；CPU统计范围为整轮；D0/A0/A1是有意干预，非重复。"
+  },
+  {
+    "name": "09_async_mechanism",
+    "title": "异步分段与迁移角色",
+    "sources": [
+      "4020"
+    ],
+    "caption": "两策略各128809恢复；恢复自身改池仅0.63%，parent因果作用尚未独立隔离。"
+  },
+  {
+    "name": "10_observation",
+    "title": "观测开关敏感性",
+    "sources": [
+      "4011",
+      "4015",
+      "4020"
+    ],
+    "caption": "展示所有匹配点，不把home观测比例直接套到O。"
+  },
+  {
+    "name": "11_historical_trace",
+    "title": "历史真实轨迹的可用线索",
+    "sources": [
+      "data/trace_evidence.json"
+    ],
+    "caption": "原始trace未在本地重算；不按16 CPU换算绑定后时延，不据此设3ms门控。"
+  }
+]

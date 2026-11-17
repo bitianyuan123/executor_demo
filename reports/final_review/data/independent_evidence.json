@@ -1,0 +1,145 @@
+{
+  "schema": "independent-conditional-evidence-v1",
+  "source_file": "docs/TARGET_PILOT_05_DAG_BASELINE_REVIEW.md",
+  "source_sha256": "c76be4b9877dc6454911da59fef550625f9c576cd129f66b3611fa917c8e29f9",
+  "upstream_log": "0005.log",
+  "evidence": "published review of printed target terminal results; no target raw CSV locally",
+  "figure": "04_queue_latency",
+  "scope": {
+    "stage": "independent tasks, not DAG requests",
+    "affinity": "cluster",
+    "threads_per_pool": 256,
+    "arrival": "local burst100",
+    "cohort": "planned arrivals [10,60) seconds; late completions retained",
+    "tasks_per_run": 12000,
+    "seeds": 3,
+    "quantiles": "Each endpoint is min/max of separately computed per-seed conditional quantiles; no pooled p99 or confidence interval",
+    "queue_observation": "Folly queue snapshot before submission, conditioned by bucket",
+    "wait": "submission to callback start",
+    "submit_to_finish": "submission to task completion, not planned-arrival completion",
+    "tail_limit": "queue=0 and 4–15 are LOW_TAIL; dependent tasks within bursts; future burst competition is absent from the earlier snapshot",
+    "cpu_utilization_percent": null
+  },
+  "rows": [
+    {
+      "queue_bin": "0",
+      "wait_p50_ms_range": [
+        0.02,
+        0.021
+      ],
+      "wait_p95_ms_range": [
+        0.025,
+        0.028
+      ],
+      "wait_p99_ms_range": [
+        0.033,
+        0.035
+      ],
+      "submit_to_finish_p50_ms_range": [
+        283.589,
+        300.12
+      ],
+      "submit_to_finish_p99_ms_range": [
+        581.142,
+        624.703
+      ],
+      "tasks_per_run_range": [
+        120,
+        120
+      ],
+      "low_tail": true,
+      "source_line": 19,
+      "source_table_row": "|0|0.020～0.021|0.025～0.028|0.033～0.035|283.589～300.120|581.142～624.703|120|"
+    },
+    {
+      "queue_bin": "4～15",
+      "wait_p50_ms_range": [
+        0.086,
+        0.092
+      ],
+      "wait_p95_ms_range": [
+        2.872,
+        2.904
+      ],
+      "wait_p99_ms_range": [
+        2.94,
+        3.018
+      ],
+      "submit_to_finish_p50_ms_range": [
+        305.866,
+        322.713
+      ],
+      "submit_to_finish_p99_ms_range": [
+        603.284,
+        609.16
+      ],
+      "tasks_per_run_range": [
+        1556,
+        1619
+      ],
+      "low_tail": true,
+      "source_line": 20,
+      "source_table_row": "|4～15|0.086～0.092|2.872～2.904|2.940～3.018|305.866～322.713|603.284～609.160|1556～1619|"
+    },
+    {
+      "queue_bin": "16～63",
+      "wait_p50_ms_range": [
+        56.065,
+        61.683
+      ],
+      "wait_p95_ms_range": [
+        148.608,
+        159.835
+      ],
+      "wait_p99_ms_range": [
+        167.625,
+        176.667
+      ],
+      "submit_to_finish_p50_ms_range": [
+        485.568,
+        490.636
+      ],
+      "submit_to_finish_p99_ms_range": [
+        643.763,
+        647.688
+      ],
+      "tasks_per_run_range": [
+        6124,
+        6346
+      ],
+      "low_tail": false,
+      "source_line": 21,
+      "source_table_row": "|16～63|56.065～61.683|148.608～159.835|167.625～176.667|485.568～490.636|643.763～647.688|6124～6346|"
+    },
+    {
+      "queue_bin": "64+",
+      "wait_p50_ms_range": [
+        229.364,
+        232.695
+      ],
+      "wait_p95_ms_range": [
+        297.951,
+        300.791
+      ],
+      "wait_p99_ms_range": [
+        313.93,
+        316.825
+      ],
+      "submit_to_finish_p50_ms_range": [
+        582.24,
+        583.437
+      ],
+      "submit_to_finish_p99_ms_range": [
+        676.422,
+        679.841
+      ],
+      "tasks_per_run_range": [
+        3549,
+        3831
+      ],
+      "low_tail": false,
+      "source_line": 22,
+      "source_table_row": "|64+|229.364～232.695|297.951～300.791|313.930～316.825|582.240～583.437|676.422～679.841|3549～3831|"
+    }
+  ]
+}

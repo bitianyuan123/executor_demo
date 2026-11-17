@@ -1,0 +1,55 @@
+{
+  "schema": "affinity-baseline-evidence-v1",
+  "source_file": "docs/TARGET_PILOT_05_DAG_BASELINE_REVIEW.md",
+  "source_sha256": "c76be4b9877dc6454911da59fef550625f9c576cd129f66b3611fa917c8e29f9",
+  "source_section": "3. DAG基线",
+  "upstream_log": "0005.log",
+  "evidence": "reviewed terminal aggregates, no local target CSV",
+  "contract": {
+    "allowed_logical_cpu_count": 96,
+    "threads_per_pool": 256,
+    "qps": 12,
+    "arrival": "regular",
+    "cpu_budget_ms_per_business_operator": 20,
+    "business_operators_per_request": 60,
+    "joins_per_request": 2,
+    "rpc": false,
+    "data_locality_model": false,
+    "cohort": "planned arrivals [10,60) seconds",
+    "requests_per_run_cohort": 600,
+    "runs_per_affinity": 3,
+    "mean": "equal weighted mean of three run means",
+    "p99": "min/max of separately computed run p99; not pooled p99 or CI",
+    "process_cpu_recorded": false
+  },
+  "rows": [
+    {
+      "affinity": "none",
+      "request_mean_ms": 60.713,
+      "request_p99_ms_range": [
+        60.818,
+        60.967
+      ]
+    },
+    {
+      "affinity": "numa",
+      "request_mean_ms": 60.731,
+      "request_p99_ms_range": [
+        60.83,
+        61.312
+      ]
+    },
+    {
+      "affinity": "cluster",
+      "request_mean_ms": 98.951,
+      "request_p99_ms_range": [
+        103.892,
+        113.252
+      ]
+    }
+  ],
+  "source_table_rows": [
+    "|request planned完成均值 ms|60.713|60.731|98.951|",
+    "|request planned完成p99范围 ms|60.818～60.967|60.830～61.312|103.892～113.252|"
+  ]
+}
