@@ -31,8 +31,9 @@
 - [4009结果](docs/TARGET_V2_4009_REVIEW.md)：burst下借出收益缩至约4%～6%，all相对fork出现约1%的小幅收益，说明负载形态影响判断。
 - [4010/4011结论](docs/TARGET_V2_4010_4011_REVIEW.md)：有界旧trace审计及18轮观测对照已完成；关闭详细trace后all均值仍略优，但p99不稳定，不能直接确定生产策略。
 - [4012信号/线程结果](docs/TARGET_V2_4012_REVIEW.md)：24轮信号/线程对照完成；三种借出策略从128降至16线程，均值改善2.93%～4.03%，Q/active/O未分出稳定赢家，不能直接指定生产线程数。
-- [4013最新结论](docs/TARGET_V2_4013_REVIEW.md)：六轮诊断完成；更多worker使开始前等待缩短、callback墙钟膨胀；Q盲区存在但在本批提交样本中少见，不能选定生产信号。
-- [当前执行与覆盖计划](docs/TARGET_V2_COVERAGE_NEXT.md)：仅9轮16线程regular守护；短callback、持续竞争、阻塞和数据代价按独立工作族推进。另有[v2异步恢复设计](docs/ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)，实现与性能验收尚待完成。
+- [4013机制结论](docs/TARGET_V2_4013_REVIEW.md)：六轮诊断完成；更多worker使开始前等待缩短、callback墙钟膨胀；Q盲区存在但在本批提交样本中少见，不能选定生产信号。
+- [4014最新结论](docs/TARGET_V2_4014_REVIEW.md)：9轮16线程regular守护已完成；Q/O相对home均值约下降38%，CPU/请求增加不足1%，两信号差不足1.2%，仍不能选赢家或完成p99验收。
+- [当前仅执行短工作S四轮](docs/TARGET_V2_SHORT_WORK_GUIDE.md)：home × 16/128线程 × trace0/1，seed421，regular 12QPS，iterations=375000、accesses=12500；其余维度按[分步覆盖计划](docs/TARGET_V2_COVERAGE_NEXT.md)另行推进。另有[v2异步恢复设计](docs/ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)，实现与性能验收尚待完成。
 - [真实应用agent分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)：只读探索、设计、实现、验收和有限迭代；候选初值与梯度由当地事实约束，不要求跨环境联网。另有[纯prompt交接版](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)，不需要给接收方传任何文件。
 - [持续压力门控候选审阅](docs/PERSISTENT_PRESSURE_REVIEW.md)：复核外部0.85ms/3ms说法，明确观测与状态机缺口；尚未修改运行策略。
 - [trace补证与后续目标实验](docs/TRACE_TO_TARGET_PLAN.md)：只读已有JSON分析同期压力与连续高桶；明确task异质性、线程/信号、异步RPC与正式尾部验证的顺序和实现缺口。
@@ -88,7 +89,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前已完成阶段3、六cluster v2机制对照、4010旧trace有界审计、4011观测扰动、4012的24轮信号/线程对照及4013六轮机制诊断，见[最新结论](docs/TARGET_V2_4013_REVIEW.md)。独立ARM测试环境下一步仅执行[9轮regular守护](docs/TARGET_V2_COVERAGE_NEXT.md)，不重跑已完成补证，不等待生产访问。真实应用环境由当地agent按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)探索与验证；无法交接文件时使用[纯prompt版](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)。生产代表性和正式尾部验收仍未完成。首次部署或资源条件变化时，按[测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量，已完成的阶段3不用因此重跑。
+当前已完成阶段3、六cluster v2机制对照、4010旧trace有界审计、4011观测扰动、4012的24轮信号/线程对照、4013六轮机制诊断及4014九轮regular守护，见[最新结论](docs/TARGET_V2_4014_REVIEW.md)。独立ARM测试环境下一步仅执行[短工作S四轮](docs/TARGET_V2_SHORT_WORK_GUIDE.md)，不重跑已完成补证，不等待生产访问。真实应用环境由当地agent按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)探索与验证；无法交接文件时使用[纯prompt版](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)。生产代表性和正式尾部验收仍未完成。首次部署或资源条件变化时，按[测试指南](docs/TARGET_TESTING.md)核对绑定、配额和容量，已完成的阶段3不用因此重跑。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 

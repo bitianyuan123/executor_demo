@@ -1,5 +1,7 @@
 # 4013 机制结论与负载覆盖边界
 
+**本文安排的9轮regular守护已由[4014](TARGET_V2_4014_REVIEW.md)完成，无需重跑。当前仅执行[短工作S四轮](TARGET_V2_SHORT_WORK_GUIDE.md)：home × 16/128线程 × trace0/1，seed421，regular 12QPS，iterations=375000、accesses=12500。下文保留当时结论与决策。**
+
 六轮诊断完成，可以结束当前固定CPU突发负载的重复诊断。**较多线程使callback更早开始，却伴随更长的callback墙钟；Q和O都实际触发大量同NUMA借出，而本负载很少在Q为零时提交到高占用池。** 因此现有结果不能证明O优于Q，也不能证明Q已足够覆盖真实业务。
 
 需要扩展负载覆盖，保留现有基线供回归。近期先做[16线程regular到达守护及分步覆盖计划](TARGET_V2_COVERAGE_NEXT.md)，之后有界推进短callback、持续竞争和外部等待工作族；不继续围绕同一burst合同堆叠信号/阈值。已知业务包含异步RPC，新增[独立实现设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)，明确这是v2驱动尚未覆盖的结构。
