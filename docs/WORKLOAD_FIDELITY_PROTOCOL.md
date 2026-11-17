@@ -8,9 +8,9 @@
 
 ## 1. 当前判断与优先级
 
-**4010有界离线补证、4011观测扰动和4012信号/线程对照均已完成。** [最新审阅](TARGET_V2_4012_REVIEW.md)支持将较少worker纳入候选，未证明某个信号最优；旧trace仍无法识别request/operator/RPC/数据变量，新增外部解析器还有状态/分桶缺陷。本阶段不要求继续重扫或生产采样，未知业务量保留为显式假设。
+**4010有界离线补证、4011观测扰动、4012信号/线程对照及4013机制诊断均已完成。** [最新审阅](TARGET_V2_4013_REVIEW.md)支持将较少worker纳入候选，确认Q盲区在当前工作族的提交样本中少见，未证明某个信号最优；旧trace仍无法识别request/operator/RPC/数据变量，新增外部解析器还有状态/分桶缺陷。本阶段不要求继续重扫或生产采样，未知业务量保留为显式假设。
 
-当前优先级：冻结已完成结果 → 在固定合成合同下做[6轮机制诊断](TARGET_V2_SIGNAL_DIAG_GUIDE.md) → 按具体缺口只选一项重复或稳健性工作族。现有模拟尚未验证生产代表性；这不阻塞独立工程。能够访问真实应用的当地agent使用[分阶段手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt版](PRODUCTION_AGENT_PROMPTS_ONLY.md)，先核实本地事实，再在授权范围做业务关联验证。
+当前优先级：冻结已完成结果 → [9轮regular守护](TARGET_V2_COVERAGE_NEXT.md) → 按同页合同补短工作或持续压力，独立推进[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)与功能验收。不以旧trace不能识别RPC为由无限后置已知业务结构。现有模拟尚未验证生产代表性；这不阻塞独立工程。能够访问真实应用的当地agent使用[分阶段手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt版](PRODUCTION_AGENT_PROMPTS_ONLY.md)，先核实本地事实，再在授权范围做业务关联验证。
 
 目标保持每个选定硬件cluster一个池，当前六池。旧四池未绑CPU是观测来源，不能重分成六池充当目标验证，也不要求把四池重新部署起来。无法取得真实业务特征时保留未知；目标cluster的生产性能外推仍属后续待验收项。
 

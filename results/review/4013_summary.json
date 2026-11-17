@@ -1,0 +1,1371 @@
+{
+  "source": "4013.log",
+  "source_sha256": "c045f001126d82c29399799c4ea0aec296f236a1e17942cb293242525b999f78",
+  "evidence": "User terminal excerpt; rounded values, not local reanalysis of original target CSV. trace1 mechanism diagnosis, not performance replication of trace0.",
+  "cohort": {
+    "start_s": 2,
+    "end_s": 18,
+    "requests": 192,
+    "complete_bursts": 24
+  },
+  "common_cli_contract": {
+    "--cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+    "--affinity": "cluster",
+    "--capacity-scale": "1",
+    "--requests": "240",
+    "--qps": "12",
+    "--arrival": "burst",
+    "--burst-size": "8",
+    "--burst-spacing-us": "100",
+    "--widths": "80,4",
+    "--depths": "2,2",
+    "--iterations": "3000000",
+    "--model": "branch-rw",
+    "--branch-kb": "64",
+    "--shared-kb": "0",
+    "--accesses": "100000",
+    "--jitter-percent": "25",
+    "--long-every": "8",
+    "--long-factor": "4",
+    "--work-scale-scope": "task",
+    "--estimate-mode": "constant",
+    "--home-policy": "rr",
+    "--continuation": "parent",
+    "--balance-at": "all",
+    "--batch-chunk": "1",
+    "--cross-numa": "0",
+    "--max-hops": "4",
+    "--cpu-sampling": "0",
+    "--trace": "1",
+    "--page-sample": "0",
+    "--max-inflight": "16",
+    "--memory-mb": "512",
+    "--seed": "421"
+  },
+  "runs": [
+    {
+      "run": "seed-421-threads-16-home",
+      "seed": 421,
+      "threads": 16,
+      "policy": "home",
+      "cohort_completed": 192,
+      "cohort_offered": 192,
+      "mean_ms": 157.53,
+      "p95_ms": 214.795,
+      "p99_ms": 227.492,
+      "task_wait_p99_ms": 81.271,
+      "operator_cpu_mean_ms": 8.135,
+      "operator_wall_mean_ms": 8.155,
+      "cohort_migrations": 0,
+      "cohort_callbacks": 32832,
+      "cohort_cross_numa": 0,
+      "whole_process_cpu_s": 328.394902,
+      "whole_cpu_per_request_ms": 1368.312,
+      "peak_inflight": 8,
+      "whole_lag_p99_ms": 0.06,
+      "work_signature_prefix": "fc06affb90adaefe",
+      "fixed_work_prefix": "c861bc6478270114",
+      "arrival_hash": "10878810193197158425",
+      "checksum": "15104970427462885364",
+      "pool_callback_occupancy": [
+        {
+          "pool": 0,
+          "mean": 2.774,
+          "peak": 16
+        },
+        {
+          "pool": 1,
+          "mean": 2.791,
+          "peak": 16
+        },
+        {
+          "pool": 2,
+          "mean": 2.764,
+          "peak": 16
+        },
+        {
+          "pool": 3,
+          "mean": 2.725,
+          "peak": 16
+        },
+        {
+          "pool": 4,
+          "mean": 2.733,
+          "peak": 16
+        },
+        {
+          "pool": 5,
+          "mean": 2.689,
+          "peak": 16
+        }
+      ],
+      "all_callback_occupancy_mean": 16.476,
+      "all_callback_occupancy_peak": 96,
+      "attempt_span_ms": {
+        "mean": 0.693,
+        "p50": 0.694,
+        "p95": 0.695,
+        "p99": 0.696,
+        "max": 0.696
+      },
+      "roles": [
+        {
+          "role": "init",
+          "n": 192,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.016,
+          "cpu_mean_ms": 3.004,
+          "wall_mean_ms": 3.016,
+          "routing_reasons": {
+            "PinnedHome": 192
+          }
+        },
+        {
+          "role": "first-wave stage0",
+          "n": 15360,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 25.15,
+          "cpu_mean_ms": 8.222,
+          "wall_mean_ms": 8.243,
+          "routing_reasons": {
+            "Home": 15360
+          }
+        },
+        {
+          "role": "later-wave stage0",
+          "n": 768,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.187,
+          "cpu_mean_ms": 7.669,
+          "wall_mean_ms": 7.684,
+          "routing_reasons": {
+            "Home": 768
+          }
+        },
+        {
+          "role": "ordinary successors",
+          "n": 16128,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 50.285,
+          "cpu_mean_ms": 8.074,
+          "wall_mean_ms": 8.093,
+          "routing_reasons": {
+            "Home": 16128
+          }
+        },
+        {
+          "role": "join",
+          "n": 384,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 1.804,
+          "cpu_mean_ms": 0.004,
+          "wall_mean_ms": 0.004,
+          "routing_reasons": {
+            "Home": 384
+          }
+        }
+      ],
+      "first_fork": {
+        "recorded_submit_span_ms": {
+          "mean": 0.092,
+          "p50": 0.072,
+          "p95": 0.218,
+          "p99": 0.262
+        },
+        "all_started_after_first_submit_ms": {
+          "mean": 45.217,
+          "p50": 36.074,
+          "p95": 79.039,
+          "p99": 82.561
+        },
+        "stage0_callback_span_ms": {
+          "mean": 57.845,
+          "p50": 58.396,
+          "p95": 66.768,
+          "p99": 73.123
+        },
+        "callback_mean": {
+          "mean": 11.465,
+          "p50": 11.497,
+          "p95": 13.042,
+          "p99": 13.899
+        },
+        "callback_peak": {
+          "mean": 16.0,
+          "p50": 16.0,
+          "p95": 16.0,
+          "p99": 16.0
+        },
+        "home_pool_callback_peak": {
+          "mean": 16.0,
+          "p50": 16.0,
+          "p95": 16.0,
+          "p99": 16.0
+        }
+      },
+      "joint_operator_count": 32256,
+      "joint_load": [
+        {
+          "condition": "Q =0, I/C <=1, O/C <=1",
+          "n": 1108,
+          "percent": 3.435,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.004,
+          "wait_p99_ms": 0.018,
+          "wall_p50_ms": 5.669,
+          "wall_p99_ms": 26.245
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C <=1",
+          "n": 2544,
+          "percent": 7.887,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.063,
+          "wait_p99_ms": 0.874,
+          "wall_p50_ms": 6.458,
+          "wall_p99_ms": 28.871
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C >1",
+          "n": 28604,
+          "percent": 88.678,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 33.664,
+          "wait_p99_ms": 81.506,
+          "wall_p50_ms": 6.13,
+          "wall_p99_ms": 28.218
+        }
+      ],
+      "order_within_block": 1,
+      "whole_completed": 240,
+      "whole_failed_or_rejected": 0
+    },
+    {
+      "run": "seed-421-threads-16-outstanding",
+      "seed": 421,
+      "threads": 16,
+      "policy": "outstanding",
+      "cohort_completed": 192,
+      "cohort_offered": 192,
+      "mean_ms": 145.379,
+      "p95_ms": 183.362,
+      "p99_ms": 190.936,
+      "task_wait_p99_ms": 67.188,
+      "operator_cpu_mean_ms": 8.142,
+      "operator_wall_mean_ms": 8.175,
+      "cohort_migrations": 15760,
+      "cohort_callbacks": 32832,
+      "cohort_cross_numa": 0,
+      "whole_process_cpu_s": 328.902076,
+      "whole_cpu_per_request_ms": 1370.425,
+      "peak_inflight": 8,
+      "whole_lag_p99_ms": 0.06,
+      "work_signature_prefix": "fc06affb90adaefe",
+      "fixed_work_prefix": "c861bc6478270114",
+      "arrival_hash": "10878810193197158425",
+      "checksum": "15104970427462885364",
+      "pool_callback_occupancy": [
+        {
+          "pool": 0,
+          "mean": 2.853,
+          "peak": 16
+        },
+        {
+          "pool": 1,
+          "mean": 2.734,
+          "peak": 16
+        },
+        {
+          "pool": 2,
+          "mean": 2.775,
+          "peak": 16
+        },
+        {
+          "pool": 3,
+          "mean": 2.692,
+          "peak": 16
+        },
+        {
+          "pool": 4,
+          "mean": 2.705,
+          "peak": 16
+        },
+        {
+          "pool": 5,
+          "mean": 2.761,
+          "peak": 16
+        }
+      ],
+      "all_callback_occupancy_mean": 16.519,
+      "all_callback_occupancy_peak": 96,
+      "attempt_span_ms": {
+        "mean": 0.693,
+        "p50": 0.693,
+        "p95": 0.695,
+        "p99": 0.695,
+        "max": 0.695
+      },
+      "roles": [
+        {
+          "role": "init",
+          "n": 192,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.016,
+          "cpu_mean_ms": 3.199,
+          "wall_mean_ms": 3.212,
+          "routing_reasons": {
+            "PinnedHome": 192
+          }
+        },
+        {
+          "role": "first-wave stage0",
+          "n": 15360,
+          "source_ne_chosen": 9551,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 22.384,
+          "cpu_mean_ms": 8.234,
+          "wall_mean_ms": 8.261,
+          "routing_reasons": {
+            "BelowBusyThreshold": 794,
+            "InsufficientGain": 5015,
+            "LocalSpill": 9551
+          }
+        },
+        {
+          "role": "later-wave stage0",
+          "n": 768,
+          "source_ne_chosen": 57,
+          "source_ne_home_chosen_eq_home": 17,
+          "wait_mean_ms": 0.29,
+          "cpu_mean_ms": 7.733,
+          "wall_mean_ms": 7.75,
+          "routing_reasons": {
+            "BelowBusyThreshold": 576,
+            "InsufficientGain": 135,
+            "LocalSpill": 57
+          }
+        },
+        {
+          "role": "ordinary successors",
+          "n": 16128,
+          "source_ne_chosen": 6108,
+          "source_ne_home_chosen_eq_home": 1888,
+          "wait_mean_ms": 45.87,
+          "cpu_mean_ms": 8.073,
+          "wall_mean_ms": 8.113,
+          "routing_reasons": {
+            "BelowBusyThreshold": 752,
+            "HopBudget": 10,
+            "InsufficientGain": 9258,
+            "LocalSpill": 6108
+          }
+        },
+        {
+          "role": "join",
+          "n": 384,
+          "source_ne_chosen": 44,
+          "source_ne_home_chosen_eq_home": 13,
+          "wait_mean_ms": 1.317,
+          "cpu_mean_ms": 0.005,
+          "wall_mean_ms": 0.006,
+          "routing_reasons": {
+            "BelowBusyThreshold": 325,
+            "HopBudget": 4,
+            "InsufficientGain": 11,
+            "LocalSpill": 44
+          }
+        }
+      ],
+      "first_fork": {
+        "recorded_submit_span_ms": {
+          "mean": 0.132,
+          "p50": 0.107,
+          "p95": 0.24,
+          "p99": 0.289
+        },
+        "all_started_after_first_submit_ms": {
+          "mean": 32.275,
+          "p50": 32.475,
+          "p95": 63.408,
+          "p99": 70.26
+        },
+        "stage0_callback_span_ms": {
+          "mean": 40.544,
+          "p50": 39.951,
+          "p95": 50.55,
+          "p99": 73.294
+        },
+        "callback_mean": {
+          "mean": 16.745,
+          "p50": 16.357,
+          "p95": 22.266,
+          "p99": 22.817
+        },
+        "callback_peak": {
+          "mean": 39.198,
+          "p50": 39.0,
+          "p95": 48.0,
+          "p99": 48.0
+        },
+        "home_pool_callback_peak": {
+          "mean": 14.578,
+          "p50": 15.0,
+          "p95": 16.0,
+          "p99": 16.0
+        }
+      },
+      "joint_operator_count": 32256,
+      "joint_load": [
+        {
+          "condition": "Q =0, I/C <=1, O/C <=1",
+          "n": 1087,
+          "percent": 3.37,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.005,
+          "wait_p99_ms": 0.02,
+          "wall_p50_ms": 5.703,
+          "wall_p99_ms": 26.421
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C <=1",
+          "n": 2529,
+          "percent": 7.84,
+          "requests": 175,
+          "pools": 6,
+          "wait_p50_ms": 0.06,
+          "wait_p99_ms": 1.399,
+          "wall_p50_ms": 6.497,
+          "wall_p99_ms": 28.563
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C >1",
+          "n": 28640,
+          "percent": 88.79,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 38.977,
+          "wait_p99_ms": 67.406,
+          "wall_p50_ms": 6.139,
+          "wall_p99_ms": 28.297
+        }
+      ],
+      "order_within_block": 4,
+      "whole_completed": 240,
+      "whole_failed_or_rejected": 0
+    },
+    {
+      "run": "seed-421-threads-16-queue",
+      "seed": 421,
+      "threads": 16,
+      "policy": "queue",
+      "cohort_completed": 192,
+      "cohort_offered": 192,
+      "mean_ms": 146.024,
+      "p95_ms": 184.647,
+      "p99_ms": 197.57,
+      "task_wait_p99_ms": 67.981,
+      "operator_cpu_mean_ms": 8.151,
+      "operator_wall_mean_ms": 8.171,
+      "cohort_migrations": 15248,
+      "cohort_callbacks": 32832,
+      "cohort_cross_numa": 0,
+      "whole_process_cpu_s": 329.100212,
+      "whole_cpu_per_request_ms": 1371.251,
+      "peak_inflight": 8,
+      "whole_lag_p99_ms": 0.061,
+      "work_signature_prefix": "fc06affb90adaefe",
+      "fixed_work_prefix": "c861bc6478270114",
+      "arrival_hash": "10878810193197158425",
+      "checksum": "15104970427462885364",
+      "pool_callback_occupancy": [
+        {
+          "pool": 0,
+          "mean": 2.8,
+          "peak": 16
+        },
+        {
+          "pool": 1,
+          "mean": 2.794,
+          "peak": 16
+        },
+        {
+          "pool": 2,
+          "mean": 2.753,
+          "peak": 16
+        },
+        {
+          "pool": 3,
+          "mean": 2.726,
+          "peak": 16
+        },
+        {
+          "pool": 4,
+          "mean": 2.743,
+          "peak": 16
+        },
+        {
+          "pool": 5,
+          "mean": 2.693,
+          "peak": 16
+        }
+      ],
+      "all_callback_occupancy_mean": 16.509,
+      "all_callback_occupancy_peak": 96,
+      "attempt_span_ms": {
+        "mean": 0.695,
+        "p50": 0.696,
+        "p95": 0.698,
+        "p99": 0.7,
+        "max": 0.7
+      },
+      "roles": [
+        {
+          "role": "init",
+          "n": 192,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.016,
+          "cpu_mean_ms": 3.062,
+          "wall_mean_ms": 3.075,
+          "routing_reasons": {
+            "PinnedHome": 192
+          }
+        },
+        {
+          "role": "first-wave stage0",
+          "n": 15360,
+          "source_ne_chosen": 9194,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 22.568,
+          "cpu_mean_ms": 8.233,
+          "wall_mean_ms": 8.254,
+          "routing_reasons": {
+            "BelowBusyThreshold": 1732,
+            "InsufficientGain": 4434,
+            "LocalSpill": 9194
+          }
+        },
+        {
+          "role": "later-wave stage0",
+          "n": 768,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.413,
+          "cpu_mean_ms": 7.824,
+          "wall_mean_ms": 7.84,
+          "routing_reasons": {
+            "BelowBusyThreshold": 768
+          }
+        },
+        {
+          "role": "ordinary successors",
+          "n": 16128,
+          "source_ne_chosen": 6027,
+          "source_ne_home_chosen_eq_home": 1848,
+          "wait_mean_ms": 45.927,
+          "cpu_mean_ms": 8.088,
+          "wall_mean_ms": 8.107,
+          "routing_reasons": {
+            "BelowBusyThreshold": 769,
+            "InsufficientGain": 9332,
+            "LocalSpill": 6027
+          }
+        },
+        {
+          "role": "join",
+          "n": 384,
+          "source_ne_chosen": 27,
+          "source_ne_home_chosen_eq_home": 11,
+          "wait_mean_ms": 1.362,
+          "cpu_mean_ms": 0.005,
+          "wall_mean_ms": 0.005,
+          "routing_reasons": {
+            "BelowBusyThreshold": 349,
+            "InsufficientGain": 8,
+            "LocalSpill": 27
+          }
+        }
+      ],
+      "first_fork": {
+        "recorded_submit_span_ms": {
+          "mean": 0.136,
+          "p50": 0.117,
+          "p95": 0.262,
+          "p99": 0.355
+        },
+        "all_started_after_first_submit_ms": {
+          "mean": 32.953,
+          "p50": 31.86,
+          "p95": 64.739,
+          "p99": 72.289
+        },
+        "stage0_callback_span_ms": {
+          "mean": 41.19,
+          "p50": 40.397,
+          "p95": 51.116,
+          "p99": 55.414
+        },
+        "callback_mean": {
+          "mean": 16.401,
+          "p50": 16.14,
+          "p95": 20.488,
+          "p99": 22.661
+        },
+        "callback_peak": {
+          "mean": 38.724,
+          "p50": 39.0,
+          "p95": 48.0,
+          "p99": 48.0
+        },
+        "home_pool_callback_peak": {
+          "mean": 14.651,
+          "p50": 15.0,
+          "p95": 16.0,
+          "p99": 16.0
+        }
+      },
+      "joint_operator_count": 32256,
+      "joint_load": [
+        {
+          "condition": "Q =0, I/C <=1, O/C <=1",
+          "n": 1192,
+          "percent": 3.695,
+          "requests": 191,
+          "pools": 6,
+          "wait_p50_ms": 0.005,
+          "wait_p99_ms": 0.019,
+          "wall_p50_ms": 5.824,
+          "wall_p99_ms": 27.712
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C <=1",
+          "n": 2368,
+          "percent": 7.341,
+          "requests": 174,
+          "pools": 6,
+          "wait_p50_ms": 0.056,
+          "wait_p99_ms": 0.961,
+          "wall_p50_ms": 6.427,
+          "wall_p99_ms": 28.633
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C >1",
+          "n": 28696,
+          "percent": 88.963,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 38.938,
+          "wait_p99_ms": 68.338,
+          "wall_p50_ms": 6.135,
+          "wall_p99_ms": 28.243
+        }
+      ],
+      "order_within_block": 3,
+      "whole_completed": 240,
+      "whole_failed_or_rejected": 0
+    },
+    {
+      "run": "seed-421-threads-128-home",
+      "seed": 421,
+      "threads": 128,
+      "policy": "home",
+      "cohort_completed": 192,
+      "cohort_offered": 192,
+      "mean_ms": 160.173,
+      "p95_ms": 218.904,
+      "p99_ms": 226.132,
+      "task_wait_p99_ms": 71.868,
+      "operator_cpu_mean_ms": 8.171,
+      "operator_wall_mean_ms": 15.007,
+      "cohort_migrations": 0,
+      "cohort_callbacks": 32832,
+      "cohort_cross_numa": 0,
+      "whole_process_cpu_s": 330.041332,
+      "whole_cpu_per_request_ms": 1375.172,
+      "peak_inflight": 8,
+      "whole_lag_p99_ms": 0.06,
+      "work_signature_prefix": "fc06affb90adaefe",
+      "fixed_work_prefix": "c861bc6478270114",
+      "arrival_hash": "10878810193197158425",
+      "checksum": "15104970427462885364",
+      "pool_callback_occupancy": [
+        {
+          "pool": 0,
+          "mean": 5.126,
+          "peak": 57
+        },
+        {
+          "pool": 1,
+          "mean": 5.139,
+          "peak": 55
+        },
+        {
+          "pool": 2,
+          "mean": 5.031,
+          "peak": 57
+        },
+        {
+          "pool": 3,
+          "mean": 5.015,
+          "peak": 57
+        },
+        {
+          "pool": 4,
+          "mean": 4.92,
+          "peak": 55
+        },
+        {
+          "pool": 5,
+          "mean": 5.059,
+          "peak": 59
+        }
+      ],
+      "all_callback_occupancy_mean": 30.291,
+      "all_callback_occupancy_peak": 220,
+      "attempt_span_ms": {
+        "mean": 0.694,
+        "p50": 0.694,
+        "p95": 0.696,
+        "p99": 0.698,
+        "max": 0.698
+      },
+      "roles": [
+        {
+          "role": "init",
+          "n": 192,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.016,
+          "cpu_mean_ms": 2.936,
+          "wall_mean_ms": 2.986,
+          "routing_reasons": {
+            "PinnedHome": 192
+          }
+        },
+        {
+          "role": "first-wave stage0",
+          "n": 15360,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 23.193,
+          "cpu_mean_ms": 8.272,
+          "wall_mean_ms": 14.059,
+          "routing_reasons": {
+            "Home": 15360
+          }
+        },
+        {
+          "role": "later-wave stage0",
+          "n": 768,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.056,
+          "cpu_mean_ms": 7.607,
+          "wall_mean_ms": 7.64,
+          "routing_reasons": {
+            "Home": 768
+          }
+        },
+        {
+          "role": "ordinary successors",
+          "n": 16128,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 41.801,
+          "cpu_mean_ms": 8.102,
+          "wall_mean_ms": 16.262,
+          "routing_reasons": {
+            "Home": 16128
+          }
+        },
+        {
+          "role": "join",
+          "n": 384,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.007,
+          "cpu_mean_ms": 0.004,
+          "wall_mean_ms": 0.005,
+          "routing_reasons": {
+            "Home": 384
+          }
+        }
+      ],
+      "first_fork": {
+        "recorded_submit_span_ms": {
+          "mean": 0.097,
+          "p50": 0.074,
+          "p95": 0.21,
+          "p99": 0.268
+        },
+        "all_started_after_first_submit_ms": {
+          "mean": 41.569,
+          "p50": 33.25,
+          "p95": 73.33,
+          "p99": 75.809
+        },
+        "stage0_callback_span_ms": {
+          "mean": 96.682,
+          "p50": 88.485,
+          "p95": 136.036,
+          "p99": 155.911
+        },
+        "callback_mean": {
+          "mean": 11.788,
+          "p50": 11.842,
+          "p95": 14.232,
+          "p99": 15.194
+        },
+        "callback_peak": {
+          "mean": 27.307,
+          "p50": 26.0,
+          "p95": 36.0,
+          "p99": 39.0
+        },
+        "home_pool_callback_peak": {
+          "mean": 27.307,
+          "p50": 26.0,
+          "p95": 36.0,
+          "p99": 39.0
+        }
+      },
+      "joint_operator_count": 32256,
+      "joint_load": [
+        {
+          "condition": "Q =0, I/C <=1, O/C <=1",
+          "n": 1270,
+          "percent": 3.937,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.005,
+          "wait_p99_ms": 0.018,
+          "wall_p50_ms": 5.679,
+          "wall_p99_ms": 27.462
+        },
+        {
+          "condition": "Q =0, I/C >1, O/C >1",
+          "n": 120,
+          "percent": 0.372,
+          "requests": 81,
+          "pools": 6,
+          "wait_p50_ms": 0.008,
+          "wait_p99_ms": 1.144,
+          "wall_p50_ms": 6.422,
+          "wall_p99_ms": 28.031
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C <=1",
+          "n": 2673,
+          "percent": 8.287,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.06,
+          "wait_p99_ms": 0.402,
+          "wall_p50_ms": 6.569,
+          "wall_p99_ms": 56.535
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C >1",
+          "n": 13362,
+          "percent": 41.425,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 24.023,
+          "wait_p99_ms": 70.587,
+          "wall_p50_ms": 9.021,
+          "wall_p99_ms": 82.432
+        },
+        {
+          "condition": "Q >0, I/C >1, O/C >1",
+          "n": 14831,
+          "percent": 45.979,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 35.686,
+          "wait_p99_ms": 72.948,
+          "wall_p50_ms": 13.597,
+          "wall_p99_ms": 69.795
+        }
+      ],
+      "order_within_block": 2,
+      "whole_completed": 240,
+      "whole_failed_or_rejected": 0
+    },
+    {
+      "run": "seed-421-threads-128-outstanding",
+      "seed": 421,
+      "threads": 128,
+      "policy": "outstanding",
+      "cohort_completed": 192,
+      "cohort_offered": 192,
+      "mean_ms": 151.492,
+      "p95_ms": 188.082,
+      "p99_ms": 205.922,
+      "task_wait_p99_ms": 58.467,
+      "operator_cpu_mean_ms": 8.186,
+      "operator_wall_mean_ms": 14.43,
+      "cohort_migrations": 15099,
+      "cohort_callbacks": 32832,
+      "cohort_cross_numa": 0,
+      "whole_process_cpu_s": 330.751672,
+      "whole_cpu_per_request_ms": 1378.132,
+      "peak_inflight": 8,
+      "whole_lag_p99_ms": 0.059,
+      "work_signature_prefix": "fc06affb90adaefe",
+      "fixed_work_prefix": "c861bc6478270114",
+      "arrival_hash": "10878810193197158425",
+      "checksum": "15104970427462885364",
+      "pool_callback_occupancy": [
+        {
+          "pool": 0,
+          "mean": 4.883,
+          "peak": 47
+        },
+        {
+          "pool": 1,
+          "mean": 4.929,
+          "peak": 51
+        },
+        {
+          "pool": 2,
+          "mean": 4.892,
+          "peak": 50
+        },
+        {
+          "pool": 3,
+          "mean": 4.796,
+          "peak": 50
+        },
+        {
+          "pool": 4,
+          "mean": 4.713,
+          "peak": 48
+        },
+        {
+          "pool": 5,
+          "mean": 4.917,
+          "peak": 50
+        }
+      ],
+      "all_callback_occupancy_mean": 29.13,
+      "all_callback_occupancy_peak": 247,
+      "attempt_span_ms": {
+        "mean": 0.694,
+        "p50": 0.694,
+        "p95": 0.695,
+        "p99": 0.696,
+        "max": 0.696
+      },
+      "roles": [
+        {
+          "role": "init",
+          "n": 192,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.016,
+          "cpu_mean_ms": 3.139,
+          "wall_mean_ms": 3.244,
+          "routing_reasons": {
+            "PinnedHome": 192
+          }
+        },
+        {
+          "role": "first-wave stage0",
+          "n": 15360,
+          "source_ne_chosen": 8960,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 20.904,
+          "cpu_mean_ms": 8.271,
+          "wall_mean_ms": 13.726,
+          "routing_reasons": {
+            "BelowBusyThreshold": 906,
+            "InsufficientGain": 5494,
+            "LocalSpill": 8960
+          }
+        },
+        {
+          "role": "later-wave stage0",
+          "n": 768,
+          "source_ne_chosen": 8,
+          "source_ne_home_chosen_eq_home": 3,
+          "wait_mean_ms": 0.031,
+          "cpu_mean_ms": 7.76,
+          "wall_mean_ms": 7.797,
+          "routing_reasons": {
+            "BelowBusyThreshold": 757,
+            "InsufficientGain": 3,
+            "LocalSpill": 8
+          }
+        },
+        {
+          "role": "ordinary successors",
+          "n": 16128,
+          "source_ne_chosen": 6130,
+          "source_ne_home_chosen_eq_home": 1740,
+          "wait_mean_ms": 37.664,
+          "cpu_mean_ms": 8.124,
+          "wall_mean_ms": 15.416,
+          "routing_reasons": {
+            "BelowBusyThreshold": 935,
+            "InsufficientGain": 9063,
+            "LocalSpill": 6130
+          }
+        },
+        {
+          "role": "join",
+          "n": 384,
+          "source_ne_chosen": 1,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.005,
+          "cpu_mean_ms": 0.006,
+          "wall_mean_ms": 0.006,
+          "routing_reasons": {
+            "BelowBusyThreshold": 383,
+            "LocalSpill": 1
+          }
+        }
+      ],
+      "first_fork": {
+        "recorded_submit_span_ms": {
+          "mean": 0.18,
+          "p50": 0.127,
+          "p95": 0.309,
+          "p99": 0.343
+        },
+        "all_started_after_first_submit_ms": {
+          "mean": 30.866,
+          "p50": 31.686,
+          "p95": 58.77,
+          "p99": 64.539
+        },
+        "stage0_callback_span_ms": {
+          "mean": 82.402,
+          "p50": 80.402,
+          "p95": 112.693,
+          "p99": 125.863
+        },
+        "callback_mean": {
+          "mean": 13.694,
+          "p50": 13.688,
+          "p95": 18.137,
+          "p99": 23.055
+        },
+        "callback_peak": {
+          "mean": 48.948,
+          "p50": 51.0,
+          "p95": 60.0,
+          "p99": 67.0
+        },
+        "home_pool_callback_peak": {
+          "mean": 19.932,
+          "p50": 19.0,
+          "p95": 25.0,
+          "p99": 29.0
+        }
+      },
+      "joint_operator_count": 32256,
+      "joint_load": [
+        {
+          "condition": "Q =0, I/C <=1, O/C <=1",
+          "n": 1337,
+          "percent": 4.145,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.005,
+          "wait_p99_ms": 0.027,
+          "wall_p50_ms": 5.735,
+          "wall_p99_ms": 26.836
+        },
+        {
+          "condition": "Q =0, I/C >1, O/C >1",
+          "n": 100,
+          "percent": 0.31,
+          "requests": 72,
+          "pools": 6,
+          "wait_p50_ms": 0.081,
+          "wait_p99_ms": 1.011,
+          "wall_p50_ms": 6.098,
+          "wall_p99_ms": 24.716
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C <=1",
+          "n": 2653,
+          "percent": 8.225,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.056,
+          "wait_p99_ms": 1.041,
+          "wall_p50_ms": 6.635,
+          "wall_p99_ms": 57.405
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C >1",
+          "n": 12066,
+          "percent": 37.407,
+          "requests": 188,
+          "pools": 6,
+          "wait_p50_ms": 22.384,
+          "wait_p99_ms": 55.981,
+          "wall_p50_ms": 8.577,
+          "wall_p99_ms": 76.64
+        },
+        {
+          "condition": "Q >0, I/C >1, O/C >1",
+          "n": 16100,
+          "percent": 49.913,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 40.236,
+          "wait_p99_ms": 59.536,
+          "wall_p50_ms": 12.978,
+          "wall_p99_ms": 61.698
+        }
+      ],
+      "order_within_block": 6,
+      "whole_completed": 240,
+      "whole_failed_or_rejected": 0
+    },
+    {
+      "run": "seed-421-threads-128-queue",
+      "seed": 421,
+      "threads": 128,
+      "policy": "queue",
+      "cohort_completed": 192,
+      "cohort_offered": 192,
+      "mean_ms": 151.277,
+      "p95_ms": 187.24,
+      "p99_ms": 198.169,
+      "task_wait_p99_ms": 58.09,
+      "operator_cpu_mean_ms": 8.181,
+      "operator_wall_mean_ms": 14.66,
+      "cohort_migrations": 14813,
+      "cohort_callbacks": 32832,
+      "cohort_cross_numa": 0,
+      "whole_process_cpu_s": 330.654969,
+      "whole_cpu_per_request_ms": 1377.729,
+      "peak_inflight": 8,
+      "whole_lag_p99_ms": 0.06,
+      "work_signature_prefix": "fc06affb90adaefe",
+      "fixed_work_prefix": "c861bc6478270114",
+      "arrival_hash": "10878810193197158425",
+      "checksum": "15104970427462885364",
+      "pool_callback_occupancy": [
+        {
+          "pool": 0,
+          "mean": 4.941,
+          "peak": 49
+        },
+        {
+          "pool": 1,
+          "mean": 4.971,
+          "peak": 49
+        },
+        {
+          "pool": 2,
+          "mean": 5.027,
+          "peak": 49
+        },
+        {
+          "pool": 3,
+          "mean": 4.865,
+          "peak": 50
+        },
+        {
+          "pool": 4,
+          "mean": 4.878,
+          "peak": 50
+        },
+        {
+          "pool": 5,
+          "mean": 4.912,
+          "peak": 55
+        }
+      ],
+      "all_callback_occupancy_mean": 29.595,
+      "all_callback_occupancy_peak": 253,
+      "attempt_span_ms": {
+        "mean": 0.694,
+        "p50": 0.693,
+        "p95": 0.695,
+        "p99": 0.695,
+        "max": 0.695
+      },
+      "roles": [
+        {
+          "role": "init",
+          "n": 192,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.016,
+          "cpu_mean_ms": 3.172,
+          "wall_mean_ms": 3.281,
+          "routing_reasons": {
+            "PinnedHome": 192
+          }
+        },
+        {
+          "role": "first-wave stage0",
+          "n": 15360,
+          "source_ne_chosen": 8638,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 20.755,
+          "cpu_mean_ms": 8.266,
+          "wall_mean_ms": 13.882,
+          "routing_reasons": {
+            "BelowBusyThreshold": 1819,
+            "InsufficientGain": 4903,
+            "LocalSpill": 8638
+          }
+        },
+        {
+          "role": "later-wave stage0",
+          "n": 768,
+          "source_ne_chosen": 0,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.063,
+          "cpu_mean_ms": 7.766,
+          "wall_mean_ms": 7.86,
+          "routing_reasons": {
+            "BelowBusyThreshold": 768
+          }
+        },
+        {
+          "role": "ordinary successors",
+          "n": 16128,
+          "source_ne_chosen": 6174,
+          "source_ne_home_chosen_eq_home": 1762,
+          "wait_mean_ms": 37.383,
+          "cpu_mean_ms": 8.121,
+          "wall_mean_ms": 15.725,
+          "routing_reasons": {
+            "BelowBusyThreshold": 1209,
+            "InsufficientGain": 8745,
+            "LocalSpill": 6174
+          }
+        },
+        {
+          "role": "join",
+          "n": 384,
+          "source_ne_chosen": 1,
+          "source_ne_home_chosen_eq_home": 0,
+          "wait_mean_ms": 0.017,
+          "cpu_mean_ms": 0.005,
+          "wall_mean_ms": 0.01,
+          "routing_reasons": {
+            "BelowBusyThreshold": 383,
+            "LocalSpill": 1
+          }
+        }
+      ],
+      "first_fork": {
+        "recorded_submit_span_ms": {
+          "mean": 0.168,
+          "p50": 0.144,
+          "p95": 0.334,
+          "p99": 0.448
+        },
+        "all_started_after_first_submit_ms": {
+          "mean": 30.775,
+          "p50": 31.151,
+          "p95": 59.098,
+          "p99": 64.426
+        },
+        "stage0_callback_span_ms": {
+          "mean": 82.857,
+          "p50": 81.868,
+          "p95": 112.905,
+          "p99": 121.92
+        },
+        "callback_mean": {
+          "mean": 13.725,
+          "p50": 13.684,
+          "p95": 18.227,
+          "p99": 19.577
+        },
+        "callback_peak": {
+          "mean": 48.818,
+          "p50": 51.0,
+          "p95": 61.0,
+          "p99": 65.0
+        },
+        "home_pool_callback_peak": {
+          "mean": 20.427,
+          "p50": 20.0,
+          "p95": 26.0,
+          "p99": 29.0
+        }
+      },
+      "joint_operator_count": 32256,
+      "joint_load": [
+        {
+          "condition": "Q =0, I/C <=1, O/C <=1",
+          "n": 1376,
+          "percent": 4.266,
+          "requests": 191,
+          "pools": 6,
+          "wait_p50_ms": 0.005,
+          "wait_p99_ms": 0.021,
+          "wall_p50_ms": 5.779,
+          "wall_p99_ms": 28.151
+        },
+        {
+          "condition": "Q =0, I/C >1, O/C >1",
+          "n": 157,
+          "percent": 0.487,
+          "requests": 90,
+          "pools": 6,
+          "wait_p50_ms": 0.009,
+          "wait_p99_ms": 0.794,
+          "wall_p50_ms": 6.512,
+          "wall_p99_ms": 26.59
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C <=1",
+          "n": 2575,
+          "percent": 7.983,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 0.054,
+          "wait_p99_ms": 1.156,
+          "wall_p50_ms": 6.614,
+          "wall_p99_ms": 57.458
+        },
+        {
+          "condition": "Q >0, I/C <=1, O/C >1",
+          "n": 12957,
+          "percent": 40.169,
+          "requests": 191,
+          "pools": 6,
+          "wait_p50_ms": 22.955,
+          "wait_p99_ms": 56.225,
+          "wall_p50_ms": 8.651,
+          "wall_p99_ms": 77.904
+        },
+        {
+          "condition": "Q >0, I/C >1, O/C >1",
+          "n": 15191,
+          "percent": 47.095,
+          "requests": 192,
+          "pools": 6,
+          "wait_p50_ms": 40.343,
+          "wait_p99_ms": 59.328,
+          "wall_p50_ms": 13.402,
+          "wall_p99_ms": 60.392
+        }
+      ],
+      "order_within_block": 5,
+      "whole_completed": 240,
+      "whole_failed_or_rejected": 0
+    }
+  ]
+}
