@@ -51,7 +51,15 @@
     "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
   },
   {
-    "name": "07_regular12_3m",
+    "name": "07_same_run_mechanism",
+    "title": "同轮执行与迁移证据",
+    "sources": [
+      "4013"
+    ],
+    "caption": "同时比较CPU/墙钟、开始前等待及改投率；不同统计对象分别标出。"
+  },
+  {
+    "name": "08_regular12_3m",
     "title": "12 QPS，每83.333ms一请求：比较Q与O",
     "sources": [
       "4014"
@@ -59,7 +67,7 @@
     "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
   },
   {
-    "name": "08_regular96_375k",
+    "name": "09_regular96_375k",
     "title": "96 QPS，每10.417ms一请求：比较Q与O",
     "sources": [
       "4016"
@@ -67,20 +75,12 @@
     "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
   },
   {
-    "name": "09_fork_all",
+    "name": "10_fork_all",
     "title": "12 QPS、8请求成组、每池128线程：算子在哪些提交点均衡",
     "sources": [
       "4011"
     ],
     "caption": "场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。"
-  },
-  {
-    "name": "10_same_run_mechanism",
-    "title": "同轮执行与迁移证据",
-    "sources": [
-      "4013"
-    ],
-    "caption": "同时比较CPU/墙钟、开始前等待及改投率；不同统计对象分别标出。"
   },
   {
     "name": "11_async_wait",

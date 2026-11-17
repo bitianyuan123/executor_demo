@@ -132,13 +132,13 @@ def scenario_chart(name,number,batch,title,sub,threads,policies):
  footer(fig,seed_note+'CPU/请求是计算消耗，不是实时CPU利用率。\n请求时延取计划到达[2,18)窗口，CPU取整轮；该批实时CPU未采集，迁移记录须看单独trace1对照。')
  save(fig,name,title,[batch],'场景内绝对指标，明确负载与线程；没有填造缺失的CPU时间序列。')
 scenario_chart('06_burst12_3m',6,'4012','12 QPS：8请求一组，组内间隔100µs，批周期666.667ms','每请求80×2+4×2=168算子；基准300万迭代+10万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16,128],['home','queue','active','outstanding'])
-scenario_chart('07_regular12_3m',7,'4014','12 QPS，每83.333ms一请求：比较Q与O','每请求80×2+4×2=168算子；基准300万迭代+10万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16],['home','queue','outstanding'])
-scenario_chart('08_regular96_375k',8,'4016','96 QPS，每10.417ms一请求：比较Q与O','每请求80×2+4×2=168算子；基准37.5万迭代+1.25万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16,128],['home','queue','outstanding'])
-scenario_chart('09_fork_all',9,'4011','12 QPS、8请求成组、每池128线程：算子在哪些提交点均衡','每组跨度700µs、周期666.667ms；168算子/请求；300万迭代+10万读写/算子；trace0、O评分、parent、同NUMA借出。',[128],['home','fork-parent','all-parent'])
+scenario_chart('08_regular12_3m',8,'4014','12 QPS，每83.333ms一请求：比较Q与O','每请求80×2+4×2=168算子；基准300万迭代+10万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16],['home','queue','outstanding'])
+scenario_chart('09_regular96_375k',9,'4016','96 QPS，每10.417ms一请求：比较Q与O','每请求80×2+4×2=168算子；基准37.5万迭代+1.25万读写/算子，±25%及约1/8四倍；6个cluster池，无异步。',[16,128],['home','queue','outstanding'])
+scenario_chart('10_fork_all',10,'4011','12 QPS、8请求成组、每池128线程：算子在哪些提交点均衡','每组跨度700µs、周期666.667ms；168算子/请求；300万迭代+10万读写/算子；trace0、O评分、parent、同NUMA借出。',[128],['home','fork-parent','all-parent'])
 
 # Mechanism: same batch/trace, including migration, not spliced into trace0.
 d13=json.loads((HERE.parents[1]/'results/review/4013_summary.json').read_text())['runs']
-fig,axs=plt.subplots(2,3,figsize=(14,8));fig.suptitle('图10  12 QPS、8请求成组：同一次trace1中的执行、等待和改投',x=.05,ha='left',fontsize=16)
+fig,axs=plt.subplots(2,3,figsize=(14,8));fig.suptitle('图7  12 QPS、8请求成组：同一次trace1中的执行、等待和改投',x=.05,ha='left',fontsize=16)
 for ri,t in enumerate([16,128]):
  rows=[next(r for r in d13 if r['threads']==t and r['policy']==p) for p in ['home','queue','outstanding']]
  for ci,(key,lab) in enumerate([('operator_cpu_mean_ms','算子CPU / 墙钟均值（ms）'),('task_wait_p99_ms','所有callback提交→开始p99（ms）'),('cohort_migrations','改投次数 / 全部callback（%）')]):
@@ -153,7 +153,7 @@ for ri,t in enumerate([16,128]):
 fig.legend(*axs[0,0].get_legend_handles_labels(),loc='upper center',bbox_to_anchor=(.5,.94),ncol=2,frameon=False)
 fig.subplots_adjust(top=.82,bottom=.13,wspace=.3,hspace=.45)
 footer(fig,'批内100µs、跨度700µs、批周期666.667ms。同seed421，192请求/32832个callback；300万迭代+10万读写/算子。改投=chosen≠保存的source，不是内核迁移。\n每点/柱来自本批trace1；它与图6的trace0为不同执行，不能把本图迁移率当作图6该轮的实测值。实时CPU未采集。')
-save(fig,'10_same_run_mechanism','同轮执行与迁移证据',['4013'],'同时比较CPU/墙钟、开始前等待及改投率；不同统计对象分别标出。')
+save(fig,'07_same_run_mechanism','同轮执行与迁移证据',['4013'],'同时比较CPU/墙钟、开始前等待及改投率；不同统计对象分别标出。')
 
 # Async contracts, numeric labels rather than names alone.
 fig,axs=plt.subplots(1,3,figsize=(14,5.3));fig.suptitle('图11  均匀每10.417ms一请求（96 QPS）：外部等待如何改变同一张图',x=.05,ha='left',fontsize=16)
@@ -193,7 +193,7 @@ fig.subplots_adjust(top=.81,bottom=.21,wspace=.23)
 footer(fig,'历史4池仅为无绑定采集配置；目标仍按cluster分组。各池峰不同时，不能相加；运行区间匹配与采集覆盖有缺失。')
 save(fig,'13_trace_mean_peak','历史峰值服务与cluster限制',['data/trace_evidence.json'],'逻辑CPU时间当量，不是当前测试实时利用率。')
 
-(OUT/'manifest.json').write_text(json.dumps(MANIFEST,ensure_ascii=False,indent=2)+'\n')
+(OUT/'manifest.json').write_text(json.dumps(sorted(MANIFEST,key=lambda item:item['name']),ensure_ascii=False,indent=2)+'\n')
 # Remove only earlier generated files tracked in the old report; no user results.
 legacy=['01_scene','02_sequence','03_routing','04_queue_latency','05_signal_tradeoffs','06_thread_budget','07_continuation','08_async_contracts','09_async_mechanism','10_observation','11_historical_trace']
 for stem in legacy:

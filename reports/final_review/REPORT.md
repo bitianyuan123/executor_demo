@@ -85,8 +85,6 @@ f = 4 if r % 8 == 0 else 1
 
 ### 1.5 异步等待放在哪里
 
-![直接后继和异步续接](figures/05_successor_async.png)
-
 三种模式保持上述168个业务算子的循环、访问、数据和依赖不变：
 
 | 模式 | 每个业务位置计算完成后 | 额外 callback | worker 是否被等待占住 |
@@ -226,6 +224,8 @@ stage0结束计算：
 | O+parent+all | 每项按压力选池 | 每次新ready再按压力选池 | 固定 |
 | continuation=home | 按策略处理 | 只有home低于return-low等条件满足才优先回home；fork普通后继不走这条分支 | 固定 |
 
+![直接后继和异步续接](figures/05_successor_async.png)
+
 parent表示“优先前驱实际执行池”，不表示永远留在那里；pool1忙时后继仍可去pool2，home变轻时也可能由普通选轻逻辑回到home。join由最后完成分支提交，因此parent起点是该分支实际池。
 
 当前本地选择需要首选池score严格高于high，并存在满足 `preferred_score-candidate_score>min_gain` 的更轻候选。候选不必绝对idle，也可能高于high。平手保留当前首选；候选之间平手保留扫描先遇到者。没有更轻池时留在原池，不为追求迁移率强制搬走。
@@ -286,7 +286,7 @@ parent表示“优先前驱实际执行池”，不表示永远留在那里；po
 
 4013保持成组到达、300万/10万、seed421，单独打开trace1；比较16/128 worker、home/Q/O。它回答机制，不补充为4012的独立性能重复。
 
-![同一诊断轮的执行、等待和改投](figures/10_same_run_mechanism.png)
+![同一诊断轮的执行、等待和改投](figures/07_same_run_mechanism.png)
 
 | seed / 每池worker / trace | 策略 | 请求mean ms | 请求p99 ms | CPU ms/完成请求 | 改投/回调（率） |
 |---|---|---|---|---|---|
@@ -307,7 +307,7 @@ O在16 worker时改投15760/32832=48.00%，Q为15248/32832=46.44%；128 worker�
 
 图结构与工作量保持场景A，改为每83.333 ms一个请求，T=16、无异步；同home每500 ms接一次请求。4014有三个工作seed，home/Q/O分别配对，active未运行。
 
-![均匀12QPS下策略比较](figures/07_regular12_3m.png)
+![均匀12QPS下策略比较](figures/08_regular12_3m.png)
 
 | seed / 每池worker / trace | 策略 | 请求mean ms | 请求p99 ms | CPU ms/完成请求 |
 |---|---|---|---|---|
@@ -336,7 +336,7 @@ O在16 worker时改投15760/32832=48.00%，Q为15248/32832=46.44%；128 worker�
 
 保持场景C的每请求图、数据、循环/访问，将到达变为每10.417 ms一个请求，同home每62.5 ms一个。4016固定seed421、无异步，比较home/Q/O和T16/128，每格一次、trace0；峰值在途3。
 
-![均匀96QPS下策略和线程比较](figures/08_regular96_375k.png)
+![均匀96QPS下策略和线程比较](figures/09_regular96_375k.png)
 
 | seed / 每池worker / trace | 策略 | 请求mean ms | 请求p99 ms | CPU ms/完成请求 |
 |---|---|---|---|---|
@@ -355,7 +355,7 @@ T16下Q略优于O，T128下两者排名并不完全一致；单格一次不足�
 
 4011使用成组12 QPS、300万/10万、T128、O评分；对home、fork-parent、all-parent做三seed比较。先看trace0性能，再在独立的trace1组内同时看时延和改投率。
 
-![分叉与所有后继的对照](figures/09_fork_all.png)
+![分叉与所有后继的对照](figures/10_fork_all.png)
 
 trace0各seed中all相对fork的mean变化为−0.893、−1.900、−0.836 ms；p99变化为−3.444、−6.908、+2.848 ms。后继也均衡有小幅mean收益，但不是每个seed的p99都更好。
 
