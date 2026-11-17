@@ -1,0 +1,116 @@
+Start testing: Nov 17 21:55 CST
+----------------------------------------------------------
+1/2 Testing: native_outstanding
+1/2 Test: native_outstanding
+Command: "/root/rank_demo/stage3_balance/build-load-accounting-native/native_outstanding_test"
+Directory: /root/rank_demo/stage3_balance/build-load-accounting-native
+"native_outstanding" start time: Nov 17 21:55 CST
+Output:
+----------------------------------------------------------
+[==========] Running 15 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 15 tests from CPUThreadPoolExecutorOutstandingTest
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.DisabledIsNotZero
+[       OK ] CPUThreadPoolExecutorOutstandingTest.DisabledIsNotZero (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.EnabledIdleAndJoin
+[       OK ] CPUThreadPoolExecutorOutstandingTest.EnabledIdleAndJoin (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.IncludesRunningAndQueuedTasks
+[       OK ] CPUThreadPoolExecutorOutstandingTest.IncludesRunningAndQueuedTasks (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.CountedBeforeEnqueueObserver
+[       OK ] CPUThreadPoolExecutorOutstandingTest.CountedBeforeEnqueueObserver (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.AcceptedOwnershipSurvivesThrow
+[       OK ] CPUThreadPoolExecutorOutstandingTest.AcceptedOwnershipSurvivesThrow (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.BoundedQueueRejectionRollsBack
+[       OK ] CPUThreadPoolExecutorOutstandingTest.BoundedQueueRejectionRollsBack (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.UserExceptionReleasesReservation
+E20261117 21:55:07.530115 252136 Executor.cpp:41] ThreadPoolExecutor: func threw unhandled std::runtime_error: expected task exception
+[       OK ] CPUThreadPoolExecutorOutstandingTest.UserExceptionReleasesReservation (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.ExpirationCallbackRemainsCounted
+E20261117 21:55:07.535418 252137 Executor.cpp:41] ThreadPoolExecutor: expireCallback threw unhandled std::runtime_error: expected expiration callback exception
+[       OK ] CPUThreadPoolExecutorOutstandingTest.ExpirationCallbackRemainsCounted (5 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.ProcessedObserverStillCounted
+[       OK ] CPUThreadPoolExecutorOutstandingTest.ProcessedObserverStillCounted (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.ExpirationWithoutCallbackReleasesReservation
+[       OK ] CPUThreadPoolExecutorOutstandingTest.ExpirationWithoutCallbackReleasesReservation (5 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.MoveAndOverwriteReleaseExactlyOnce
+[       OK ] CPUThreadPoolExecutorOutstandingTest.MoveAndOverwriteReleaseExactlyOnce (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.StopRetainsUntilActuallyDiscarded
+[       OK ] CPUThreadPoolExecutorOutstandingTest.StopRetainsUntilActuallyDiscarded (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.StopPoisonIsNotOrdinaryWork
+[       OK ] CPUThreadPoolExecutorOutstandingTest.StopPoisonIsNotOrdinaryWork (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.RetainedTaskMayOutliveExecutor
+[       OK ] CPUThreadPoolExecutorOutstandingTest.RetainedTaskMayOutliveExecutor (0 ms)
+[ RUN      ] CPUThreadPoolExecutorOutstandingTest.MultipleProducersDrainToZero
+[       OK ] CPUThreadPoolExecutorOutstandingTest.MultipleProducersDrainToZero (0 ms)
+[----------] 15 tests from CPUThreadPoolExecutorOutstandingTest (12 ms total)
+
+[----------] Global test environment tear-down
+[==========] 15 tests from 1 test suite ran. (12 ms total)
+[  PASSED  ] 15 tests.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"native_outstanding" end time: Nov 17 21:55 CST
+"native_outstanding" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: upstream_cpu_regression
+2/2 Test: upstream_cpu_regression
+Command: "/root/rank_demo/stage3_balance/build-load-accounting-native/upstream_thread_pool_test" "--gtest_filter=ThreadPoolExecutorTypedTest/0.Basic:ThreadPoolExecutorTypedTest/0.Join:ThreadPoolExecutorTypedTest/0.Stop:ThreadPoolExecutorTypedTest/0.Destroy:ThreadPoolExecutorTypedTest/0.TaskObserver:ThreadPoolExecutorTypedTest/0.KeepAlive:ThreadPoolExecutorTypedTest/0.FuturePool:ThreadPoolExecutorTest.CPUExpiration:ThreadPoolExecutorTest.AddWithPriority:ThreadPoolExecutorTest.BlockingQueue:ThreadPoolExecutorTest.RequestContext:ThreadPoolExecutorTest.AddImplToleratesThreadCreationFailure:ThreadPoolExecutorTest.AddImplNoThreadsAndCreationFails:ThreadPoolExecutorTest.SetNumThreadsNoOpOnFailure_CPU:ThreadPoolExecutorTest.SetNumThreadsNoOpOnPartialFailure_CPU"
+Directory: /root/rank_demo/stage3_balance/build-load-accounting-native
+"upstream_cpu_regression" start time: Nov 17 21:55 CST
+Output:
+----------------------------------------------------------
+Note: Google Test filter = ThreadPoolExecutorTypedTest/0.Basic:ThreadPoolExecutorTypedTest/0.Join:ThreadPoolExecutorTypedTest/0.Stop:ThreadPoolExecutorTypedTest/0.Destroy:ThreadPoolExecutorTypedTest/0.TaskObserver:ThreadPoolExecutorTypedTest/0.KeepAlive:ThreadPoolExecutorTypedTest/0.FuturePool:ThreadPoolExecutorTest.CPUExpiration:ThreadPoolExecutorTest.AddWithPriority:ThreadPoolExecutorTest.BlockingQueue:ThreadPoolExecutorTest.RequestContext:ThreadPoolExecutorTest.AddImplToleratesThreadCreationFailure:ThreadPoolExecutorTest.AddImplNoThreadsAndCreationFails:ThreadPoolExecutorTest.SetNumThreadsNoOpOnFailure_CPU:ThreadPoolExecutorTest.SetNumThreadsNoOpOnPartialFailure_CPU
+[==========] Running 15 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 7 tests from ThreadPoolExecutorTypedTest/0, where TypeParam = folly::CPUThreadPoolExecutor
+[ RUN      ] ThreadPoolExecutorTypedTest/0.Basic
+[       OK ] ThreadPoolExecutorTypedTest/0.Basic (0 ms)
+[ RUN      ] ThreadPoolExecutorTypedTest/0.Stop
+[       OK ] ThreadPoolExecutorTypedTest/0.Stop (10 ms)
+[ RUN      ] ThreadPoolExecutorTypedTest/0.Join
+[       OK ] ThreadPoolExecutorTypedTest/0.Join (106 ms)
+[ RUN      ] ThreadPoolExecutorTypedTest/0.Destroy
+[       OK ] ThreadPoolExecutorTypedTest/0.Destroy (10 ms)
+[ RUN      ] ThreadPoolExecutorTypedTest/0.TaskObserver
+[       OK ] ThreadPoolExecutorTypedTest/0.TaskObserver (30 ms)
+[ RUN      ] ThreadPoolExecutorTypedTest/0.FuturePool
+[       OK ] ThreadPoolExecutorTypedTest/0.FuturePool (10 ms)
+[ RUN      ] ThreadPoolExecutorTypedTest/0.KeepAlive
+[       OK ] ThreadPoolExecutorTypedTest/0.KeepAlive (100 ms)
+[----------] 7 tests from ThreadPoolExecutorTypedTest/0 (267 ms total)
+
+[----------] 8 tests from ThreadPoolExecutorTest
+[ RUN      ] ThreadPoolExecutorTest.CPUExpiration
+[       OK ] ThreadPoolExecutorTest.CPUExpiration (10 ms)
+[ RUN      ] ThreadPoolExecutorTest.AddWithPriority
+[       OK ] ThreadPoolExecutorTest.AddWithPriority (0 ms)
+[ RUN      ] ThreadPoolExecutorTest.BlockingQueue
+[       OK ] ThreadPoolExecutorTest.BlockingQueue (5 ms)
+[ RUN      ] ThreadPoolExecutorTest.RequestContext
+[       OK ] ThreadPoolExecutorTest.RequestContext (0 ms)
+[ RUN      ] ThreadPoolExecutorTest.AddImplToleratesThreadCreationFailure
+E20261117 21:55:07.829249 252150 ThreadPoolExecutor.cpp:325] ThreadPoolExecutor: thread creation failed: std::runtime_error: newThread: simulated failure
+[       OK ] ThreadPoolExecutorTest.AddImplToleratesThreadCreationFailure (0 ms)
+[ RUN      ] ThreadPoolExecutorTest.AddImplNoThreadsAndCreationFails
+[       OK ] ThreadPoolExecutorTest.AddImplNoThreadsAndCreationFails (0 ms)
+[ RUN      ] ThreadPoolExecutorTest.SetNumThreadsNoOpOnFailure_CPU
+[       OK ] ThreadPoolExecutorTest.SetNumThreadsNoOpOnFailure_CPU (0 ms)
+[ RUN      ] ThreadPoolExecutorTest.SetNumThreadsNoOpOnPartialFailure_CPU
+[       OK ] ThreadPoolExecutorTest.SetNumThreadsNoOpOnPartialFailure_CPU (0 ms)
+[----------] 8 tests from ThreadPoolExecutorTest (17 ms total)
+
+[----------] Global test environment tear-down
+[==========] 15 tests from 2 test suites ran. (284 ms total)
+[  PASSED  ] 15 tests.
+<end of output>
+Test time =   0.31 sec
+----------------------------------------------------------
+Test Passed.
+"upstream_cpu_regression" end time: Nov 17 21:55 CST
+"upstream_cpu_regression" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 17 21:55 CST

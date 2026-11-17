@@ -1,0 +1,56 @@
+Start testing: Nov 17 21:53 CST
+----------------------------------------------------------
+1/1 Testing: business_accounting_lifecycle
+1/1 Test: business_accounting_lifecycle
+Command: "/root/rank_demo/stage3_balance/build-load-accounting-business/business_accounting_test"
+Directory: /root/rank_demo/stage3_balance/build-load-accounting-business
+"business_accounting_lifecycle" start time: Nov 17 21:53 CST
+Output:
+----------------------------------------------------------
+Running main() from ./googletest/src/gtest_main.cc
+[==========] Running 13 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 13 tests from BusinessAccounting
+[ RUN      ] BusinessAccounting.CountsQueuedAndRunningUntilCallbackReturns
+[       OK ] BusinessAccounting.CountsQueuedAndRunningUntilCallbackReturns (0 ms)
+[ RUN      ] BusinessAccounting.RunningExceptionReleasesReservation
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+E20261117 21:53:46.074983 251451 Executor.cpp:41] ThreadPoolExecutor: func threw unhandled std::runtime_error: expected callback failure
+[       OK ] BusinessAccounting.RunningExceptionReleasesReservation (3 ms)
+[ RUN      ] BusinessAccounting.QueueRefusalReleasesWithoutManualCatchDecrement
+[       OK ] BusinessAccounting.QueueRefusalReleasesWithoutManualCatchDecrement (0 ms)
+[ RUN      ] BusinessAccounting.MovedThenThrownTaskDoesNotDoubleRelease
+[       OK ] BusinessAccounting.MovedThenThrownTaskDoesNotDoubleRelease (0 ms)
+[ RUN      ] BusinessAccounting.ExpirationKeepsCountDuringExpiryCallback
+[       OK ] BusinessAccounting.ExpirationKeepsCountDuringExpiryCallback (5 ms)
+[ RUN      ] BusinessAccounting.ExpirationWithoutUserCallbackAndExceptionBothRelease
+E20261117 21:53:46.086067 251453 Executor.cpp:41] ThreadPoolExecutor: expireCallback threw unhandled std::runtime_error: expected expiry failure
+[       OK ] BusinessAccounting.ExpirationWithoutUserCallbackAndExceptionBothRelease (5 ms)
+[ RUN      ] BusinessAccounting.NonExpiredCallbackReleasesEvenWithUnusedExpiryOwner
+[       OK ] BusinessAccounting.NonExpiredCallbackReleasesEvenWithUnusedExpiryOwner (0 ms)
+[ RUN      ] BusinessAccounting.BothPriorityEntrypointsAreCounted
+[       OK ] BusinessAccounting.BothPriorityEntrypointsAreCounted (0 ms)
+[ RUN      ] BusinessAccounting.UnexecutedQueueDestructionReleasesBothKindsOfTicket
+[       OK ] BusinessAccounting.UnexecutedQueueDestructionReleasesBothKindsOfTicket (0 ms)
+[ RUN      ] BusinessAccounting.CounterOutlivesFacadeWhileSharedPoolFinishesTask
+[       OK ] BusinessAccounting.CounterOutlivesFacadeWhileSharedPoolFinishesTask (0 ms)
+[ RUN      ] BusinessAccounting.ConcurrentProducersDrainToZero
+[       OK ] BusinessAccounting.ConcurrentProducersDrainToZero (0 ms)
+[ RUN      ] BusinessAccounting.DisabledMeansUnavailableWhileCallbacksStillRun
+[       OK ] BusinessAccounting.DisabledMeansUnavailableWhileCallbacksStillRun (0 ms)
+[ RUN      ] BusinessAccounting.EmptyUserFunctionsCannotBecomeHiddenPoisonOrWork
+[       OK ] BusinessAccounting.EmptyUserFunctionsCannotBecomeHiddenPoisonOrWork (0 ms)
+[----------] 13 tests from BusinessAccounting (16 ms total)
+
+[----------] Global test environment tear-down
+[==========] 13 tests from 1 test suite ran. (16 ms total)
+[  PASSED  ] 13 tests.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"business_accounting_lifecycle" end time: Nov 17 21:53 CST
+"business_accounting_lifecycle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 17 21:53 CST

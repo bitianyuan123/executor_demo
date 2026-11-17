@@ -1,0 +1,10 @@
+$ build-load-accounting-business/business_accounting_example
+running=1 queued=1 N=2
+after drain N=0
+disabled metric available=0
+exit=0
+
+$ build-load-accounting-native/native_outstanding_example
+disabled=unavailable; one held callback plus one queued task: N=2
+after join: N=0
+exit=0

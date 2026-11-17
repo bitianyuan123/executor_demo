@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-17",
+  "purpose": "Optional per-pool outstanding CPU callback accounting only; no routing changes",
+  "folly": {
+    "repository": "git@github.com:bitianyuan123/folly.git",
+    "base_tag": "v2026.10.26.00",
+    "base_commit": "c8c7adb72c6d73e2fced5ff5cebc96aa3ff65b2c",
+    "branch": "experiment/native-outstanding-20261117",
+    "implementation_commit": "54b6ebe1cd4622e92834087b5f0302654e8f6a55",
+    "key_sources": {
+      "folly/executors/CPUThreadPoolExecutor.h": {
+        "base_sha256": "dd04a0e2129d51103f4fa71ca7a6471335df37979b1dc4278cb6d32104771c20",
+        "patched_sha256": "645fb5da26f7e91a57dc2aab1f5b8b4d79f361bcd626b7295535bcbb21017540"
+      },
+      "folly/executors/CPUThreadPoolExecutor.cpp": {
+        "base_sha256": "990d16f5666edf2ba5b79eeeb2cd1f70e6e763b600a006aaad86270e20f82c21",
+        "patched_sha256": "8288e3faa11c1d0581ad661e9b439c72a4b6adef7bb60af74b393e0ccb71b4fe"
+      },
+      "folly/executors/ThreadPoolExecutor.cpp": {
+        "base_sha256": "5cd684ebaf1cfcbcf7f670d86706692983b3c85fbcdf9e3c8b2ae5ef9f88c89a",
+        "patched_sha256": "5cd684ebaf1cfcbcf7f670d86706692983b3c85fbcdf9e3c8b2ae5ef9f88c89a"
+      }
+    }
+  },
+  "demo": {
+    "repository": "git@github.com:bitianyuan123/executor_demo.git",
+    "branch": "experiment/stage3-load-balance-20261115",
+    "directory": "handoff/load-accounting"
+  },
+  "native_patch": {
+    "path": "folly/native-outstanding.patch",
+    "sha256": "ed12ee83545271156a9d93ea0d9a4236aa36e5a74b0e2b5c0443508aa1b542b5",
+    "apply_check": "passed on isolated base files; resulting changed files byte-equal implementation commit"
+  },
+  "public_api": {
+    "option": "CPUThreadPoolExecutor::Options::setTaskCounting(bool = true)",
+    "default_enabled": false,
+    "getter": "folly::Optional<size_t> CPUThreadPoolExecutor::getOutstandingTaskCount() const noexcept",
+    "disabled": "folly::none"
+  },
+  "validation": {
+    "platform": "Linux x86_64 GCC 14.2 C++20 Release",
+    "business_gtests_passed": 13,
+    "native_gtests_passed": 15,
+    "selected_upstream_gtests_passed": 15,
+    "folly_complete_build_install": true,
+    "examples_passed": 2,
+    "buck_executed": false,
+    "full_folly_test_suite_executed": false,
+    "sanitizers_executed": false,
+    "arm_application_performance_measured": false,
+    "raw_logs_directory": "validation"
+  },
+  "compatibility": {
+    "rebuild_folly_and_consumers": true,
+    "blind_cross_version_patch": false,
+    "upstream_standard_api": false
+  }
+}

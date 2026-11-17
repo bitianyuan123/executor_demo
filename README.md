@@ -14,6 +14,8 @@
 
 真实应用无法与开发/测试环境联网时，使用[生产调优离线交接包](handoff/production-tuning/README.md)：内含已有负载与CPU证据、指标/亲和性指导、有限阈值探索规则，以及探索→设计→实现→验收→迭代五个独立prompt。默认现状与一个候选各一次，不照搬旧指南的多因素矩阵或默认重复；生产收益以现场完整请求时延为准。
 
+仅增加负载计数时，使用[N计数改造交接包](handoff/load-accounting/README.md)：提供业务统一包装器、Folly原生可选计数补丁、版本迁移说明和两个可单独复制的现场agent prompt。两套方案各有独立构建与生命周期测试，不修改现有实验的负载、调度或阈值。
+
 阶段3短峰最小对照与请求级补充均已完成，见[3007指标与策略分析报告](stages/03-independent/ARM_3007_SHORT_PEAK_POLICY_REPORT.md)：**完整请求p99为568.466→567.877ms，基本不变；初始80项全部完成p99为13.642→4.784ms，下降64.930%。** 各池高位段缩短，但全局瞬时峰值提高，总CPU需求相近。N/C+0.8改善初始工作集合，尚未证明完整请求有稳定收益；[指南](stages/03-independent/SHORT_PEAK_GUIDE.md)只保留复现步骤，当前无需继续测试或收集。
 
 再次复核后的入口是[实验设计与定量验证协议](stages/EXPERIMENT_REVIEW.md)：区分等需求burst、同均值长尾、容量压力和真实业务参数，明确每项对照能支持的结论。[配对分析指南](stages/COMPARISON_GUIDE.md)提供工作量合同、planned cohort、整轮差值区间和小样本p99门槛；[本轮修订与补测](results/review/README.md)保留实际执行事实。旧结果继续作为历史证据，不替换其数据。
