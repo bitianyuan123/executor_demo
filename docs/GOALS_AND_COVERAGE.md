@@ -117,7 +117,7 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 [4016 SD结果](TARGET_V2_4016_REVIEW.md)六轮均1920成功、零失败，正式cohort各1536、peak-inflight均3；同线程Q/O相对home均值下降33.36%～34.40%，CPU/请求增加6.01%～7.03%。Q/O排名随线程档变化，仍未证明16线程全局最优。home两轮每个一秒桶的投递lag p99均偏高，但两轮恰好先运行，不能据此归因于策略或内核调度。
 
-**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑旧CPU矩阵，也不追加该批的到达诊断、trace或阈值扫描。异步完成源与驱动已通过开发机及目标机小规模功能验收；等待期间释放worker，恢复callback再推进图。[4018异步首批八轮](TARGET_V2_4018_REVIEW.md)已完成；A1下O相对home均值降低19.546%、CPU/请求增加3.721%，保留单次证据限制。当前仅执行[四轮A1机制覆盖](TARGET_V2_ASYNC_MECHANISM_GUIDE.md)，补齐O恢复观测与trace敏感性，完成即分析。目标始终每个已核实硬件cluster一个池。**
+**当前状态：[4020四轮A1机制覆盖](TARGET_V2_4020_REVIEW.md)已完成，O的业务与恢复等待下降，伴随约3.74%的CPU/请求代价；每格一次，正式性能与生产代表性验收仍未完成。冻结合成模型、计数评分与阈值，不自动追加目标机性能测试或生产trace。下一步按[当地实施手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](PRODUCTION_AGENT_PROMPTS_ONLY.md)交接：只读核实、本地设计、已有授权内功能验证与预先定预算的验收；访问不足可止于离线交接。目标始终每个已核实硬件cluster一个池。**
 
 真实业务接入另按[分阶段生产agent手册](PRODUCTION_AGENT_PLAYBOOK.md)推进；若只能复制文字，使用[纯prompt交接版](PRODUCTION_AGENT_PROMPTS_ONLY.md)。当地agent先确认源码/授权/资源，再设计、实现、验收、有限迭代。给候选初值与有界梯度，不直接指定生产阈值；不要求环境网络直通。阶段5继续负责组件归属与Folly最小扩展的必要性，当前无需修改Folly核心。
 

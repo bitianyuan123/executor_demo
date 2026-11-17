@@ -1,6 +1,6 @@
 # 异步等待与恢复：实现合同及验收边界
 
-4017结束了既有CPU工作族的到达核查。本实现补上“算子释放worker、外部完成后重新进入ready调度”的结构，使用新的`affinity-v3-async`结果合同。原有直接推进仍输出`affinity-v2`，旧结果可继续分析。开发机与目标机功能验收、[4018异步首批八轮](TARGET_V2_4018_REVIEW.md)均已完成；当前A1合同下O的时延收益伴随CPU代价，尚未完成生产代表性或尾部验收。执行入口为[四轮A1机制指南](TARGET_V2_ASYNC_MECHANISM_GUIDE.md)，功能验收合同保留在[原指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)。
+4017结束了既有CPU工作族的到达核查。本实现补上“算子释放worker、外部完成后重新进入ready调度”的结构，使用新的`affinity-v3-async`结果合同。原有直接推进仍输出`affinity-v2`，旧结果可继续分析。开发机与目标机功能验收、[4018异步首批八轮](TARGET_V2_4018_REVIEW.md)及[4020四轮A1机制补证](TARGET_V2_4020_REVIEW.md)均已完成；当前A1合同下O的时延收益伴随CPU代价，尚未完成生产代表性或正式多轮性能验收。冻结现有模型与策略，转入[当地分步交接](PRODUCTION_AGENT_PLAYBOOK.md)；[四轮合同](TARGET_V2_ASYNC_MECHANISM_GUIDE.md)和[功能验收合同](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)保留供复核，不是新运行清单。
 
 目标仍为每个已核实硬件cluster一个子池，业务持有总池；request选择home，后续ready callback由总池按策略选池。六池仅属于现有目标机资源，代码不写死四池或六池。
 
@@ -78,8 +78,10 @@ trace0不产生逐事件/逐任务记录，但保留来源统计与失败守恒�
 
 小型端到端脚本覆盖D0/A0/A1、网格恢复、trace0/1、50%选择跨策略、parent/home与fork/all、容量拒绝，并核对固定工作、checksum、恢复数量和各分析入口。开发机人工CPU分区只验证功能，不代表ARM cluster、缓存或NUMA性能。
 
-目标机功能验收已通过，见[终端验收摘录](../results/review/async_v3_target_functional_validation.json)；4018完成了固定资源、同NUMA的八轮先导对照，见[结果摘录](../results/review/4018_summary.json)。这些是合成合同下的单次证据，尚未验收生产异步性能或尾部，也未实现网络服务、随机下游分布、重试及独立超时竞争。下一步仅补四轮A1的O机制及两策略观测敏感性。CPU族到达核查已由4017完成，不作为继续等待生产trace或扩大原矩阵的理由。
+目标机功能验收已通过，见[终端验收摘录](../results/review/async_v3_target_functional_validation.json)；4018完成固定资源、同NUMA的八轮先导对照，4020又完成四轮A1的O机制及两策略观测敏感性，见[最新结论](TARGET_V2_4020_REVIEW.md)。本次机制补证已闭合，不新增模型、门控或热路径探针。每格一次，尚未验收生产异步性能或尾部；真实网络、随机下游分布、重试与独立超时竞争也未覆盖。后续若要做正式性能验收，先定义待验收结论、CPU/时延/失败门槛与独立重复预算，不以追加扫描直到候选获胜为目标。
 
 首批D0/A0/A1各有home/O trace0对照，A0/A1另各有home trace1。O是未完成ready callback的计数，新增轻量rpc_resume与昂贵operator各按一个计数；异步后效果变化不能只归因等待。D0→A0包含额外源线程、控制callback及调度点；A0→A1保持选择集合但到期相对实际issue产生，并非冻结绝对完成流。两格home trace1只提供home的机制和观测敏感性，不能代替O路径诊断或直接扣除其成本。
+
+4020中，O相对home的恢复等待均值从1.127降至0.018ms，但128809次恢复中仅812次直接借出；首波业务算子占全部迁移约75.66%。这支持分开分析首波分散、后继继承和恢复排队，不能把恢复变快解释成大量恢复迁移。parent仍可通过选池回到home，本批未比较parent/home或fork/all。source lag p99从2.863降至0.898ms，完成线程与executor共享资源，不能归因为独立下游或内核runq优化。O自身trace1/0的mean、p99、CPU/请求变化约为−0.019%、+0.404%、+0.382%；这是单次观测敏感性，不证明零扰动。
 
 生产接入复用的是总池Continuation契约：实际RPC完成线程恢复token。AsyncCompletionSource是实验中的外部完成模拟器，无需用它替换真实RPC运行时。开发机验证记录见[功能验收摘录](../results/review/async_v3_functional_validation.json)，不包含ARM性能结论。

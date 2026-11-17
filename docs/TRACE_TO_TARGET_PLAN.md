@@ -1,6 +1,6 @@
 # 从4005调度证据到目标cluster实验：补什么、暂不改什么
 
-**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑旧CPU矩阵，也不追加该批的到达诊断、trace或阈值扫描。异步完成源与驱动已通过开发机及目标机小规模功能验收；等待期间释放worker，恢复callback再推进图。[4018异步首批八轮](TARGET_V2_4018_REVIEW.md)已完成；A1下O相对home均值降低19.546%、CPU/请求增加3.721%，保留单次证据限制。当前仅执行[四轮A1机制覆盖](TARGET_V2_ASYNC_MECHANISM_GUIDE.md)，补齐O恢复观测与trace敏感性，完成即分析。目标始终每个已核实硬件cluster一个池。**
+**当前状态：[4020四轮A1机制覆盖](TARGET_V2_4020_REVIEW.md)已完成，O的业务与恢复等待下降，伴随约3.74%的CPU/请求代价；每格一次，正式性能与生产代表性验收仍未完成。冻结合成模型、计数评分与阈值，不自动追加目标机性能测试或生产trace。下一步按[当地实施手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](PRODUCTION_AGENT_PROMPTS_ONLY.md)交接：只读核实、本地设计、已有授权内功能验证与预先定预算的验收；访问不足可止于离线交接。目标始终每个已核实硬件cluster一个池。**
 
 ## 1. 决策与固定主线
 
@@ -53,7 +53,7 @@ python3 scripts/analyze_sched_windows.py "$TRACE_SUMMARY" --bin-ms 10
 | 线程过配与信号 | 固定worker数；Q、callback I、O、估计work及后台CPU可替换 | 保留16/128线程与Q/active/O少量对照；不能把窗口unique-onCPU当作I已获验证 |
 | 数据亲和 | none/request-ro/branch-rw/mixed；home初始化、连续分支读写 | 先64KiB，再256KiB或共享读；不是对真实cache miss的复现或直接测量 |
 | 内部ready释放节奏 | 一个callback连续addBatch，后继依赖自然释放，可配置后续wave | `batch-chunk`控制选池预留粒度，**不控制时间间隔**；非阻塞分段release需要新增驱动，目前未实现 |
-| 异步RPC | 总池Continuation及外部完成源已集成固定工作/内存驱动，v3合同记录恢复与取消 | 目标机功能与4018首批八轮已完成，当前待四轮A1机制覆盖；真实网络与随机下游分布未覆盖，同步sleep不代表异步等待 |
+| 异步RPC | 总池Continuation及外部完成源已集成固定工作/内存驱动，v3合同记录恢复与取消 | 目标机功能、4018八轮与4020四轮A1机制覆盖均完成；真实网络与随机下游分布未覆盖，同步sleep不代表异步等待 |
 | 内存来源与计算形态 | home first-touch全部波的数组；每operator先计算循环再访存循环 | worker构图已触页、复用缓存、计算访存交织、大块多父融合尚未实现；结果或业务证据需要时再补 |
 
 4004校准的普通后继CPU约4～6ms，不证明真实算子也如此。真实“平均100ms”仍需明确CPU或墙钟口径、算子个数分布和CPU/request。内核一次switch运行片段可能只是算子的一部分，也可能包含多个callback；禁止按它重新标定算子预算。

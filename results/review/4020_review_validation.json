@@ -1,0 +1,23 @@
+{
+  "scope": "4020 terminal-evidence and documentation update only",
+  "target_evidence_sha256": "2df24bac1fe562a10d0a05a6582f7f26ec58c08839303dc89ddedf965092c465",
+  "local_actions": [
+    "Extracted four cells and compared non-policy/trace/output command options",
+    "Checked printed identities, source counters and role/work conservation",
+    "Checked printed CPU per request against whole process CPU seconds",
+    "Checked new evidence JSON syntax and finite values",
+    "Checked relative Markdown file targets in all changed documents",
+    "git diff --check",
+    "Independent read-only numerical and inference review"
+  ],
+  "relative_links_checked": 308,
+  "native_tests_run_this_turn": 0,
+  "code_or_build_files_changed": false,
+  "target_raw_csv_available_locally": false,
+  "new_target_runs_requested": 0,
+  "limitations": [
+    "Original target CSVs were not transferred or independently reanalyzed locally",
+    "No new ARM performance run was executed by this agent",
+    "Documentation checks do not constitute production or tail acceptance"
+  ]
+}

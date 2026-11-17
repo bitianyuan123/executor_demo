@@ -71,7 +71,7 @@ active和outstanding很可能在CPU密集长任务时近似，这正是有意义
 
 [4008的既有CSV诊断](TARGET_V2_4008_REVIEW.md#3-4008前半q有信息但任何单个计数都未验收)说明Q有描述性信息、I与等待不稳定单调，不能预先淘汰某信号。[4009](TARGET_V2_4009_REVIEW.md)联合桶确认Q为零而I高与I不高却有积压两类样本均存在；尚未证明某个信号生产最优。4010有界补证、4011观测开关和[4012信号/线程对照](TARGET_V2_4012_REVIEW.md)均已完成。4012中Q在128线程下仍有收益，Q/active/O未分出稳定赢家；不能把过配时Q有盲区改写成Q必然无用。[4013](TARGET_V2_4013_REVIEW.md)六轮机制诊断显示128档Q零且I/O高仅占0.310%～0.487%的提交样本，不能证明盲区主导尾部；16档大量Q非零但I不超过容量。[4014](TARGET_V2_4014_REVIEW.md)九轮regular守护也已完成：Q/O相对home均值约下降38%，两信号差不足1.2%，未分出稳定赢家。[4015短工作校准](TARGET_V2_4015_REVIEW.md)四轮已完成：trace0的16/128线程请求均值几乎相同，详细trace使CPU/请求分别增加1.83%/2.28%，四轮peak-inflight均为1。128线程trace1下，Q零且I/O均高于容量仅5/32256个operator提交样本，不能证明它主导尾部或据此启用门控。[4016 SD六轮](TARGET_V2_4016_REVIEW.md)已完成，Q/O相对同线程home均值下降33.36%～34.40%，CPU/请求增加6.01%～7.03%，排名随线程档变化；trace0没有任务级负载观测，不能补出Q/I/O或迁移。home每个一秒桶的投递lag p99偏高，且与执行顺序混杂，原因未定。4017到达核查已完成，相位规律不构成池负载或内核根因证据。未知业务量仍是敏感性假设，不要求生产访问。`diagnose.py --joint-load`可离线检查同一行的Q/I/O联合条件；没有新增热路径探针，仍受选池后采样、成本混合和非原子快照限制。[持续压力门控](PERSISTENT_PRESSURE_REVIEW.md)是独立于Provider/Scorer的候选设计，目前没有实现、没有将3ms设为默认；`return-low`也不是门控释放阈值。
 
-**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑旧CPU矩阵，也不追加该批的到达诊断、trace或阈值扫描。异步完成源与驱动已通过开发机及目标机小规模功能验收；等待期间释放worker，恢复callback再推进图。[4018异步首批八轮](TARGET_V2_4018_REVIEW.md)已完成；A1下O相对home均值降低19.546%、CPU/请求增加3.721%，保留单次证据限制。当前仅执行[四轮A1机制覆盖](TARGET_V2_ASYNC_MECHANISM_GUIDE.md)，补齐O恢复观测与trace敏感性，完成即分析。目标始终每个已核实硬件cluster一个池。**
+**当前状态：[4020四轮A1机制覆盖](TARGET_V2_4020_REVIEW.md)已完成，O的业务与恢复等待下降，伴随约3.74%的CPU/请求代价；每格一次，正式性能与生产代表性验收仍未完成。冻结合成模型、计数评分与阈值，不自动追加目标机性能测试或生产trace。下一步按[当地实施手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](PRODUCTION_AGENT_PROMPTS_ONLY.md)交接：只读核实、本地设计、已有授权内功能验证与预先定预算的验收；访问不足可止于离线交接。目标始终每个已核实硬件cluster一个池。**
 
 ## 4. 已保留的调度开关与未实现的能力
 
@@ -96,7 +96,7 @@ none模式所有池共享同一CPU集合，NUMA标签为未知；逻辑home不�
 
 ## 5. 负载覆盖、测试顺序与第五阶段
 
-[4018异步八轮](TARGET_V2_4018_REVIEW.md)补上了实际detach/resume路径的目标机证据。home trace1中，加入每选中位置2ms外部等待后，请求mean由18.263升至22.690ms，恢复callback的等待均值却由2.065降至1.135ms。外部pending与request存活不能作为CPU ready压力，源due→fire与executor submit→start必须分开。恢复控制约0.002ms CPU，业务operator约1.055ms CPU，count评分仍将两者各计一个；本批O仍有描述性收益，尚无依据换评分或门控。当前只复用既有事件/角色字段补[四轮A1机制](TARGET_V2_ASYNC_MECHANISM_GUIDE.md)，不新增热路径探针或系统采样；下文是长期覆盖维度，不是立即执行的完整扫描。
+[4018异步八轮](TARGET_V2_4018_REVIEW.md)补上了实际detach/resume路径的目标机证据。home trace1中，加入每选中位置2ms外部等待后，请求mean由18.263升至22.690ms，恢复callback的等待均值却由2.065降至1.135ms。外部pending与request存活不能作为CPU ready压力，源due→fire与executor submit→start必须分开。恢复控制约0.002ms CPU，业务operator约1.055ms CPU，count评分仍将两者各计一个。[4020](TARGET_V2_4020_REVIEW.md)补齐O后，首波/后继/恢复等待均值分别由2.098/2.028/1.127ms降至0.355/0.135/0.018ms；恢复直接借出仅0.6304%，不意味着需要按恢复次数批量外迁。O自身trace1/0的CPU/请求差约+0.382%，但每格一次，不能据此证明零扰动、全部计数成本低或O普遍最优。当前保留count及既有Provider/Scorer接口，不新增热路径探针、权重或门控；下文是长期覆盖维度，不是立即执行的完整扫描。
 
 [cluster负载矩阵](REAL_WORKLOAD_MATRIX.md)给出主线命令：每cluster一池下校准单request扇出，扫描线程过配、QPS、regular/Poisson/入口微突发与request/task异质性，并保留同步阻塞反例。原有v1保留异步RPC；v2保留request只读、branch真实读写依赖、mixed足迹、初始fork和后续fork/链。当前是参数化波次图，不是生产任意DAG回放；没有请求标记的调度轨迹不能自动还原20～400算子的图形或请求p99。
 

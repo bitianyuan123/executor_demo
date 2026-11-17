@@ -37,7 +37,7 @@
 - [4016密度结论](docs/TARGET_V2_4016_REVIEW.md)：SD六轮全部1920成功、零失败，正式cohort各1536、peak-inflight均3；同线程Q/O相对home请求均值下降33.36%～34.40%，CPU/请求增加6.01%～7.03%。Q/O排名随线程档变化，尚无统一赢家。
 - [4017到达核查](docs/TARGET_V2_4017_REVIEW.md)：home高lag集中于序号相位但原因未知，Q/O响应更短同时重叠更少，不作为因果证明。CPU族结果冻结。
 - [4018异步结果](docs/TARGET_V2_4018_REVIEW.md)：八轮完成；A1下O相对home均值降低19.546%、p99降低20.752%，CPU/请求增加3.721%。home外部等待增加而恢复排队变短，不能用请求在途替代ready负载。
-- [当前四轮A1机制覆盖](docs/TARGET_V2_ASYNC_MECHANISM_GUIDE.md)：沿用每cluster一池、16线程、50%/2ms合同；home/O各trace0/1，补齐O路径和观测敏感性。四轮完成即分析，不改算法或阈值。实现与计量合同见[异步设计](docs/ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)。
+- [4020异步机制结论](docs/TARGET_V2_4020_REVIEW.md)：四轮已完成；O的业务与恢复等待下降，trace0请求均值/p99约降低19.87%/21.35%，CPU/请求增加约3.74%。恢复callback直接借出仅0.63%，不能把收益归为大量恢复迁移。单次证据不构成正式尾部验收；[四轮指南](docs/TARGET_V2_ASYNC_MECHANISM_GUIDE.md)已归档，实现与计量合同见[异步设计](docs/ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)。
 - [真实应用agent分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)：只读探索、设计、实现、验收和有限迭代；候选初值与梯度由当地事实约束，不要求跨环境联网。另有[纯prompt交接版](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)，不需要给接收方传任何文件。
 - [持续压力门控候选审阅](docs/PERSISTENT_PRESSURE_REVIEW.md)：复核外部0.85ms/3ms说法，明确观测与状态机缺口；尚未修改运行策略。
 - [trace补证与后续目标实验](docs/TRACE_TO_TARGET_PLAN.md)：只读已有JSON分析同期压力与连续高桶；明确task异质性、线程/信号、异步RPC与正式尾部验证的顺序和实现缺口。
@@ -93,7 +93,7 @@ SKIP_FOLLY_BUILD=1 BUILD_JOBS=1 ./scripts/build.sh
 
 ## 在测试环境分步执行
 
-当前已完成阶段3、截至4017的cluster机制与到达核查、异步功能验收及4018首批八轮对照。下一步仅按[四轮A1机制指南](docs/TARGET_V2_ASYNC_MECHANISM_GUIDE.md)补齐O恢复观测，不扩大CPU工作族矩阵；新模式使用affinity-v3-async，旧v2结果继续支持。真实应用当地agent仍按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)核实本地实现，生产代表性与尾部验收尚未完成。
+当前已完成阶段3、截至4017的cluster机制与到达核查、异步功能验收、4018八轮对照及[4020四轮机制补证](docs/TARGET_V2_4020_REVIEW.md)。冻结合成模型、计数评分与阈值，不自动追加性能批次或生产trace；新模式使用affinity-v3-async，旧v2结果继续支持。下一步优先按[分阶段手册](docs/PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt](docs/PRODUCTION_AGENT_PROMPTS_ONLY.md)交给当地agent只读核实、设计，再在已有授权和预定预算内实施与验收。生产访问不足可止于离线交接；生产代表性和正式多轮性能验收仍未完成。本次仅文档更新，不需重编。
 
 先保存 `python3 scripts/topology.py --output results/local/topology.json`，脚本自动创建输出父目录；核对allowed CPU、真实NUMA/cluster、SMT和quota。测试机6池三种绑定使用同一套真实CPU列表生成，不能猜测连续编号就是同cluster。开发机只做低成本机制验证，不模拟“真实六cluster”。
 

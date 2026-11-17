@@ -1,0 +1,746 @@
+{
+  "source": "4020.log",
+  "source_path": "/root/.codex/attachments/f3800de0-6ad8-47c9-ba3d-27761f123b3c/4020.log",
+  "source_sha256": "2df24bac1fe562a10d0a05a6582f7f26ec58c08839303dc89ddedf965092c465",
+  "evidence": "Target terminal output only; original target CSVs not transferred or locally reanalyzed. Input values retain printed precision. Derived ratios and endpoint differences use printed values, not unrounded observations.",
+  "previous_result": "4018_summary.json",
+  "duplicate_input_note": "4019.log is byte-identical to 4018.log; not an extra native execution.",
+  "repository_commit_reported": "23d89e5dc56f48a24325f0eade88f72a8f6550d6",
+  "binary_sha256_reported": "c8b10b34db358931d6015f3054410142c7481b139bdb01effbdeac4de262e4b2",
+  "batch": {
+    "suite": "overhead",
+    "output": "results/local/v2-async-mechanism-01",
+    "seed": 421,
+    "native_runs": 4,
+    "runs_per_cell_this_batch": 1,
+    "timeout_seconds_per_run": 120,
+    "execution_order": [
+      "home-trace0",
+      "outstanding-trace1",
+      "home-trace1",
+      "outstanding-trace0"
+    ],
+    "warmup_seconds": 2,
+    "window_seconds": 16,
+    "cohort": "planned arrivals [2,18), late completions retained"
+  },
+  "audit": {
+    "four_commands_same_except_policy_trace_output": true,
+    "fixed_business_work_audit_printed": true,
+    "all_whole_completed": 1920,
+    "all_cohort_completed": 1536,
+    "whole_failed_or_rejected_each": 0,
+    "raw_csv_available_locally": false,
+    "formal_tail_acceptance": false,
+    "all_fork_interaction_available": false,
+    "all_fork_missing_is_expected": true
+  },
+  "whole_fixed_work": {
+    "iterations": 166355865000,
+    "accesses": 5545195500,
+    "fixed_work_sha256_prefix": "223ea3119f9bbdce",
+    "business_callbacks_per_request": 171,
+    "operators_per_request": 168,
+    "async_resumes": 161076,
+    "total_callbacks_derived": 489396
+  },
+  "cpu_scope": "CPU/request uses whole execution including warmup and drain, not cohort CPU. Process CPU includes completion-source creation/startup inside run(), dispatch and shutdown, including helper CPU. Experiment/Driver construction (including pools and trace-buffer allocation) and post-run export are excluded.",
+  "resource_scope": {
+    "research_target": "one pool per verified cluster",
+    "pool_count": 6,
+    "threads_per_pool": 16,
+    "cpu_union": "0-47,192-239",
+    "numa_ids": [
+      0,
+      2
+    ],
+    "source_and_driver_share_cpu_union": true,
+    "cross_numa_enabled": false,
+    "historical_four_pool_configuration": false
+  },
+  "runs": {
+    "home-trace0": {
+      "ordinal": 1,
+      "options": {
+        "--cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+        "--affinity": "cluster",
+        "--capacity-scale": "1",
+        "--threads": "16",
+        "--requests": "1920",
+        "--qps": "96",
+        "--arrival": "regular",
+        "--burst-size": "8",
+        "--burst-spacing-us": "100",
+        "--widths": "80,4",
+        "--depths": "2,2",
+        "--iterations": "375000",
+        "--model": "branch-rw",
+        "--branch-kb": "64",
+        "--shared-kb": "0",
+        "--accesses": "12500",
+        "--jitter-percent": "25",
+        "--long-every": "8",
+        "--long-factor": "4",
+        "--work-scale-scope": "task",
+        "--estimate-mode": "constant",
+        "--home-policy": "rr",
+        "--continuation": "parent",
+        "--balance-at": "all",
+        "--batch-chunk": "1",
+        "--cross-numa": "0",
+        "--max-hops": "4",
+        "--cpu-sampling": "0",
+        "--page-sample": "0",
+        "--sync-block-percent": "0",
+        "--sync-block-us": "0",
+        "--async-percent": "50",
+        "--async-delay-us": "2000",
+        "--async-align-us": "0",
+        "--async-capacity": "4096",
+        "--max-inflight": "16",
+        "--memory-mb": "512",
+        "--policy": "home",
+        "--trace": "0",
+        "--seed": "421",
+        "--output": "results/local/v2-async-mechanism-01/seed-421-home-trace0"
+      },
+      "cohort": {
+        "offered": 1536,
+        "completed": 1536,
+        "mean_ms": 22.808,
+        "p95_ms": 26.612,
+        "p99_ms": 29.175,
+        "task_wait_p99_ms": null
+      },
+      "whole": {
+        "completed": 1920,
+        "failed_or_rejected": 0,
+        "process_cpu_s": 346.827883,
+        "cpu_per_request_ms": 180.64,
+        "peak_inflight": 4,
+        "attempt_lag_p99_ms": 2.659
+      },
+      "source": {
+        "registered": 161076,
+        "fired": 161076,
+        "canceled": 0,
+        "rejected": 0,
+        "resume_succeeded": 161076,
+        "resume_failed": 0,
+        "pending": 0,
+        "pending_peak": 79,
+        "helper_cpu_s": 1.551
+      },
+      "reported_identity": {
+        "work_signature_sha256_prefix": "55d3e07fbbcacd62",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      }
+    },
+    "outstanding-trace1": {
+      "ordinal": 2,
+      "options": {
+        "--cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+        "--affinity": "cluster",
+        "--capacity-scale": "1",
+        "--threads": "16",
+        "--requests": "1920",
+        "--qps": "96",
+        "--arrival": "regular",
+        "--burst-size": "8",
+        "--burst-spacing-us": "100",
+        "--widths": "80,4",
+        "--depths": "2,2",
+        "--iterations": "375000",
+        "--model": "branch-rw",
+        "--branch-kb": "64",
+        "--shared-kb": "0",
+        "--accesses": "12500",
+        "--jitter-percent": "25",
+        "--long-every": "8",
+        "--long-factor": "4",
+        "--work-scale-scope": "task",
+        "--estimate-mode": "constant",
+        "--home-policy": "rr",
+        "--continuation": "parent",
+        "--balance-at": "all",
+        "--batch-chunk": "1",
+        "--cross-numa": "0",
+        "--max-hops": "4",
+        "--cpu-sampling": "0",
+        "--page-sample": "0",
+        "--sync-block-percent": "0",
+        "--sync-block-us": "0",
+        "--async-percent": "50",
+        "--async-delay-us": "2000",
+        "--async-align-us": "0",
+        "--async-capacity": "4096",
+        "--max-inflight": "16",
+        "--memory-mb": "512",
+        "--policy": "outstanding",
+        "--trace": "1",
+        "--seed": "421",
+        "--output": "results/local/v2-async-mechanism-01/seed-421-outstanding-trace1"
+      },
+      "cohort": {
+        "offered": 1536,
+        "completed": 1536,
+        "mean_ms": 18.273,
+        "p95_ms": 21.397,
+        "p99_ms": 23.039,
+        "task_wait_p99_ms": 0.976,
+        "routing_migrations": 109109,
+        "observed_callbacks": 391465,
+        "cross_numa": 0,
+        "operator_cpu_mean_ms": 1.082,
+        "operator_wall_mean_ms": 1.086
+      },
+      "whole": {
+        "completed": 1920,
+        "failed_or_rejected": 0,
+        "process_cpu_s": 361.185409,
+        "cpu_per_request_ms": 188.117,
+        "peak_inflight": 4,
+        "attempt_lag_p99_ms": 0.059
+      },
+      "source": {
+        "registered": 161076,
+        "fired": 161076,
+        "canceled": 0,
+        "rejected": 0,
+        "resume_succeeded": 161076,
+        "resume_failed": 0,
+        "pending": 0,
+        "pending_peak": 66,
+        "helper_cpu_s": 2.0
+      },
+      "reported_identity": {
+        "work_signature_sha256_prefix": "55d3e07fbbcacd62",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "callback_occupancy_printed": "0:mean=2.952/peak=16, 1:mean=2.951/peak=16, 2:mean=2.979/peak=16, 3:mean=2.968/peak=16, 4:mean=2.974/peak=16, 5:mean=2.987/peak=16, all:mean=17.811/peak=52",
+      "flow": {
+        "roles": [
+          {
+            "role": "init",
+            "n": 1536,
+            "source_ne_chosen": 0,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 0.014,
+            "cpu_mean_ms": 2.612,
+            "wall_mean_ms": 2.62,
+            "routing_reasons": {
+              "PinnedHome": 1536
+            }
+          },
+          {
+            "role": "first-wave stage0",
+            "n": 122880,
+            "source_ne_chosen": 82553,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 0.355,
+            "cpu_mean_ms": 1.149,
+            "wall_mean_ms": 1.153,
+            "routing_reasons": {
+              "BelowBusyThreshold": 24106,
+              "InsufficientGain": 16221,
+              "LocalSpill": 82553
+            }
+          },
+          {
+            "role": "later-wave stage0",
+            "n": 6144,
+            "source_ne_chosen": 252,
+            "source_not_home_chosen_home": 87,
+            "wait_mean_ms": 0.027,
+            "cpu_mean_ms": 0.971,
+            "wall_mean_ms": 0.974,
+            "routing_reasons": {
+              "BelowBusyThreshold": 5647,
+              "InsufficientGain": 245,
+              "LocalSpill": 252
+            }
+          },
+          {
+            "role": "ordinary successors",
+            "n": 129024,
+            "source_ne_chosen": 25461,
+            "source_not_home_chosen_home": 9369,
+            "wait_mean_ms": 0.135,
+            "cpu_mean_ms": 1.024,
+            "wall_mean_ms": 1.027,
+            "routing_reasons": {
+              "BelowBusyThreshold": 80561,
+              "HopBudget": 18,
+              "InsufficientGain": 22984,
+              "LocalSpill": 25461
+            }
+          },
+          {
+            "role": "join",
+            "n": 3072,
+            "source_ne_chosen": 31,
+            "source_not_home_chosen_home": 11,
+            "wait_mean_ms": 0.022,
+            "cpu_mean_ms": 0.006,
+            "wall_mean_ms": 0.007,
+            "routing_reasons": {
+              "BelowBusyThreshold": 2947,
+              "HopBudget": 4,
+              "InsufficientGain": 90,
+              "LocalSpill": 31
+            }
+          },
+          {
+            "role": "rpc_resume",
+            "n": 128809,
+            "source_ne_chosen": 812,
+            "source_not_home_chosen_home": 265,
+            "wait_mean_ms": 0.018,
+            "cpu_mean_ms": 0.004,
+            "wall_mean_ms": 0.005,
+            "routing_reasons": {
+              "BelowBusyThreshold": 127461,
+              "HopBudget": 20,
+              "InsufficientGain": 516,
+              "LocalSpill": 812
+            }
+          }
+        ],
+        "async_timing_ms": {
+          "issue_to_due_ms": {
+            "n": 128809,
+            "mean": 2.0,
+            "p50": 2.0,
+            "p95": 2.0,
+            "p99": 2.0,
+            "max": 2.0
+          },
+          "source_due_to_fire_ms": {
+            "n": 128809,
+            "mean": 0.062,
+            "p50": 0.047,
+            "p95": 0.068,
+            "p99": 0.898,
+            "max": 4.286
+          },
+          "fire_to_resume_submit_ms": {
+            "n": 128809,
+            "mean": 0.001,
+            "p50": 0.001,
+            "p95": 0.002,
+            "p99": 0.003,
+            "max": 0.021
+          },
+          "resume_executor_wait_ms": {
+            "n": 128809,
+            "mean": 0.018,
+            "p50": 0.015,
+            "p95": 0.022,
+            "p99": 0.145,
+            "max": 2.005
+          }
+        },
+        "cohort_attempt_lag_mean_ms": 0.054,
+        "cohort_attempt_to_finish_mean_ms": 18.22,
+        "cohort_attempt_lag_p99_ms": 0.059,
+        "cohort_attempt_to_finish_p99_ms": 22.986
+      }
+    },
+    "home-trace1": {
+      "ordinal": 3,
+      "options": {
+        "--cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+        "--affinity": "cluster",
+        "--capacity-scale": "1",
+        "--threads": "16",
+        "--requests": "1920",
+        "--qps": "96",
+        "--arrival": "regular",
+        "--burst-size": "8",
+        "--burst-spacing-us": "100",
+        "--widths": "80,4",
+        "--depths": "2,2",
+        "--iterations": "375000",
+        "--model": "branch-rw",
+        "--branch-kb": "64",
+        "--shared-kb": "0",
+        "--accesses": "12500",
+        "--jitter-percent": "25",
+        "--long-every": "8",
+        "--long-factor": "4",
+        "--work-scale-scope": "task",
+        "--estimate-mode": "constant",
+        "--home-policy": "rr",
+        "--continuation": "parent",
+        "--balance-at": "all",
+        "--batch-chunk": "1",
+        "--cross-numa": "0",
+        "--max-hops": "4",
+        "--cpu-sampling": "0",
+        "--page-sample": "0",
+        "--sync-block-percent": "0",
+        "--sync-block-us": "0",
+        "--async-percent": "50",
+        "--async-delay-us": "2000",
+        "--async-align-us": "0",
+        "--async-capacity": "4096",
+        "--max-inflight": "16",
+        "--memory-mb": "512",
+        "--policy": "home",
+        "--trace": "1",
+        "--seed": "421",
+        "--output": "results/local/v2-async-mechanism-01/seed-421-home-trace1"
+      },
+      "cohort": {
+        "offered": 1536,
+        "completed": 1536,
+        "mean_ms": 22.752,
+        "p95_ms": 26.158,
+        "p99_ms": 27.972,
+        "task_wait_p99_ms": 4.768,
+        "routing_migrations": 0,
+        "observed_callbacks": 391465,
+        "cross_numa": 0,
+        "operator_cpu_mean_ms": 1.054,
+        "operator_wall_mean_ms": 1.059
+      },
+      "whole": {
+        "completed": 1920,
+        "failed_or_rejected": 0,
+        "process_cpu_s": 349.745192,
+        "cpu_per_request_ms": 182.159,
+        "peak_inflight": 4,
+        "attempt_lag_p99_ms": 1.69
+      },
+      "source": {
+        "registered": 161076,
+        "fired": 161076,
+        "canceled": 0,
+        "rejected": 0,
+        "resume_succeeded": 161076,
+        "resume_failed": 0,
+        "pending": 0,
+        "pending_peak": 87,
+        "helper_cpu_s": 1.578
+      },
+      "reported_identity": {
+        "work_signature_sha256_prefix": "55d3e07fbbcacd62",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "callback_occupancy_printed": "0:mean=2.904/peak=16, 1:mean=2.900/peak=16, 2:mean=2.889/peak=16, 3:mean=2.911/peak=16, 4:mean=2.878/peak=16, 5:mean=2.882/peak=16, all:mean=17.364/peak=35",
+      "flow": {
+        "roles": [
+          {
+            "role": "init",
+            "n": 1536,
+            "source_ne_chosen": 0,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 0.016,
+            "cpu_mean_ms": 2.664,
+            "wall_mean_ms": 2.672,
+            "routing_reasons": {
+              "PinnedHome": 1536
+            }
+          },
+          {
+            "role": "first-wave stage0",
+            "n": 122880,
+            "source_ne_chosen": 0,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 2.098,
+            "cpu_mean_ms": 1.098,
+            "wall_mean_ms": 1.104,
+            "routing_reasons": {
+              "Home": 122880
+            }
+          },
+          {
+            "role": "later-wave stage0",
+            "n": 6144,
+            "source_ne_chosen": 0,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 0.008,
+            "cpu_mean_ms": 0.928,
+            "wall_mean_ms": 0.931,
+            "routing_reasons": {
+              "Home": 6144
+            }
+          },
+          {
+            "role": "ordinary successors",
+            "n": 129024,
+            "source_ne_chosen": 0,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 2.028,
+            "cpu_mean_ms": 1.019,
+            "wall_mean_ms": 1.023,
+            "routing_reasons": {
+              "Home": 129024
+            }
+          },
+          {
+            "role": "join",
+            "n": 3072,
+            "source_ne_chosen": 0,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 0.005,
+            "cpu_mean_ms": 0.006,
+            "wall_mean_ms": 0.006,
+            "routing_reasons": {
+              "Home": 3072
+            }
+          },
+          {
+            "role": "rpc_resume",
+            "n": 128809,
+            "source_ne_chosen": 0,
+            "source_not_home_chosen_home": 0,
+            "wait_mean_ms": 1.127,
+            "cpu_mean_ms": 0.002,
+            "wall_mean_ms": 0.003,
+            "routing_reasons": {
+              "Home": 128809
+            }
+          }
+        ],
+        "async_timing_ms": {
+          "issue_to_due_ms": {
+            "n": 128809,
+            "mean": 2.0,
+            "p50": 2.0,
+            "p95": 2.0,
+            "p99": 2.0,
+            "max": 2.0
+          },
+          "source_due_to_fire_ms": {
+            "n": 128809,
+            "mean": 0.145,
+            "p50": 0.053,
+            "p95": 0.579,
+            "p99": 2.863,
+            "max": 7.228
+          },
+          "fire_to_resume_submit_ms": {
+            "n": 128809,
+            "mean": 0.001,
+            "p50": 0.001,
+            "p95": 0.002,
+            "p99": 0.002,
+            "max": 0.293
+          },
+          "resume_executor_wait_ms": {
+            "n": 128809,
+            "mean": 1.127,
+            "p50": 1.074,
+            "p95": 3.057,
+            "p99": 3.576,
+            "max": 4.643
+          }
+        },
+        "cohort_attempt_lag_mean_ms": 0.12,
+        "cohort_attempt_to_finish_mean_ms": 22.632,
+        "cohort_attempt_lag_p99_ms": 1.488,
+        "cohort_attempt_to_finish_p99_ms": 27.86
+      }
+    },
+    "outstanding-trace0": {
+      "ordinal": 4,
+      "options": {
+        "--cpus": "0-15;16-31;32-47;192-207;208-223;224-239",
+        "--affinity": "cluster",
+        "--capacity-scale": "1",
+        "--threads": "16",
+        "--requests": "1920",
+        "--qps": "96",
+        "--arrival": "regular",
+        "--burst-size": "8",
+        "--burst-spacing-us": "100",
+        "--widths": "80,4",
+        "--depths": "2,2",
+        "--iterations": "375000",
+        "--model": "branch-rw",
+        "--branch-kb": "64",
+        "--shared-kb": "0",
+        "--accesses": "12500",
+        "--jitter-percent": "25",
+        "--long-every": "8",
+        "--long-factor": "4",
+        "--work-scale-scope": "task",
+        "--estimate-mode": "constant",
+        "--home-policy": "rr",
+        "--continuation": "parent",
+        "--balance-at": "all",
+        "--batch-chunk": "1",
+        "--cross-numa": "0",
+        "--max-hops": "4",
+        "--cpu-sampling": "0",
+        "--page-sample": "0",
+        "--sync-block-percent": "0",
+        "--sync-block-us": "0",
+        "--async-percent": "50",
+        "--async-delay-us": "2000",
+        "--async-align-us": "0",
+        "--async-capacity": "4096",
+        "--max-inflight": "16",
+        "--memory-mb": "512",
+        "--policy": "outstanding",
+        "--trace": "0",
+        "--seed": "421",
+        "--output": "results/local/v2-async-mechanism-01/seed-421-outstanding-trace0"
+      },
+      "cohort": {
+        "offered": 1536,
+        "completed": 1536,
+        "mean_ms": 18.277,
+        "p95_ms": 21.333,
+        "p99_ms": 22.947,
+        "task_wait_p99_ms": null
+      },
+      "whole": {
+        "completed": 1920,
+        "failed_or_rejected": 0,
+        "process_cpu_s": 359.810033,
+        "cpu_per_request_ms": 187.401,
+        "peak_inflight": 4,
+        "attempt_lag_p99_ms": 0.056
+      },
+      "source": {
+        "registered": 161076,
+        "fired": 161076,
+        "canceled": 0,
+        "rejected": 0,
+        "resume_succeeded": 161076,
+        "resume_failed": 0,
+        "pending": 0,
+        "pending_peak": 67,
+        "helper_cpu_s": 2.011
+      },
+      "reported_identity": {
+        "work_signature_sha256_prefix": "55d3e07fbbcacd62",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      }
+    }
+  },
+  "instrumentation_sensitivity_reported": [
+    {
+      "strategy": "home",
+      "requests_per_trace": 1536,
+      "mean": {
+        "delta_ms": -0.056,
+        "delta_percent": -0.247
+      },
+      "p95": {
+        "delta_ms": -0.454,
+        "delta_percent": -1.707
+      },
+      "p99": {
+        "delta_ms": -1.203,
+        "delta_percent": -4.124
+      },
+      "whole_cpu_per_request": {
+        "delta_ms": 1.519,
+        "delta_percent": 0.841
+      }
+    },
+    {
+      "strategy": "all-parent",
+      "requests_per_trace": 1536,
+      "mean": {
+        "delta_ms": -0.003,
+        "delta_percent": -0.019
+      },
+      "p95": {
+        "delta_ms": 0.063,
+        "delta_percent": 0.296
+      },
+      "p99": {
+        "delta_ms": 0.093,
+        "delta_percent": 0.404
+      },
+      "whole_cpu_per_request": {
+        "delta_ms": 0.716,
+        "delta_percent": 0.382
+      }
+    }
+  ],
+  "candidate_minus_home_reported": [
+    {
+      "trace": 0,
+      "n": 1536,
+      "mean_delta_ms": -4.531,
+      "p95_delta_ms": -5.279,
+      "p99_delta_ms": -6.228
+    },
+    {
+      "trace": 1,
+      "n": 1536,
+      "mean_delta_ms": -4.478,
+      "p95_delta_ms": -4.761,
+      "p99_delta_ms": -4.932
+    }
+  ],
+  "candidate_minus_home_derived": {
+    "trace0": {
+      "mean_ms": {
+        "delta_from_printed_endpoints": -4.530999999999999,
+        "percent_from_printed_endpoints": -19.86583654857944
+      },
+      "p95_ms": {
+        "delta_from_printed_endpoints": -5.279,
+        "percent_from_printed_endpoints": -19.836915677138133
+      },
+      "p99_ms": {
+        "delta_from_printed_endpoints": -6.2280000000000015,
+        "percent_from_printed_endpoints": -21.347043701799493
+      },
+      "whole_cpu_per_request": {
+        "delta_ms_from_cpu_seconds": 6.761536458333328,
+        "percent_from_cpu_seconds": 3.7431102389192827
+      }
+    },
+    "trace1": {
+      "mean_ms": {
+        "delta_from_printed_endpoints": -4.478999999999999,
+        "percent_from_printed_endpoints": -19.686181434599153
+      },
+      "p95_ms": {
+        "delta_from_printed_endpoints": -4.761000000000003,
+        "percent_from_printed_endpoints": -18.200932793026997
+      },
+      "p99_ms": {
+        "delta_from_printed_endpoints": -4.933,
+        "percent_from_printed_endpoints": -17.635492635492632
+      },
+      "whole_cpu_per_request": {
+        "delta_ms_from_cpu_seconds": 5.958446354166677,
+        "percent_from_cpu_seconds": 3.271014802113425
+      }
+    }
+  },
+  "derived_routing": {
+    "cohort_all_routing_migrations": 109109,
+    "first_wave_share_percent": 75.66103621149493,
+    "resume_direct_routing_percent": 0.6303907335667539,
+    "source_not_home_chosen_home_total": 9732
+  },
+  "decisions": {
+    "a1_mechanism_step": "complete",
+    "new_native_runs_required_now": 0,
+    "change_cpp_or_folly": false,
+    "change_workload_or_default_policy_thresholds": false,
+    "keep_O_candidate_and_home_fallback": true,
+    "next": "Freeze synthetic contract and hand off staged read-only local implementation review; formal repetition is a separate predeclared goal, not a prerequisite for closing this mechanism step."
+  },
+  "limitations": [
+    "One execution per cell; no confidence interval or production p99 acceptance.",
+    "Routing migration is not kernel migration; callback occupancy is not runnable/on-CPU.",
+    "Source lag differs between strategies sharing execution resources; compatible with scheduling feedback but this single pair cannot rule out run variability. It is not a fixed independent network delay.",
+    "Role summaries and separate quantiles cannot be added into a request critical path.",
+    "Parent/home, all/fork, Q/O and cross-NUMA alternatives are not compared in this batch.",
+    "The synthetic 96QPS/50%/2ms/16-thread contract is not production calibration."
+  ]
+}
