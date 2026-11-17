@@ -61,7 +61,7 @@ request进入总池
 | 算子异质性 | 固定seed的task/request抖动与长尾；常数/请求类别估计对照 | 长尾改变均值需重新校准；不同shape/分布不自动成为同工作策略配对 |
 | 数据亲和 | none、request-ro、branch-rw、mixed；home初始化，链消费前驱修改的数据 | follow重点分支depth≥2；初始化位置不保证永久NUMA页归属，真实worker构图的first-touch可能不同 |
 | CPU亲和 | 每cluster一池主线；相同CPU并集下none/numa控制 | none的逻辑迁移不是可证明的物理NUMA迁移 |
-| 阻塞/异步 | v2同步sleep反例；v1模拟异步RPC；总池token生命周期单测 | sleep不是CPU工作或异步RPC；v2驱动未做真实网络压力 |
+| 阻塞/异步 | 同步sleep反例；总池token生命周期；新增单线程外部完成源和异步驱动（v3合同） | sleep不是CPU工作或异步RPC；v2驱动未做真实网络压力 |
 
 v2使用固定迭代/访问次数，使迁移变慢时仍完成同样工作；v1/阶段3的CPU预算模型用于排队机制，不拿它证明cache收益。当前图为波次分支链与标量join，不是任意生产DAG导入、多父大块数据融合或共享写争用模型。
 
@@ -117,7 +117,7 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 [4016 SD结果](TARGET_V2_4016_REVIEW.md)六轮均1920成功、零失败，正式cohort各1536、peak-inflight均3；同线程Q/O相对home均值下降33.36%～34.40%，CPU/请求增加6.01%～7.03%。Q/O排名随线程档变化，仍未证明16线程全局最优。home两轮每个一秒桶的投递lag p99均偏高，但两轮恰好先运行，不能据此归因于策略或内核调度。
 
-当前仅按[既有SD结果的到达核查指南](TARGET_V2_4016_NEXT.md)，用`arrival_audit.py`对已完成六个目录做只读、有界核查；无新增压力、trace或阈值试验。暂停扩大CPU工作族性能矩阵；后续工程优先实现等待期间释放executor worker、完成后重新提交恢复回调的异步工作族。v2驱动当前尚未实现该工作族，没有可执行的异步负载CLI。按[覆盖计划](TARGET_V2_COVERAGE_NEXT.md)推进[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)的工程与功能验收，不为拟合旧四池改变主线。
+**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑CPU矩阵、到达诊断或追加trace/阈值。异步完成源与驱动已加入工程，当前按[异步功能指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)进行编译及小规模功能验收；等待期间释放worker，恢复callback再推进图。性能对照待功能验收后另立合同。目标始终每个已核实硬件cluster一个池。**
 
 真实业务接入另按[分阶段生产agent手册](PRODUCTION_AGENT_PLAYBOOK.md)推进；若只能复制文字，使用[纯prompt交接版](PRODUCTION_AGENT_PROMPTS_ONLY.md)。当地agent先确认源码/授权/资源，再设计、实现、验收、有限迭代。给候选初值与有界梯度，不直接指定生产阈值；不要求环境网络直通。阶段5继续负责组件归属与Folly最小扩展的必要性，当前无需修改Folly核心。
 

@@ -1,6 +1,6 @@
 # 从4005调度证据到目标cluster实验：补什么、暂不改什么
 
-**当前状态：截至4016的历史证据、观测扰动、信号/线程、机制诊断、regular守护、S校准及SD六轮均已完成，见[最新结论](TARGET_V2_4016_REVIEW.md)。当前仅按[既有SD结果的到达核查指南](TARGET_V2_4016_NEXT.md)，用`arrival_audit.py`对已完成六个目录做只读、有界核查；无新增压力、trace或阈值试验。暂停扩大CPU工作族性能矩阵；后续工程优先实现等待期间释放executor worker、完成后重新提交恢复回调的异步工作族。v2驱动当前尚未实现该工作族，没有可执行的异步负载CLI。下文保留历史设计，不自动重跑旧trace或已完成矩阵。**
+**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑CPU矩阵、到达诊断或追加trace/阈值。异步完成源与驱动已加入工程，当前按[异步功能指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)进行编译及小规模功能验收；等待期间释放worker，恢复callback再推进图。性能对照待功能验收后另立合同。目标始终每个已核实硬件cluster一个池。**
 
 ## 1. 决策与固定主线
 
@@ -53,7 +53,7 @@ python3 scripts/analyze_sched_windows.py "$TRACE_SUMMARY" --bin-ms 10
 | 线程过配与信号 | 固定worker数；Q、callback I、O、估计work及后台CPU可替换 | 保留16/128线程与Q/active/O少量对照；不能把窗口unique-onCPU当作I已获验证 |
 | 数据亲和 | none/request-ro/branch-rw/mixed；home初始化、连续分支读写 | 先64KiB，再256KiB或共享读；不是对真实cache miss的复现或直接测量 |
 | 内部ready释放节奏 | 一个callback连续addBatch，后继依赖自然释放，可配置后续wave | `batch-chunk`控制选池预留粒度，**不控制时间间隔**；非阻塞分段release需要新增驱动，目前未实现 |
-| 异步RPC | 总池Continuation登记、恢复/取消与关闭测试已实现；v1有RPC实验 | v2固定工作/内存驱动没有异步RPC；需单独集成，不能拿同步sleep反例宣称覆盖 |
+| 异步RPC | 总池Continuation及外部完成源已集成固定工作/内存驱动，v3合同记录恢复与取消 | 当前先功能验收；真实网络与随机下游分布未覆盖，同步sleep不代表异步等待 |
 | 内存来源与计算形态 | home first-touch全部波的数组；每operator先计算循环再访存循环 | worker构图已触页、复用缓存、计算访存交织、大块多父融合尚未实现；结果或业务证据需要时再补 |
 
 4004校准的普通后继CPU约4～6ms，不证明真实算子也如此。真实“平均100ms”仍需明确CPU或墙钟口径、算子个数分布和CPU/request。内核一次switch运行片段可能只是算子的一部分，也可能包含多个callback；禁止按它重新标定算子预算。

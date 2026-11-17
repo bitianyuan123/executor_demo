@@ -1,0 +1,2118 @@
+{
+  "source": "4017.log",
+  "source_path": "/root/.codex/attachments/1774db42-f8ec-4036-9d89-f2db840b4dec/4017.log",
+  "source_sha256": "be6b4bc4b236d7482b663840592c158b6ba6b959f04edb4d56dbe140fdfd8050",
+  "evidence": "Audit of returned terminal output from existing six SD runs. Original target CSVs were not transferred or locally reanalyzed; figures retain printed precision. No new performance run. Cross-checks below compare terminal extracts only.",
+  "previous_result": "4016_summary.json",
+  "command": {
+    "tool": "experiments/affinity/arrival_audit.py",
+    "warmup_seconds": 2,
+    "window_seconds": 16,
+    "phase_modulus": 6,
+    "lag_threshold_ms": 1,
+    "top": 3,
+    "inputs": [
+      "results/local/v2-short-density-count-01/seed-421-threads-16-home",
+      "results/local/v2-short-density-count-01/seed-421-threads-128-home",
+      "results/local/v2-short-density-count-01/seed-421-threads-16-queue",
+      "results/local/v2-short-density-count-01/seed-421-threads-16-outstanding",
+      "results/local/v2-short-density-count-01/seed-421-threads-128-queue",
+      "results/local/v2-short-density-count-01/seed-421-threads-128-outstanding"
+    ]
+  },
+  "cohort_definition": "planned arrivals in [2,18) seconds; all statuses and late outcomes retained",
+  "quantiles": "nearest rank; no tail independence or confidence interval guarantee",
+  "phase_interpretation": "request ID modulo 6 is an ordinal residue, not measured home pool, selected pool, callback pool or CPU",
+  "lag_interpretation": "submitted_ns is the driver attempt before current request construction/root add. Lag cannot be attributed to execution of that current request. Shared driver CPU union, previous driver work, timer/wakeup, scheduler and run order remain unseparated.",
+  "overlap_interpretation": "ALL request intervals clipped to wall window [2,18), including earlier arrivals and late outcomes. Scheduled overlap includes generator lag; attempt overlap includes request construction. Neither equals callback I, Folly Q/O, kernel runq, or whole-run RequestState peak_inflight. Faster completion naturally lowers overlap at equal arrival rate; this does not independently establish reduced contention as the cause.",
+  "runs": [
+    {
+      "run": "results/local/v2-short-density-count-01/seed-421-threads-16-home",
+      "run_id": "seed-421-threads-16-home",
+      "contract": {
+        "seed": 421,
+        "model": "branch-rw",
+        "policy": "home",
+        "continuation": "parent",
+        "home-policy": "rr",
+        "arrival": "regular",
+        "qps": 96,
+        "trace": 0,
+        "affinity": "cluster",
+        "pools": 6,
+        "threads/pool": 16,
+        "max-inflight": 16
+      },
+      "resources": [
+        {
+          "capacity": 16,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "numa": 2
+        }
+      ],
+      "identity": {
+        "work_signature_sha256_prefix": "5f5edf58db060d0a",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "whole": {
+        "n": 1920,
+        "statuses": {
+          "completed": 1920
+        }
+      },
+      "cohort": {
+        "start_s": 2.0,
+        "end_s": 18.0,
+        "n": 1536,
+        "statuses": {
+          "completed": 1536
+        }
+      },
+      "lag_ms": {
+        "mean": 0.302,
+        "p50": 0.053,
+        "p95": 2.229,
+        "p99": 3.312,
+        "max": 3.89
+      },
+      "lag_above_threshold": {
+        "threshold_ms": 1,
+        "comparison": ">",
+        "count": 173,
+        "denominator": 1536,
+        "percent": 11.263
+      },
+      "phase_modulus": 6,
+      "phases": [
+        {
+          "residue": 0,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.071,
+          "lag_p99_ms": 0.365,
+          "above_threshold_count": 2
+        },
+        {
+          "residue": 1,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 1.526,
+          "lag_p99_ms": 3.884,
+          "above_threshold_count": 171
+        },
+        {
+          "residue": 2,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.058,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 3,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.053,
+          "lag_p99_ms": 0.057,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 4,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.053,
+          "lag_p99_ms": 0.055,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 5,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.055,
+          "above_threshold_count": 0
+        }
+      ],
+      "lag_strata": [
+        {
+          "stratum": "lag<=threshold",
+          "n": 1363,
+          "statuses": {
+            "completed": 1363
+          },
+          "successful": 1363,
+          "planned_mean_ms": 17.677,
+          "planned_p99_ms": 21.083,
+          "attempt_to_finish_mean_ms": 17.617,
+          "attempt_to_finish_p99_ms": 21.031
+        },
+        {
+          "stratum": "lag>threshold",
+          "n": 173,
+          "statuses": {
+            "completed": 173
+          },
+          "successful": 173,
+          "planned_mean_ms": 19.863,
+          "planned_p99_ms": 24.134,
+          "attempt_to_finish_mean_ms": 17.655,
+          "attempt_to_finish_p99_ms": 21.124
+        }
+      ],
+      "top_lag": [
+        {
+          "request": 319,
+          "status": "completed",
+          "scheduled_from_origin_ms": 3322.917,
+          "attempt_from_origin_ms": 3326.807,
+          "terminal_from_origin_ms": 3343.636,
+          "lag_ms": 3.89,
+          "planned_to_terminal_ms": 20.719,
+          "attempt_to_terminal_ms": 16.829,
+          "previous_attempt_gap_ms": 14.254,
+          "next_attempt_gap_ms": 6.58
+        },
+        {
+          "request": 607,
+          "status": "completed",
+          "scheduled_from_origin_ms": 6322.917,
+          "attempt_from_origin_ms": 6326.805,
+          "terminal_from_origin_ms": 6345.391,
+          "lag_ms": 3.889,
+          "planned_to_terminal_ms": 22.474,
+          "attempt_to_terminal_ms": 18.586,
+          "previous_attempt_gap_ms": 14.252,
+          "next_attempt_gap_ms": 6.581
+        },
+        {
+          "request": 895,
+          "status": "completed",
+          "scheduled_from_origin_ms": 9322.917,
+          "attempt_from_origin_ms": 9326.8,
+          "terminal_from_origin_ms": 9343.308,
+          "lag_ms": 3.884,
+          "planned_to_terminal_ms": 20.391,
+          "attempt_to_terminal_ms": 16.507,
+          "previous_attempt_gap_ms": 14.248,
+          "next_attempt_gap_ms": 6.586
+        }
+      ],
+      "overlap": {
+        "scheduled-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.721,
+          "peak": 3,
+          "time_at_least_2_percent": 71.756
+        },
+        "attempt-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.692,
+          "peak": 3,
+          "time_at_least_2_percent": 68.882
+        }
+      },
+      "verification": {
+        "whole_counts_and_statuses_match_4016": true,
+        "cohort_counts_and_statuses_match_4016": true,
+        "resources_match_4016": true,
+        "printed_work_prefix_match_4016": true,
+        "printed_arrival_hash_match_4016": true,
+        "printed_checksum_match_4016": true,
+        "lag_mean_and_p99_match_4016": true,
+        "phase_counts_partition_cohort": true,
+        "phase_exceedances_partition_cohort": true,
+        "stratum_counts_partition_cohort": true,
+        "stratum_successes_match_cohort": true,
+        "whole_summary_peak_inflight_4016": 3,
+        "weighted_rounded_stratum_means": {
+          "planned_mean_ms": 17.923209635416665,
+          "attempt_to_finish_mean_ms": 17.621279947916666
+        },
+        "weighted_stratum_means_within_0_002ms_of_4016": true
+      },
+      "descriptive_derived": {
+        "phase_1_share_of_above_threshold_percent": 98.84393063583815,
+        "high_minus_low_attempt_to_finish_mean_ms": 0.038,
+        "interpretation": "Descriptive conditional groups, not causal correction; no percentile subtraction."
+      }
+    },
+    {
+      "run": "results/local/v2-short-density-count-01/seed-421-threads-128-home",
+      "run_id": "seed-421-threads-128-home",
+      "contract": {
+        "seed": 421,
+        "model": "branch-rw",
+        "policy": "home",
+        "continuation": "parent",
+        "home-policy": "rr",
+        "arrival": "regular",
+        "qps": 96,
+        "trace": 0,
+        "affinity": "cluster",
+        "pools": 6,
+        "threads/pool": 128,
+        "max-inflight": 16
+      },
+      "resources": [
+        {
+          "capacity": 16,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "numa": 2
+        }
+      ],
+      "identity": {
+        "work_signature_sha256_prefix": "5f5edf58db060d0a",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "whole": {
+        "n": 1920,
+        "statuses": {
+          "completed": 1920
+        }
+      },
+      "cohort": {
+        "start_s": 2.0,
+        "end_s": 18.0,
+        "n": 1536,
+        "statuses": {
+          "completed": 1536
+        }
+      },
+      "lag_ms": {
+        "mean": 0.275,
+        "p50": 0.054,
+        "p95": 2.085,
+        "p99": 3.083,
+        "max": 4.578
+      },
+      "lag_above_threshold": {
+        "threshold_ms": 1,
+        "comparison": ">",
+        "count": 153,
+        "denominator": 1536,
+        "percent": 9.961
+      },
+      "phase_modulus": 6,
+      "phases": [
+        {
+          "residue": 0,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.073,
+          "lag_p99_ms": 0.395,
+          "above_threshold_count": 2
+        },
+        {
+          "residue": 1,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 1.351,
+          "lag_p99_ms": 3.588,
+          "above_threshold_count": 150
+        },
+        {
+          "residue": 2,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.057,
+          "lag_p99_ms": 0.154,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 3,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.062,
+          "lag_p99_ms": 0.057,
+          "above_threshold_count": 1
+        },
+        {
+          "residue": 4,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.059,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 5,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.058,
+          "above_threshold_count": 0
+        }
+      ],
+      "lag_strata": [
+        {
+          "stratum": "lag<=threshold",
+          "n": 1383,
+          "statuses": {
+            "completed": 1383
+          },
+          "successful": 1383,
+          "planned_mean_ms": 17.849,
+          "planned_p99_ms": 21.515,
+          "attempt_to_finish_mean_ms": 17.789,
+          "attempt_to_finish_p99_ms": 21.461
+        },
+        {
+          "stratum": "lag>threshold",
+          "n": 153,
+          "statuses": {
+            "completed": 153
+          },
+          "successful": 153,
+          "planned_mean_ms": 20.14,
+          "planned_p99_ms": 23.948,
+          "attempt_to_finish_mean_ms": 17.922,
+          "attempt_to_finish_p99_ms": 21.656
+        }
+      ],
+      "top_lag": [
+        {
+          "request": 1543,
+          "status": "completed",
+          "scheduled_from_origin_ms": 16072.917,
+          "attempt_from_origin_ms": 16077.495,
+          "terminal_from_origin_ms": 16094.135,
+          "lag_ms": 4.578,
+          "planned_to_terminal_ms": 21.219,
+          "attempt_to_terminal_ms": 16.641,
+          "previous_attempt_gap_ms": 14.941,
+          "next_attempt_gap_ms": 5.892
+        },
+        {
+          "request": 1465,
+          "status": "completed",
+          "scheduled_from_origin_ms": 15260.417,
+          "attempt_from_origin_ms": 15264.063,
+          "terminal_from_origin_ms": 15282.036,
+          "lag_ms": 3.647,
+          "planned_to_terminal_ms": 21.619,
+          "attempt_to_terminal_ms": 17.972,
+          "previous_attempt_gap_ms": 14.009,
+          "next_attempt_gap_ms": 6.823
+        },
+        {
+          "request": 1363,
+          "status": "completed",
+          "scheduled_from_origin_ms": 14197.917,
+          "attempt_from_origin_ms": 14201.505,
+          "terminal_from_origin_ms": 14217.122,
+          "lag_ms": 3.588,
+          "planned_to_terminal_ms": 19.206,
+          "attempt_to_terminal_ms": 15.617,
+          "previous_attempt_gap_ms": 13.95,
+          "next_attempt_gap_ms": 6.882
+        }
+      ],
+      "overlap": {
+        "scheduled-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.736,
+          "peak": 3,
+          "time_at_least_2_percent": 73.101
+        },
+        "attempt-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.709,
+          "peak": 3,
+          "time_at_least_2_percent": 70.49
+        }
+      },
+      "verification": {
+        "whole_counts_and_statuses_match_4016": true,
+        "cohort_counts_and_statuses_match_4016": true,
+        "resources_match_4016": true,
+        "printed_work_prefix_match_4016": true,
+        "printed_arrival_hash_match_4016": true,
+        "printed_checksum_match_4016": true,
+        "lag_mean_and_p99_match_4016": true,
+        "phase_counts_partition_cohort": true,
+        "phase_exceedances_partition_cohort": true,
+        "stratum_counts_partition_cohort": true,
+        "stratum_successes_match_cohort": true,
+        "whole_summary_peak_inflight_4016": 3,
+        "weighted_rounded_stratum_means": {
+          "planned_mean_ms": 18.077205078125,
+          "attempt_to_finish_mean_ms": 17.802248046875
+        },
+        "weighted_stratum_means_within_0_002ms_of_4016": true
+      },
+      "descriptive_derived": {
+        "phase_1_share_of_above_threshold_percent": 98.03921568627452,
+        "high_minus_low_attempt_to_finish_mean_ms": 0.133,
+        "interpretation": "Descriptive conditional groups, not causal correction; no percentile subtraction."
+      }
+    },
+    {
+      "run": "results/local/v2-short-density-count-01/seed-421-threads-16-queue",
+      "run_id": "seed-421-threads-16-queue",
+      "contract": {
+        "seed": 421,
+        "model": "branch-rw",
+        "policy": "queue",
+        "continuation": "parent",
+        "home-policy": "rr",
+        "arrival": "regular",
+        "qps": 96,
+        "trace": 0,
+        "affinity": "cluster",
+        "pools": 6,
+        "threads/pool": 16,
+        "max-inflight": 16
+      },
+      "resources": [
+        {
+          "capacity": 16,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "numa": 2
+        }
+      ],
+      "identity": {
+        "work_signature_sha256_prefix": "5f5edf58db060d0a",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "whole": {
+        "n": 1920,
+        "statuses": {
+          "completed": 1920
+        }
+      },
+      "cohort": {
+        "start_s": 2.0,
+        "end_s": 18.0,
+        "n": 1536,
+        "statuses": {
+          "completed": 1536
+        }
+      },
+      "lag_ms": {
+        "mean": 0.055,
+        "p50": 0.054,
+        "p95": 0.056,
+        "p99": 0.059,
+        "max": 0.089
+      },
+      "lag_above_threshold": {
+        "threshold_ms": 1,
+        "comparison": ">",
+        "count": 0,
+        "denominator": 1536,
+        "percent": 0.0
+      },
+      "phase_modulus": 6,
+      "phases": [
+        {
+          "residue": 0,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.059,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 1,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.056,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 2,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.059,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 3,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.056,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 4,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.061,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 5,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.059,
+          "above_threshold_count": 0
+        }
+      ],
+      "lag_strata": [
+        {
+          "stratum": "lag<=threshold",
+          "n": 1536,
+          "statuses": {
+            "completed": 1536
+          },
+          "successful": 1536,
+          "planned_mean_ms": 11.757,
+          "planned_p99_ms": 15.76,
+          "attempt_to_finish_mean_ms": 11.703,
+          "attempt_to_finish_p99_ms": 15.707
+        },
+        {
+          "stratum": "lag>threshold",
+          "n": 0,
+          "statuses": {},
+          "successful": 0,
+          "planned_mean_ms": null,
+          "planned_p99_ms": null,
+          "attempt_to_finish_mean_ms": null,
+          "attempt_to_finish_p99_ms": null
+        }
+      ],
+      "top_lag": [
+        {
+          "request": 1489,
+          "status": "completed",
+          "scheduled_from_origin_ms": 15510.417,
+          "attempt_from_origin_ms": 15510.505,
+          "terminal_from_origin_ms": 15520.432,
+          "lag_ms": 0.089,
+          "planned_to_terminal_ms": 10.015,
+          "attempt_to_terminal_ms": 9.927,
+          "previous_attempt_gap_ms": 10.451,
+          "next_attempt_gap_ms": 10.383
+        },
+        {
+          "request": 250,
+          "status": "completed",
+          "scheduled_from_origin_ms": 2604.167,
+          "attempt_from_origin_ms": 2604.229,
+          "terminal_from_origin_ms": 2613.688,
+          "lag_ms": 0.062,
+          "planned_to_terminal_ms": 9.521,
+          "attempt_to_terminal_ms": 9.459,
+          "previous_attempt_gap_ms": 10.423,
+          "next_attempt_gap_ms": 10.41
+        },
+        {
+          "request": 1595,
+          "status": "completed",
+          "scheduled_from_origin_ms": 16614.583,
+          "attempt_from_origin_ms": 16614.645,
+          "terminal_from_origin_ms": 16625.575,
+          "lag_ms": 0.062,
+          "planned_to_terminal_ms": 10.991,
+          "attempt_to_terminal_ms": 10.929,
+          "previous_attempt_gap_ms": 10.424,
+          "next_attempt_gap_ms": 10.41
+        }
+      ],
+      "overlap": {
+        "scheduled-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.129,
+          "peak": 2,
+          "time_at_least_2_percent": 14.049
+        },
+        "attempt-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.124,
+          "peak": 2,
+          "time_at_least_2_percent": 13.635
+        }
+      },
+      "verification": {
+        "whole_counts_and_statuses_match_4016": true,
+        "cohort_counts_and_statuses_match_4016": true,
+        "resources_match_4016": true,
+        "printed_work_prefix_match_4016": true,
+        "printed_arrival_hash_match_4016": true,
+        "printed_checksum_match_4016": true,
+        "lag_mean_and_p99_match_4016": true,
+        "phase_counts_partition_cohort": true,
+        "phase_exceedances_partition_cohort": true,
+        "stratum_counts_partition_cohort": true,
+        "stratum_successes_match_cohort": true,
+        "whole_summary_peak_inflight_4016": 3,
+        "weighted_rounded_stratum_means": {
+          "planned_mean_ms": 11.757,
+          "attempt_to_finish_mean_ms": 11.702999999999998
+        },
+        "weighted_stratum_means_within_0_002ms_of_4016": true
+      }
+    },
+    {
+      "run": "results/local/v2-short-density-count-01/seed-421-threads-16-outstanding",
+      "run_id": "seed-421-threads-16-outstanding",
+      "contract": {
+        "seed": 421,
+        "model": "branch-rw",
+        "policy": "outstanding",
+        "continuation": "parent",
+        "home-policy": "rr",
+        "arrival": "regular",
+        "qps": 96,
+        "trace": 0,
+        "affinity": "cluster",
+        "pools": 6,
+        "threads/pool": 16,
+        "max-inflight": 16
+      },
+      "resources": [
+        {
+          "capacity": 16,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "numa": 2
+        }
+      ],
+      "identity": {
+        "work_signature_sha256_prefix": "5f5edf58db060d0a",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "whole": {
+        "n": 1920,
+        "statuses": {
+          "completed": 1920
+        }
+      },
+      "cohort": {
+        "start_s": 2.0,
+        "end_s": 18.0,
+        "n": 1536,
+        "statuses": {
+          "completed": 1536
+        }
+      },
+      "lag_ms": {
+        "mean": 0.055,
+        "p50": 0.055,
+        "p95": 0.056,
+        "p99": 0.061,
+        "max": 0.072
+      },
+      "lag_above_threshold": {
+        "threshold_ms": 1,
+        "comparison": ">",
+        "count": 0,
+        "denominator": 1536,
+        "percent": 0.0
+      },
+      "phase_modulus": 6,
+      "phases": [
+        {
+          "residue": 0,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.06,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 1,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.056,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 2,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.056,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 3,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.055,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 4,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.058,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 5,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.065,
+          "above_threshold_count": 0
+        }
+      ],
+      "lag_strata": [
+        {
+          "stratum": "lag<=threshold",
+          "n": 1536,
+          "statuses": {
+            "completed": 1536
+          },
+          "successful": 1536,
+          "planned_mean_ms": 11.943,
+          "planned_p99_ms": 16.023,
+          "attempt_to_finish_mean_ms": 11.888,
+          "attempt_to_finish_p99_ms": 15.969
+        },
+        {
+          "stratum": "lag>threshold",
+          "n": 0,
+          "statuses": {},
+          "successful": 0,
+          "planned_mean_ms": null,
+          "planned_p99_ms": null,
+          "attempt_to_finish_mean_ms": null,
+          "attempt_to_finish_p99_ms": null
+        }
+      ],
+      "top_lag": [
+        {
+          "request": 1481,
+          "status": "completed",
+          "scheduled_from_origin_ms": 15427.083,
+          "attempt_from_origin_ms": 15427.155,
+          "terminal_from_origin_ms": 15439.004,
+          "lag_ms": 0.072,
+          "planned_to_terminal_ms": 11.921,
+          "attempt_to_terminal_ms": 11.849,
+          "previous_attempt_gap_ms": 10.433,
+          "next_attempt_gap_ms": 10.399
+        },
+        {
+          "request": 431,
+          "status": "completed",
+          "scheduled_from_origin_ms": 4489.583,
+          "attempt_from_origin_ms": 4489.649,
+          "terminal_from_origin_ms": 4503.208,
+          "lag_ms": 0.066,
+          "planned_to_terminal_ms": 13.625,
+          "attempt_to_terminal_ms": 13.559,
+          "previous_attempt_gap_ms": 10.429,
+          "next_attempt_gap_ms": 10.406
+        },
+        {
+          "request": 1055,
+          "status": "completed",
+          "scheduled_from_origin_ms": 10989.583,
+          "attempt_from_origin_ms": 10989.648,
+          "terminal_from_origin_ms": 11001.944,
+          "lag_ms": 0.065,
+          "planned_to_terminal_ms": 12.361,
+          "attempt_to_terminal_ms": 12.296,
+          "previous_attempt_gap_ms": 10.427,
+          "next_attempt_gap_ms": 10.406
+        }
+      ],
+      "overlap": {
+        "scheduled-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.147,
+          "peak": 2,
+          "time_at_least_2_percent": 15.521
+        },
+        "attempt-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.141,
+          "peak": 2,
+          "time_at_least_2_percent": 15.095
+        }
+      },
+      "verification": {
+        "whole_counts_and_statuses_match_4016": true,
+        "cohort_counts_and_statuses_match_4016": true,
+        "resources_match_4016": true,
+        "printed_work_prefix_match_4016": true,
+        "printed_arrival_hash_match_4016": true,
+        "printed_checksum_match_4016": true,
+        "lag_mean_and_p99_match_4016": true,
+        "phase_counts_partition_cohort": true,
+        "phase_exceedances_partition_cohort": true,
+        "stratum_counts_partition_cohort": true,
+        "stratum_successes_match_cohort": true,
+        "whole_summary_peak_inflight_4016": 3,
+        "weighted_rounded_stratum_means": {
+          "planned_mean_ms": 11.943,
+          "attempt_to_finish_mean_ms": 11.888
+        },
+        "weighted_stratum_means_within_0_002ms_of_4016": true
+      }
+    },
+    {
+      "run": "results/local/v2-short-density-count-01/seed-421-threads-128-queue",
+      "run_id": "seed-421-threads-128-queue",
+      "contract": {
+        "seed": 421,
+        "model": "branch-rw",
+        "policy": "queue",
+        "continuation": "parent",
+        "home-policy": "rr",
+        "arrival": "regular",
+        "qps": 96,
+        "trace": 0,
+        "affinity": "cluster",
+        "pools": 6,
+        "threads/pool": 128,
+        "max-inflight": 16
+      },
+      "resources": [
+        {
+          "capacity": 16,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "numa": 2
+        }
+      ],
+      "identity": {
+        "work_signature_sha256_prefix": "5f5edf58db060d0a",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "whole": {
+        "n": 1920,
+        "statuses": {
+          "completed": 1920
+        }
+      },
+      "cohort": {
+        "start_s": 2.0,
+        "end_s": 18.0,
+        "n": 1536,
+        "statuses": {
+          "completed": 1536
+        }
+      },
+      "lag_ms": {
+        "mean": 0.055,
+        "p50": 0.055,
+        "p95": 0.056,
+        "p99": 0.059,
+        "max": 0.065
+      },
+      "lag_above_threshold": {
+        "threshold_ms": 1,
+        "comparison": ">",
+        "count": 0,
+        "denominator": 1536,
+        "percent": 0.0
+      },
+      "phase_modulus": 6,
+      "phases": [
+        {
+          "residue": 0,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.06,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 1,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.057,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 2,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.056,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 3,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.064,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 4,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.059,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 5,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.059,
+          "above_threshold_count": 0
+        }
+      ],
+      "lag_strata": [
+        {
+          "stratum": "lag<=threshold",
+          "n": 1536,
+          "statuses": {
+            "completed": 1536
+          },
+          "successful": 1536,
+          "planned_mean_ms": 12.009,
+          "planned_p99_ms": 16.166,
+          "attempt_to_finish_mean_ms": 11.954,
+          "attempt_to_finish_p99_ms": 16.112
+        },
+        {
+          "stratum": "lag>threshold",
+          "n": 0,
+          "statuses": {},
+          "successful": 0,
+          "planned_mean_ms": null,
+          "planned_p99_ms": null,
+          "attempt_to_finish_mean_ms": null,
+          "attempt_to_finish_p99_ms": null
+        }
+      ],
+      "top_lag": [
+        {
+          "request": 981,
+          "status": "completed",
+          "scheduled_from_origin_ms": 10218.75,
+          "attempt_from_origin_ms": 10218.815,
+          "terminal_from_origin_ms": 10230.732,
+          "lag_ms": 0.065,
+          "planned_to_terminal_ms": 11.982,
+          "attempt_to_terminal_ms": 11.917,
+          "previous_attempt_gap_ms": 10.426,
+          "next_attempt_gap_ms": 10.409
+        },
+        {
+          "request": 1461,
+          "status": "completed",
+          "scheduled_from_origin_ms": 15218.75,
+          "attempt_from_origin_ms": 15218.814,
+          "terminal_from_origin_ms": 15231.432,
+          "lag_ms": 0.064,
+          "planned_to_terminal_ms": 12.682,
+          "attempt_to_terminal_ms": 12.618,
+          "previous_attempt_gap_ms": 10.425,
+          "next_attempt_gap_ms": 10.407
+        },
+        {
+          "request": 501,
+          "status": "completed",
+          "scheduled_from_origin_ms": 5218.75,
+          "attempt_from_origin_ms": 5218.814,
+          "terminal_from_origin_ms": 5229.713,
+          "lag_ms": 0.064,
+          "planned_to_terminal_ms": 10.963,
+          "attempt_to_terminal_ms": 10.899,
+          "previous_attempt_gap_ms": 10.426,
+          "next_attempt_gap_ms": 10.408
+        }
+      ],
+      "overlap": {
+        "scheduled-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.153,
+          "peak": 2,
+          "time_at_least_2_percent": 16.078
+        },
+        "attempt-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.148,
+          "peak": 2,
+          "time_at_least_2_percent": 15.638
+        }
+      },
+      "verification": {
+        "whole_counts_and_statuses_match_4016": true,
+        "cohort_counts_and_statuses_match_4016": true,
+        "resources_match_4016": true,
+        "printed_work_prefix_match_4016": true,
+        "printed_arrival_hash_match_4016": true,
+        "printed_checksum_match_4016": true,
+        "lag_mean_and_p99_match_4016": true,
+        "phase_counts_partition_cohort": true,
+        "phase_exceedances_partition_cohort": true,
+        "stratum_counts_partition_cohort": true,
+        "stratum_successes_match_cohort": true,
+        "whole_summary_peak_inflight_4016": 3,
+        "weighted_rounded_stratum_means": {
+          "planned_mean_ms": 12.009,
+          "attempt_to_finish_mean_ms": 11.954
+        },
+        "weighted_stratum_means_within_0_002ms_of_4016": true
+      }
+    },
+    {
+      "run": "results/local/v2-short-density-count-01/seed-421-threads-128-outstanding",
+      "run_id": "seed-421-threads-128-outstanding",
+      "contract": {
+        "seed": 421,
+        "model": "branch-rw",
+        "policy": "outstanding",
+        "continuation": "parent",
+        "home-policy": "rr",
+        "arrival": "regular",
+        "qps": 96,
+        "trace": 0,
+        "affinity": "cluster",
+        "pools": 6,
+        "threads/pool": 128,
+        "max-inflight": 16
+      },
+      "resources": [
+        {
+          "capacity": 16,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "numa": 0
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217,
+            218,
+            219,
+            220,
+            221,
+            222,
+            223
+          ],
+          "numa": 2
+        },
+        {
+          "capacity": 16,
+          "cpus": [
+            224,
+            225,
+            226,
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239
+          ],
+          "numa": 2
+        }
+      ],
+      "identity": {
+        "work_signature_sha256_prefix": "5f5edf58db060d0a",
+        "arrival_hash": "8354655555075271473",
+        "checksum": "12935529526370272479"
+      },
+      "whole": {
+        "n": 1920,
+        "statuses": {
+          "completed": 1920
+        }
+      },
+      "cohort": {
+        "start_s": 2.0,
+        "end_s": 18.0,
+        "n": 1536,
+        "statuses": {
+          "completed": 1536
+        }
+      },
+      "lag_ms": {
+        "mean": 0.055,
+        "p50": 0.054,
+        "p95": 0.055,
+        "p99": 0.059,
+        "max": 0.061
+      },
+      "lag_above_threshold": {
+        "threshold_ms": 1,
+        "comparison": ">",
+        "count": 0,
+        "denominator": 1536,
+        "percent": 0.0
+      },
+      "phase_modulus": 6,
+      "phases": [
+        {
+          "residue": 0,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.06,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 1,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.055,
+          "lag_p99_ms": 0.055,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 2,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.056,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 3,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.056,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 4,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.06,
+          "above_threshold_count": 0
+        },
+        {
+          "residue": 5,
+          "n": 256,
+          "statuses": {
+            "completed": 256
+          },
+          "lag_mean_ms": 0.054,
+          "lag_p99_ms": 0.059,
+          "above_threshold_count": 0
+        }
+      ],
+      "lag_strata": [
+        {
+          "stratum": "lag<=threshold",
+          "n": 1536,
+          "statuses": {
+            "completed": 1536
+          },
+          "successful": 1536,
+          "planned_mean_ms": 11.97,
+          "planned_p99_ms": 15.844,
+          "attempt_to_finish_mean_ms": 11.915,
+          "attempt_to_finish_p99_ms": 15.789
+        },
+        {
+          "stratum": "lag>threshold",
+          "n": 0,
+          "statuses": {},
+          "successful": 0,
+          "planned_mean_ms": null,
+          "planned_p99_ms": null,
+          "attempt_to_finish_mean_ms": null,
+          "attempt_to_finish_p99_ms": null
+        }
+      ],
+      "top_lag": [
+        {
+          "request": 1672,
+          "status": "completed",
+          "scheduled_from_origin_ms": 17416.667,
+          "attempt_from_origin_ms": 17416.728,
+          "terminal_from_origin_ms": 17426.705,
+          "lag_ms": 0.061,
+          "planned_to_terminal_ms": 10.038,
+          "attempt_to_terminal_ms": 9.977,
+          "previous_attempt_gap_ms": 10.423,
+          "next_attempt_gap_ms": 10.411
+        },
+        {
+          "request": 1133,
+          "status": "completed",
+          "scheduled_from_origin_ms": 11802.083,
+          "attempt_from_origin_ms": 11802.144,
+          "terminal_from_origin_ms": 11812.634,
+          "lag_ms": 0.061,
+          "planned_to_terminal_ms": 10.551,
+          "attempt_to_terminal_ms": 10.49,
+          "previous_attempt_gap_ms": 10.421,
+          "next_attempt_gap_ms": 10.412
+        },
+        {
+          "request": 617,
+          "status": "completed",
+          "scheduled_from_origin_ms": 6427.083,
+          "attempt_from_origin_ms": 6427.144,
+          "terminal_from_origin_ms": 6439.911,
+          "lag_ms": 0.061,
+          "planned_to_terminal_ms": 12.828,
+          "attempt_to_terminal_ms": 12.767,
+          "previous_attempt_gap_ms": 10.423,
+          "next_attempt_gap_ms": 10.411
+        }
+      ],
+      "overlap": {
+        "scheduled-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.149,
+          "peak": 3,
+          "time_at_least_2_percent": 15.759
+        },
+        "attempt-to-terminal": {
+          "clipped_intervals": 1537,
+          "time_weighted_mean": 1.144,
+          "peak": 2,
+          "time_at_least_2_percent": 15.328
+        }
+      },
+      "verification": {
+        "whole_counts_and_statuses_match_4016": true,
+        "cohort_counts_and_statuses_match_4016": true,
+        "resources_match_4016": true,
+        "printed_work_prefix_match_4016": true,
+        "printed_arrival_hash_match_4016": true,
+        "printed_checksum_match_4016": true,
+        "lag_mean_and_p99_match_4016": true,
+        "phase_counts_partition_cohort": true,
+        "phase_exceedances_partition_cohort": true,
+        "stratum_counts_partition_cohort": true,
+        "stratum_successes_match_cohort": true,
+        "whole_summary_peak_inflight_4016": 3,
+        "weighted_rounded_stratum_means": {
+          "planned_mean_ms": 11.97,
+          "attempt_to_finish_mean_ms": 11.915
+        },
+        "weighted_stratum_means_within_0_002ms_of_4016": true
+      }
+    }
+  ],
+  "boundaries": [
+    "One seed and one run per performance cell; this is another view of the same data, not an independent repetition.",
+    "The two home runs were first in the 4016 execution order; sequence/environment drift remains a confound.",
+    "Threshold 1 ms is a descriptive lag partition, not a scheduler pressure threshold.",
+    "Trace0 leaves callback load, placement, waits and cross-NUMA observations unavailable, not zero.",
+    "1537 clipped intervals per run is a wall-window interval count; the planned-arrival cohort remains 1536.",
+    "Whole-run RequestState peak 3 and wall-window attempt overlap peak 2 in candidate runs use different windows and lifecycle definitions; they are not contradictory.",
+    "No CPU or cluster blame is inferred from request residue; no causal performance correction is inferred from lag strata.",
+    "Current synthetic observations are not a production replay, a universal p99 predictor, or evidence for fixed four-pool deployment."
+  ],
+  "decision": {
+    "bounded_arrival_audit": "completed; no additional phase slicing, new trace, CPU matrix, pressure escalation or threshold search requested",
+    "cpu_family_performance_expansion": "frozen; retain 4016 latency benefit and CPU cost together, Q/O winner and production thread budget undecided",
+    "engineering_priority": "implement and functionally validate true external async completion and continuation; no completion claim is made in this evidence artifact",
+    "mainline": "one pool per verified hardware cluster, high-level total executor, request home plus ready callback placement, same NUMA preferred"
+  }
+}

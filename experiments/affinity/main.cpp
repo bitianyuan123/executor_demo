@@ -2,6 +2,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <executor_demo/AsyncCompletionSource.h>
 #include <executor_demo/LinuxSchedstatLoadProvider.h>
 #include <executor_demo/LocalityWorkload.h>
 #include <executor_demo/RequestExecutor.h>
@@ -23,6 +24,7 @@
 using Pool = executor_demo::RequestExecutor;
 using Work = executor_demo::LocalityWorkload;
 using CpuSampler = executor_demo::LinuxSchedstatLoadProvider;
+using CompletionSource = executor_demo::AsyncCompletionSource;
 using Clock = std::chrono::steady_clock;
 static uint64_t ns() {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -102,6 +104,8 @@ struct Config {
   size_t requests = 24, maxInflight = 16, threads = 2, memoryMiB = 256;
   size_t poolCount = 0, burstSize = 4, syncBlockPercent = 0;
   uint64_t burstSpacingUs = 0, syncBlockUs = 0;
+  size_t asyncPercent = 0, asyncCapacity = 4096;
+  uint64_t asyncDelayUs = 0, asyncAlignUs = 0;
   uint64_t cpuSampleMs = 50, cpuMaxAgeMs = 150;
   uint64_t seed = 1, iterations = 10000, accesses = 1000, estimateUs = 1000;
   double qps = 12;
@@ -115,7 +119,7 @@ struct Config {
   Work::Config work;
   Pool::Config pool;
   std::vector<std::vector<int>> partitions;
-  size_t nodes = 0, branches = 0;
+  size_t nodes = 0, branches = 0, taskSlots = 0;
 };
 static Config parse(int argc, char **argv) {
   Config c;
@@ -132,6 +136,10 @@ static Config parse(int argc, char **argv) {
                                 "burst-spacing-us",
                                 "sync-block-percent",
                                 "sync-block-us",
+                                "async-percent",
+                                "async-delay-us",
+                                "async-align-us",
+                                "async-capacity",
                                 "cpu-sampling",
                                 "cpu-sample-ms",
                                 "cpu-max-age-ms",
@@ -207,6 +215,16 @@ static Config parse(int argc, char **argv) {
   c.burstSpacingUs = u("burst-spacing-us", 0);
   c.syncBlockPercent = u("sync-block-percent", 0);
   c.syncBlockUs = u("sync-block-us", 0);
+  c.asyncPercent = u("async-percent", 0);
+  c.asyncDelayUs = u("async-delay-us", 0);
+  c.asyncAlignUs = u("async-align-us", 0);
+  c.asyncCapacity = u("async-capacity", 4096);
+  if (c.asyncPercent > 100 || c.asyncDelayUs > 10000000 ||
+      c.asyncAlignUs > 10000000 || !c.asyncCapacity ||
+      c.asyncCapacity > 2000000 ||
+      (!c.asyncPercent && (c.asyncDelayUs || c.asyncAlignUs)))
+    throw std::invalid_argument(
+        "invalid asynchronous completion configuration");
   c.maxInflight = u("max-inflight", c.maxInflight);
   c.threads = u("threads", c.threads);
   c.memoryMiB = u("memory-mb", c.memoryMiB);
@@ -265,7 +283,8 @@ static Config parse(int argc, char **argv) {
     c.branches += c.widths[i];
     c.nodes += c.widths[i] * c.depths[i] + 1;
   }
-  if (c.nodes * c.requests > 2000000 ||
+  c.taskSlots = c.nodes * (c.asyncPercent ? 2 : 1);
+  if (c.taskSlots * c.requests > 2000000 ||
       c.iterations > 1000000000000ULL / c.longFactor ||
       c.accesses > 1000000000000ULL / c.longFactor)
     throw std::invalid_argument("work/trace size exceeds experiment bound");
@@ -422,6 +441,10 @@ struct RequestRow {
   size_t concurrent = 0;
   std::string status = "not_submitted", error;
 };
+struct AsyncRow {
+  uint64_t issue = 0, due = 0, fired = 0, terminal = 0;
+  const char *status = nullptr;
+};
 class Experiment {
   struct RequestState {
     RequestState(Work::Config config, size_t id, std::atomic<size_t> &active)
@@ -439,12 +462,13 @@ class Experiment {
 public:
   explicit Experiment(Config config)
       : c_(std::move(config)), requests_(c_.requests),
-        tasks_(c_.trace ? c_.requests * c_.nodes : 0) {
+        tasks_(c_.trace ? c_.requests * c_.taskSlots : 0),
+        asyncRows_(c_.trace && c_.asyncPercent ? c_.requests * c_.nodes : 0) {
     if (c_.trace)
       c_.pool.observer = [this](const Pool::Observation &observation) {
-        if (observation.color >= c_.requests || observation.tag >= c_.nodes)
+        if (observation.color >= c_.requests || observation.tag >= c_.taskSlots)
           throw std::logic_error("trace index");
-        auto &row = tasks_[observation.color * c_.nodes + observation.tag];
+        auto &row = tasks_[observation.color * c_.taskSlots + observation.tag];
         row.observation = observation;
         row.observed = true;
       };
@@ -464,8 +488,21 @@ public:
       sampler_->setThreadGroups(threadGroups);
     }
   }
+  ~Experiment() {
+    // Failure cleanup must cancel leases before joining the executor. Both
+    // objects and all callback state stay alive until callbacks have drained.
+    if (completion_)
+      completion_->abort();
+    if (pool_)
+      pool_->join();
+    if (sampler_)
+      sampler_->stop();
+  }
   void run() {
     processStart_ = processCpuNs();
+    if (c_.asyncPercent)
+      completion_ =
+          std::make_unique<CompletionSource>(c_.requests, c_.asyncCapacity);
     if (sampler_)
       sampler_->start();
     std::mt19937_64 rng(c_.seed);
@@ -522,12 +559,24 @@ public:
       }
     }
     pool_->join();
+    // The source must continue accepting waits registered by callbacks while
+    // the executor drains. Its last dispatch may still own request references.
+    if (completion_)
+      completion_->stopAfterDrain();
     if (sampler_)
       sampler_->stop();
     end_ = ns();
     processCpu_ = processCpuNs() - processStart_;
     if (active_ != 0 || pool_->observerFailures() != 0)
       throw std::runtime_error("request accounting or observer failure");
+    if (completion_) {
+      const auto stats = completion_->stats();
+      if (stats.pending || stats.callbackFailures ||
+          stats.registered != stats.fired + stats.canceled ||
+          stats.fired != resumeSucceeded_.load() + resumeFailed_.load() ||
+          stats.rejected != registrationRejected_.load())
+        throw std::runtime_error("asynchronous completion accounting failure");
+    }
     write();
   }
 
@@ -565,6 +614,10 @@ private:
                ? c_.syncBlockUs
                : 0;
   }
+  bool asyncSelected(size_t request, size_t tag) const {
+    return mix(c_.seed ^ mix(request) ^ mix(tag) ^ 0xa510c0deULL) % 100 <
+           c_.asyncPercent;
+  }
   template <class F>
   void guarded(const std::shared_ptr<RequestState> &state, size_t tag,
                F &&callback) {
@@ -579,7 +632,7 @@ private:
       finish(state, "failed", "unknown callback exception");
     }
     if (c_.trace)
-      tasks_[state->id * c_.nodes + tag].cpu = cpuNs() - begin;
+      tasks_[state->id * c_.taskSlots + tag].cpu = cpuNs() - begin;
   }
   void fork(const std::shared_ptr<RequestState> &state, size_t wave) {
     state->remaining.store(c_.widths[wave], std::memory_order_release);
@@ -602,7 +655,7 @@ private:
                                     scaledWork(c_.iterations, state->id, tag),
                                     scaledWork(c_.accesses, state->id, tag));
       if (c_.trace) {
-        auto &row = tasks_[state->id * c_.nodes + tag];
+        auto &row = tasks_[state->id * c_.taskSlots + tag];
         row.iterations = result.computeIterations;
         row.reads = result.readWords;
         row.writes = result.writtenWords;
@@ -616,45 +669,132 @@ private:
         const auto blockStart = c_.trace ? ns() : 0;
         std::this_thread::sleep_for(std::chrono::microseconds(blockingUs));
         if (c_.trace) {
-          auto &row = tasks_[state->id * c_.nodes + tag];
+          auto &row = tasks_[state->id * c_.taskSlots + tag];
           row.syncBlockUs = blockingUs;
           row.syncBlockWallNs = ns() - blockStart;
         }
       }
-      if (depth + 1 < c_.depths[wave]) {
-        Pool::TaskOptions options;
-        options.tag = taskId(wave, branch, depth + 1);
-        options.estimatedCpuUs = estimate(state->id);
-        if (!pool_->add([this, state, wave, branch,
-                         depth] { stage(state, wave, branch, depth + 1); },
-                        options))
-          finish(state, "child_rejected");
-      } else if (state->remaining.fetch_sub(1, std::memory_order_acq_rel) ==
-                 1) {
-        Pool::TaskOptions options;
-        options.tag = waveBase(wave) + c_.widths[wave] * c_.depths[wave];
-        options.estimatedCpuUs = 1;
-        if (!pool_->add(
-                [this, state, wave, tag = options.tag] {
-                  guarded(state, tag, [&] {
-                    // Join reads every completed branch result. Later waves use
-                    // separate branch buffers; the barrier is a real control
-                    // dependency.
-                    auto checksum = state->work.finalChecksum();
-                    if (c_.trace)
-                      tasks_[state->id * c_.nodes + tag].checksum = checksum;
-                    if (wave + 1 < c_.widths.size())
-                      fork(state, wave + 1);
-                    else {
-                      requests_[state->id].checksum = checksum;
-                      finish(state, "completed");
-                    }
-                  });
-                },
-                options))
-          finish(state, "join_rejected");
-      }
+      if (c_.asyncPercent && asyncSelected(state->id, tag))
+        awaitCompletion(state, wave, branch, depth, tag);
+      else
+        advance(state, wave, branch, depth);
     });
+  }
+  void awaitCompletion(const std::shared_ptr<RequestState> &state, size_t wave,
+                       size_t branch, size_t depth, size_t tag) {
+    const auto issue = ns();
+    auto due = issue + c_.asyncDelayUs * 1000;
+    if (c_.asyncAlignUs) {
+      const auto grid = c_.asyncAlignUs * 1000;
+      due = origin_ + ((due - origin_ + grid - 1) / grid) * grid;
+    }
+    // Both callbacks are owned by one event and only the source thread invokes
+    // one of them. Rejected registrations leave ownership with this caller.
+    auto token =
+        std::make_shared<Pool::Continuation>(pool_->captureContinuation());
+    AsyncRow *row =
+        c_.trace ? &asyncRows_[state->id * c_.nodes + tag] : nullptr;
+    if (row) {
+      row->issue = issue;
+      row->due = due;
+    }
+    auto fire = [this, state, wave, branch, depth, tag, token, row] {
+      if (row)
+        row->fired = ns();
+      bool resumed = false;
+      try {
+        Pool::TaskOptions options;
+        options.tag = c_.nodes + tag;
+        options.estimatedCpuUs = 1;
+        resumed = token->resume(
+            [this, state, wave, branch, depth, tag] {
+              guarded(state, c_.nodes + tag,
+                      [&] { advance(state, wave, branch, depth); });
+            },
+            options);
+      } catch (...) {
+        // resume consumes its token on submission failure. Cancellation also
+        // covers allocation failure while constructing its callback argument.
+        token->cancel();
+      }
+      if (resumed)
+        resumeSucceeded_.fetch_add(1, std::memory_order_relaxed);
+      else {
+        resumeFailed_.fetch_add(1, std::memory_order_relaxed);
+        finish(state, "async_resume_failed");
+      }
+      if (row) {
+        row->terminal = ns();
+        row->status = resumed ? "resumed" : "resume_failed";
+      }
+    };
+    auto cancel = [this, state, token, row] {
+      if (row)
+        row->fired = ns();
+      token->cancel();
+      if (row) {
+        row->terminal = ns();
+        row->status = "canceled";
+      }
+      finish(state, "async_canceled");
+    };
+    bool accepted = false;
+    try {
+      accepted = completion_->schedule(
+          state->id, Clock::time_point(std::chrono::nanoseconds(due)),
+          std::move(fire), std::move(cancel));
+    } catch (...) {
+      token->cancel();
+      // Allocation failure is a driver failure, not a capacity rejection.
+      // No valid event row was registered; guarded() records request failure.
+      if (row)
+        *row = {};
+      throw;
+    }
+    if (!accepted) {
+      token->cancel();
+      registrationRejected_.fetch_add(1, std::memory_order_relaxed);
+      if (row) {
+        row->terminal = ns();
+        row->status = "register_rejected";
+      }
+      finish(state, "async_register_rejected");
+    }
+  }
+  void advance(const std::shared_ptr<RequestState> &state, size_t wave,
+               size_t branch, size_t depth) {
+    if (depth + 1 < c_.depths[wave]) {
+      Pool::TaskOptions options;
+      options.tag = taskId(wave, branch, depth + 1);
+      options.estimatedCpuUs = estimate(state->id);
+      if (!pool_->add([this, state, wave, branch,
+                       depth] { stage(state, wave, branch, depth + 1); },
+                      options))
+        finish(state, "child_rejected");
+    } else if (state->remaining.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+      Pool::TaskOptions options;
+      options.tag = waveBase(wave) + c_.widths[wave] * c_.depths[wave];
+      options.estimatedCpuUs = 1;
+      if (!pool_->add(
+              [this, state, wave, tag = options.tag] {
+                guarded(state, tag, [&] {
+                  // Join reads every completed branch result. Later waves use
+                  // separate branch buffers; the barrier is a real control
+                  // dependency.
+                  auto checksum = state->work.finalChecksum();
+                  if (c_.trace)
+                    tasks_[state->id * c_.taskSlots + tag].checksum = checksum;
+                  if (wave + 1 < c_.widths.size())
+                    fork(state, wave + 1);
+                  else {
+                    requests_[state->id].checksum = checksum;
+                    finish(state, "completed");
+                  }
+                });
+              },
+              options))
+        finish(state, "join_rejected");
+    }
   }
   void finish(const std::shared_ptr<RequestState> &state, std::string status,
               std::string error = "") {
@@ -664,6 +804,8 @@ private:
     row.finished = ns();
     row.status = std::move(status);
     row.error = std::move(error);
+    if (completion_ && row.status != "completed")
+      completion_->cancelRequest(state->id);
   }
   static double quantile(std::vector<double> v, double p) {
     if (v.empty())
@@ -676,7 +818,8 @@ private:
     folly::dynamic config = folly::dynamic::object;
     for (auto &[key, value] : c_.args)
       config[key] = value;
-    folly::dynamic summary = folly::dynamic::object("schema", "affinity-v2")(
+    folly::dynamic summary = folly::dynamic::object(
+        "schema", c_.asyncPercent ? "affinity-v3-async" : "affinity-v2")(
         "options", config)("seed", c_.seed)("policy", c_.policy)(
         "continuation", c_.continuation)("affinity", c_.affinity)(
         "model", c_.model)("requests", c_.requests)("nodes_per_request",
@@ -688,6 +831,25 @@ private:
                                        double(end_ - origin_) / 1e9)(
         "page_query_enabled", c_.pageSample);
     summary["process_cpu_s"] = double(processCpu_) / 1e9;
+    folly::dynamic asyncContract = folly::dynamic::object;
+    if (completion_) {
+      asyncContract = folly::dynamic::object("percent", c_.asyncPercent)(
+          "delay_us", c_.asyncDelayUs)("align_us", c_.asyncAlignUs)(
+          "capacity", c_.asyncCapacity)("selection", "splitmix64-v1");
+      summary["async_contract"] = asyncContract;
+      summary["task_slots_per_request"] = c_.taskSlots;
+      const auto stats = completion_->stats();
+      summary["async_source"] = folly::dynamic::object(
+          "registered", stats.registered)("fired", stats.fired)(
+          "canceled", stats.canceled)("rejected", stats.rejected)(
+          "pending", stats.pending)("peak_pending", stats.peakPending)(
+          "callback_failures", stats.callbackFailures)(
+          "helper_cpu_s", double(stats.helperCpuNs) / 1e9)(
+          "helper_cpu_valid", stats.helperCpuValid)("resume_succeeded",
+                                                    resumeSucceeded_.load())(
+          "resume_failed", resumeFailed_.load())("registration_rejected",
+                                                 registrationRejected_.load());
+    }
     summary["origin_ns"] = origin_;
     summary["balance_at"] = c_.balanceAt;
     summary["max_inflight"] = c_.maxInflight;
@@ -737,6 +899,8 @@ private:
     contract["work_scale_scope"] = c_.scaleScope;
     contract["sync_block_percent"] = c_.syncBlockPercent;
     contract["sync_block_us"] = c_.syncBlockUs;
+    if (completion_)
+      contract["async_contract"] = asyncContract;
     if (c_.arrival == "burst") {
       contract["burst_size"] = c_.burstSize;
       contract["burst_spacing_us"] = c_.burstSpacingUs;
@@ -747,12 +911,15 @@ private:
     // across arrival/blocking counterexamples; it is not an arrival-pair key.
     auto fixedWorkContract = contract;
     for (auto key : {"arrival", "qps", "burst_size", "burst_spacing_us",
-                     "sync_block_percent", "sync_block_us"})
+                     "sync_block_percent", "sync_block_us", "async_contract"})
       fixedWorkContract.erase(key);
     summary["fixed_work_signature"] = folly::toJson(fixedWorkContract);
     uint64_t plannedIterations = 0, plannedAccesses = 0, plannedBlockUs = 0;
     size_t plannedBlockedOperators = 0;
-    for (size_t id = 0; id < c_.requests; ++id)
+    size_t plannedResumes = 0;
+    folly::dynamic plannedResumeCounts = folly::dynamic::array;
+    for (size_t id = 0; id < c_.requests; ++id) {
+      size_t requestResumes = 0;
       for (size_t wave = 0; wave < c_.widths.size(); ++wave)
         for (size_t depth = 0; depth < c_.depths[wave]; ++depth)
           for (size_t branch = 0; branch < c_.widths[wave]; ++branch) {
@@ -762,7 +929,15 @@ private:
             auto block = syncBlockUs(id, tag);
             plannedBlockUs += block;
             plannedBlockedOperators += block != 0;
+            requestResumes += c_.asyncPercent && asyncSelected(id, tag);
           }
+      plannedResumes += requestResumes;
+      plannedResumeCounts.push_back(requestResumes);
+    }
+    if (completion_) {
+      summary["planned_resumes"] = plannedResumes;
+      summary["planned_resume_counts"] = std::move(plannedResumeCounts);
+    }
     summary["planned_total_iterations"] = plannedIterations;
     summary["planned_total_accesses"] = plannedAccesses;
     summary["planned_iterations_per_request"] =
@@ -828,7 +1003,10 @@ private:
                "sampled_runnable,sampled_at_ns,sample_window_ns,cpu_valid,"
                "runqueue_valid,"
                "runnable_valid,score_evaluated,score_fallback,score_fallback_"
-               "reason\n";
+               "reason";
+      if (completion_)
+        trace << ",logical_tag";
+      trace << '\n';
       for (size_t i = 0; i < tasks_.size(); ++i) {
         auto &row = tasks_[i];
         if (!row.observed)
@@ -853,7 +1031,10 @@ private:
         bool isJoin = false;
         for (size_t w = 0; w < c_.widths.size(); ++w)
           isJoin |= o.tag == waveBase(w) + c_.widths[w] * c_.depths[w];
-        const char *kind = o.tag == 0 ? "init" : isJoin ? "join" : "operator";
+        const char *kind = o.tag >= c_.nodes ? "rpc_resume"
+                           : o.tag == 0      ? "init"
+                           : isJoin          ? "join"
+                                             : "operator";
         trace << o.color << ',' << o.tag << ',' << kind << ',' << o.home << ','
               << o.source << ',' << o.chosen << ',' << o.hops << ','
               << int(o.reason) << ',' << o.migrated << ',' << o.crossNuma << ','
@@ -868,11 +1049,29 @@ private:
               << o.sampleWindowNs << ',' << o.cpuValid << ',' << o.runqueueValid
               << ',' << o.runnableValid << ',' << o.scoreEvaluated << ','
               << o.scoreFallback << ','
-              << executor_demo::loadFallbackName(o.scoreFallbackReason) << '\n';
+              << executor_demo::loadFallbackName(o.scoreFallbackReason);
+        if (completion_)
+          trace << ',' << (o.tag >= c_.nodes ? o.tag - c_.nodes : o.tag);
+        trace << '\n';
       }
       trace.flush();
       if (!trace)
         throw std::runtime_error("task trace write failed");
+      if (completion_) {
+        std::ofstream events(c_.output + "/async.csv");
+        events << "request,logical_tag,issue_ns,due_ns,fired_ns,terminal_ns,"
+                  "status\n";
+        for (size_t i = 0; i < asyncRows_.size(); ++i) {
+          const auto &row = asyncRows_[i];
+          if (row.status)
+            events << i / c_.nodes << ',' << i % c_.nodes << ',' << row.issue
+                   << ',' << row.due << ',' << row.fired << ',' << row.terminal
+                   << ',' << row.status << '\n';
+        }
+        events.flush();
+        if (!events)
+          throw std::runtime_error("async trace write failed");
+      }
     }
     summary["completed"] = completed;
     summary["failed_or_rejected"] = failed;
@@ -913,6 +1112,9 @@ private:
   Config c_;
   std::vector<RequestRow> requests_;
   std::vector<TaskRow> tasks_;
+  std::vector<AsyncRow> asyncRows_;
+  std::atomic<uint64_t> resumeSucceeded_{0}, resumeFailed_{0},
+      registrationRejected_{0};
   std::atomic<size_t> active_{0}, peak_{0};
   Work::PageSample pages_;
   uint64_t origin_ = 0, end_ = 0, arrivalHash_ = 0, processStart_ = 0,
@@ -920,6 +1122,7 @@ private:
   std::shared_ptr<CpuSampler> sampler_;
   // Destroy/drain the executor before the state used by outstanding callbacks.
   std::unique_ptr<Pool> pool_;
+  std::unique_ptr<CompletionSource> completion_;
 };
 int main(int argc, char **argv) {
   try {

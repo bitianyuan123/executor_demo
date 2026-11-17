@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only arrival and callback-role diagnosis for audited affinity-v2 runs.
+"""Read-only arrival and callback-role diagnosis for audited affinity runs.
 
 No new hot-path instrumentation is needed. All cohorts use planned request
 arrival, retaining late attempts/completions and their complete task records.
@@ -86,14 +86,14 @@ def burst_summary(requests, burst_size, start, end):
 
 
 def task_roles(summary, tasks):
-    """Partition exact affinity-v2 tags; never infer arbitrary DAG semantics."""
+    """Partition versioned business/resume tags; never infer arbitrary DAG semantics."""
     if not summary['trace']:
         return None
     widths, depths = summary['widths'], summary['depths']
-    if (summary['schema'] != 'affinity-v2' or not isinstance(widths, list)
+    if (summary['schema'] not in report.SUPPORTED_SCHEMAS or not isinstance(widths, list)
             or not isinstance(depths, list) or not widths or len(widths) != len(depths)
             or any(type(value) is not int or value <= 0 for value in widths + depths)):
-        raise ValueError('unsupported affinity-v2 role/tag contract')
+        raise ValueError('unsupported affinity role/tag contract')
     tags, offset = {0: ('init', 'init')}, 1
     for wave, (width, depth) in enumerate(zip(widths, depths)):
         for stage in range(depth):
@@ -104,10 +104,16 @@ def task_roles(summary, tasks):
         offset += width * depth + 1
     if summary['nodes_per_request'] != offset:
         raise ValueError('affinity-v2 role node count mismatch')
-    groups = {role: [] for role in ROLES}
+    is_async = summary['schema'] == report.ASYNC_SCHEMA
+    if is_async:
+        tags.update({offset + tag: ('rpc_resume', 'rpc_resume')
+                     for tag, (_, kind) in list(tags.items()) if kind == 'operator'})
+    groups = {role: [] for role in (*ROLES, 'rpc_resume') if is_async or role != 'rpc_resume'}
     for row in tasks:
         if row['tag'] not in tags or tags[row['tag']][1] != row['kind']:
             raise ValueError('affinity-v2 task kind/tag mismatch')
+        if is_async and row.get('logical_tag') != (row['tag'] - offset if row['kind'] == 'rpc_resume' else row['tag']):
+            raise ValueError('async role logical tag mismatch')
         groups[tags[row['tag']][0]].append(row)
     output = {}
     for role, rows in groups.items():
@@ -133,6 +139,24 @@ def distribution_text(item):
     return '/'.join(number(item[key]) for key in ('mean', 'p50', 'p95', 'p99', 'max'))
 
 
+def async_timing(run, ids):
+    """Separate source release lag from post-routing executor wait."""
+    if run['summary']['schema'] != report.ASYNC_SCHEMA or run['async_events'] is None:
+        return None
+    resumes = {(row['request'], row['logical_tag']): row for row in run['tasks']
+               if row['kind'] == 'rpc_resume'}
+    selected = [row for row in run['async_events'] if row['request'] in ids and row['status'] == 'resumed']
+    values = {name: [] for name in ('issue_to_due_ms', 'source_due_to_fire_ms',
+                                   'fire_to_resume_submit_ms', 'resume_executor_wait_ms')}
+    for event in selected:
+        task = resumes[event['request'], event['logical_tag']]
+        values['issue_to_due_ms'].append((event['due_ns'] - event['issue_ns']) / 1e6)
+        values['source_due_to_fire_ms'].append((event['fired_ns'] - event['due_ns']) / 1e6)
+        values['fire_to_resume_submit_ms'].append((task['submitted_ns'] - event['fired_ns']) / 1e6)
+        values['resume_executor_wait_ms'].append((task['start_ns'] - task['submitted_ns']) / 1e6)
+    return {name: distribution(samples) for name, samples in values.items()}
+
+
 def print_flow(run, warmup_seconds, window_seconds):
     summary = run['summary']
     start = summary['origin_ns'] + round(warmup_seconds * 1e9)
@@ -141,7 +165,8 @@ def print_flow(run, warmup_seconds, window_seconds):
     ids = {row['request'] for row in run['completed_cohort']}
     tasks = [row for row in run['tasks'] if row['request'] in ids]
     roles = task_roles(summary, tasks)
-    if roles is not None and len(tasks) != len(ids) * summary['nodes_per_request']:
+    extra = sum(summary['planned_resume_counts'][request] for request in ids) if summary['schema'] == report.ASYNC_SCHEMA else 0
+    if roles is not None and len(tasks) != len(ids) * summary['nodes_per_request'] + extra:
         raise ValueError('completed-cohort role conservation mismatch')
     print(f'\nRUN {run["path"]}: policy={summary["policy"]}, continuation={summary["continuation"]}, model={summary["model"]}')
     print(f'Resources: pools={len(summary["groups"])}, affinity={summary["affinity"]}, threads/pool={summary["threads_per_pool"]}, groups={summary["groups"]}')
@@ -167,7 +192,22 @@ def print_flow(run, warmup_seconds, window_seconds):
         for role, row in roles.items():
             reasons = ', '.join(f'{reason}:{count}' for reason, count in row['routing_reasons'].items()) or '-'
             print(f'| {role} | {row["n"]} | {row["migrations"]} | {row["return_home"]} | {number(row["wait_ms"])} | {number(row["cpu_ms"])} | {number(row["wall_ms"])} | {reasons} |')
-        print(f'Role conservation: {sum(row["n"] for row in roles.values())} = {len(ids)} completed requests x {summary["nodes_per_request"]} callbacks; wait starts after routing selection, CPU/wall includes successor submission. Ordinary successors have depth>0; joins are separate.')
+        if summary['schema'] == report.ASYNC_SCHEMA:
+            print(f'Role conservation: {sum(row["n"] for row in roles.values())} = {len(ids)} completed requests x '
+                  f'{summary["nodes_per_request"]} business callbacks + {extra} rpc_resume callbacks; '
+                  'ordinary successors remain business depth>0, joins and resume controls are separate.')
+        else:
+            print(f'Role conservation: {sum(row["n"] for row in roles.values())} = {len(ids)} completed requests x {summary["nodes_per_request"]} callbacks; wait starts after routing selection, CPU/wall includes successor submission. Ordinary successors have depth>0; joins are separate.')
+    if summary['schema'] == report.ASYNC_SCHEMA:
+        print('Async source timing is independent of executor waiting. Detached waits release workers; source terminal acknowledgement may occur after resume callback start/finish.')
+        timing = async_timing(run, ids)
+        if timing is None:
+            print('Async event and resume timing unavailable: trace=0; planned counts are not observed callback samples.')
+        else:
+            print('Async timing: resumed events from completed planned-request cohort; issue-to-due includes alignment, '
+                  'due-to-fire is source lag, fire-to-submit includes routing, executor wait starts after choose/reserve.')
+            for label, item in timing.items():
+                print(f'  {label}: n={item["n"]}, mean/p50/p95/p99/max={distribution_text(item)}')
 
 
 def main():

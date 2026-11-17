@@ -1,6 +1,6 @@
 # 短工作SD：提高到达密度后的六轮策略对照
 
-**本页安排的SD六轮已由[4016](TARGET_V2_4016_REVIEW.md)完成，无需重跑。当前仅按[既有SD结果的到达核查指南](TARGET_V2_4016_NEXT.md)，用`arrival_audit.py`对已完成六个目录做只读、有界核查；无新增压力、trace或阈值试验。暂停扩大CPU工作族性能矩阵；后续工程优先实现等待期间释放executor worker、完成后重新提交恢复回调的异步工作族。v2驱动当前尚未实现该工作族，没有可执行的异步负载CLI。下文保留当时结论与执行合同。**
+**当前状态：4017已完成六轮既有CSV的到达核查，见[结论](TARGET_V2_4017_REVIEW.md)。不再重跑CPU矩阵、到达诊断或追加trace/阈值。异步完成源与驱动已加入工程，当前按[异步功能指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)进行编译及小规模功能验收；等待期间释放worker，恢复callback再推进图。性能对照待功能验收后另立合同。目标始终每个已核实硬件cluster一个池。** 下文保留当时证据/命令，不是新的执行清单。
 
 4015已完成[短工作S四轮校准](TARGET_V2_SHORT_WORK_GUIDE.md)：regular12QPS下request峰值在途数为1，operator CPU均值约1.065ms，16/128线程的trace0请求均值接近。详细trace的整轮CPU/请求变化约1.83%/2.28%，不能把长工作下的观测成本比例直接用于短工作。
 

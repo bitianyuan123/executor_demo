@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit affinity-v2 runs and print request-cohort statistics to the terminal."""
+"""Audit affinity-v2/affinity-v3-async runs and print request-cohort statistics."""
 
 import argparse
 import csv
@@ -15,6 +15,11 @@ import sys
 MASK64 = (1 << 64) - 1
 TERMINAL = {'completed', 'admission_rejected', 'submit_rejected',
             'partial_batch_rejected', 'child_rejected', 'join_rejected', 'failed'}
+ASYNC_SCHEMA = 'affinity-v3-async'
+SUPPORTED_SCHEMAS = {'affinity-v2', ASYNC_SCHEMA}
+ASYNC_TERMINAL = {'async_register_rejected', 'async_resume_failed', 'async_canceled'}
+ASYNC_EVENT_STATUSES = {'resumed', 'canceled', 'resume_failed', 'register_rejected'}
+ASYNC_SELECTION_SALT = 0xa510c0de
 
 
 def mix(value):
@@ -56,6 +61,138 @@ def quantile(values, fraction):
 
 def mean(values):
     return statistics.fmean(values) if values else None
+
+
+def strict_integer(value, label, minimum=0, maximum=None):
+    if type(value) is not int or value < minimum or (maximum is not None and value > maximum):
+        raise ValueError(f'{label}: integer outside allowed range')
+    return value
+
+
+def async_plan(summary, expected_kinds, path):
+    """Reconstruct exact selected operator identities, independently of tracing."""
+    if summary['schema'] != ASYNC_SCHEMA:
+        if 'async_contract' in summary:
+            raise ValueError(f'{path}: async contract requires {ASYNC_SCHEMA}')
+        return None
+    require_fields(summary, ('async_contract', 'task_slots_per_request', 'planned_resume_counts',
+                             'planned_resumes', 'async_source', 'work_contract',
+                             'fixed_work_signature'), str(path))
+    contract = summary['async_contract']
+    if not isinstance(contract, dict):
+        raise ValueError(f'{path}: invalid async contract')
+    require_fields(contract, ('percent', 'delay_us', 'align_us', 'capacity', 'selection'), str(path))
+    percent = strict_integer(contract['percent'], 'async percent', 1, 100)
+    strict_integer(contract['delay_us'], 'async delay_us', 0, 10_000_000)
+    strict_integer(contract['align_us'], 'async align_us', 0, 10_000_000)
+    strict_integer(contract['capacity'], 'async capacity', 1, 2_000_000)
+    if contract['selection'] != 'splitmix64-v1':
+        raise ValueError(f'{path}: unsupported async selection')
+    if strict_integer(summary['task_slots_per_request'], 'task_slots_per_request') != 2 * len(expected_kinds):
+        raise ValueError(f'{path}: async task-slot count mismatch')
+    work = summary['work_contract']
+    if not isinstance(work, dict) or work.get('async_contract') != contract:
+        raise ValueError(f'{path}: work/async contract mismatch')
+    if json.loads(summary['work_signature']) != work:
+        raise ValueError(f'{path}: async work signature mismatch')
+    fixed = {key: value for key, value in work.items()
+             if key not in ('arrival', 'qps', 'burst_size', 'burst_spacing_us',
+                            'sync_block_percent', 'sync_block_us', 'async_contract')}
+    if json.loads(summary['fixed_work_signature']) != fixed:
+        raise ValueError(f'{path}: async fixed business-work signature mismatch')
+    operators = [tag for tag, kind in expected_kinds.items() if kind == 'operator']
+    seed = strict_integer(summary['seed'], 'seed')
+    selected = [{tag for tag in operators
+                 if mix(seed ^ mix(request) ^ mix(tag) ^ ASYNC_SELECTION_SALT) % 100 < percent}
+                for request in range(summary['requests'])]
+    counts = summary['planned_resume_counts']
+    if (not isinstance(counts, list) or len(counts) != len(selected)
+            or any(type(count) is not int or count != len(tags) for count, tags in zip(counts, selected))
+            or strict_integer(summary['planned_resumes'], 'planned_resumes') != sum(counts)):
+        raise ValueError(f'{path}: planned async resume count/selection mismatch')
+    source = summary['async_source']
+    if not isinstance(source, dict):
+        raise ValueError(f'{path}: invalid async source summary')
+    counters = ('registered', 'fired', 'canceled', 'rejected', 'pending', 'peak_pending',
+                'callback_failures', 'resume_succeeded', 'resume_failed', 'registration_rejected')
+    require_fields(source, (*counters, 'helper_cpu_s', 'helper_cpu_valid'), str(path))
+    for field in counters:
+        strict_integer(source[field], f'async_source.{field}')
+    if (source['pending'] != 0 or source['callback_failures'] != 0
+            or source['registered'] != source['fired'] + source['canceled']
+            or source['fired'] != source['resume_succeeded'] + source['resume_failed']
+            or source['registration_rejected'] != source['rejected']
+            or source['registered'] + source['rejected'] > sum(counts)
+            or (source['registered'] > 0 and source['peak_pending'] == 0)
+            or source['peak_pending'] > min(source['registered'], contract['capacity'])):
+        raise ValueError(f'{path}: async source conservation mismatch')
+    if (type(source['helper_cpu_valid']) is not bool
+            or not math.isfinite(float(source['helper_cpu_s'])) or float(source['helper_cpu_s']) < 0):
+        raise ValueError(f'{path}: invalid async helper CPU')
+    if summary['failed_or_rejected'] == 0 and (
+            source['resume_succeeded'] != sum(counts) or source['canceled']
+            or source['resume_failed'] or source['registration_rejected']):
+        raise ValueError(f'{path}: successful run has incomplete async resumes')
+    return selected
+
+
+def audit_async_events(path, summary, requests, tasks, selected):
+    """Join source outcomes with callback identities; never order ack before execution."""
+    if selected is None or not summary['trace']:
+        return None
+    fields = ('request', 'logical_tag', 'issue_ns', 'due_ns', 'fired_ns', 'terminal_ns', 'status')
+    events = read_csv(path / 'async.csv', fields)
+    by_task = {(row['request'], row['tag']): row for row in tasks}
+    seen = set()
+    counts = {status: 0 for status in ASYNC_EVENT_STATUSES}
+    contract, origin, nodes = summary['async_contract'], summary['origin_ns'], summary['nodes_per_request']
+    for row in events:
+        for field in fields:
+            if field != 'status':
+                row[field] = integer(row[field], field)
+        request, tag = row['request'], row['logical_tag']
+        key = request, tag
+        if (request >= len(requests) or tag not in selected[request] or key in seen
+                or row['status'] not in ASYNC_EVENT_STATUSES):
+            raise ValueError(f'{path}: duplicate/invalid async event identity or status')
+        seen.add(key)
+        operator = by_task.get(key)
+        if operator is None or not operator['start_ns'] <= row['issue_ns'] <= operator['finish_ns']:
+            raise ValueError(f'{path}: async issue outside its operator callback')
+        due = row['issue_ns'] + contract['delay_us'] * 1000
+        align = contract['align_us'] * 1000
+        if align:
+            due = origin + ((due - origin + align - 1) // align) * align
+        if row['due_ns'] != due or row['terminal_ns'] < row['issue_ns']:
+            raise ValueError(f'{path}: async due/terminal timestamp mismatch')
+        if row['status'] == 'register_rejected':
+            if row['fired_ns'] != 0:
+                raise ValueError(f'{path}: rejected registration has a source fire timestamp')
+        elif (not row['issue_ns'] <= row['fired_ns'] <= row['terminal_ns']
+              or (row['status'] != 'canceled' and row['fired_ns'] < row['due_ns'])):
+            raise ValueError(f'{path}: invalid async source timestamps')
+        resume = by_task.get((request, nodes + tag))
+        if row['status'] == 'resumed':
+            if resume is None or not row['fired_ns'] <= resume['submitted_ns'] <= row['terminal_ns']:
+                raise ValueError(f'{path}: resumed event missing callback or submit outside fire/ack interval')
+        elif resume is not None:
+            raise ValueError(f'{path}: nonresumed event has a resume callback')
+        if requests[request]['status'] == 'completed' and row['status'] != 'resumed':
+            raise ValueError(f'{path}: completed request has a failed async event')
+        counts[row['status']] += 1
+    for task in tasks:
+        if task['kind'] == 'rpc_resume' and (task['request'], task['logical_tag']) not in seen:
+            raise ValueError(f'{path}: resume callback missing its async event')
+    for row in requests:
+        if row['status'] == 'completed' and any((row['request'], tag) not in seen for tag in selected[row['request']]):
+            raise ValueError(f'{path}: completed request missing async event')
+    source = summary['async_source']
+    if (counts['resumed'] != source['resume_succeeded']
+            or counts['resume_failed'] != source['resume_failed']
+            or counts['canceled'] != source['canceled']
+            or counts['register_rejected'] != source['registration_rejected']):
+        raise ValueError(f'{path}: async event/source summary mismatch')
+    return events
 
 
 def callback_occupancy(tasks, group_count, start, end):
@@ -140,7 +277,7 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                             'completed', 'failed_or_rejected', 'observed_tasks',
                             'migrations', 'cross_numa', 'options', 'process_cpu_s',
                             'peak_inflight'), str(path / 'summary.json'))
-    if summary['schema'] != 'affinity-v2':
+    if summary['schema'] not in SUPPORTED_SCHEMAS:
         raise ValueError(f'{path}: unsupported schema')
     if not isinstance(summary['work_signature'], str) or not summary['work_signature']:
         raise ValueError(f'{path}: empty/non-string work signature')
@@ -156,7 +293,8 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
     for row in requests:
         for field in numeric_request_fields:
             row[field] = integer(row[field], field)
-        if row['status'] not in TERMINAL:
+        terminal = TERMINAL | ASYNC_TERMINAL if summary['schema'] == ASYNC_SCHEMA else TERMINAL
+        if row['status'] not in terminal:
             raise ValueError(f'{path}: nonterminal/unknown request status {row["status"]!r}')
         if not origin <= row['scheduled_ns'] <= row['submitted_ns'] <= row['finished_ns']:
             raise ValueError(f'{path}: invalid request timestamps')
@@ -197,6 +335,7 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
         expected_kinds.update((tag, 'operator') for tag in range(offset, offset + count))
         expected_kinds[offset + count] = 'join'
         offset += count + 1
+    selected_resumes = async_plan(summary, expected_kinds, path)
 
     tasks = []
     if summary['trace']:
@@ -204,6 +343,8 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                   'migrated', 'cross_numa', 'queue_before', 'outstanding_before',
                   'submitted_ns', 'start_ns', 'finish_ns', 'cpu_ns', 'iterations',
                   'read_words', 'write_words', 'checksum')
+        if selected_resumes is not None:
+            fields += ('logical_tag',)
         tasks = read_csv(path / 'tasks.csv', fields)
         if summary.get('sync_block_percent', 0):
             for row in tasks:
@@ -227,11 +368,23 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                 if not math.isfinite(row[field]) or row[field] < 0:
                     raise ValueError(f'{path}: invalid sampled load')
             key = row['request'], row['tag']
-            if key in seen or row['request'] >= len(requests) or row['tag'] >= expected_nodes:
+            if key in seen or row['request'] >= len(requests):
                 raise ValueError(f'{path}: duplicate/invalid task identity')
             seen.add(key)
-            if row['kind'] != expected_kinds[row['tag']]:
+            kind = expected_kinds.get(row['tag'])
+            if selected_resumes is not None:
+                logical = row['tag'] if row['tag'] < expected_nodes else row['tag'] - expected_nodes
+                if row['logical_tag'] != logical:
+                    raise ValueError(f'{path}: async task logical tag mismatch')
+                if logical in selected_resumes[row['request']] and row['tag'] >= expected_nodes:
+                    kind = 'rpc_resume'
+            if kind is None:
+                raise ValueError(f'{path}: duplicate/invalid task identity')
+            if row['kind'] != kind:
                 raise ValueError(f'{path}: task kind does not match graph')
+            if selected_resumes is not None and kind != 'operator' and any(
+                    row[field] != 0 for field in ('iterations', 'read_words', 'write_words')):
+                raise ValueError(f'{path}: control callback has business work counters')
             if not requests[row['request']]['submitted_ns'] <= row['submitted_ns'] <= row['start_ns'] <= row['finish_ns']:
                 raise ValueError(f'{path}: invalid task timestamps')
             if any(row[field] >= len(summary['groups']) for field in ('home', 'source', 'chosen')):
@@ -241,7 +394,10 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
         if len(tasks) != int(summary['observed_tasks']):
             raise ValueError(f'{path}: task trace count mismatch')
         for row in requests:
-            if row['status'] == 'completed' and any((row['request'], tag) not in seen for tag in range(expected_nodes)):
+            tags = set(range(expected_nodes))
+            if selected_resumes is not None:
+                tags.update(expected_nodes + tag for tag in selected_resumes[row['request']])
+            if row['status'] == 'completed' and any((row['request'], tag) not in seen for tag in tags):
                 raise ValueError(f'{path}: completed request missing tasks')
         if sum(row['migrated'] for row in tasks) != int(summary['migrations']) or sum(row['cross_numa'] for row in tasks) != int(summary['cross_numa']):
             raise ValueError(f'{path}: migration counter mismatch')
@@ -263,6 +419,8 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                 raise ValueError(f'{path}: planned synchronous blocking is not conserved')
     elif int(summary['observed_tasks']) != 0:
         raise ValueError(f'{path}: trace disabled but observed_tasks is nonzero')
+
+    async_events = audit_async_events(path, summary, requests, tasks, selected_resumes)
 
     start = origin + round(warmup_seconds * 1e9)
     end = None if window_seconds is None else start + round(window_seconds * 1e9)
@@ -289,9 +447,11 @@ def load_run(path, warmup_seconds=0.0, window_seconds=None):
                  'estimate_mode': summary.get('routing', {}).get('estimate_mode', 'constant'),
                  'home_policy': summary['options'].get('home-policy', 'rr')}
     pairing_key = (summary['seed'], summary['work_signature'], str(summary['arrival_hash']),
-                   summary['model'], json.dumps(resources, sort_keys=True))
+                   summary['model'], json.dumps(resources, sort_keys=True), summary['schema'],
+                   json.dumps(summary.get('async_contract'), sort_keys=True))
     occupancy_end = end if end is not None else max((row['finish_ns'] for row in tasks), default=start)
     return {'path': path, 'summary': summary, 'requests': requests, 'tasks': tasks,
+            'async_events': async_events, 'selected_resumes': selected_resumes,
             'matrix_context': matrix_context(path),
             'cohort': cohort, 'completed_cohort': complete_cohort, 'pairing_key': pairing_key,
             'callback_occupancy': callback_occupancy(tasks, len(summary['groups']), start, occupancy_end) if summary['trace'] else None,
@@ -314,11 +474,40 @@ def format_value(value):
     return '-' if value is None else f'{value:.3f}'
 
 
+def fixed_business_checks(runs):
+    """Cross async/direct contracts verify work only, never create timing pairs."""
+    groups = {}
+    for run in runs:
+        summary = run['summary']
+        if summary.get('fixed_work_signature') and int(summary['failed_or_rejected']) == 0:
+            key = summary['seed'], summary['fixed_work_signature']
+            groups.setdefault(key, []).append(run)
+    checked = []
+    for group in groups.values():
+        if len(group) < 2 or not any(run['summary']['schema'] == ASYNC_SCHEMA for run in group):
+            continue
+        baseline = group[0]
+        request_work = lambda run: [(row['request'], row['checksum']) for row in run['requests']]
+        operator_work = lambda run: sorted((row['request'], row['tag'], row['iterations'],
+                                           row['read_words'], row['write_words'], row['checksum'])
+                                          for row in run['tasks'] if row['kind'] == 'operator')
+        traced = [run for run in group if run['summary']['trace']]
+        for run in group[1:]:
+            if request_work(run) != request_work(baseline):
+                raise ValueError(f'{run["path"]}: fixed business-work request checksums differ')
+        for run in traced[1:]:
+            if operator_work(run) != operator_work(traced[0]):
+                raise ValueError(f'{run["path"]}: fixed business-work operator records differ')
+        checked.append((group, len(traced)))
+    return checked
+
+
 def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
-    print('Affinity v2: scheduled-request cohort; late completions are retained.')
+    business_checks = fixed_business_checks(runs)
+    print('Affinity v2/v3-async: scheduled-request cohort; late completions are retained.')
     print(f'Window: warmup={warmup_seconds:g}s, length={window_seconds if window_seconds is not None else "all remaining arrivals"}; nearest-rank quantiles.')
     print('Per-run descriptive statistics; no confidence interval or claim of independent tail samples.')
-    print('Operator CPU/wall values cover the operator callback, including its successor submission; they are not a hardware stall decomposition.')
+    print('Operator CPU/wall values cover the operator callback, including work submitted or async registration inside it; they are not a hardware stall decomposition.')
     print('Matrix roles are declared experiment provenance, not certification of physical cluster boundaries.')
     printed_resources = set()
     for run in runs:
@@ -373,6 +562,20 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
         if summary.get('fixed_work_signature'):
             fixed_digest = hashlib.sha256(summary['fixed_work_signature'].encode()).hexdigest()[:16]
             print(f'  fixed_work_sha256_prefix={fixed_digest}; equal fixed work does not imply equal arrival schedules or equal CPU service time.')
+        if summary['schema'] == ASYNC_SCHEMA:
+            source = summary['async_source']
+            helper_cpu = float(source['helper_cpu_s']) if source['helper_cpu_valid'] else None
+            print(f'  Async contract={json.dumps(summary["async_contract"], sort_keys=True, separators=(",", ":"))}; '
+                  f'business nodes/request={summary["nodes_per_request"]}, planned extra resumes={summary["planned_resumes"]}.')
+            print(f'  WHOLE RUN async source: registered/fired/canceled/rejected='
+                  f'{source["registered"]}/{source["fired"]}/{source["canceled"]}/{source["rejected"]}, '
+                  f'resume succeeded/failed={source["resume_succeeded"]}/{source["resume_failed"]}, '
+                  f'pending/peak={source["pending"]}/{source["peak_pending"]}, '
+                  f'helper CPU s={format_value(helper_cpu)} (already included in process CPU, do not add again).')
+            print('  Async waiting releases executor workers; detached waits/source callbacks are absent from executor callback occupancy. '
+                  'rpc_resume is a separate control callback, not fixed business compute.')
+            if not summary['trace']:
+                print('  trace=0: async event timing and observed resume callback metrics unavailable; source counters are aggregate measurements.')
         if summary.get('sync_block_percent', 0) and summary['trace']:
             print(f'  COHORT synchronous callback blocking: operators={metric["blocked_operators"]}, '
                   f'target/wall sum ms={metric["sync_block_target_ms"]:.3f}/{metric["sync_block_wall_ms"]:.3f}, '
@@ -400,6 +603,10 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
         if summary['peak_inflight'] <= 1:
             print(f'  {run["path"].name}: no overlapping requests observed; this run cannot establish multi-request contention behavior.')
 
+    for group, traced in business_checks:
+        print('Fixed business-work audit: ' + ', '.join(str(run['path']) for run in group) +
+              f'; request checksums match; operator work checked across {traced} traced runs. '
+              'This verifies business work only; direct/zero-delay/delayed async contracts are not timing pairs.')
     print('\nMatched home deltas (candidate - home; negative means lower latency):')
     comparisons = 0
     for run in runs:
@@ -426,7 +633,7 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
               f'delta mean/p95/p99 ms={deltas["mean_ms"]:+.3f}/{deltas["p95_ms"]:+.3f}/{deltas["p99_ms"]:+.3f}; descriptive only.')
         comparisons += 1
     if not comparisons:
-        print('  No eligible unique pairs. Models, work, arrival schedules, seeds, CPU resources and tracing are never pooled.')
+        print('  No eligible unique pairs. Models, work, async contracts, arrival schedules, seeds, CPU resources and tracing are never pooled.')
 
 
 def main():

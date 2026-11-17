@@ -106,7 +106,7 @@ def first_fork(run, start, end):
     if not summary.get('trace'):
         return {**unavailable, 'reason': 'trace=0'}
     widths, depths = summary.get('widths'), summary.get('depths')
-    if (summary.get('schema') != 'affinity-v2' or not isinstance(widths, list)
+    if (summary.get('schema') not in report.SUPPORTED_SCHEMAS or not isinstance(widths, list)
             or not isinstance(depths, list) or not widths or len(widths) != len(depths)
             or any(not isinstance(value, int) or value <= 0 for value in widths + depths)
             or summary.get('nodes_per_request') != 1 + sum(w * d + 1 for w, d in zip(widths, depths))):
@@ -250,6 +250,10 @@ def print_diagnosis(run, start, end, width, min_tail_samples, available_fields, 
           f'bin={width/1e6:.3f} ms. Late submissions/completions are retained.')
     print('Request backlog = scheduled arrivals without a terminal outcome, measured immediately before each boundary; '
           'this includes generator lag and is NOT the Folly queue. Submission counts include rejected attempts.')
+    if summary['schema'] == report.ASYNC_SCHEMA:
+        print('Async callback occupancy includes rpc_resume controls, excludes detached external waits and the source thread. '
+              'First-fork spans describe original operator callbacks, not completion of their detached continuations; '
+              'load-condition buckets below use business operator submissions only.')
     print('| seconds [lo,hi) | scheduled | submit attempts | completed | failed/rejected | backlog left/right | '
           'scheduled-cohort lag p50/p99 ms | all-overlapping callback mean/peak |')
     for row in request_trend(run['requests'], run['tasks'], start, end, width):

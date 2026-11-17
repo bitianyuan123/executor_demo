@@ -1,74 +1,83 @@
-# v2异步等待与恢复负载：待实现设计
+# 异步等待与恢复：实现合同及验收边界
 
-状态：**本页仅为实现设计，当前affinity demo尚无异步RPC负载或对应CLI。** 不修改现有实验合同，不把同步sleep当异步RPC。目标仍按实际核实的cluster动态建池，池数、CPU编号和线程数均不写死。
+4017结束了既有CPU工作族的到达核查。本实现补上“算子释放worker、外部完成后重新进入ready调度”的结构，使用新的`affinity-v3-async`结果合同。原有直接推进仍输出`affinity-v2`，旧结果可继续分析。当前目标是功能验收，尚未建立ARM异步性能排名或生产RPC代表性。执行入口见[异步功能指南](TARGET_V2_ASYNC_FUNCTIONAL_GUIDE.md)。
 
-## 1. 为什么现在补，而不等待旧trace还原RPC
+目标仍为每个已核实硬件cluster一个子池，业务持有总池；request选择home，后续ready callback由总池按策略选池。六池仅属于现有目标机资源，代码不写死四池或六池。
 
-现有v2在算子内可执行同步sleep，期间callback和worker仍被占用；这只能测阻塞反例。真实RPC可能释放executor worker，随后多个完成事件集中恢复，改变Q/I/O、ready形状和亲和继承。旧sched事件无法识别这些业务边界，不应因此无限推迟该机制覆盖。先实现明确标为敏感性假设的受控模型，生产RPC比例/延迟未知就不称真实回放。
+## 1. 已实现的执行与所有权
 
-## 2. 已核对的接口与缺口
+[AsyncCompletionSource](../experiments/affinity/include/executor_demo/AsyncCompletionSource.h)使用一个辅助线程、单调时钟有序队列、按request索引的取消记录及容量上限。它不执行网络RPC，不为每事件创建线程。插入/移除为O(log pending)，取消设置request标记后由辅助线程逐个消费；已取消request以后登记也会被拒绝。辅助线程继承与driver、worker相同的CPU并集，不额外借用实验外CPU。
 
-代码依据：[RequestExecutor.h](../experiments/affinity/include/executor_demo/RequestExecutor.h)、[main.cpp](../experiments/affinity/main.cpp)、[request_executor_test.cpp](../experiments/affinity/tests/request_executor_test.cpp)。
+[驱动](../experiments/affinity/main.cpp)在选中业务operator完成原有计算/访问后、推进依赖前登记等待：
 
-- `captureContinuation()`仅可在本总池callback内调用；保存request、home、实际source、hops及`folly::RequestContext`，并增加排空lease。
-- `Continuation`是move-only、一次性token；`resume(task, options)`恢复上下文并通过同一选择/提交路径运行，允许在Draining期间恢复；重复resume返回false。`cancel()`和析构释放lease。**同一个token不能被多个线程并发访问。**
-- `join()`关闭新request/外部root提交，等待callback、提交操作和已注册continuation排空；没有独立`stopDrain()`接口。token最终必须resume、cancel或销毁，不能遗留。
-- 现有测试`RegisteredRpcRestoresContextAndCompletesDuringDrain`覆盖外部线程恢复、上下文、恢复后子任务及join等待；`CancelAndThrowingCallbacksReleaseDrainLeases`覆盖取消/析构与异常。它们没有验证v2定时源、图完成守恒或生产RPC性能。
-- 当前main在发完请求后直接`pool_->join()`，随后停止CPU采样并检查request计数；trace按固定节点数预分配，旧分析器也检查固定tag/kind。新增恢复callback需要连同driver/schema/分析器一起演进。
+1. 记录issue与计划due，捕获总池的move-only Continuation。其保存request home、实际source、hops与Folly RequestContext，并维持drain lease。
+2. 把token及request引用移交外部完成事件，然后原callback返回。等待期间不占worker，不增加子池的ready任务Q/I/O；request仍存活。
+3. 到期时辅助线程使用token恢复一个`rpc_resume`控制callback。它按原有parent/home、fork/all、同NUMA及hop规则选池，执行原本的后继提交或branch完成通知；不重复业务计算。
+4. 恢复callback的后继继承其实际执行池。多个完成碰巧同时到期不自动标记为fork；恢复callback为普通后继，真正addBatch时才进入fork规则。
 
-## 3. 最小实现：外部完成源，worker立即返回
+零配置延迟仍经过完成线程与额外callback；它不保证零实际等待。源线程串行提交多个完成，会使实际释放跨度不同于计划网格。源与driver的成本均计入本轮进程CPU，另列辅助线程CPU；详细事件/任务记录受trace开关控制，基础生命周期和统计维护不会因此消失。
 
-新增独立的`AsyncCompletionSource`（设计名），由一个辅助线程管理单调时钟定时队列及取消命令。它只产生完成事件，不在executor worker上sleep、等待future或忙轮询；不模拟真实网络、序列化和下游计算。先设容量上限、每事件固定小记录和可统计的辅助线程CPU，不能为每个RPC创建一个线程。
+## 2. 参数与三个独立合同
 
-初版将等待插在选定业务算子计算/访存完成之后、后继或branch完成通知之前；选择由seed与逻辑request/operator ID决定，与执行池和时间无关。
+| 参数 | 含义与界限 |
+|---|---|
+| `--async-percent` | 0关闭，1～100按逻辑operator确定性选择；不根据池状态或运行时间选择 |
+| `--async-delay-us` | 0～10000000，issue之后的固定最小延迟 |
+| `--async-align-us` | 0为独立due；正值至10000000，将最小due向上对齐到run origin的网格 |
+| `--async-capacity` | 1～2000000，默认4096；包含待到期及辅助线程正在处理的事件 |
 
-1. 原算子完成原有固定计算、访问和结果写入，调用`captureContinuation()`；把token、`shared_ptr<RequestState>`、逻辑位置、到期时间和结果类型移交完成源，然后返回。
-2. 完成源到期后取出唯一记录，调用`token.resume(resume_control, options)`；该控制callback执行原来的“提交下一stage或递减branch剩余数/发join”逻辑。只有RPC成功后才推进依赖。
-3. 源线程不直接执行图计算，不直接使用业务层root `add(request,...)`代替token恢复；后者会丢失实际父池继承及排空能力。
-4. 捕获时source是发起等待的实际池；恢复callback按现有parent/home、fork/all、hop及NUMA规则选池，后续子任务继承恢复callback的实际执行池。home仍为原request的home。
-5. `resume_control`标为普通后继，**多个完成事件碰巧同时到期不自动等于业务fork**。fork-only下恢复不借出；all下可重新选池。真实恢复会再扇出时，控制callback显式调用addBatch，才进入fork规则。
+async-percent为0时不能设置非零delay/align。参数是敏感性变量，不是生产默认值；当前没有随机延迟分布、重试、超时竞速或真实服务调用。需要新分布时另立合同，不把固定延迟解释成真实RPC分布。
 
-等待token仅维持总池drain lease及request存活，不能加进某个CPU子池Q/I/O来假装CPU占用。源记录、request、token的所有权必须可追踪；完成后及时移除重复超时记录，避免已完成request仍被辅助结构长期持有。
+选择函数为`mix(seed ^ mix(request_id) ^ mix(operator_tag) ^ 0xa510c0de) % 100 < percent`；mix为已有64位SplitMix形式。业务工作缩放使用原有独立公式，等待不改变compute迭代、访问次数、数据依赖或checksum。
 
-## 4. 固定业务工作不等于固定callback合同
-
-原业务图的宽/深、依赖、compute迭代、访存次数、数据布局和校验结果保持；初版每个选定等待位置额外产生一个`rpc_resume`控制callback。若原请求K个callback、选中S个位置，全部成功时应为K+S，而非继续宣称旧K不变。控制callback参与路由、计数、CPU开销和hop，可能改变下一次选池；不能将差异全部归因于等待时间。
-
-必须有三个合同：D0原有直接推进；A0相同选择位置＋外部源＋零配置延迟；A1相同选择位置和额外callback＋非零延迟。D0/A0测机制引入差异，A0/A1研究等待/恢复，均记录实际投递延迟；零配置延迟不保证零墙钟延迟。
-
-业务operator tag和工作量hash保持稳定；恢复callback使用独立且唯一的执行标识与`kind=rpc_resume`，记录其所属逻辑operator。不要覆盖原operator追踪行。每request保存计划恢复位置/预期callback集合；选择数不同时不能套用统一固定节点数。
-
-新增明确的schema版本或扩展标记，并同步更新writer、report/diagnose/flow及合同检查：旧文件继续按旧合同读取；新文件未经支持应拒绝而非静默忽略恢复节点。业务operator与控制callback的CPU/wait分别统计，整request仍含两者；故障轮按实际状态守恒，不能强求成功完整tag集合。
-
-## 5. 两类独立恢复形态
-
-| 工作族 | 到期规则与用途 | 必须保留的边界 |
+| 合同 | 配置 | 可以比较什么 |
 |---|---|---|
-| 独立延迟 | 固定、离散长短或有界分布；每位置延迟由独立hash确定，到期为实际issue时间加该延迟 | issue时间受调度影响；相同延迟样本不等于不同策略有相同绝对完成时间 |
-| 对齐完成批次 | 在最小等待后对齐到相对run origin的释放网格；同格集中提交恢复 | 模拟外部完成相关性，不声称复现真实RPC；源线程串行投递会拉宽实际恢复跨度 |
+| D0 | async-percent=0 | 原有直接推进 |
+| A0 | percent>0，delay=align=0 | 外部完成机制与额外恢复callback |
+| A1 | 相同percent，固定非零delay，align=0 | 在同恢复位置/数量下增加等待 |
+| 网格恢复 | 相同percent/delay，align>0 | 单独研究集中恢复，实际源释放跨度另测 |
 
-RPC选择率、延迟、长尾、释放网格和每批上限均为待实现配置概念，不提供不存在的命令。初期只选少量档，禁止同时改变选择率、延迟形态和路由策略；先独立延迟，再保持业务工作研究对齐恢复。配置由未来小规模校准确定，不继承0.85ms线程周期或3ms门控。
+D0/A0的callback数量不同，A0/A1的实际绝对完成时间也不必相同。完整work_signature包含async合同，普通策略配对只接受相同合同；fixed_work_signature排除async参数，仅用于证明业务计算相同，不能据此自动比较请求时延。
 
-每事件至少记录逻辑ID、issue、planned-due、source-fired、resume-submit及callback-start/finish；定义时钟与标记位置，分开源调度lag、恢复投递跨度及executor等待。记录计划延迟、实际等待、源队列峰值/拒绝、恢复数/取消数、辅助CPU和观测开关；trace关闭时没有逐事件时序不能补0。
+## 3. 任务、事件与计量边界
 
-## 6. 完成、失败、取消与停止顺序
+业务图仍有K个节点，tag为0～K−1。被选operator额外产生`tag=K+operator_tag`的`rpc_resume`，logical_tag指回业务operator。成功request实际callback数为K+其选中位置数，不再假定每request都是K。任务槽位保留2K，逻辑tag稀疏；初始化、join不被选为等待位置。
 
-完成源单线程拥有token；外部取消只投递控制命令，不能与resume并发操作同一token。每事件只允许`pending→resumed`或`pending→canceled/failed`之一；先决出唯一终态再移走token。`resume`返回false或抛异常均结束该事件并终止/标错request，不能丢掉失败继续发join。
+新schema增加async_contract、planned_resume_counts及planned_resumes，分析器独立重算选择集合。成功request必须完成完整业务tag和计划恢复tag，失败request只允许计划内子集，不能强求成功集合或删除失败。
 
-注册容量不足或抛异常时，未转移成功的token在原调用方取消/析构，request标为注册失败。失败request通过现有terminal恰好一次仲裁后，请求完成源取消其余pending事件；已恢复callback也检查terminal。取消路径释放token而不递减成功branch计数，不伪造成功完成。
+trace1新增`async.csv`：
 
-正常排空顺序：停止外部request生产 → **完成源保持运行且仍接纳已获准callback产生的新等待** → 非executor线程调用`pool.join()` → 源quiesce/stop并清理记录 → 停CPU采样 → 检查request存活和守恒 → 结束CPU计时/写报告。不能先停源再join，否则持有token可永久阻塞排空；也不能仅等源暂时为空就认为未来不会再注册。
+| 字段 | 记录位置 |
+|---|---|
+| request / logical_tag | 逻辑request与发起等待的operator |
+| issue_ns | 业务计算/同步阻塞完成后，捕获token前 |
+| due_ns | issue加配置延迟，再按可选网格向上取整 |
+| fired_ns | 辅助线程进入fire或cancel闭包；登记拒绝时为0 |
+| terminal_ns | token.resume返回或token.cancel完成后的事件记录时间 |
+| status | resumed、canceled、resume_failed、register_rejected |
 
-异常停止采用单独abort模式：先禁止新request，令源拒绝后续注册并取消全部pending token；每个受影响request必须恰好一次写入取消/失败终态，不能等待已不可能发生的成功join。运行中的callback注册失败走上述终止路径，然后join总池并quiesce源。池对象必须活到所有token消费/取消及源停止之后；当前API无超时强制销毁池能力，不能用析构掩盖卡住的lease。
+恢复任务本身的submitted/start/finish继续在tasks.csv。submitted位于总池选择/预留之后，因此它不包含完整恢复路由成本。source-fired减due仅对到期fire有意义；取消可早于due。terminal可能晚于恢复callback开始、完成甚至request终态，不能要求相反；零延迟恢复也可能与原operator callback收尾交叠。
 
-排空后核对：每事件注册成功数=恢复成功数+取消/失败数；无pending事件或token；所有已接纳callback恰好完成一次；每成功request恰好一次终态、branch/join守恒；子池O/I/pending归零；request存活计数归零。把注册失败、resume失败及控制callback异常分别计数，避免用总失败数掩盖泄漏。
+trace0不产生逐事件/逐任务记录，但保留来源统计与失败守恒。Q/I/O仍是CPU子池中的ready生命周期；外部pending数量是独立指标，不加入CPU繁忙评分。单看request在途数或端到端时长会把外部等待也算进去，不能替代池负载。
 
-## 7. 低资源功能验收与后续范围
+## 4. 取消、失败和停止次序
 
-先用可注入单调时钟/人工完成的源测试到期排序、同期限稳定处理、取消先/完成先、重复完成、容量拒绝及异常回滚；再在获准CPU上以极少request/分支验证真实辅助线程，无网络服务依赖、不跑生产规模。
+完成源独占已注册事件的fire/cancel执行，回调不持源锁。cancelRequest与登记/dispatch在锁内仲裁；未dispatch时取消获胜，已经dispatch的fire继续执行，绝不重复回调。同一个Continuation不被多个线程并发访问。
 
-必要联验：没有其他工作时，等待期间子池Q/I/O可降为0而join仍被token保持；恢复在Draining继续并恢复RequestContext/home/source；parent/home与fork/all路径真实触发；request终止竞态不重复join；长等待取消可排空；固定计算/访问/checksum在D0/A0/A1成功轮一致；额外callback及trace开关按新合同计数。
+源容量满、已关闭或request已取消时，登记返回false，闭包在调用线程销毁；驱动取消token并把request记为async_register_rejected。token.resume返回false或抛异常时记async_resume_failed。request失败通过一次terminal仲裁，并取消其他pending事件；已经恢复的callback检查terminal后可以不再推进图。取消不伪造branch成功或request成功。
 
-至少验证“队列暂空但仍有执行callback会注册新等待”和“源发出resume后尚未清理request引用”两类停止竞态；对齐批次打印实际释放跨度，不只检查计划时间。源线程、计时与诊断均计入执行CPU，资源预算相同，不悄悄借用额外CPU来改善某策略。
+正常顺序：停止生成request → 源继续接纳已获准callback新登记的等待 → pool.join → source.stopAfterDrain → 停采样 → 检查存活及守恒 → 写结果。源暂时为空不代表后续callback不会再登记。源callback仍可能持有request引用，因此必须等源线程结束后检查active归零。
 
-功能完成后仅追加一组有界同NUMA性能对照，固定线程和业务工作；再分别研究RPC比例、独立/对齐恢复及亲和策略。同步sleep反例保留为不同工作族。真实RPC的服务依赖、取消网络请求、重试、限流和回调线程语义仍未模拟；将这些列为适用边界，而不阻塞本设计先覆盖“释放worker后再集中恢复”的基本机制。
+异常清理：source.abort关闭登记、取消已有等待并等待当前fire结束 → pool.join → 停采样；已经运行的executor callback再登记会被拒绝并正常终止request。池和driver状态必须活到这些操作完成。源callback自身禁止调用join/stop/abort；析构也必须在外部线程。
+
+最终核对registered=fired+canceled、pending=0、fired=resume_succeeded+resume_failed、rejected=registration_rejected；源未知回调异常、observer异常或request存活不归零均使运行报错。合法故障轮保留请求/事件失败并返回非零，不能进入性能配对。
+
+## 5. 验证范围与剩余工作
+
+组件测试覆盖到期排序、同期限顺序、提前新期限唤醒、禁止提前fire、容量、取消先/完成先、重复取消、取消空request后再登记、异常回调、abort中断长等待及停止并发。与真实RequestExecutor联验等待期间Q/I/O归零但join仍等待、Draining中恢复RequestContext、恢复后再次登记等待及取消释放引用。
+
+小型端到端脚本覆盖D0/A0/A1、网格恢复、trace0/1、50%选择跨策略、parent/home与fork/all、容量拒绝，并核对固定工作、checksum、恢复数量和各分析入口。开发机人工CPU分区只验证功能，不代表ARM cluster、缓存或NUMA性能。
+
+目前没有按目标机生产规模验收异步性能、尾延迟或观测扰动，也未实现网络服务、随机下游分布、重试及独立超时竞争。下一步先在测试机编译并回传小型功能验收；通过后再声明一组固定资源、同NUMA、有界的异步性能合同。CPU族到达核查已由4017完成，不作为继续等待生产trace或扩大原矩阵的理由。
+
+生产接入复用的是总池Continuation契约：实际RPC完成线程恢复token。AsyncCompletionSource是实验中的外部完成模拟器，无需用它替换真实RPC运行时。开发机验证记录见[功能验收摘录](../results/review/async_v3_functional_validation.json)，不包含ARM性能结论。
