@@ -113,7 +113,9 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 4012已完成[24轮信号/线程对照](TARGET_V2_4012_REVIEW.md)：16线程的借出策略均值比128线程低2.93%～4.03%，Q/active/O间未分出稳定赢家，p99也未证明全面改善。[4013](TARGET_V2_4013_REVIEW.md)已完成六轮机制诊断，[4014](TARGET_V2_4014_REVIEW.md)已完成9轮16线程regular守护。4014中Q/O相对home均值约下降38%，CPU/请求增加不足1%；Q/O差不足1.2%，仍不能选信号赢家或完成p99正式验收。两轮home的投递lag异常原因unknown；regular与历史burst不同期，不能据跨批差异作因果比较。
 
-当前仅执行[短工作S四轮](TARGET_V2_SHORT_WORK_GUIDE.md)：home × 16/128线程 × trace0/1，seed421，regular 12QPS，iterations=375000、accesses=12500。不重跑旧初筛、不扩阈值；其余工作族按[覆盖计划](TARGET_V2_COVERAGE_NEXT.md)分步推进。[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)明确已知结构性缺口与后续功能验收。模型仍保持固定工作与依赖，不为拟合旧四池改变负载。
+[4015短工作校准](TARGET_V2_4015_REVIEW.md)四轮已完成：trace0的16/128线程请求均值几乎相同，详细trace使CPU/请求分别增加1.83%/2.28%，四轮peak-inflight均为1。
+
+当前仅执行[短工作SD六轮](TARGET_V2_SHORT_DENSITY_GUIDE.md)：home/Q/O × 16/128线程，seed421、trace0、regular 96QPS/1920请求，iterations=375000、accesses=12500，其余沿用S合同。该批用于增加请求重叠覆盖，不代表真实负载或已形成持续饱和；完成后先分析，不自动追加矩阵。其余工作族按[覆盖计划](TARGET_V2_COVERAGE_NEXT.md)分步推进。[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)明确已知结构性缺口与后续功能验收。模型仍保持固定工作与依赖，不为拟合旧四池改变负载。
 
 真实业务接入另按[分阶段生产agent手册](PRODUCTION_AGENT_PLAYBOOK.md)推进；若只能复制文字，使用[纯prompt交接版](PRODUCTION_AGENT_PROMPTS_ONLY.md)。当地agent先确认源码/授权/资源，再设计、实现、验收、有限迭代。给候选初值与有界梯度，不直接指定生产阈值；不要求环境网络直通。阶段5继续负责组件归属与Folly最小扩展的必要性，当前无需修改Folly核心。
 
