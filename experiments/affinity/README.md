@@ -4,7 +4,7 @@
 
 **主线为每硬件cluster一池**：当前选定六cluster即六池，分区来自已核实拓扑。最新[cluster负载矩阵](../../docs/REAL_WORKLOAD_MATRIX.md)和[观测/算法复核](../../docs/LOAD_OBSERVATION_REVIEW.md)补充`active/cpu`、入口burst、同步阻塞及可注册`LoadProvider/LoadScorer`。四池128线程只属于历史trace与可选重放，none模式的独立软件池数不改变目标设计。CPU采样默认关闭，仅cpu策略或显式`--cpu-sampling 1`开启。
 
-**当前状态：4015短工作S四轮已完成，见[结果审阅](../../docs/TARGET_V2_4015_REVIEW.md)。trace0两档线程的请求均值几乎相同，四轮peak-inflight均1。下一步仅执行[短工作SD六轮](../../docs/TARGET_V2_SHORT_DENSITY_GUIDE.md)：home/Q/O × 16/128线程，seed421、trace0、regular 96QPS/1920请求，iterations=375000、accesses=12500，其余不变；用于增加请求重叠覆盖，不代表真实负载或持续饱和，完成后先分析。下文能力示例不是全部待跑清单。**
+**当前状态：4016 SD六轮已完成，见[结果审阅](../../docs/TARGET_V2_4016_REVIEW.md)。当前仅按[只读到达核查指南](../../docs/TARGET_V2_4016_NEXT.md)，用`arrival_audit.py`分析既有六个目录；不新增压力、trace或阈值。CPU工作族暂停扩大性能矩阵，后续工程优先实现等待期间释放worker、完成后重新提交恢复回调的异步工作族；当前v2驱动尚未实现这一工作族，没有异步负载CLI。下文能力示例不是全部待跑清单。**
 
 ## 接口与实现边界
 
@@ -102,7 +102,7 @@ python3 experiments/affinity/report.py results/affinity/arm-calibration-01
 
 矩阵metadata保存二进制和核心源码的SHA256、内核、架构及调用者allowed mask；计划记录每轮完整命令。实验期间不要重新编译或替换二进制。
 
-信号/线程24轮已由[4012](../../docs/TARGET_V2_4012_REVIEW.md)完成，4013六轮诊断、4014九轮regular守护及4015短工作S四轮也已完成，当前入口仅为[短工作SD六轮](../../docs/TARGET_V2_SHORT_DENSITY_GUIDE.md)。`signals --thread-counts 16,128`可在策略筛选后展开线程维度，每seed全部case统一打乱；不能同时在base-args指定threads。未使用此选项时原矩阵行为保持不变。
+信号/线程24轮已由[4012](../../docs/TARGET_V2_4012_REVIEW.md)完成，4013～4016的诊断、regular守护、S校准与SD六轮也已完成，当前入口仅为[既有SD结果的只读到达核查](../../docs/TARGET_V2_4016_NEXT.md)，不新增性能矩阵。`signals --thread-counts 16,128`可在策略筛选后展开线程维度，每seed全部case统一打乱；不能同时在base-args指定threads。未使用此选项时原矩阵行为保持不变。
 
 可在`--base-args`之前用`--cases home,outstanding`仅选所选suite中的两个case，例如`--suite routing --cases home,outstanding`。筛选后再逐seed随机排列；未指定时保持完整套件。空、重复或不属于该suite的case会在创建输出前报错，metadata记录`selected_cases`。这适合[4002校准后的有限竞争对照](../../docs/TARGET_V2_4002_REVIEW.md)，不必为验证两个策略执行整个信号矩阵。
 
@@ -166,7 +166,7 @@ python3 experiments/affinity/flow_report.py results/affinity/routing-run-01/seed
   --warmup-seconds 2 --window-seconds 8
 ```
 
-它复用完整审计，将成功请求均值分为投递lag与attempt→完成，单列失败/拒绝；p99不能相减。对完整burst计算实际attempt跨度与首attempt lag，区分整批后移和批内拉宽；对成功计划到达cohort保留全部晚完成回调，分类init、首波stage0、后续波stage0、普通后继和join。request的attempt记录在准入检查/构造/root add之前，不等于入队；回home列为source非home且chosen等于home，不等于特定阈值分支命中。`routing reasons`列另统计已有CSV的Home/ReturnHome/LocalSpill/NonFork等原因；未知值显示Unknown(n)，当前契约下矛盾的ReturnHome记录拒绝。24轮、9轮task异质性及9轮burst均已完成，最新[4009审阅](../../docs/TARGET_V2_4009_REVIEW.md)说明收益对到达形态敏感。4010～4015的后续审计、regular守护及短工作校准已完成，当前仅执行[短工作SD六轮](../../docs/TARGET_V2_SHORT_DENSITY_GUIDE.md)，不重跑历史命令；无需重编C++。
+它复用完整审计，将成功请求均值分为投递lag与attempt→完成，单列失败/拒绝；p99不能相减。对完整burst计算实际attempt跨度与首attempt lag，区分整批后移和批内拉宽；对成功计划到达cohort保留全部晚完成回调，分类init、首波stage0、后续波stage0、普通后继和join。request的attempt记录在准入检查/构造/root add之前，不等于入队；回home列为source非home且chosen等于home，不等于特定阈值分支命中。`routing reasons`列另统计已有CSV的Home/ReturnHome/LocalSpill/NonFork等原因；未知值显示Unknown(n)，当前契约下矛盾的ReturnHome记录拒绝。24轮、9轮task异质性及9轮burst均已完成，最新[4009审阅](../../docs/TARGET_V2_4009_REVIEW.md)说明收益对到达形态敏感。4010～4016的后续审计、regular守护、短工作校准与SD六轮已完成，当前仅做[既有结果的只读到达核查](../../docs/TARGET_V2_4016_NEXT.md)，不重跑历史命令，不新增压力；无需重编C++。
 
 同seed成对delta是整轮统计量之差，不把请求当独立重复。默认少于1000请求提示尾部样本不足；1000也仅约10个名义尾样本，不是自动可信。初筛240请求/12QPS只看机制、稳定性和数量级；正式p99建议每配置至少数千到上万请求，≥5次交错重复，并检查队列/提交lag是否随时间增长。共享负载下有相关性，不能拿每秒p99平均当总体p99。
 

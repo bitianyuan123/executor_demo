@@ -8,9 +8,9 @@
 
 ## 1. 当前判断与优先级
 
-**4010有界离线补证、4011观测扰动、4012信号/线程对照、4013机制诊断、4014九轮regular守护及4015短工作S四轮均已完成。** [4013机制审阅](TARGET_V2_4013_REVIEW.md)支持将较少worker纳入候选，确认Q盲区在当时工作族的提交样本中少见；[4014审阅](TARGET_V2_4014_REVIEW.md)支持该regular合同下同NUMA借出，仍未证明某个信号最优。[4015短工作校准](TARGET_V2_4015_REVIEW.md)四轮已完成：trace0的16/128线程请求均值几乎相同，详细trace使CPU/请求分别增加1.83%/2.28%，四轮peak-inflight均为1。短工作约1ms的实测operator CPU不能追认为生产校准；旧trace仍无法识别request/operator/RPC/数据变量，新增外部解析器还有状态/分桶缺陷。本阶段不要求继续重扫或生产采样，未知业务量保留为显式假设。
+**4010有界离线补证、4011观测扰动、4012信号/线程对照、4013机制诊断、4014九轮regular守护、4015短工作S四轮及4016 SD六轮均已完成。** [4016审阅](TARGET_V2_4016_REVIEW.md)支持该短工作密度合同下以更高CPU/请求换取较低均值，但Q/O与线程预算未产生全局赢家；home投递lag与执行顺序混杂，原因仍未知。 [4013机制审阅](TARGET_V2_4013_REVIEW.md)支持将较少worker纳入候选，确认Q盲区在当时工作族的提交样本中少见；[4014审阅](TARGET_V2_4014_REVIEW.md)支持该regular合同下同NUMA借出，仍未证明某个信号最优。[4015短工作校准](TARGET_V2_4015_REVIEW.md)四轮已完成：trace0的16/128线程请求均值几乎相同，详细trace使CPU/请求分别增加1.83%/2.28%，四轮peak-inflight均为1。短工作约1ms的实测operator CPU不能追认为生产校准；旧trace仍无法识别request/operator/RPC/数据变量，新增外部解析器还有状态/分桶缺陷。本阶段不要求继续重扫或生产采样，未知业务量保留为显式假设。
 
-当前优先级：冻结已完成结果 → 仅执行[短工作SD六轮](TARGET_V2_SHORT_DENSITY_GUIDE.md) → 按[分步覆盖计划](TARGET_V2_COVERAGE_NEXT.md)分析后再决定后续工作族，独立推进[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)与功能验收。SD为home/Q/O × 16/128线程、seed421、trace0、regular 96QPS/1920请求，短工作和其他设置保持S合同；它增加请求重叠覆盖，不代表生产复现或持续饱和，不自动追加矩阵。不以旧trace不能识别RPC为由无限后置已知业务结构。现有模拟尚未验证生产代表性；这不阻塞独立工程。能够访问真实应用的当地agent使用[分阶段手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt版](PRODUCTION_AGENT_PROMPTS_ONLY.md)，先核实本地事实，再在授权范围做业务关联验证。
+当前优先级：冻结已完成结果 → 按[只读到达核查指南](TARGET_V2_4016_NEXT.md)用`arrival_audit.py`检查既有SD六个目录 → 优先实现[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)并进行功能验收。当前不新增压力、trace或阈值，CPU工作族暂停扩大性能矩阵；v2驱动尚未具备真正的异步等待/恢复工作族，不提供未实现的CLI。其他工作族按[分步覆盖计划](TARGET_V2_COVERAGE_NEXT.md)独立推进。不以旧trace不能识别RPC为由无限后置已知业务结构。现有模拟尚未验证生产代表性；这不阻塞独立工程。能够访问真实应用的当地agent使用[分阶段手册](PRODUCTION_AGENT_PLAYBOOK.md)或[纯prompt版](PRODUCTION_AGENT_PROMPTS_ONLY.md)，先核实本地事实，再在授权范围做业务关联验证。
 
 目标保持每个选定硬件cluster一个池，当前六池。旧四池未绑CPU是观测来源，不能重分成六池充当目标验证，也不要求把四池重新部署起来。无法取得真实业务特征时保留未知；目标cluster的生产性能外推仍属后续待验收项。
 
@@ -105,6 +105,6 @@
 ## 8. 当前下一步（离线补证已完成）
 
 1. 不重跑4010/4011。新增S3数据的限制按[解析器审计](../results/review/TRACE_4010_PARSER_AUDIT.md)保留；修复后重算只有在明确影响某个决策时才安排。
-2. 独立ARM测试环境仅执行[短工作SD六轮](TARGET_V2_SHORT_DENSITY_GUIDE.md)：home/Q/O × 16/128线程、seed421、trace0、regular 96QPS/1920请求，保持S固定工作；完成后先分析。既有24轮信号/线程、六轮机制诊断、九轮regular和S四轮均已完成，不再作为待办。开发机只验证工程与缩小负载。
+2. 独立ARM测试环境仅按[到达核查指南](TARGET_V2_4016_NEXT.md)，对既有SD六个目录做只读、有界分析；截至4016的矩阵均已完成，不新增压力、trace或阈值。CPU工作族暂停扩大性能矩阵，后续工程优先真正的异步恢复功能；开发机验证工程及缩小负载，未实现能力不提供运行命令。
 3. 真实环境若有当地agent，按[分阶段提示词](PRODUCTION_AGENT_PLAYBOOK.md)或[无文件提示词](PRODUCTION_AGENT_PROMPTS_ONLY.md)发现本地可得证据。环境间无需联网、传源码或原始trace。
 4. 当地材料不可得时明确unknown，继续受控机制与敏感性实验；只有声称生产收益/默认策略时才需要相应的业务验证。生产正式验收仍未完成。

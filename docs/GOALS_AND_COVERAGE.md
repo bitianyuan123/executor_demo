@@ -115,7 +115,9 @@ v2的`submitted_ns`在**选池、预占和诊断读取之后，底层pool.add之
 
 [4015短工作校准](TARGET_V2_4015_REVIEW.md)四轮已完成：trace0的16/128线程请求均值几乎相同，详细trace使CPU/请求分别增加1.83%/2.28%，四轮peak-inflight均为1。
 
-当前仅执行[短工作SD六轮](TARGET_V2_SHORT_DENSITY_GUIDE.md)：home/Q/O × 16/128线程，seed421、trace0、regular 96QPS/1920请求，iterations=375000、accesses=12500，其余沿用S合同。该批用于增加请求重叠覆盖，不代表真实负载或已形成持续饱和；完成后先分析，不自动追加矩阵。其余工作族按[覆盖计划](TARGET_V2_COVERAGE_NEXT.md)分步推进。[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)明确已知结构性缺口与后续功能验收。模型仍保持固定工作与依赖，不为拟合旧四池改变负载。
+[4016 SD结果](TARGET_V2_4016_REVIEW.md)六轮均1920成功、零失败，正式cohort各1536、peak-inflight均3；同线程Q/O相对home均值下降33.36%～34.40%，CPU/请求增加6.01%～7.03%。Q/O排名随线程档变化，仍未证明16线程全局最优。home两轮每个一秒桶的投递lag p99均偏高，但两轮恰好先运行，不能据此归因于策略或内核调度。
+
+当前仅按[既有SD结果的到达核查指南](TARGET_V2_4016_NEXT.md)，用`arrival_audit.py`对已完成六个目录做只读、有界核查；无新增压力、trace或阈值试验。暂停扩大CPU工作族性能矩阵；后续工程优先实现等待期间释放executor worker、完成后重新提交恢复回调的异步工作族。v2驱动当前尚未实现该工作族，没有可执行的异步负载CLI。按[覆盖计划](TARGET_V2_COVERAGE_NEXT.md)推进[异步恢复设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)的工程与功能验收，不为拟合旧四池改变主线。
 
 真实业务接入另按[分阶段生产agent手册](PRODUCTION_AGENT_PLAYBOOK.md)推进；若只能复制文字，使用[纯prompt交接版](PRODUCTION_AGENT_PROMPTS_ONLY.md)。当地agent先确认源码/授权/资源，再设计、实现、验收、有限迭代。给候选初值与有界梯度，不直接指定生产阈值；不要求环境网络直通。阶段5继续负责组件归属与Folly最小扩展的必要性，当前无需修改Folly核心。
 

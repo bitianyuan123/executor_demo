@@ -16,6 +16,7 @@
 - [4013 审阅](TARGET_V2_4013_REVIEW.md)：128线程开始前等待较短，但operator wall约14.43～15.01ms、CPU仍约8.17ms；16线程CPU/wall约8.14/8.17ms。Q零且I/O高仅占该负载提交样本0.310%～0.487%，不能据此证明生产Q已足够。覆盖须纳入当地短callback、持续竞争及已知异步恢复；同步sleep不替代RPC，历史trace不能指定3ms门控。[分步覆盖计划](TARGET_V2_COVERAGE_NEXT.md)和[异步设计](ASYNC_CONTINUATION_WORKLOAD_DESIGN.md)只提供合同思路，不是新增能力已上线。
 - [4014 审阅](TARGET_V2_4014_REVIEW.md)：外部六cluster、每池16线程、trace0的regular九轮中，Q/O相对home均值约下降38%，CPU/请求增加不足1%，两信号差不足1.2%；不能选择生产信号赢家或宣称p99验收通过。两轮home投递lag异常原因unknown；与历史burst不同期，不能作到达形态的因果对照。这仅补充候选依据，不是当地负载或生产参数；当地agent仍需独立核实。
 - [4015 审阅](TARGET_V2_4015_REVIEW.md)：外部短工作S的四轮home校准中，trace0下16/128线程请求均值几乎相同（17.952/17.973ms）；详细trace使整轮CPU/请求增加1.83%/2.28%。四轮peak-inflight均1，属于无请求重叠的合成工作族，不能据此判断密集竞争、最优线程数或评分。约1.07ms的operator CPU是该合成负载的实测尺度，不是由旧trace的0.85ms校准，也不代表当地业务；观测差不等于全部计数维护或总池封装成本。
+- [4016 审阅](TARGET_V2_4016_REVIEW.md)：外部短工作SD六轮各1920成功、零失败，正式cohort各1536、request peak均3；同线程Q/O相对home均值下降33.36%～34.40%，CPU/请求增加6.01%～7.03%。Q/O排名随线程档变化，仍未证明16线程全局最优。home每个一秒桶的lag p99均偏高，但两轮home恰好先运行，原因不能归于策略或内核；trace0没有任务观测。该合成证据仅形成当地假设，不继承池数、96QPS或线程阈值；后续组件需覆盖真正异步等待/恢复，不能以同步sleep代替。
 - [负载观测设计](LOAD_OBSERVATION_REVIEW.md)、[真实负载校准协议](WORKLOAD_FIDELITY_PROTOCOL.md)、[持续压力候选设计](PERSISTENT_PRESSURE_REVIEW.md)：用于核对指标语义、缺失信息和未实现能力。
 
 无法复制这些文件时，可只粘贴本页提示词及已有报告的必要摘录。接收方应注明哪些材料实际可读；不能捏造已读文件、仓库提交、生产数据或运行结果。历史四池是采集条件；本研究曾选择的六池、CPU 编号、每池 128 线程、约 0.85ms 的线程周期推断和 3ms 门控建议，**一律不是新环境默认值**。
