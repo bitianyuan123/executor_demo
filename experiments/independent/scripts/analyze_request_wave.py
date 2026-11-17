@@ -19,6 +19,14 @@ from pathlib import Path
 POLICIES = ('home', 'source_only', 'guarded')
 EDGES = (0., .5, .8, 1., 2., 4.)
 LATENCIES = ('S', 'W', 'X', 'L', 'D')
+REQUEST_LATENCIES = ('request_planned_to_end', 'request_submit_to_end',
+                     'initial_planned_to_end')
+REQUEST_DEFINITIONS = {
+    'request_planned_to_end': 'max(all task end_ns) - request_planned_ns; PRIMARY',
+    'request_submit_to_end': 'max(all task end_ns) - min(all task submit_ns); secondary',
+    'initial_planned_to_end': 'max(initial task end_ns) - request_planned_ns; initial set completion',
+    'last_planned_release_offset': 'max(all task planned_ns) - request_planned_ns; input release schedule, NOT latency',
+}
 TRACE_FIELDS = ('task', 'burst', 'request_planned_ns', 'planned_ns', 'phase',
                 'target_cpu_us', 'home_pool')
 INT_FIELDS = ('task', 'burst', 'pool', 'home_pool', 'request_planned_ns',
@@ -71,6 +79,33 @@ def describe(rows):
             'tail_quality': ('EMPTY' if not n else 'LOW_TAIL' if n < 1000 else 'DESCRIPTIVE'),
             'nominal_top_1pct_tasks': n*.01,
             **{key: stats([r[key] for r in rows]) for key in LATENCIES}}
+
+
+def describe_requests(rows, valid):
+    grouped = defaultdict(list)
+    for row in rows:
+        grouped[row['burst']].append(row)
+    samples = []
+    # Never drop failed/missing tasks and then report a successful-request p99.
+    # Whole-run validation also catches requests missing entirely from the CSV.
+    if valid:
+        for burst, items in sorted(grouped.items()):
+            arrival = items[0]['request_planned_ns']
+            end = max(r['end_ns'] for r in items)
+            samples.append({'burst': burst, 'tasks': len(items),
+                'request_planned_ns': arrival,
+                'request_planned_to_end': (end-arrival)/1e6,
+                'request_submit_to_end': (end-min(r['submit_ns'] for r in items))/1e6,
+                'initial_planned_to_end': (max(r['end_ns'] for r in items if r['phase'] == 'initial')-arrival)/1e6,
+                'last_planned_release_offset': (max(r['planned_ns'] for r in items)-arrival)/1e6})
+    n = len(samples)
+    return {'status': 'ok' if valid else 'invalid_run',
+            'observed_requests': len(grouped), 'n': n,
+            'tail_quality': ('INVALID' if not valid else 'EMPTY' if not n else
+                             'LOW_TAIL' if n < 1000 else 'DESCRIPTIVE'),
+            'nominal_top_1pct_requests': n*.01,
+            **{key: stats([r[key] for r in samples]) for key in REQUEST_DEFINITIONS},
+            'samples': samples}
 
 
 def initial_submission_spans(rows):
@@ -455,6 +490,8 @@ def analyze(plan_path, manifest_path=None):
         run['valid'] = not run['issues']
         runs.append(run)
         cohorts[entry['policy']], metas[entry['policy']] = rows, meta
+    for run in runs:
+        run['request_completion'] = describe_requests(cohorts[run['policy']], run['valid'])
     comparison_issues = []
     if set(names) != expected_policies:
         comparison_issues.append('not_all_planned_policy_runs')
@@ -467,7 +504,7 @@ def analyze(plan_path, manifest_path=None):
     if len({json.dumps(run.get('metadata_config'), sort_keys=True) for run in runs}) != 1:
         comparison_issues.append('resource_or_observation_or_workload_config_mismatch')
     buckets = bucket_rows(cohorts['home'], metas['home']['capacities']) if any(r['policy'] == 'home' and r['valid'] for r in runs) else []
-    comparisons = []
+    comparisons, request_comparisons = [], []
     if not comparison_issues:
         home = next(run for run in runs if run['policy'] == 'home')
         indexed = {run['policy']: run for run in runs}
@@ -479,6 +516,10 @@ def analyze(plan_path, manifest_path=None):
                 f'{latency}_{kind}_change_pct': 100*(run['cohort'][latency][kind]/baseline['cohort'][latency][kind]-1)
                 if baseline['cohort'][latency][kind] else None
                 for latency in ('S', 'L') for kind in ('mean_ms', 'p99_ms')}})
+            request_comparisons.append({'baseline': baseline_name, 'policy': policy, **{
+                f'{metric}_{kind}_change_pct': 100*(run['request_completion'][metric][kind]/baseline['request_completion'][metric][kind]-1)
+                if baseline['request_completion'][metric][kind] else None
+                for metric in REQUEST_LATENCIES for kind in ('mean_ms', 'p99_ms')}})
     report = {'schema_version': 1, 'family': 'request-wave', 'plan': str(plan_path), 'calibration': calibration,
               'analysis_only': analysis_only, 'profile': plan.get('profile', 'legacy'),
               'functional_only': manifest.get('functional_only') is True,
@@ -488,12 +529,14 @@ def analyze(plan_path, manifest_path=None):
                          'warmup_seconds': window[0], 'request_end_seconds': window[1]},
               'latency_definitions_ms': {'S': 'end-submit', 'W': 'start-submit', 'X': 'end-start',
                                          'L': 'end-task_planned', 'D': 'submit-task_planned'},
+              'request_completion_definitions_ms': REQUEST_DEFINITIONS,
               'input': {'base': plan['base'], 'capacities': plan['capacities'],
                         'pool_cpus': plan['pool_cpus'], 'numa': plan['numa'],
                         'cpu_union': plan['cpu_union'], 'policies': plan['policies'],
                         'policy_order': manifest.get('policy_order', names)},
               'runs': runs, 'comparison_valid': not comparison_issues,
               'comparison_issues': comparison_issues, 'comparisons': comparisons,
+              'request_comparisons': request_comparisons,
               'buckets': buckets,
               'notes': [
                   'One run per policy: descriptive observed differences, no confidence intervals or significance claims.',
@@ -502,6 +545,10 @@ def analyze(plan_path, manifest_path=None):
                   'N is unfinished accepted/reserved tasks; Q is the approximate Folly task queue, not Linux runq; C is configured logical accounting capacity.',
                   'Home-only fixed load buckets describe conditional task latency, not a causal or steady-load response curve.',
                   'S=W+X and L=D+S per task and for means; p99 values cannot be added.',
+                  'PRIMARY request completion is max(all task end)-request planned arrival, one sample per request; pooled task p99 is a secondary scheduler diagnostic, not request p99.',
+                  'Invalid runs suppress all request completion samples and statistics, rather than silently dropping failed or missing requests. Observed request count is not proof of complete coverage.',
+                  'Request p99 uses nearest rank; LOW_TAIL means fewer than 1000 requests (600 requests give about 6 nominal tail observations). No task-count-based confidence claim.',
+                  'Initial set completion is not a DAG barrier. Steady releases are fixed by time and cannot advance when initial tasks finish sooner; the last planned release is an input constraint on request completion.',
                   'No completion-window filtering and no averaging of per-second or per-bucket p99.',
                   'CPU percentages cover complete sampling intervals inside the fixed arrival window, not the request cohort lifetime; whole-run process CPU seconds include warmup and drain.',
                   'CPU union is measured directly, never averaged from pool percentages. Sampling peaks (100 ms by default) cannot resolve a 20 ms pulse.',
@@ -515,6 +562,39 @@ def fmt(value):
     return 'NA' if value is None else f'{value:.3f}' if isinstance(value, float) else str(value)
 
 
+def render_request_completion(report):
+    lines = ['REQUEST COMPLETION — OFFLINE, NO NEW WORKLOAD',
+             f"request cohort: [{report['cohort']['warmup_seconds']}, {report['cohort']['request_end_seconds']}) seconds by request_planned_ns; retain all releases and drain completions",
+             'One sample per complete request; all times in milliseconds; p99=nearest rank.',
+             'comparison_valid='+str(report['comparison_valid']).lower(),
+             'comparison_issues='+','.join(report['comparison_issues'])]
+    for field in ('functional_only', 'home_waveform_gate', 'home_waveform_review'):
+        if report.get(field) is not None:
+            lines.append(field+'='+json.dumps(report[field], sort_keys=True))
+    lines += [key+'='+value for key, value in REQUEST_DEFINITIONS.items()]
+    lines += ['', 'policy,status,observed_requests,request_samples,tail_quality,nominal_top_1pct_requests,metric,mean_ms,p99_ms']
+    for run in report['runs']:
+        values = run['request_completion']
+        for metric in REQUEST_DEFINITIONS:
+            lines.append(','.join(map(fmt, [run['policy'], values['status'], values['observed_requests'],
+                values['n'], values['tail_quality'], values['nominal_top_1pct_requests'], metric,
+                values[metric]['mean_ms'], values[metric]['p99_ms']])))
+        if not run['valid']:
+            lines.append('INVALID '+run['policy']+': '+'; '.join(run['issues']))
+    if report['request_comparisons']:
+        lines += ['', 'baseline,policy,metric,mean_change_pct,p99_change_pct (negative=lower latency)']
+        for row in report['request_comparisons']:
+            for metric in REQUEST_LATENCIES:
+                lines.append(','.join(map(fmt, [row['baseline'], row['policy'], metric,
+                    row[metric+'_mean_ms_change_pct'], row[metric+'_p99_ms_change_pct']])))
+    lines += ['', 'LOW_TAIL: fewer than 1000 requests; 600 requests provide about 6 nominal tail observations. Single-run descriptive comparison, no significance claim.',
+              'Invalid runs have no request latency estimates; observed counts alone do not prove coverage.',
+              'Steady releases are predetermined, independent of initial completion. Last planned release is an input lower bound, not scheduling wait.',
+              'Initial set completion is not a DAG barrier or complete request. Pooled task p99 remains secondary and cannot reconstruct request p99.',
+              'comparison_valid does not change the original home waveform verdict; any post-result review remains separate.']
+    return '\n'.join(lines)+'\n'
+
+
 def render(report):
     inputs, base = report['input'], report['input']['base']
     lines = ['REQUEST-WAVE DESCRIPTIVE REPORT',
@@ -526,8 +606,7 @@ def render(report):
              f"request cohort: [{report['cohort']['warmup_seconds']}, {report['cohort']['request_end_seconds']}) seconds; retain entire requests and drain",
              'S=end-submit, W=start-submit, X=end-start, L=end-task_planned, D=submit-task_planned (milliseconds)',
              'comparison_valid='+str(report['comparison_valid']).lower(),
-             'comparison_issues='+','.join(report['comparison_issues']), '',
-             'policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger']
+             'comparison_issues='+','.join(report['comparison_issues']), '']
     if report.get('functional_only'):
         lines.insert(1, 'FUNCTIONAL_ONLY: development exercise without high-resolution trace. Home 5-20ms waveform is unvalidated; numeric comparisons are not production-performance evidence.')
     gate = report.get('home_waveform_gate')
@@ -537,6 +616,8 @@ def render(report):
     if review is not None:
         lines.insert(2, 'HOME WAVEFORM REVIEW '+json.dumps(review, sort_keys=True))
         lines.insert(3, 'POST-RESULT REVIEW: comparison uses a reviewed short-envelope deviation; original strict waveform result is unchanged. This is not a predeclared strict pass.')
+    lines += [render_request_completion(report).rstrip(), '', 'SECONDARY TASK DIAGNOSTICS',
+              'policy,valid,tasks,requests,S_mean_ms,S_p99_ms,L_mean_ms,L_p99_ms,CPU_union_execution_pct,whole_run_process_CPU_s,spill_fraction,source_trigger_fraction,target_ineligible_fraction,target_ineligible_given_trigger']
     for run in report['runs']:
         cohort, decisions = run.get('cohort', {}), run.get('decisions', {})
         values = [run['policy'], run['valid'], cohort.get('n'), cohort.get('requests'),
@@ -604,12 +685,23 @@ def main(argv=None):
     (out/'report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False)+'\n')
     text = render(report)
     (out/'report.txt').write_text(text)
+    (out/'request_completion.txt').write_text(render_request_completion(report))
+    with (out/'request_completion.csv').open('w', newline='') as handle:
+        fields = ['policy', 'burst', 'tasks', 'request_planned_ns',
+                  *(key+'_ms' for key in REQUEST_DEFINITIONS)]
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for run in report['runs']:
+            for sample in run['request_completion']['samples']:
+                writer.writerow({'policy': run['policy'],
+                    **{key: sample[key] for key in ('burst', 'tasks', 'request_planned_ns')},
+                    **{key+'_ms': sample[key] for key in REQUEST_DEFINITIONS}})
     with (out/'buckets.csv').open('w', newline='') as handle:
         fields = list(report['buckets'][0]) if report['buckets'] else ['policy', 'phase', 'metric']
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader(); writer.writerows(report['buckets'])
     print(text, end='')
-    print(f'Artifacts: {out}/report.json, {out}/report.txt, {out}/buckets.csv')
+    print(f'Artifacts: {out}/report.json, {out}/report.txt, {out}/buckets.csv, {out}/request_completion.txt, {out}/request_completion.csv')
     return 0 if all(run['valid'] for run in report['runs']) and (report['comparison_valid'] or report['calibration'] or report['analysis_only']) else 2
 
 

@@ -146,6 +146,72 @@ class RequestWaveAnalysis(unittest.TestCase):
         self.assertEqual(zero_q['n'], 2)
         self.assertEqual(zero_q['S_p99_ms'], 200.)
 
+    def test_request_completion_uses_whole_request_and_distinguishes_anchors(self):
+        report = a.analyze(self.plan)
+        home = report['runs'][0]['request_completion']
+        # Request starts at 800ms; late steady release at 1200ms ends at 1401ms.
+        # Both are retained despite the cohort ending at 1000ms.
+        self.assertEqual((home['observed_requests'], home['n']), (1, 1))
+        self.assertEqual(home['samples'][0]['burst'], 1)
+        for metric, expected in (('request_planned_to_end', 601.),
+                                 ('request_submit_to_end', 600.),
+                                 ('initial_planned_to_end', 101.),
+                                 ('last_planned_release_offset', 400.)):
+            self.assertEqual(home[metric], {'mean_ms': expected, 'p99_ms': expected})
+        self.assertEqual(home['tail_quality'], 'LOW_TAIL')
+        self.assertEqual(home['nominal_top_1pct_requests'], .01)
+        source = report['runs'][1]['request_completion']
+        self.assertEqual(source['request_planned_to_end']['p99_ms'], 501.)
+        self.assertEqual(source['request_submit_to_end']['p99_ms'], 500.)
+        self.assertEqual(source['initial_planned_to_end']['p99_ms'], 51.)
+        self.assertAlmostEqual(report['request_comparisons'][0]['request_planned_to_end_p99_ms_change_pct'],
+                               100*(501/601-1))
+
+    def test_request_uses_max_end_not_last_row_or_largest_task_latency(self):
+        # The earlier task now outlasts the later steady task.
+        modify_tasks(self.root, 'home', lambda rows: rows[2].update(end_ns='1500000000'))
+        first = a.analyze(self.plan)['runs'][0]['request_completion']
+        self.assertEqual(first['request_planned_to_end']['p99_ms'], 700.)
+        self.assertEqual(first['initial_planned_to_end']['p99_ms'], 700.)
+        modify_tasks(self.root, 'home', lambda rows: rows.reverse())
+        self.assertEqual(a.analyze(self.plan)['runs'][0]['request_completion'], first)
+
+    def test_requests_have_equal_weight_despite_different_fanout(self):
+        rows = [{'burst': b, 'request_planned_ns': 0, 'submit_ns': 0,
+                 'planned_ns': 0, 'end_ns': end*1_000_000, 'phase': 'initial'}
+                for b, end, count in ((0, 10, 1), (1, 100, 9)) for _ in range(count)]
+        value = a.describe_requests(rows, valid=True)
+        self.assertEqual(value['n'], 2)
+        self.assertEqual(value['request_planned_to_end']['mean_ms'], 55.)
+        self.assertEqual(value['request_planned_to_end']['p99_ms'], 100.)
+
+    def test_invalid_request_data_never_reports_survivor_p99(self):
+        # Failure is in warmup: still invalidate the run rather than silently
+        # infer that missing or failed request records are outside the cohort.
+        modify_tasks(self.root, 'home', lambda rows: rows[0].update(status='failed'))
+        report = a.analyze(self.plan)
+        home = report['runs'][0]['request_completion']
+        self.assertEqual(home['status'], 'invalid_run')
+        self.assertEqual(home['n'], 0)
+        self.assertEqual(home['samples'], [])
+        self.assertIsNone(home['request_planned_to_end']['p99_ms'])
+        self.assertEqual(report['request_comparisons'], [])
+
+    def test_request_summary_output_has_definitions_and_raw_request_samples(self):
+        out = self.root/'offline-request-analysis'
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(a.main(['--plan', str(self.plan), '--out', str(out)]), 0)
+        text = (out/'request_completion.txt').read_text()
+        self.assertIn('PRIMARY', text)
+        self.assertIn('600 requests provide about 6', text)
+        self.assertIn('home,ok,1,1,LOW_TAIL', text)
+        self.assertIn('independent of initial completion', text)
+        with (out/'request_completion.csv').open() as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(float(rows[0]['request_planned_to_end_ms']), 601.)
+        self.assertEqual(int(rows[0]['burst']), 1)
+
     def test_review_label_keeps_failed_strict_verdict_and_numeric_comparison_separate(self):
         before = a.analyze(self.plan)
         gate = {'status': 'failed', 'passed': False, 'comparison_allowed': False,
@@ -195,6 +261,9 @@ class RequestWaveAnalysis(unittest.TestCase):
         self.assertIn('planned_task_count_mismatch', report['runs'][0]['issues'])
         self.assertIn('incomplete_request_tasks', report['runs'][0]['issues'])
         self.assertFalse(report['comparison_valid'])
+        self.assertEqual(report['runs'][0]['request_completion']['samples'], [])
+        self.assertIsNone(report['runs'][0]['request_completion']['request_planned_to_end']['p99_ms'])
+        self.assertEqual(report['request_comparisons'], [])
 
     def test_failed_task_or_counter_imbalance_invalidates_run(self):
         modify_tasks(self.root, 'home', lambda rows: rows[0].update(status='failed'))
@@ -211,7 +280,9 @@ class RequestWaveAnalysis(unittest.TestCase):
 
     def test_manifest_hash_drift_prevents_comparison(self):
         modify_json(self.root/'run_manifest.json', lambda manifest: manifest.update(plan_sha256='different'))
-        self.assertFalse(a.analyze(self.plan)['comparison_valid'])
+        report = a.analyze(self.plan)
+        self.assertFalse(report['comparison_valid'])
+        self.assertTrue(all(not r['request_completion']['samples'] for r in report['runs']))
 
     def test_original_plan_tampering_is_detected_before_calibration_changes(self):
         modify_json(self.plan, lambda plan: plan.update(extra_tampered_value=1))
