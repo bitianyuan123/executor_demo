@@ -237,6 +237,9 @@ def main():
     if args.suite == "shape-coverage":
         metadata["shape_coverage"] = {
             "schema": "affinity-shape-coverage-v1",
+            "validation_status": "unvalidated_workload_hypothesis",
+            "recommended_next_step": False,
+            "recommendation_status": "withdrawn_pending_temporal_evidence_and_model_review",
             "seeds": seeds, "rounds": 6 * len(seeds), "trace": 1,
             "iterations_per_operator": int(base["--iterations"]),
             "accesses_per_operator": int(base["--accesses"]),
@@ -254,6 +257,10 @@ def main():
         parser.error("binary is missing; build the affinity stage first")
     (root / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     if args.suite == "shape-coverage":
+        print("WORKLOAD STATUS: unvalidated structural hypothesis; the recommendation to run "
+              "this suite next has been withdrawn. Historical trace has not established these "
+              "graph parameters, complex dependencies, or old/new request phase contention.",
+              flush=True)
         print(f"SHAPE COVERAGE: six cells x {len(seeds)} seed blocks = {6 * len(seeds)} rounds; "
               "one pool per explicit cluster partition; "
               "16 workers/pool; regular 12 QPS; 240 requests/round; trace=1, no perf.\n"

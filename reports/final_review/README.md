@@ -4,7 +4,7 @@
 
 - [离线 HTML](executor_affinity_report.html)：内嵌全部 15 张图，可搜索、有目录，可单文件复制阅读。
 - [PDF](executor_affinity_report.pdf)：中文字体内嵌，适合离线传阅；宽图采用横版图页。
-- [Markdown 源报告](REPORT.md)：一条请求从到达到80路扇出 → Q/I/O/R读写时序 → 算子逐次选池 → 六个量化场景的绝对指标 → 历史trace指导与候选初值；第7节加入六轮同合同CPU实测；第7.6节说明细粒度诊断，第7.7节根据4022证据明确新增工作尺度与图形状覆盖。
+- [Markdown 源报告](REPORT.md)：一条请求从到达到80路扇出 → Q/I/O/R读写时序 → 算子逐次选池 → 六个量化场景的绝对指标 → 历史trace指导与候选初值；第7节加入六轮同合同CPU实测；第7.6节说明细粒度诊断，第7.7节复核4022证据并撤回未经校准的新图必做建议，明确复杂依赖与跨请求阶段竞争的缺口。
 - [数据来源与配对](data/comparisons.json)、[运行 CSV](data/runs.csv)、[配对 CSV](data/paired_comparisons.csv)、[图表清单](figures/manifest.json)。
 
 HTML/PDF 单独阅读正文和图表不依赖网络。HTML 中附录的仓库文件链接需保留目录结构才能打开，PDF 将这类链接保留为可读标签；进一步核查源码和数据时使用完整仓库。图表同时提供 PNG 与可缩放 SVG。旧批次数字来自已审阅的回传摘要。新增4021保留终端逐窗CPU的5724条记录及源行号，可复算并绘图；它们不代替未取得的原始任务CSV/trace。其他批次缺失CPU利用率保持缺失，不用CPU/请求冒充。
@@ -34,7 +34,7 @@ python3 reports/final_review/validate_report.py --require-artifacts
 
 `validate_report.py` 检查审阅源哈希、JSON 指针与指标一致性、运行覆盖、配对算术、机制字段、图表产物、Markdown 本地链接、HTML 内嵌图片和 PDF 头部，结果保存在 `validation.json`。另用 PDF 文本提取与页面渲染检查中文和排版。
 
-这些验证保证交付物与已有证据一致，不构成新性能实验、正式置信区间或生产验收。历史实验合同与数据不变；4022之后新增shape-coverage用于检验负载代表性的缺口，没有更改调度算法与阈值。跨 NUMA、真实网络/阻塞及持续饱和仍按报告列出的具体决策触发。
+这些验证保证交付物与已有证据一致，不构成新性能实验、正式置信区间或生产验收。历史实验合同与数据不变；4022之后新增shape-coverage仅保留为未校准的结构假设工具，已撤回必做建议；不能把它当成生产模型或已经补齐复杂依赖。没有更改调度算法与阈值。跨 NUMA、真实网络/阻塞及持续饱和仍按报告列出的具体决策触发。
 
 ## CPU补采已完成
 
@@ -56,4 +56,4 @@ python3 experiments/affinity/tests/cpu_window_metrics_test.py
 
 100 ms曲线已完成，不意味着80×2模型的时间形状已和现场对齐。[请求内CPU形态指南](../../docs/REQUEST_CPU_SHAPE_GUIDE.md)先给出工作量/供给界，再提供已有CSV上下界分析和短轮sched_switch归因。后者的新worker TID只用于trace1诊断，需重编demo；报告没有把开发机功能验证当作目标性能结论。
 
-[4022证据与负载覆盖指南](../../docs/TARGET_V2_4022_REVIEW.md)进一步确认首波CPU占比约95.7%，将图形状与工作尺度干预列为明确下一步。新矩阵与perf紧凑格式修复只涉及Python；已有带TID的目标demo不用重编，已采集的文件可以离线重分析。
+[4022证据复核](../../docs/TARGET_V2_4022_REVIEW.md)确认首波CPU占比约95.7%，但该证据不足以指定替代图。当前用[定向提示词](../../docs/TRACE_TEMPORAL_SHAPE_PROMPT.md)补历史trace峰间背景与再次突发约束，并离线恢复已有demo采集，不执行新图矩阵。已有带TID的目标demo不用重编；perf紧凑格式兼容修复保留。

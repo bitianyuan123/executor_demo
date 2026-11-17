@@ -2,7 +2,7 @@
 
 **阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从一条请求的量化到达、80路扇出与后继执行开始，逐点标出Q/I/O/R的读写位置和算子选池过程；用15张图按六种明确负载比较时延、CPU/请求和改投率，再解释旧trace如何指导每cluster一池；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。新增[4021同轮CPU审阅](docs/TARGET_V2_4021_REVIEW.md)已补齐均匀12QPS、首波80算子、每池16线程的六轮CPU窗口与时延/改投对照：平均CPU约17%不变，局部热点和请求等待显著下降。[CPU采集指南](reports/final_review/CPU_CAPTURE_GUIDE.md)保留复现命令，无需为同目的重跑。
 
-**4022修订：观测不能替代负载覆盖。** 旧CSV确认首波占约95.7%的算子CPU。新增[4022分析与执行指南](docs/TARGET_V2_4022_REVIEW.md)及`shape-coverage`，在相同168算子、84分支下比较80×2+4×2与80×1+4×22，并分步覆盖每算子375k、46875、3M迭代档。已兼容目标机perf紧凑格式，可离线恢复已有采集，不需重跑。[请求内CPU形态工具](docs/REQUEST_CPU_SHAPE_GUIDE.md)作为配套观测；均衡机制已验证不代表生产收益或负载覆盖已验收。
+**4022复核：撤回未经校准的新图必做建议。** 旧CSV确认首波占约95.7%的算子CPU，但不能由此指定80×1+4×22为更接近现场的模型。`shape-coverage`仅保留为未校准的结构敏感性工具。当前先用[历史trace定向提示词](docs/TRACE_TEMPORAL_SHAPE_PROMPT.md)补齐峰间背景、再次突发和同期竞争约束，并按[4022修订指南](docs/TARGET_V2_4022_REVIEW.md)离线恢复已采集的demo CPU曲线；不重采、不执行新图矩阵。复杂依赖和旧请求后期与新请求扇出的联合覆盖仍有缺口，不能以均衡收益代替代表性验收。
 
 按业务理解 → Folly机制 → 独立任务负载 → 复杂DAG → 能力归属逐步验证。**一个仓库管理五个阶段，但简单任务实验、DAG实验和成本探针是独立CMake工程**，无需一次运行所有实验。阶段2～4仅依赖原版Folly；阶段5才需要实验扩展。
 
@@ -22,7 +22,7 @@
 
 当前总览见[总目标、实现难点与验收覆盖](docs/GOALS_AND_COVERAGE.md)：集中区分已实现、已验证和待目标机证据，并说明阶段3条件时延如何接到阶段4策略干预。v2性能摘要用`report.py`，负载分桶、首波扇出与积压趋势用`diagnose.py`，实际burst跨度、请求均值分解与后继角色用`flow_report.py`；这些工具不输出生产最优策略或统一的负载→request p99公式。
 
-[截至4022的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前机制结论、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；下一步并行恢复已有CPU采集和完成新增图形状覆盖，不依赖访问生产环境。
+[截至4022的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前机制结论、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；下一步补历史trace时间形状证据并恢复已有CPU采集，再确定新负载合同，不依赖访问生产环境。
 
 - [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
 - [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。

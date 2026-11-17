@@ -78,6 +78,10 @@ class ShapeCoverageMatrixTest(unittest.TestCase):
             self.assertEqual(options["--policy"], entry["case"].split("-", 1)[1])
             self.assertEqual(options["--depths"], "2,2" if entry["case"].startswith("front80-") else "1,22")
         self.assertIn("not production replay", metadata["shape_coverage"]["scope"])
+        self.assertEqual(metadata["shape_coverage"]["validation_status"],
+                         "unvalidated_workload_hypothesis")
+        self.assertIs(metadata["shape_coverage"]["recommended_next_step"], False)
+        self.assertIn("recommendation to run this suite next has been withdrawn", result.stdout)
         self.assertIn("NOT zero-overhead", result.stdout)
         self.assertIn("six cells x 2 seed blocks = 12 rounds", result.stdout)
         self.assertEqual(metadata["research_target"], "one_pool_per_cluster")
