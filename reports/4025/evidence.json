@@ -1,0 +1,616 @@
+{
+  "schema": "review-4025-v1",
+  "source_log_sha256": "21cf4d7d8a9c5fffec298b4a96946fb67c4dab725cbcdd92a38ea7c99722c6ff",
+  "source_lines": 100,
+  "input_series_reported_sha256": "2a9a9adc00250cd49b3e2be05990ac92515e62c8b02eb10995340ff6dc3cc04d",
+  "window_ms": 10000,
+  "bin_ms": 1,
+  "coverage": "unknown",
+  "mapping": "comm-name inference, not verified",
+  "definition": "high-service S > 2 * own full-window mean; S is matched CPU residence / bin width, not O, Q, runnable N or overload",
+  "pools": {
+    "pool_a": {
+      "background_source_line": 15,
+      "mean_cpu_equiv": 7.093,
+      "top10_service_percent": 45.532,
+      "high_time_percent": 13.28,
+      "high_area_percent": 52.75,
+      "nonhigh_cpu_equiv": {
+        "mean": 3.865,
+        "p50": 2.676,
+        "p90": 10.0,
+        "p99": 13.632
+      },
+      "nonhigh_area_percent": 47.25,
+      "nonhigh_interval_ms": [
+        13.0,
+        125.0,
+        321.0
+      ],
+      "nonhigh_censored_segments": 2,
+      "segments_source_line": 25,
+      "complete_segments": 275,
+      "censored_segments": 0,
+      "censored_area_cpu_ms": 0.0,
+      "groups": [
+        {
+          "duration_bucket_ms": "0,2",
+          "count": 148,
+          "duration_ms": 189.0,
+          "area_cpu_ms": 3503.163,
+          "peak_p50": 16.639,
+          "peak_p95": 31.29
+        },
+        {
+          "duration_bucket_ms": "2,5",
+          "count": 56,
+          "duration_ms": 232.0,
+          "area_cpu_ms": 6082.541,
+          "peak_p50": 24.857,
+          "peak_p95": 74.346
+        },
+        {
+          "duration_bucket_ms": "5,20",
+          "count": 62,
+          "duration_ms": 629.0,
+          "area_cpu_ms": 20815.955,
+          "peak_p50": 51.597,
+          "peak_p95": 70.495
+        },
+        {
+          "duration_bucket_ms": "20,inf",
+          "count": 9,
+          "duration_ms": 278.0,
+          "area_cpu_ms": 7015.298,
+          "peak_p50": 33.34,
+          "peak_p95": 62.409
+        }
+      ],
+      "gaps": {
+        "source_line": 31,
+        "pairs": 274,
+        "gap_ms": [
+          13.0,
+          85.0,
+          278.0,
+          321.0
+        ],
+        "start_gap_ms": [
+          17.0,
+          89.0,
+          279.0,
+          331.0
+        ],
+        "at_most": {
+          "1": [
+            29,
+            274
+          ],
+          "5": [
+            96,
+            274
+          ],
+          "10": [
+            127,
+            274
+          ],
+          "30": [
+            196,
+            274
+          ],
+          "100": [
+            254,
+            274
+          ]
+        }
+      },
+      "concurrent": {
+        "high": {
+          "source_line": 50,
+          "n_bins": 1328,
+          "other_service_cpu_equiv": [
+            12.815,
+            32.789,
+            54.312
+          ],
+          "unlabeled_triple": "0.330/3.907/12.097",
+          "other_high_counts": [
+            912,
+            384,
+            30,
+            2
+          ],
+          "source_service_cpu_equiv": [
+            23.149,
+            48.735
+          ]
+        },
+        "nonHigh": {
+          "source_line": 51,
+          "n_bins": 8672,
+          "other_service_cpu_equiv": [
+            12.164,
+            43.897,
+            68.418
+          ],
+          "unlabeled_triple": "0.045/2.723/10.891",
+          "other_high_counts": [
+            5720,
+            2638,
+            303,
+            11
+          ],
+          "source_service_cpu_equiv": [
+            2.676,
+            10.0
+          ]
+        }
+      }
+    },
+    "pool_b": {
+      "background_source_line": 16,
+      "mean_cpu_equiv": 4.364,
+      "top10_service_percent": 54.827,
+      "high_time_percent": 12.93,
+      "high_area_percent": 61.321,
+      "nonhigh_cpu_equiv": {
+        "mean": 1.939,
+        "p50": 1.185,
+        "p90": 4.88,
+        "p99": 8.187
+      },
+      "nonhigh_area_percent": 38.679,
+      "nonhigh_interval_ms": [
+        13.0,
+        131.0,
+        414.0
+      ],
+      "nonhigh_censored_segments": 2,
+      "segments_source_line": 26,
+      "complete_segments": 277,
+      "censored_segments": 0,
+      "censored_area_cpu_ms": 0.0,
+      "groups": [
+        {
+          "duration_bucket_ms": "0,2",
+          "count": 163,
+          "duration_ms": 203.0,
+          "area_cpu_ms": 2532.716,
+          "peak_p50": 11.056,
+          "peak_p95": 22.544
+        },
+        {
+          "duration_bucket_ms": "2,5",
+          "count": 47,
+          "duration_ms": 176.0,
+          "area_cpu_ms": 3054.099,
+          "peak_p50": 15.768,
+          "peak_p95": 61.149
+        },
+        {
+          "duration_bucket_ms": "5,20",
+          "count": 54,
+          "duration_ms": 564.0,
+          "area_cpu_ms": 14741.772,
+          "peak_p50": 49.002,
+          "peak_p95": 70.483
+        },
+        {
+          "duration_bucket_ms": "20,inf",
+          "count": 13,
+          "duration_ms": 350.0,
+          "area_cpu_ms": 6432.072,
+          "peak_p50": 40.079,
+          "peak_p95": 55.269
+        }
+      ],
+      "gaps": {
+        "source_line": 32,
+        "pairs": 276,
+        "gap_ms": [
+          13.0,
+          75.0,
+          236.0,
+          414.0
+        ],
+        "start_gap_ms": [
+          19.0,
+          89.0,
+          238.0,
+          415.0
+        ],
+        "at_most": {
+          "1": [
+            18,
+            276
+          ],
+          "5": [
+            78,
+            276
+          ],
+          "10": [
+            121,
+            276
+          ],
+          "30": [
+            194,
+            276
+          ],
+          "100": [
+            254,
+            276
+          ]
+        }
+      },
+      "concurrent": {
+        "high": {
+          "source_line": 52,
+          "n_bins": 1293,
+          "other_service_cpu_equiv": [
+            14.713,
+            39.271,
+            62.587
+          ],
+          "unlabeled_triple": "0.252/3.878/10.462",
+          "other_high_counts": [
+            897,
+            358,
+            36,
+            2
+          ],
+          "source_service_cpu_equiv": [
+            14.0,
+            42.349
+          ]
+        },
+        "nonHigh": {
+          "source_line": 53,
+          "n_bins": 8707,
+          "other_service_cpu_equiv": [
+            14.95,
+            47.86,
+            70.785
+          ],
+          "unlabeled_triple": "0.056/3.408/12.237",
+          "other_high_counts": [
+            5720,
+            2653,
+            329,
+            5
+          ],
+          "source_service_cpu_equiv": [
+            1.185,
+            4.88
+          ]
+        }
+      }
+    },
+    "pool_c": {
+      "background_source_line": 17,
+      "mean_cpu_equiv": 6.62,
+      "top10_service_percent": 47.157,
+      "high_time_percent": 12.01,
+      "high_area_percent": 51.467,
+      "nonhigh_cpu_equiv": {
+        "mean": 3.651,
+        "p50": 2.698,
+        "p90": 8.925,
+        "p99": 12.976
+      },
+      "nonhigh_area_percent": 48.533,
+      "nonhigh_interval_ms": [
+        15.0,
+        99.0,
+        429.0
+      ],
+      "nonhigh_censored_segments": 2,
+      "segments_source_line": 27,
+      "complete_segments": 273,
+      "censored_segments": 0,
+      "censored_area_cpu_ms": 0.0,
+      "groups": [
+        {
+          "duration_bucket_ms": "0,2",
+          "count": 147,
+          "duration_ms": 187.0,
+          "area_cpu_ms": 3317.316,
+          "peak_p50": 16.936,
+          "peak_p95": 27.007
+        },
+        {
+          "duration_bucket_ms": "2,5",
+          "count": 53,
+          "duration_ms": 208.0,
+          "area_cpu_ms": 5605.579,
+          "peak_p50": 27.641,
+          "peak_p95": 68.068
+        },
+        {
+          "duration_bucket_ms": "5,20",
+          "count": 68,
+          "duration_ms": 688.0,
+          "area_cpu_ms": 21754.58,
+          "peak_p50": 52.117,
+          "peak_p95": 65.928
+        },
+        {
+          "duration_bucket_ms": "20,inf",
+          "count": 5,
+          "duration_ms": 118.0,
+          "area_cpu_ms": 3391.499,
+          "peak_p50": 57.471,
+          "peak_p95": 70.531
+        }
+      ],
+      "gaps": {
+        "source_line": 33,
+        "pairs": 272,
+        "gap_ms": [
+          15.0,
+          80.0,
+          264.0,
+          429.0
+        ],
+        "start_gap_ms": [
+          20.0,
+          83.0,
+          281.0,
+          430.0
+        ],
+        "at_most": {
+          "1": [
+            24,
+            272
+          ],
+          "5": [
+            77,
+            272
+          ],
+          "10": [
+            115,
+            272
+          ],
+          "30": [
+            180,
+            272
+          ],
+          "100": [
+            259,
+            272
+          ]
+        }
+      },
+      "concurrent": {
+        "high": {
+          "source_line": 54,
+          "n_bins": 1201,
+          "other_service_cpu_equiv": [
+            12.415,
+            31.748,
+            51.668
+          ],
+          "unlabeled_triple": "0.394/3.577/9.729",
+          "other_high_counts": [
+            835,
+            337,
+            27,
+            2
+          ],
+          "source_service_cpu_equiv": [
+            24.516,
+            49.647
+          ]
+        },
+        "nonHigh": {
+          "source_line": 55,
+          "n_bins": 8799,
+          "other_service_cpu_equiv": [
+            12.633,
+            44.633,
+            68.554
+          ],
+          "unlabeled_triple": "0.047/2.764/11.484",
+          "other_high_counts": [
+            5720,
+            2715,
+            350,
+            14
+          ],
+          "source_service_cpu_equiv": [
+            2.698,
+            8.925
+          ]
+        }
+      }
+    },
+    "pool_d": {
+      "background_source_line": 18,
+      "mean_cpu_equiv": 6.569,
+      "top10_service_percent": 47.565,
+      "high_time_percent": 12.33,
+      "high_area_percent": 52.515,
+      "nonhigh_cpu_equiv": {
+        "mean": 3.558,
+        "p50": 2.428,
+        "p90": 8.812,
+        "p99": 12.756
+      },
+      "nonhigh_area_percent": 47.485,
+      "nonhigh_interval_ms": [
+        11.0,
+        111.0,
+        411.0
+      ],
+      "nonhigh_censored_segments": 2,
+      "segments_source_line": 28,
+      "complete_segments": 290,
+      "censored_segments": 0,
+      "censored_area_cpu_ms": 0.0,
+      "groups": [
+        {
+          "duration_bucket_ms": "0,2",
+          "count": 162,
+          "duration_ms": 203.0,
+          "area_cpu_ms": 3486.685,
+          "peak_p50": 15.508,
+          "peak_p95": 27.781
+        },
+        {
+          "duration_bucket_ms": "2,5",
+          "count": 57,
+          "duration_ms": 226.0,
+          "area_cpu_ms": 6002.734,
+          "peak_p50": 25.8,
+          "peak_p95": 70.59
+        },
+        {
+          "duration_bucket_ms": "5,20",
+          "count": 66,
+          "duration_ms": 681.0,
+          "area_cpu_ms": 21987.18,
+          "peak_p50": 51.521,
+          "peak_p95": 71.383
+        },
+        {
+          "duration_bucket_ms": "20,inf",
+          "count": 5,
+          "duration_ms": 123.0,
+          "area_cpu_ms": 3021.11,
+          "peak_p50": 52.92,
+          "peak_p95": 69.298
+        }
+      ],
+      "gaps": {
+        "source_line": 34,
+        "pairs": 289,
+        "gap_ms": [
+          11.0,
+          77.0,
+          208.0,
+          411.0
+        ],
+        "start_gap_ms": [
+          16.0,
+          80.0,
+          218.0,
+          413.0
+        ],
+        "at_most": {
+          "1": [
+            37,
+            289
+          ],
+          "5": [
+            112,
+            289
+          ],
+          "10": [
+            143,
+            289
+          ],
+          "30": [
+            210,
+            289
+          ],
+          "100": [
+            274,
+            289
+          ]
+        }
+      },
+      "concurrent": {
+        "high": {
+          "source_line": 56,
+          "n_bins": 1233,
+          "other_service_cpu_equiv": [
+            11.809,
+            30.345,
+            51.027
+          ],
+          "unlabeled_triple": "0.235/3.512/8.909",
+          "other_high_counts": [
+            906,
+            295,
+            30,
+            2
+          ],
+          "source_service_cpu_equiv": [
+            22.526,
+            50.207
+          ]
+        },
+        "nonHigh": {
+          "source_line": 57,
+          "n_bins": 8767,
+          "other_service_cpu_equiv": [
+            12.821,
+            45.359,
+            68.662
+          ],
+          "unlabeled_triple": "0.047/2.892/11.622",
+          "other_high_counts": [
+            5720,
+            2644,
+            392,
+            11
+          ],
+          "source_service_cpu_equiv": [
+            2.428,
+            8.812
+          ]
+        }
+      }
+    }
+  },
+  "pooled_duration_groups": [
+    {
+      "duration_bucket_ms": "(0,2]",
+      "count": 620,
+      "duration_ms": 782.0,
+      "area_cpu_ms": 12839.88,
+      "count_percent": 55.60538116591928,
+      "duration_ms_percent": 15.469831849653808,
+      "area_cpu_ms_percent": 9.67264138401906
+    },
+    {
+      "duration_bucket_ms": "(2,5]",
+      "count": 213,
+      "duration_ms": 842.0,
+      "area_cpu_ms": 20744.953,
+      "count_percent": 19.103139013452914,
+      "duration_ms_percent": 16.65677546983185,
+      "area_cpu_ms_percent": 15.6277543791165
+    },
+    {
+      "duration_bucket_ms": "(5,20]",
+      "count": 250,
+      "duration_ms": 2562.0,
+      "area_cpu_ms": 79299.48700000001,
+      "count_percent": 22.42152466367713,
+      "duration_ms_percent": 50.682492581602375,
+      "area_cpu_ms_percent": 59.738525569373046
+    },
+    {
+      "duration_bucket_ms": "(20,infinity)",
+      "count": 32,
+      "duration_ms": 869.0,
+      "area_cpu_ms": 19859.979,
+      "count_percent": 2.8699551569506725,
+      "duration_ms_percent": 17.190900098911968,
+      "area_cpu_ms_percent": 14.9610786674914
+    }
+  ],
+  "common_bins_by_number_high_pools": {
+    "1": 3550,
+    "2": 687,
+    "3": 41,
+    "4": 2
+  },
+  "limits": [
+    "Only terminal summaries available locally; no raw series or parser implementation revalidated.",
+    "Durations/areas are pooled across historical pool-segments; not request lifetimes, not independent samples.",
+    "S19 unlabeled triple excluded. S17 v/side/boundary denominators ambiguous; no statistics derived from them.",
+    "Reported complete segment censoring is not evidence of complete trace coverage.",
+    "No online residual-duration prediction, full N(t), request p99, idle destination or calibrated pressure threshold."
+  ]
+}

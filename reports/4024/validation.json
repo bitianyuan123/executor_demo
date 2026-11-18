@@ -1,0 +1,28 @@
+{
+  "source_log_sha256": "702778049dc293ee6f2d2cc96f0a722a8db260d8a7247b49f9bf579192d781b9",
+  "terminal_only": true,
+  "raw_target_files_verified_locally": false,
+  "link_checks": 11,
+  "embedded_figures": 2,
+  "source_checks": 1181,
+  "artifacts_sha256": {
+    "build_evidence.py": "5f01282405e8345cab06dcdf4a2727cf57d9934b917f75e1acb4327dc0b52e9f",
+    "tail4_role_waits.png": "31e363c27ed3ecc28b487debd6a6f96848d9b77bf5e6b1d27ba0e730089caa04",
+    "tail4_role_waits.svg": "8419db82469d6bd7cfce7a2862c68780a7174602d7e1b9fd9a9bac73a72d61fa",
+    "paired_comparisons.csv": "eee58c70e29f04fce301e2fe1abc748d19cff82b96141fbb0af1ee81f8f5431f",
+    "report.pdf": "a7424569e7b7a498c6c9dc9c7a9b7093e8b4a6be2aa4ff4ecdbd1a38b512385f",
+    "evidence.json": "0dfce6d19e8dc1b5cd7345aa63e929459a59fb613de5909954abbc1f98d2d2ee",
+    "render_figures.py": "b3bc095adc40218a3318b4d87eee9102157c381e89cef5e71946752c5c0be766",
+    "cohort_policy_pairs.svg": "1bfc0acef3e22e9cd661cf2809e2810a57c8301aa8c2d746e740d961f71195bc",
+    "README.md": "021ba9d38e9936f615e513eb40fd20f89f872b8055834bc5acc77e5aca0cd7bb",
+    "tables.md": "08ac005774733981317e7f9dfd41dc61f686dab6a7a8b2abd14b44674f264b9d",
+    "cohort_policy_pairs.png": "cb5a15c35720e64b64149455434762d2c99238a5388ead18a8ff0367cf677a04",
+    "report.html": "9ec28ac658eb786eb71fa879cf6334d2188c305ddcb2a04c9299ab9991f407ce"
+  },
+  "analysis_code_validation": {
+    "phase_overlap_synthetic_tests": 9,
+    "existing_smoke_runs_read_only": 8,
+    "ctest_analysis_tests_passed": 4,
+    "new_workloads_run": 0
+  }
+}

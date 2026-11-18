@@ -1,0 +1,24 @@
+{
+  "source_log_sha256": "21cf4d7d8a9c5fffec298b4a96946fb67c4dab725cbcdd92a38ea7c99722c6ff",
+  "terminal_only": true,
+  "raw_target_files_verified_locally": false,
+  "link_checks": 7,
+  "embedded_figures": 1,
+  "source_checks": "labeled counts/duration/rounded area/complements/gaps/multiplicity",
+  "artifacts_sha256": {
+    "historical_service_shapes.png": "799c77313edd8f765bee9c296e087bc5ae5d2854bf33557ba97cecc159d884ca",
+    "build_evidence.py": "3228df70803bb92b90192fa3f5dc9a4a29bfbb16b94dd8242f80bb96cebfebfd",
+    "historical_service_shapes.svg": "7cd408d447c00fe656dbd2c0864766ad041ce0f9da8bf5f3303608bf70e73954",
+    "report.pdf": "ee0216f92fe079ce4e4a6a982dc825559b0e6c90d99cb949627f751736e8887a",
+    "evidence.json": "d61f32bd29b692b7d08b482b7246c3188230198839199636571c2b7d913648e5",
+    "render_figures.py": "78fc47dd8074096ed4543fcb179909748f010eb568a9c4cb69522da63a559cc9",
+    "README.md": "61d1687f7b4a47bfa555671a513db6c1546b741d78e565f29d6ed224c15bdf70",
+    "report.html": "524d3f62350199adaf2a0924c8f40a6ebf8a4501ebdbfb43d5158190191cb4c2"
+  },
+  "analysis_code_validation": {
+    "phase_overlap_synthetic_tests": 9,
+    "existing_smoke_runs_read_only": 8,
+    "ctest_analysis_tests_passed": 4,
+    "new_workloads_run": 0
+  }
+}
