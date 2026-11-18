@@ -1,12 +1,14 @@
 # Folly线程池：五阶段分析与独立实验
 
+**4026阶段/实际池联合核对已完成：** [分析与下一步](docs/TARGET_V2_4026_REVIEW.md)确认3M深链场景中Q/O使新首波进入旧请求后期所在池，约4%的后期callback具有等待交集，覆盖约95%–97%的后期等待面积；请求整体时延仍优于home。该离线步骤无需重采或重跑。下一版先验证[目标借入保护](docs/DESTINATION_ADMISSION_EXPERIMENT.md)，再单独验证源持续门控；两者尚未实现，不修改负载或默认阈值。[图表/证据](reports/4026/README.md)保留六轮与4024配对及口径边界。
+
 **4025历史trace补证已审阅：** [业务特征与分级门控设计](docs/TARGET_V2_4025_REVIEW.md)确认短高服务段次数多、持续段承载更多CPU服务，峰间仍有显著服务且反复起伏。建议保留即时策略，细化可选的“中等压力持续确认＋严重积压旁路＋快释放”，但尚未实现或标定生产阈值；不把历史四池当目标架构，也不凭trace指定新DAG。文档含观测/状态/并发/目标保护、候选初值及分步消融。
 
 **4024报告补全已审阅：** [统一比较与下一步](docs/TARGET_V2_4024_REVIEW.md)将原36轮全部对齐至192请求窗口；不是新增实验。最小工作量的Q策略在两图中均出现跨seed的p99改善反号；3M深链图的首波等待下降、后继等待上升。新增[只读阶段重叠分析](docs/REQUEST_PHASE_OVERLAP_GUIDE.md)利用现有CSV核对新旧请求是否落在同池，无需编译或重跑。图模型仍未由历史trace校准，不改变负载默认或策略参数。[4023](docs/TARGET_V2_4023_REVIEW.md)的三份1ms请求CPU曲线另行保留，不与本矩阵混配。
 
 **阶段总报告已按设计和问题重新组织：** [离线 HTML](reports/final_review/executor_affinity_report.html) · [PDF](reports/final_review/executor_affinity_report.pdf) · [可审阅正文](reports/final_review/REPORT.md)。从一条请求的量化到达、80路扇出与后继执行开始，逐点标出Q/I/O/R的读写位置和算子选池过程；用15张图按六种明确负载比较时延、CPU/请求和改投率，再解释旧trace如何指导每cluster一池；不要求先读逐轮日志。数据、来源和重建说明见[报告目录](reports/final_review/README.md)。新增[4021同轮CPU审阅](docs/TARGET_V2_4021_REVIEW.md)已补齐均匀12QPS、首波80算子、每池16线程的六轮CPU窗口与时延/改投对照：平均CPU约17%不变，局部热点和请求等待显著下降。[CPU采集指南](reports/final_review/CPU_CAPTURE_GUIDE.md)保留复现命令，无需为同目的重跑。
 
-**4022复核：撤回未经校准的新图必做建议。** 旧CSV确认首波占约95.7%的算子CPU，但不能由此指定80×1+4×22为更接近现场的模型。`shape-coverage`仅保留为未校准的结构敏感性工具。后续仍用[历史trace定向提示词](docs/TRACE_TEMPORAL_SHAPE_PROMPT.md)补齐峰间背景、再次突发和同期服务约束；[4022要求的离线恢复](docs/TARGET_V2_4022_REVIEW.md)现已由4023完成，不重采或重复恢复，不新增矩阵。复杂依赖和旧请求后期与新请求扇出的联合覆盖仍有缺口，不能以均衡收益代替代表性验收。
+**4022复核：撤回未经校准的新图必做建议。** 旧CSV确认首波占约95.7%的算子CPU，但不能由此指定80×1+4×22为更接近现场的模型。`shape-coverage`仅保留为未校准的结构敏感性工具。当时提出的[历史trace定向分析](docs/TRACE_TEMPORAL_SHAPE_PROMPT.md)现已由4025补回峰间服务、再次突发和同期服务约束；[4022要求的离线恢复](docs/TARGET_V2_4022_REVIEW.md)现已由4023完成，不重采或重复恢复，不新增矩阵。复杂依赖和生产相似性仍有缺口；4026已在既有深链场景确认旧后期与新首波同池相遇，不能以这一机制覆盖代替代表性验收。
 
 按业务理解 → Folly机制 → 独立任务负载 → 复杂DAG → 能力归属逐步验证。**一个仓库管理五个阶段，但简单任务实验、DAG实验和成本探针是独立CMake工程**，无需一次运行所有实验。阶段2～4仅依赖原版Folly；阶段5才需要实验扩展。
 
@@ -26,7 +28,7 @@
 
 当前总览见[总目标、实现难点与验收覆盖](docs/GOALS_AND_COVERAGE.md)：集中区分已实现、已验证和待目标机证据，并说明阶段3条件时延如何接到阶段4策略干预。v2性能摘要用`report.py`，负载分桶、首波扇出与积压趋势用`diagnose.py`，实际burst跨度、请求均值分解与后继角色用`flow_report.py`；这些工具不输出生产最优策略或统一的负载→request p99公式。
 
-[截至4025的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前机制结论、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；现有矩阵报告和历史时间补证已返回，下一步为已有CSV的阶段/实际池联合分析与可选门控设计验证，再为明确缺口确定新负载合同，不依赖访问生产环境。
+[截至4026的结论与候选初值](docs/CURRENT_CONCLUSIONS_AND_STARTING_CONFIG.md)集中说明当前机制结论、负载与观测的适用范围、两层算法，以及复现参数与当地起点的区别；现有矩阵、历史时间补证及阶段/实际池联合分析均已返回；下一步为目标借入保护与源持续门控的独立实现/消融，不依赖访问生产环境，也不再要求重复相同离线分析。
 
 - [大调度轨迹的本地分析工作流](docs/TRACE_WORKFLOW.md)、[流式脚本指标解释](docs/TRACE_ANALYZER.md)、[GLM/DeepSeek分析与审计提示词](docs/TRACE_ANALYSIS_PROMPTS.md)：原始trace留在测试机，只回传终端摘要。
 - [负载观测与调度复核](docs/LOAD_OBSERVATION_REVIEW.md)：生产可复用observer适配、后台schedstat、可注册Provider/Scorer及其成本与边界。

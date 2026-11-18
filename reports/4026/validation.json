@@ -1,0 +1,30 @@
+{
+  "source_log_sha256": "9e3a8d4c3b7d0c3c29727cd3ba77a55aaaead5532d016bb2ad54cfdca1cbcdf9",
+  "previous_evidence_sha256": "0dfce6d19e8dc1b5cd7345aa63e929459a59fb613de5909954abbc1f98d2d2ee",
+  "source_checks": 474,
+  "terminal_only": true,
+  "raw_target_files_verified_locally": false,
+  "existing_runs": 6,
+  "new_workload_executions": 0,
+  "analyzer_tests_passed": 9,
+  "link_checks": 31,
+  "embedded_figures": 2,
+  "pdf_pages": 6,
+  "pdf_layout": "page audit, Chinese text extraction, rendered table/figure page inspection",
+  "artifacts_sha256": {
+    "reports/4026/README.md": "a32cdd15646dd20d9052d611426223c0259072885ee2dc22e11801e00e092c04",
+    "reports/4026/build_evidence.py": "10d586b337c9fdef00473ba74d05268b41ac2f4f0b51f7f5b2760660cd5f4c90",
+    "reports/4026/comparison.csv": "7f442e48aaf28067570e82053bc5346a880eaf72e5eea3d6fde4f387dfd0eb37",
+    "reports/4026/evidence.json": "58e7bdecc77b9a327d0e3e3f1e54f706feecfa23bcc55b404ebc108e7da2ab8d",
+    "reports/4026/render_figures.py": "1fb866d6bc65a343c0512625c25286b1afa9bc8bc53d52e796a313f57eca3b75",
+    "reports/4026/report.html": "92e5b1de0ea2686e375d2badc60dcd0035da2245c3b04d8af01a85f59741b994",
+    "reports/4026/report.pdf": "d793aee6bf92b4c8230647e835ebc0d772a5161d3db1f1e0c707eb948b2e2467",
+    "reports/4026/request_tradeoff.png": "6168cc63fffa53e240bda3a599fbdb2faba347c8e95049c8d24843ee35a6121e",
+    "reports/4026/request_tradeoff.svg": "6462c016d87faddde0998a80e632bd836333f52aee3d142b09a1903b9a91ead6",
+    "reports/4026/tables.md": "6abee63b31f50ea886a005a127835308dca5b28e9f5998a31e4fad2daf4e9f33",
+    "reports/4026/wait_localization.png": "0fb98505f85f1d8a79507acdfe2743f3a36a92692ceb44e4127172f28dd1f188",
+    "reports/4026/wait_localization.svg": "634c27829e0145f929017b99ca533a56f35b07216b39073e3f1f8c5da108aa94",
+    "docs/TARGET_V2_4026_REVIEW.md": "ee5ce5b1b4e0b6134e467c074ddf8a6434e733c58fa9c9ca65c088be49ce0693",
+    "docs/DESTINATION_ADMISSION_EXPERIMENT.md": "087dc3649704ab1ba5b2bc08a500e68c4636e8bb36b5f8530d5ebdf3f8d669cc"
+  }
+}
