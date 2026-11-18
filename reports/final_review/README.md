@@ -1,5 +1,7 @@
 # 自包含阶段报告与可追溯图表
 
+**4023补充已加入第7.8节：** 3份1ms请求profile与36轮形状假设实验单独保存在[4023目录](../4023/README.md)，[详细审阅](../../docs/TARGET_V2_4023_REVIEW.md)含两张新图。它们不混入旧97条历史整理/15张主报告图，不认证生产相似性，不触发新矩阵或参数修改。
+
 从基础概念开始阅读，无需先看历史日志：
 
 - [离线 HTML](executor_affinity_report.html)：内嵌全部 15 张图，可搜索、有目录，可单文件复制阅读。
@@ -56,4 +58,4 @@ python3 experiments/affinity/tests/cpu_window_metrics_test.py
 
 100 ms曲线已完成，不意味着80×2模型的时间形状已和现场对齐。[请求内CPU形态指南](../../docs/REQUEST_CPU_SHAPE_GUIDE.md)先给出工作量/供给界，再提供已有CSV上下界分析和短轮sched_switch归因。后者的新worker TID只用于trace1诊断，需重编demo；报告没有把开发机功能验证当作目标性能结论。
 
-[4022证据复核](../../docs/TARGET_V2_4022_REVIEW.md)确认首波CPU占比约95.7%，但该证据不足以指定替代图。当前用[定向提示词](../../docs/TRACE_TEMPORAL_SHAPE_PROMPT.md)补历史trace峰间背景与再次突发约束，并离线恢复已有demo采集，不执行新图矩阵。已有带TID的目标demo不用重编；perf紧凑格式兼容修复保留。
+[4022证据复核](../../docs/TARGET_V2_4022_REVIEW.md)确认首波CPU占比约95.7%，但该证据不足以指定替代图。当前用[定向提示词](../../docs/TRACE_TEMPORAL_SHAPE_PROMPT.md)补历史trace峰间背景与再次突发约束；4023已经完成三份离线恢复并回传已运行矩阵，不再重复恢复或新增矩阵。已有带TID的目标demo不用重编；perf紧凑格式兼容修复保留。

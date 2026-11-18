@@ -2,3 +2,6 @@
 results/logs/** -whitespace
 results/staged/logs/** -whitespace
 results/review/logs/** -whitespace
+# Generated report artifacts: PDF is binary; Matplotlib SVG paths retain spaces.
+reports/4023/*.pdf binary
+reports/4023/*.svg -whitespace

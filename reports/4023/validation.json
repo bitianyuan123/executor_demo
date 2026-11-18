@@ -1,0 +1,32 @@
+{
+  "scope": "4023 returned-terminal evidence and report validation only; no new workload or production trace capture.",
+  "source_log_sha256": "790427ed9172febde1c9cdcc538783dd789e5347bf298cec0ca7b523206ffd1c",
+  "evidence_checks_passed": 8049,
+  "profiles": 3,
+  "profile_window_rows": 1127,
+  "whole_matrix_runs": 36,
+  "cohort_and_flow_runs": 12,
+  "within_shape_seed_pairs": 24,
+  "new_report_links_and_shell_syntax_checks_passed": 9,
+  "main_report_validation_checks_passed": 31370,
+  "errors": 0,
+  "standalone_pdf_pages": 6,
+  "standalone_embedded_figures": 2,
+  "visually_checked": [
+    "both PNG figures",
+    "standalone PDF page3"
+  ],
+  "raw_target_trace_or_csv_revalidated_locally": false,
+  "sha256": {
+    "build_evidence.py": "ce2d005a122bcc7d2f30ba6f1808581bd7d893c8fc379069081649667b327f14",
+    "render_figures.py": "59c84bc45cbf3ef0010b6dbf748b45efb0082357f86fa392a60be238319f8488",
+    "evidence.json": "2055e27a512e49eb5df13b727766e4ee6ef0842644bfa2536f0ca6a58668f9d2",
+    "request_cpu_windows.csv": "67c6a68a449c333f1e158210d2ba7ed1f4384c8cd5a550f27d48e5cf87acd240",
+    "request_cpu_profiles.png": "89c854d2d018d4cd6c3e5f92d967283a6b3bada92e42fd1335f2f02aad0b9950",
+    "request_cpu_profiles.svg": "f885ba876a75387479e43e6f2abc31f5e9027e1e29e6758e36f42eabadabb0b0",
+    "shape_policy_pairs.png": "18e1865fc663c726952f4de89761aa0d9b352239a025052ccea0e235e85eb774",
+    "shape_policy_pairs.svg": "994cdce08bee37c367089dffeab5edf3493199f6ad57bbe6ba983f572e695394",
+    "report.html": "42ce38b1ff5bdab930bd4c92c7a7c28b32826e306dc0339117178f1138ecc1fc",
+    "report.pdf": "b53d950b810829550651ee059f6bb380a92a76bcd2e0984eeddca83953bc2771"
+  }
+}
