@@ -1,0 +1,18 @@
+{
+  "scope": "Development-only read-only validation of existing runs; no new workload executed",
+  "analyzer": "experiments/affinity/admission_tail_audit.py",
+  "analyzer_sha256": "9e5d354b6d7e871fb9e1720a301cfef22735293ead022ced20adb687c8708862",
+  "synthetic_unit_tests_passed": 9,
+  "ctest": "affinity_admission_tail_audit passed",
+  "matrix_runs": 12,
+  "output_records": 13,
+  "validated_pairs": 8,
+  "input_files_checked": 62,
+  "input_sha256_unchanged": true,
+  "development": true,
+  "all_cohort_requests": 4,
+  "commands": [
+    "python3 experiments/affinity/tests/admission_tail_audit_test.py",
+    "python3 experiments/affinity/admission_tail_audit.py results/review/destination-admission-dev-01 --warmup-seconds 0 --window-seconds all --top 3"
+  ]
+}

@@ -11,3 +11,4 @@ reports/4025/*.pdf binary
 reports/4025/*.svg -whitespace
 reports/4026/*.pdf binary
 reports/4026/*.svg -whitespace
+reports/4027/*.pdf binary
