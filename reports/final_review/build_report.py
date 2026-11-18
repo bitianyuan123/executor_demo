@@ -183,19 +183,25 @@ def pdf_styles():
     return styles
 
 
+def pdf_text(text: str) -> str:
+    # WenQuanYi Zen Hei lacks U+2212: ReportLab otherwise silently drops the
+    # minus sign, turning negative results positive in both display and copy.
+    return html.escape(text.replace("\N{MINUS SIGN}", "-"))
+
+
 def inline_pdf(token) -> str:
     content = []
     link_tags = []
     for child in token.children or []:
         kind = child.type
         if kind == "text":
-            content.append(html.escape(child.content))
+            content.append(pdf_text(child.content))
         elif kind in {"softbreak", "hardbreak"}:
             content.append(" " if kind == "softbreak" else "<br/>")
         elif kind == "code_inline":
-            content.append('<font backColor="#edf3f6">' + html.escape(child.content) + "</font>")
+            content.append('<font backColor="#edf3f6">' + pdf_text(child.content) + "</font>")
         elif kind == "image":
-            content.append(html.escape(child.content))
+            content.append(pdf_text(child.content))
         elif kind == "link_open":
             href = child.attrGet("href") or ""
             scheme = urlsplit(href).scheme.lower()
@@ -217,7 +223,7 @@ def inline_pdf(token) -> str:
             if re.fullmatch(r"\s*</?(?:br|sub|sup)\s*/?>\s*", child.content):
                 content.append(child.content.replace("<br>", "<br/>"))
             else:
-                content.append(html.escape(child.content))
+                content.append(pdf_text(child.content))
     return "".join(content)
 
 
@@ -434,7 +440,7 @@ class PdfBuilder:
                 self.quote_depth -= 1
             elif kind in {"fence", "code_block"}:
                 # Paragraph's CJK wrapping also breaks overlong ASCII identifiers.
-                text = html.escape(token.content.rstrip("\n")).replace(" ", "&#160;").replace("\n", "<br/>")
+                text = pdf_text(token.content.rstrip("\n")).replace(" ", "&#160;").replace("\n", "<br/>")
                 story.append(Paragraph(text or "&#160;", self.styles["code"]))
             elif kind == "hr":
                 story.append(HRFlowable(width="100%", thickness=.5, color=colors.HexColor("#c4d7e1"), spaceBefore=8, spaceAfter=8))
