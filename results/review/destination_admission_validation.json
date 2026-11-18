@@ -1,0 +1,194 @@
+{
+  "scope": "Development functional validation only; no target performance measurement",
+  "target_runs_executed": 0,
+  "core_unit_tests_passed": 33,
+  "ctest_groups_passed": [
+    "request_executor_test",
+    "load_policy_test",
+    "async_completion_source_test",
+    "affinity_functional",
+    "affinity_destination_admission_functional",
+    "affinity_async_functional",
+    "affinity_async_analysis",
+    "affinity_flow",
+    "affinity_request_cpu_shape",
+    "affinity_shape_coverage_matrix",
+    "affinity_request_phase_overlap",
+    "affinity_destination_admission_matrix"
+  ],
+  "matrix_unit_tests_passed": 10,
+  "matrix_smoke_runs": 12,
+  "matrix_smoke_paired_groups": 8,
+  "development_contract": {
+    "affinity": "cluster",
+    "threads": "1",
+    "capacity-scale": "1",
+    "requests": "4",
+    "max-inflight": "16",
+    "memory-mb": "512",
+    "qps": "50",
+    "arrival": "regular",
+    "widths": "80,4",
+    "model": "branch-rw",
+    "branch-kb": "64",
+    "shared-kb": "0",
+    "iterations": "1000",
+    "accesses": "32",
+    "jitter-percent": "0",
+    "long-every": "0",
+    "long-factor": "1",
+    "work-scale-scope": "task",
+    "estimate-mode": "constant",
+    "home-policy": "rr",
+    "continuation": "parent",
+    "balance-at": "all",
+    "batch-chunk": "1",
+    "policy": "outstanding",
+    "busy-high": "1",
+    "return-low": "0.5",
+    "min-gain": "0",
+    "cross-numa": "0",
+    "cross-numa-penalty": "0",
+    "max-hops": "4",
+    "max-outstanding": "0",
+    "cpu-sampling": "0",
+    "trace": "1",
+    "page-sample": "0",
+    "sync-block-percent": "0",
+    "sync-block-us": "0",
+    "async-percent": "0",
+    "async-delay-us": "0",
+    "async-align-us": "0",
+    "async-capacity": "4096",
+    "cpus": "0;1"
+  },
+  "binary_sha256": "22cf4fab3f71f2354a6b3d6bf669bd31c7d8e999a1a5449c84d8053156cc7672",
+  "execution_sources_sha256": {
+    "experiments/affinity/main.cpp": "bc82fe90bcf79b16f3cb8f7a5c6488d8529e45013b798ff800b32c11bc594910",
+    "experiments/affinity/include/executor_demo/RequestExecutor.h": "f7ea3a286ccd0b40f1431f61a3dd98005a8b000a4ff5530f66b412b0c30a3f2f",
+    "experiments/affinity/include/executor_demo/AdmissionPolicy.h": "23d52740264c257ceaa4a3da9cfdcc50952a9a1b2018465ce0c2a40b5b798572",
+    "experiments/affinity/include/executor_demo/LoadPolicy.h": "957625e4190e74c1f54ef77da1eff5d34456254efd18d59cdd589975de41d8bf",
+    "experiments/affinity/include/executor_demo/LocalityWorkload.h": "a53950456689d0438617dc3555a1bb1a820060f0a7c71289f00bd831e18c0f8a",
+    "experiments/affinity/include/executor_demo/AsyncCompletionSource.h": "3a1ba9b8980a0ed616fff77c504bd30b380360913b33a103167e4c6b8a85e165",
+    "experiments/affinity/include/executor_demo/LinuxSchedstatLoadProvider.h": "426d8d242e32ba3bc4491e39dd71b51a6d89dcf1ab1d5bf4f484b461e6228c53",
+    "experiments/dag/include/executor_demo/BusinessExecutor.h": "4f5a248f32cc7427f5190a2c214a13395f4695868e12fb14af3ce05b03e0a20b",
+    "scripts/run_destination_admission_matrix.py": "4cb60245a471b56e5fcfa6fc8a4792d3f709a549b59fe9910f71de96b09b54c2"
+  },
+  "current_sources_sha256": {
+    "experiments/affinity/include/executor_demo/AdmissionPolicy.h": "23d52740264c257ceaa4a3da9cfdcc50952a9a1b2018465ce0c2a40b5b798572",
+    "experiments/affinity/include/executor_demo/RequestExecutor.h": "f7ea3a286ccd0b40f1431f61a3dd98005a8b000a4ff5530f66b412b0c30a3f2f",
+    "experiments/affinity/tests/request_executor_test.cpp": "8769cdd8947df3e48a4242f4d16a1864bf85e9097ae52f1f1dd9f209978d9de8",
+    "experiments/affinity/main.cpp": "bc82fe90bcf79b16f3cb8f7a5c6488d8529e45013b798ff800b32c11bc594910",
+    "experiments/affinity/tests/destination_admission_functional.py": "382b8d6c75604ef8f7ad5df33b8bbd395c87a2c1d6ac1ca00abd46ee12583160",
+    "scripts/run_destination_admission_matrix.py": "7185f5374c291efd4cddf097885fb84c6c6b417c21a5b2aa1d99a5ce7d08281e",
+    "experiments/affinity/tests/destination_admission_matrix_test.py": "7049a700ccecd4fb8ca4e10e16557b509d9041eb40c2a1d463830d728c666012"
+  },
+  "report_sha256": "954fe14a6b7dc881fb50db75f9d26e919c09fd66922cbfe90737610a5e95bedb",
+  "report_lines": 21,
+  "report_bytes": 90633,
+  "cases": [
+    {
+      "seed": 421,
+      "case": "front80-off",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "0683f7dd0195b3f7fb89f033a3fbb5fe63d276b95d3bcd35f3c87864fe672667"
+    },
+    {
+      "seed": 421,
+      "case": "tail4-off",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "14f2b87f97e63c586a70a11b9c22e132d524d4c749b98ba9775fd98763ef8ee6"
+    },
+    {
+      "seed": 421,
+      "case": "front80-cap100",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "0683f7dd0195b3f7fb89f033a3fbb5fe63d276b95d3bcd35f3c87864fe672667"
+    },
+    {
+      "seed": 421,
+      "case": "front80-cap075",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "0683f7dd0195b3f7fb89f033a3fbb5fe63d276b95d3bcd35f3c87864fe672667"
+    },
+    {
+      "seed": 421,
+      "case": "tail4-cap100",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "14f2b87f97e63c586a70a11b9c22e132d524d4c749b98ba9775fd98763ef8ee6"
+    },
+    {
+      "seed": 421,
+      "case": "tail4-cap075",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "14f2b87f97e63c586a70a11b9c22e132d524d4c749b98ba9775fd98763ef8ee6"
+    },
+    {
+      "seed": 422,
+      "case": "tail4-cap100",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "9a9fb30222df6ac67282a91f91e48bca41e9d86e10e0fcaea6ef7056076345a4"
+    },
+    {
+      "seed": 422,
+      "case": "tail4-cap075",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "9a9fb30222df6ac67282a91f91e48bca41e9d86e10e0fcaea6ef7056076345a4"
+    },
+    {
+      "seed": 422,
+      "case": "front80-cap100",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "652b4274d6486d458394da6beef55d78bfb1e9e62e19cd346780387f14510967"
+    },
+    {
+      "seed": 422,
+      "case": "front80-off",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "652b4274d6486d458394da6beef55d78bfb1e9e62e19cd346780387f14510967"
+    },
+    {
+      "seed": 422,
+      "case": "front80-cap075",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "652b4274d6486d458394da6beef55d78bfb1e9e62e19cd346780387f14510967"
+    },
+    {
+      "seed": 422,
+      "case": "tail4-off",
+      "completed": 4,
+      "failed": 0,
+      "callback_count": 684,
+      "pairing_sha256": "9a9fb30222df6ac67282a91f91e48bca41e9d86e10e0fcaea6ef7056076345a4"
+    }
+  ],
+  "limits": [
+    "Artificial two CPU partitions with 1 worker each; no real cluster/NUMA claims.",
+    "Default-off preserves routing semantics, not identical instruction count or object size across builds.",
+    "New target rule is approximate and can overshoot under concurrent selection; not admission control or fairness.",
+    "Reporting tool was extended after smoke execution to expose source/resource contracts; execution hashes remain recorded separately.",
+    "Development timings intentionally omitted; target twelve-run experiment remains outstanding."
+  ]
+}

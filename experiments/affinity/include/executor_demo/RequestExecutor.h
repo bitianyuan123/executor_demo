@@ -1,10 +1,12 @@
 #pragma once
 
 #include <executor_demo/BusinessExecutor.h>
+#include <executor_demo/AdmissionPolicy.h>
 #include <executor_demo/LoadPolicy.h>
 #include <folly/io/async/Request.h>
 
 #include <atomic>
+#include <array>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
@@ -41,7 +43,16 @@ class RequestExecutor {
   enum class ContinuationPolicy { FollowParent, ReturnHome };
   enum class Reason {
     Home, BelowBusyThreshold, ReturnHome, LocalSpill, CrossNumaSpill,
-    InsufficientGain, HopBudget, PinnedHome, NonFork
+    InsufficientGain, HopBudget, PinnedHome, NonFork, NoEligibleTarget
+  };
+  static constexpr size_t reasonCount = size_t(Reason::NoEligibleTarget) + 1;
+  struct AdmissionStats {
+    // One decision per single add or selected batch chunk, including decisions
+    // whose enqueue later fails. All fields remain zero when admission is off.
+    uint64_t decisions{0}, evaluatedDecisions{0};
+    std::array<uint64_t, reasonCount> reasons{};
+    uint64_t candidateChecks{0}, candidateScoreInvalid{0}, candidateInvalid{0};
+    uint64_t candidateOverLimit{0}, candidateInsufficientGain{0}, returnHomeRejected{0};
   };
   struct TaskOptions {
     uint64_t tag{0};
@@ -64,6 +75,13 @@ class RequestExecutor {
     bool scoreFallback{false};
     LoadFallback scoreFallbackReason{LoadFallback::None};
     bool migrated{false}, crossNuma{false}, failed{false};
+    // Shared selection metadata repeats for every member of a batch chunk;
+    // sum admissionStats(), not these callback rows, for decision counts.
+    size_t selectionBatchTasks{1};
+    bool admissionEnabled{false}, admissionEvaluated{false}, returnHomeRejected{false};
+    double admissionBefore{0}, admissionAfter{0}; // Valid only when evaluated.
+    uint64_t candidateChecks{0}, candidateScoreInvalid{0}, candidateInvalid{0};
+    uint64_t candidateOverLimit{0}, candidateInsufficientGain{0};
     Reason reason{Reason::Home};
   };
   using Observer = std::function<void(const Observation&)>;
@@ -84,6 +102,9 @@ class RequestExecutor {
     // configured thresholds. Provider read() must only return published data.
     std::shared_ptr<const LoadScorer> loadScorer;
     std::shared_ptr<const LoadProvider> loadProvider;
+    // Null preserves existing routing and the queue-only read path. An enabled
+    // policy applies to borrowing and ReturnHome, never forces a task drop.
+    std::shared_ptr<const AdmissionPolicy> admissionPolicy;
     uint64_t cpuMaxAgeNs{100000000};
     Observer observer;
   };
@@ -145,11 +166,14 @@ class RequestExecutor {
   explicit RequestExecutor(Config config)
       : config_(validate(std::move(config))), pool_(poolConfig(config_)),
         scorer_(makeScorer(config_)),
-        nativeProvider_(std::make_unique<NativeLoadProvider>(pool_, config_.groups, scorer_->needs())),
+        nativeProvider_(std::make_unique<NativeLoadProvider>(pool_, config_.groups,
+                                                          nativeInputs(config_, *scorer_))),
         identity_(std::make_shared<Identity>()) {
     reservations_.reserve(config_.groups.size());
-    for (size_t i = 0; i < config_.groups.size(); ++i)
+    for (size_t i = 0; i < config_.groups.size(); ++i) {
       reservations_.push_back(std::make_unique<ReservationCount>());
+      if (config_.admissionPolicy) admissionCounters_.push_back(std::make_unique<AdmissionCounters>());
+    }
   }
   RequestExecutor(const RequestExecutor&) = delete;
   RequestExecutor& operator=(const RequestExecutor&) = delete;
@@ -201,6 +225,28 @@ class RequestExecutor {
   bool acceptingRequests() const noexcept { return state_.load() == State::Open; }
   const char* loadScorerName() const noexcept { return scorer_->name(); }
   const char* loadScoreUnits() const noexcept { return scorer_->units(); }
+  const char* admissionPolicyName() const noexcept {
+    return config_.admissionPolicy ? config_.admissionPolicy->name() : "disabled";
+  }
+  const char* admissionUnits() const noexcept {
+    return config_.admissionPolicy ? config_.admissionPolicy->units() : "none";
+  }
+  AdmissionStats admissionStats() const noexcept {
+    AdmissionStats result;
+    for (const auto& counters : admissionCounters_) {
+      for (size_t i = 0; i < reasonCount; ++i)
+        result.reasons[i] += counters->reasons[i].load(std::memory_order_relaxed);
+      result.evaluatedDecisions += counters->evaluated.load(std::memory_order_relaxed);
+      result.candidateChecks += counters->checks.load(std::memory_order_relaxed);
+      result.candidateScoreInvalid += counters->scoreInvalid.load(std::memory_order_relaxed);
+      result.candidateInvalid += counters->invalid.load(std::memory_order_relaxed);
+      result.candidateOverLimit += counters->overLimit.load(std::memory_order_relaxed);
+      result.candidateInsufficientGain += counters->insufficientGain.load(std::memory_order_relaxed);
+      result.returnHomeRejected += counters->returnHomeRejected.load(std::memory_order_relaxed);
+    }
+    for (const auto count : result.reasons) result.decisions += count;
+    return result;
+  }
 
   // Current native counters are always available as defaults. An optional
   // provider can override explicitly valid fields, and can publish only OS
@@ -213,7 +259,7 @@ class RequestExecutor {
       if (external.queueValid) { result.queueDepth = external.queueDepth; result.queueValid = true; }
       // Sampled policies fall back to this executor's live outstanding count,
       // never to an older external estimate of the same counter.
-      if (external.outstandingValid && scorer_->needs() != LoadInputs::SampledCpu) {
+      if (external.outstandingValid && nativeInputs(config_, *scorer_) != LoadInputs::SampledCpu) {
         result.outstanding = external.outstanding; result.outstandingValid = true;
       }
       if (external.callbackInflightValid) { result.callbackInflight = external.callbackInflight; result.callbackInflightValid = true; }
@@ -252,6 +298,13 @@ class RequestExecutor {
   struct InstalledContext { RequestExecutor* owner; Context context; };
   inline static thread_local InstalledContext* current_{nullptr};
   struct alignas(64) ReservationCount { std::atomic<uint64_t> tasks{0}, work{0}; };
+  // Shard by the original preferred group: independent source pools do not
+  // contend on a single global diagnostics cache line. Updated once per choice.
+  struct alignas(64) AdmissionCounters {
+    std::array<std::atomic<uint64_t>, reasonCount> reasons{};
+    std::atomic<uint64_t> evaluated{0}, checks{0}, scoreInvalid{0}, invalid{0};
+    std::atomic<uint64_t> overLimit{0}, insufficientGain{0}, returnHomeRejected{0};
+  };
   class NativeLoadProvider final : public LoadProvider {
    public:
     NativeLoadProvider(const BusinessExecutor& pool,
@@ -281,7 +334,7 @@ class RequestExecutor {
     const std::vector<BusinessExecutor::GroupConfig>& groups_;
     const LoadInputs inputs_;
   };
-  struct ScoredLoad { LoadScore result; LoadSample sample; };
+  struct ScoredLoad { LoadScore result; LoadSample sample; ScoreContext context; };
   struct Selection {
     size_t chosen{0};
     double preferredScore{0}, chosenScore{0};
@@ -289,7 +342,23 @@ class RequestExecutor {
     LoadScore preferredResult{}, chosenResult{};
     LoadSample sample;
     bool evaluated{false};
+    size_t batchTasks{1};
+    bool admissionEvaluated{false}, returnHomeRejected{false};
+    double admissionBefore{0}, admissionAfter{0};
+    uint64_t candidateChecks{0}, candidateScoreInvalid{0}, candidateInvalid{0};
+    uint64_t candidateOverLimit{0}, candidateInsufficientGain{0};
   };
+
+  static LoadInputs nativeInputs(const Config& config, const LoadScorer& scorer) {
+    // Combining queue ranking with outstanding admission is a distinct policy
+    // combination and needs O; disabling admission retains the cheap Q path.
+    if (!config.admissionPolicy) return scorer.needs();
+    const auto admission = config.admissionPolicy->needs();
+    if (admission == LoadInputs::SampledCpu || scorer.needs() == LoadInputs::SampledCpu)
+      return LoadInputs::SampledCpu;
+    return admission == LoadInputs::Counters || scorer.needs() == LoadInputs::Counters
+        ? LoadInputs::Counters : LoadInputs::QueueOnly;
+  }
 
   static Config validate(Config config) {
     if (config.groups.empty() || !config.batchChunk || !config.cpuMaxAgeNs ||
@@ -361,13 +430,13 @@ class RequestExecutor {
     auto sample = readLoadSample(group);
     ScoreContext context{reserved.tasks.load(std::memory_order_relaxed),
                          reserved.work.load(std::memory_order_relaxed),
-                         scorer_->needs() == LoadInputs::SampledCpu ? now() : 0};
+                         nativeInputs(config_, *scorer_) == LoadInputs::SampledCpu ? now() : 0};
     auto result = scorer_->score(sample, context);
     // A registered policy may fail its contract. Never turn NaN/negative into
     // an idle destination. Infinity explicitly means unknown/unusable load.
     if (std::isnan(result.value) || result.value < 0)
       result = load_policy_detail::invalid(LoadFallback::InvalidScore);
-    return {result, sample};
+    return {result, sample, context};
   }
   static Selection selection(size_t preferred, const ScoredLoad& load, Reason reason) {
     Selection result;
@@ -381,11 +450,48 @@ class RequestExecutor {
   }
   // Candidate search is independent of metric calculation and scans the
   // configured groups; adding P2C here would need its own paired study.
-  void searchDomain(size_t preferred, bool remote, Selection& result) const {
+  bool admit(const ScoredLoad& load, size_t incomingTasks, Selection& result,
+             AdmissionDecision& decision) const {
+    if (!config_.admissionPolicy) return true;
+    ++result.candidateChecks;
+    if (!std::isfinite(load.result.value)) {
+      ++result.candidateScoreInvalid;
+      return false;
+    }
+    decision = config_.admissionPolicy->evaluate(load.sample, load.context, incomingTasks);
+    // Invalid registered-policy output must never be interpreted as idle.
+    if (decision.failure == AdmissionFailure::InvalidSample ||
+        !std::isfinite(decision.before) || decision.before < 0 ||
+        !std::isfinite(decision.after) || decision.after < 0 ||
+        (decision.allowed && decision.failure != AdmissionFailure::None)) {
+      ++result.candidateInvalid;
+      return false;
+    }
+    if (!decision.allowed) {
+      if (decision.failure == AdmissionFailure::OverLimit) ++result.candidateOverLimit;
+      else ++result.candidateInvalid;
+      return false;
+    }
+    return true;
+  }
+  void selectedAdmission(Selection& result, const AdmissionDecision& decision) const {
+    if (!config_.admissionPolicy) return;
+    result.admissionEvaluated = true;
+    result.admissionBefore = decision.before;
+    result.admissionAfter = decision.after;
+  }
+  void searchDomain(size_t preferred, bool remote, size_t incomingTasks, Selection& result) const {
     for (size_t candidate = 0; candidate < config_.groups.size(); ++candidate) {
       if (candidate == preferred || crossNuma(preferred, candidate) != remote) continue;
       const auto load = evaluate(candidate);
+      AdmissionDecision admission;
+      if (!admit(load, incomingTasks, result, admission)) continue;
       const auto candidateScore = load.result.value + (remote ? config_.crossNumaPenalty : 0);
+      if (config_.admissionPolicy &&
+          !(result.preferredScore - candidateScore > config_.minGain)) {
+        ++result.candidateInsufficientGain;
+        continue;
+      }
       if (candidateScore < result.chosenScore &&
           result.preferredScore - candidateScore > config_.minGain) {
         result.chosen = candidate;
@@ -393,10 +499,11 @@ class RequestExecutor {
         result.chosenResult = load.result;
         result.sample = load.sample;
         result.reason = remote ? Reason::CrossNumaSpill : Reason::LocalSpill;
+        selectedAdmission(result, admission);
       }
     }
   }
-  Selection choose(const Context& context, const TaskOptions& options) const {
+  Selection choose(const Context& context, const TaskOptions& options, size_t incomingTasks) const {
     const auto home = context.request->home;
     if (options.pinHome || config_.policy == Policy::Home) {
       Selection result; result.chosen = home;
@@ -412,24 +519,51 @@ class RequestExecutor {
     auto preferredLoad = evaluate(preferred);
     if (context.hops >= config_.maxHops)
       return selection(preferred, preferredLoad, Reason::HopBudget);
-    Reason reason = Reason::BelowBusyThreshold;
+    auto result = selection(preferred, preferredLoad, Reason::BelowBusyThreshold);
     // ReturnHome is an affinity policy, not evidence of measured cache gains.
     if (config_.continuationPolicy == ContinuationPolicy::ReturnHome &&
         preferred != home && (!crossNuma(preferred, home) || config_.allowCrossNuma)) {
       const auto homeLoad = evaluate(home);
       if (homeLoad.result.value <= config_.returnLow) {
-        preferred = home;
-        preferredLoad = homeLoad;
-        reason = Reason::ReturnHome;
+        AdmissionDecision admission;
+        if (admit(homeLoad, incomingTasks, result, admission)) {
+          result.chosen = home;
+          result.preferredScore = result.chosenScore = homeLoad.result.value;
+          result.preferredResult = result.chosenResult = homeLoad.result;
+          result.sample = homeLoad.sample;
+          result.reason = Reason::ReturnHome;
+          selectedAdmission(result, admission);
+          return result; // returnLow <= busyHigh, matching the original path.
+        }
+        result.returnHomeRejected = true;
       }
     }
-    auto result = selection(preferred, preferredLoad, reason);
     if (result.preferredScore <= config_.busyHigh) return result;
     result.reason = Reason::InsufficientGain;
-    searchDomain(preferred, false, result);
+    searchDomain(preferred, false, incomingTasks, result);
     if (result.chosen == preferred && config_.allowCrossNuma)
-      searchDomain(preferred, true, result);
+      searchDomain(preferred, true, incomingTasks, result);
+    if (result.chosen == preferred && config_.admissionPolicy &&
+        (result.candidateInvalid || result.candidateOverLimit || result.candidateScoreInvalid))
+      result.reason = Reason::NoEligibleTarget;
     return result;
+  }
+
+  void recordSelection(const Context& context, const Selection& result) const noexcept {
+    if (!config_.admissionPolicy) return;
+    const auto source = context.hasParent ? context.source : context.request->home;
+    auto& counters = *admissionCounters_[source];
+    counters.reasons[size_t(result.reason)].fetch_add(1, std::memory_order_relaxed);
+    const auto add = [](std::atomic<uint64_t>& counter, uint64_t value) {
+      if (value) counter.fetch_add(value, std::memory_order_relaxed);
+    };
+    add(counters.evaluated, result.candidateChecks > result.candidateScoreInvalid);
+    add(counters.checks, result.candidateChecks);
+    add(counters.scoreInvalid, result.candidateScoreInvalid);
+    add(counters.invalid, result.candidateInvalid);
+    add(counters.overLimit, result.candidateOverLimit);
+    add(counters.insufficientGain, result.candidateInsufficientGain);
+    add(counters.returnHomeRejected, result.returnHomeRejected);
   }
 
   // Reservations cover only not-yet-enqueued members of one selected chunk.
@@ -450,7 +584,9 @@ class RequestExecutor {
     operations_.fetch_add(1);
     auto leave = folly::makeGuard([&] { operations_.fetch_sub(1); notifyDrain(); });
     if (!maySubmit(drainCapability)) return false;
-    const auto selected = choose(context, options);
+    auto selected = choose(context, options, 1);
+    selected.batchTasks = 1;
+    recordSelection(context, selected);
     reserve(selected.chosen, 1, options.estimatedCpuUs);
     auto reserved = folly::makeGuard([&] { unreserve(selected.chosen, 1, options.estimatedCpuUs); });
     return enqueue(std::move(context), std::move(task), options, selected);
@@ -468,7 +604,9 @@ class RequestExecutor {
     size_t accepted = 0;
     while (accepted < tasks.size()) {
       const auto chunk = std::min(config_.batchChunk, tasks.size() - accepted);
-      const auto selected = choose(context, options);
+      auto selected = choose(context, options, chunk);
+      selected.batchTasks = chunk;
+      recordSelection(context, selected);
       reserve(selected.chosen, chunk, options.estimatedCpuUs);
       size_t remaining = chunk;
       auto reserved = folly::makeGuard([&] { unreserve(selected.chosen, remaining, options.estimatedCpuUs); });
@@ -506,6 +644,17 @@ class RequestExecutor {
       observation.preferredScore = selected.preferredScore;
       observation.chosenScore = selected.chosenScore;
       observation.reason = selected.reason;
+      observation.selectionBatchTasks = selected.batchTasks;
+      observation.admissionEnabled = bool(config_.admissionPolicy);
+      observation.admissionEvaluated = selected.admissionEvaluated;
+      observation.admissionBefore = selected.admissionBefore;
+      observation.admissionAfter = selected.admissionAfter;
+      observation.returnHomeRejected = selected.returnHomeRejected;
+      observation.candidateChecks = selected.candidateChecks;
+      observation.candidateScoreInvalid = selected.candidateScoreInvalid;
+      observation.candidateInvalid = selected.candidateInvalid;
+      observation.candidateOverLimit = selected.candidateOverLimit;
+      observation.candidateInsufficientGain = selected.candidateInsufficientGain;
       observation.queueBefore = before.queueDepth;
       observation.outstandingBefore = before.outstanding;
       observation.callbackInflightBefore = before.inflight;
@@ -566,6 +715,7 @@ class RequestExecutor {
   std::unique_ptr<const NativeLoadProvider> nativeProvider_;
   std::shared_ptr<Identity> identity_;
   std::vector<std::unique_ptr<ReservationCount>> reservations_;
+  std::vector<std::unique_ptr<AdmissionCounters>> admissionCounters_;
   std::atomic<uint64_t> sequence_{0}, operations_{0}, activeWork_{0}, observerFailures_{0};
   std::atomic<State> state_{State::Open};
   std::mutex joinMutex_, drainMutex_;

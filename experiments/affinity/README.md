@@ -1,5 +1,8 @@
 # 阶段4补充：透明请求总池与固定工作量的数据亲和实验（v2）
 
+**下一轮：目标借入保护已实现为可关闭候选。** `--target-limit 0`保持原路由规则，正数按目标投递后的近似`(O+R+B)/C`过滤候选；尚无目标机性能结论。源池持续门控仍未实现。按[有限12轮指南](../../docs/DESTINATION_ADMISSION_RUN_GUIDE.md)先做功能验收，再用同一新构建比较两图×三档×两seed；无需重编Folly或重新解析历史trace。
+
+
 这是独立、可选的阶段4工程。保留 `experiments/dag`、此前ARM日志和原有命令；v1适合固定CPU预算下研究排队、图依赖和模拟RPC，v2专门检验“借用并行资源的收益能否覆盖数据迁移的代价”。详细审查、算法依据及试验顺序见 [两层调度设计](../../stages/04-dag/TWO_LEVEL_DESIGN.md)。
 
 **主线为每硬件cluster一池**：当前选定六cluster即六池，分区来自已核实拓扑。最新[cluster负载矩阵](../../docs/REAL_WORKLOAD_MATRIX.md)和[观测/算法复核](../../docs/LOAD_OBSERVATION_REVIEW.md)补充`active/cpu`、入口burst、同步阻塞及可注册`LoadProvider/LoadScorer`。四池128线程只属于历史trace与可选重放，none模式的独立软件池数不改变目标设计。CPU采样默认关闭，仅cpu策略或显式`--cpu-sampling 1`开启。
@@ -34,6 +37,22 @@ executor.join(); // 关闭新root，排空已登记的任务和continuation
 3. `continuation=parent`沿实际父池；`home`在home低于低阈值时回迁。这是策略开关，不是已测得的缓存收益模型。join沿最后完成分支的上下文；不是多父数据归属最优化。
 4. `balance-at=fork`只在batch做L2；普通链后继保持source，下一次fork才重新评估回home/借出。`all`在每次就绪时评估。
 5. chunk预占待提交任务，降低一次批量提交过程中反复把任务投向同一空池的偏差；每个任务仍独立执行。并发选池与预占不是事务，可能短暂同选或重复计量；没有完全避免惊群。
+
+## 可关闭的目标借入保护
+
+此能力位于总池，不改变业务的add/addBatch/continuation调用，也不要求修改Folly。`Config::admissionPolicy`可注册只读已发布样本的`AdmissionPolicy`实现；空指针关闭。内置`OutstandingAdmissionPolicy(limit)`检查目标的`(O_snapshot+R_snapshot+本次chunk大小)/C <= limit`。源评分和busy-high、收益检查仍独立，首轮只测试outstanding/parent组合。
+
+- CLI `--target-limit 0`关闭；`1`和`0.75`是下一轮探索值，不是生产推荐。非有限值或负数拒绝。
+- 本地候选先经准入及收益检查，无合格者才考虑已开启的跨NUMA。全部不合格则投回preferred；不会因该规则丢弃任务或等待余量。
+- 开启后ReturnHome也检查同一目标准入；被拒绝后继续按原preferred决策。pin-home、Home策略、hop和fork-only的原语义保留。
+- 使用Q评分同时启用本规则会读取O相关计数，是新组合；关闭时保留Q的只读队列路径。单位独立于work/CPU评分，不拿work分数直接套任务数上限。
+- O/R交接可短暂重复，并发选择→预留非事务；这是近似路由保护，不是硬容量，不保证旧请求进展。未ready后继和detach异步等待也不在O中。
+
+`summary.target_admission`始终记录enabled/policy/units/limit。开启时`stats`以整轮**选池/chunk**为单位统计，`decision_reasons`每次一项；candidate过滤则按检查次数。`evaluated_selections`表示检查过至少一个可评分候选，不等于实际发生借出。没有合格目标次数也在reason中展示，不能相加计算选择总数。关闭时这些诊断计数全零，表示未维护，不表示没有做过路由。
+
+`tasks.csv`增加本次chunk大小、已选中目标的准入前后估计及候选过滤计数；`admission_evaluated=1`才有有效前后值，未评估时留空。一次chunk各callback共享这些字段，不能直接逐行加总选池数。trace0仍有整轮准入统计，没有逐任务样本。
+
+开启时只读已发布计数、按源池分片维护少量relaxed原子统计，不读/proc、不遍历worker、不新增采样线程。统计与判断的成本都包含在候选CPU成本内；不能称为零扰动。关闭保证路由语义延续，新增Observation字段仍可能改变跨版本内存/时序，所以性能对照必须使用同一新构建的off/on，不能拿4024旧off替代。
 
 ## 工作量与测量
 

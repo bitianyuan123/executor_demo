@@ -21,7 +21,7 @@ ROLES = ('init', 'first-wave stage0', 'later-wave stage0', 'ordinary successors'
 # enum order; the test checks this contract against RequestExecutor.h.
 ROUTING_REASONS = ('Home', 'BelowBusyThreshold', 'ReturnHome', 'LocalSpill',
                    'CrossNumaSpill', 'InsufficientGain', 'HopBudget',
-                   'PinnedHome', 'NonFork')
+                   'PinnedHome', 'NonFork', 'NoEligibleTarget')
 
 
 def routing_reason(row):

@@ -540,6 +540,9 @@ def print_report(runs, min_tail_samples, warmup_seconds, window_seconds):
         print(f'  seed={summary["seed"]}, pool_count={len(summary["groups"])}, affinity={summary["affinity"]}, threads/pool={summary["threads_per_pool"]}, '
               f'whole completed/rejected-or-failed={summary["completed"]}/{summary["failed_or_rejected"]}, '
               f'operator CPU/request ms={format_value(metric["operator_cpu_per_request_ms"])}')
+        if 'target_admission' in summary:
+            print('  WHOLE RUN target admission (selection/chunk counts, not cohort callbacks): ' +
+                  json.dumps(summary['target_admission'], sort_keys=True, separators=(',', ':')))
         context = run['matrix_context']
         print(f'  matrix suite={context["suite"]}, experiment_role={context["experiment_role"]}, '
               f'research_target={context["research_target"]}, provenance={context["source"]}')

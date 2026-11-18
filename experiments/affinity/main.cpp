@@ -110,7 +110,7 @@ struct Config {
   uint64_t asyncDelayUs = 0, asyncAlignUs = 0;
   uint64_t cpuSampleMs = 50, cpuMaxAgeMs = 150;
   uint64_t seed = 1, iterations = 10000, accesses = 1000, estimateUs = 1000;
-  double qps = 12;
+  double qps = 12, targetLimit = 0;
   size_t jitter = 0, longEvery = 0, longFactor = 8;
   std::vector<size_t> widths{8, 4}, depths{2, 2};
   std::string model = "branch-rw", policy = "home", continuation = "parent",
@@ -165,6 +165,7 @@ static Config parse(int argc, char **argv) {
                                 "balance-at",
                                 "home-policy",
                                 "busy-high",
+                                "target-limit",
                                 "return-low",
                                 "min-gain",
                                 "cross-numa",
@@ -425,6 +426,12 @@ static Config parse(int argc, char **argv) {
       d("busy-high", c.policy == "work" ? double(c.estimateUs) : 1);
   c.pool.returnLow = d("return-low", c.pool.busyHigh / 2);
   c.pool.minGain = d("min-gain", 0);
+  c.targetLimit = d("target-limit", 0);
+  if (c.targetLimit < 0)
+    throw std::invalid_argument("target-limit must be zero (disabled) or positive");
+  if (c.targetLimit > 0)
+    c.pool.admissionPolicy =
+        std::make_shared<executor_demo::OutstandingAdmissionPolicy>(c.targetLimit);
   c.pool.crossNumaPenalty = d("cross-numa-penalty", 0);
   c.pool.allowCrossNuma = b("cross-numa", false);
   c.pool.maxHops = u("max-hops", 4);
@@ -986,6 +993,37 @@ private:
         "home_policy",
         c_.pool.homePolicy == Pool::HomePolicy::RoundRobin ? "rr" : "hash");
     summary["routing"]["estimate_mode"] = c_.estimateMode;
+    summary["routing"]["target_limit"] = c_.targetLimit;
+    const auto admissionStats = pool_->admissionStats();
+    summary["target_admission"] = folly::dynamic::object(
+        "enabled", bool(c_.pool.admissionPolicy))(
+        "policy", pool_->admissionPolicyName())("units", pool_->admissionUnits())(
+        "limit", c_.targetLimit)("stats", folly::dynamic::object(
+            "selections", admissionStats.decisions)(
+            "evaluated_selections", admissionStats.evaluatedDecisions)(
+            "candidate_checks", admissionStats.candidateChecks)(
+            "candidate_score_invalid", admissionStats.candidateScoreInvalid)(
+            "candidate_invalid", admissionStats.candidateInvalid)(
+            "candidate_over_limit", admissionStats.candidateOverLimit)(
+            "candidate_insufficient_gain", admissionStats.candidateInsufficientGain)(
+            "return_home_rejected", admissionStats.returnHomeRejected)(
+            "no_eligible_target", admissionStats.reasons[size_t(Pool::Reason::NoEligibleTarget)]))(
+        "decision_reasons", folly::dynamic::object)(
+        "contract", "Whole-run selections/chunks, including submission attempts; "
+        "not completed callbacks or cohort counts. One primary reason per selection; "
+        "candidate filters may count multiple attempts. NoEligibleTarget is also "
+        "included in stats.no_eligible_target. Disabled policy maintains no admission "
+        "counts. Selected target pressure in tasks.csv is valid only when "
+        "admission_evaluated=1; all selection fields repeat for members of a chunk. "
+        "Approximate (O+R+B)/C: reservation handoff can double-count and concurrent "
+        "choices can exceed the observed limit. Not a hard capacity or CPU measurement.");
+    const char* admissionReasons[] = {
+        "Home", "BelowBusyThreshold", "ReturnHome", "LocalSpill", "CrossNumaSpill",
+        "InsufficientGain", "HopBudget", "PinnedHome", "NonFork", "NoEligibleTarget"};
+    static_assert(std::size(admissionReasons) == Pool::reasonCount);
+    for (size_t i = 0; i < std::size(admissionReasons); ++i)
+      summary["target_admission"]["decision_reasons"][admissionReasons[i]] =
+          admissionStats.reasons[i];
     Work allocation(c_.work);
     summary["payload_bytes_per_request"] = allocation.allocatedBytes();
     summary["payload_budget_at_max_inflight"] =
@@ -1036,7 +1074,10 @@ private:
                "reason,worker_tid";
       if (completion_)
         trace << ",logical_tag";
-      trace << '\n';
+      trace << ",selection_batch_tasks,admission_enabled,admission_evaluated,"
+               "admission_before,admission_after,candidate_checks,candidate_score_invalid,"
+               "candidate_invalid,candidate_over_limit,candidate_insufficient_gain,"
+               "return_home_rejected\n";
       for (size_t i = 0; i < tasks_.size(); ++i) {
         auto &row = tasks_[i];
         if (!row.observed)
@@ -1083,7 +1124,14 @@ private:
               << row.workerTid;
         if (completion_)
           trace << ',' << (o.tag >= c_.nodes ? o.tag - c_.nodes : o.tag);
-        trace << '\n';
+        trace << ',' << o.selectionBatchTasks << ',' << o.admissionEnabled << ','
+              << o.admissionEvaluated << ',';
+        if (o.admissionEvaluated) trace << o.admissionBefore;
+        trace << ',';
+        if (o.admissionEvaluated) trace << o.admissionAfter;
+        trace << ',' << o.candidateChecks << ',' << o.candidateScoreInvalid << ','
+              << o.candidateInvalid << ',' << o.candidateOverLimit << ','
+              << o.candidateInsufficientGain << ',' << o.returnHomeRejected << '\n';
       }
       trace.flush();
       if (!trace)

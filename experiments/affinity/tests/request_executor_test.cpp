@@ -731,5 +731,304 @@ TEST(RequestExecutor, CpuStrategyUsesConfiguredWorkerLimitForBlockedPool) {
   }
 }
 
+TEST(OutstandingAdmissionPolicy, InclusiveBoundaryInvalidInputsAndNoIntegerWrap) {
+  for (double limit : {0.0, -1.0, std::numeric_limits<double>::quiet_NaN(),
+                       std::numeric_limits<double>::infinity()})
+    EXPECT_THROW(OutstandingAdmissionPolicy policy(limit), std::invalid_argument);
+  OutstandingAdmissionPolicy policy(2);
+  LoadSample sample;
+  sample.capacity = 1.5;
+  sample.outstanding = 1;
+  sample.outstandingValid = true;
+  EXPECT_TRUE(policy.evaluate(sample, {}, 2).allowed); // (1 + 2) / 1.5 == 2.
+  EXPECT_EQ(policy.evaluate(sample, {}, 3).failure, AdmissionFailure::OverLimit);
+  EXPECT_EQ(policy.evaluate(sample, {}, 0).failure, AdmissionFailure::InvalidSample);
+  sample.outstandingValid = false;
+  EXPECT_EQ(policy.evaluate(sample, {}, 1).failure, AdmissionFailure::InvalidSample);
+  sample.outstandingValid = true;
+  for (double capacity : {0.0, -1.0, std::numeric_limits<double>::quiet_NaN(),
+                          std::numeric_limits<double>::infinity()}) {
+    sample.capacity = capacity;
+    EXPECT_EQ(policy.evaluate(sample, {}, 1).failure, AdmissionFailure::InvalidSample);
+  }
+  sample.capacity = 1;
+  sample.outstanding = std::numeric_limits<uint64_t>::max();
+  const auto result = policy.evaluate(sample, {std::numeric_limits<uint64_t>::max(), 0, 0}, 2);
+  EXPECT_EQ(result.failure, AdmissionFailure::OverLimit);
+  EXPECT_GT(result.after, double(std::numeric_limits<uint64_t>::max()));
+}
+
+TEST(RequestExecutor, AdmissionUsesActualChunkIncludingFinalRemainderAndCountsChoices) {
+  for (bool enabled : {false, true}) {
+    Records records;
+    auto provider = std::make_shared<PublishedProvider>();
+    for (auto& sample : provider->samples) sample.outstandingValid = true;
+    provider->samples[0].outstanding = 8;
+    auto cfg = config(&records);
+    cfg.policy = Pool::Policy::OutstandingSpill;
+    cfg.loadProvider = provider;
+    cfg.batchChunk = 2;
+    for (auto& group : cfg.groups) group.capacity = 1.5;
+    if (enabled) cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(1);
+    Pool pool(std::move(cfg));
+    std::vector<folly::Func> tasks;
+    for (size_t i = 0; i < 3; ++i) tasks.emplace_back([] {});
+    ASSERT_EQ(pool.addBatch(pool.beginRequest(7), std::move(tasks), {10, 1000, false, true}), 3);
+    pool.join();
+    auto rows = records.take();
+    std::sort(rows.begin(), rows.end(), [](const auto& a, const auto& b) { return a.tag < b.tag; });
+    ASSERT_EQ(rows.size(), 3);
+    for (size_t i = 0; i < 3; ++i) {
+      EXPECT_EQ(rows[i].selectionBatchTasks, i == 2 ? 1 : 2);
+      EXPECT_EQ(rows[i].chosen, enabled && i < 2 ? 0 : 1);
+      EXPECT_EQ(rows[i].admissionEnabled, enabled);
+      EXPECT_EQ(rows[i].admissionEvaluated, enabled && i == 2);
+      EXPECT_EQ(rows[i].candidateOverLimit, enabled && i < 2 ? 1 : 0);
+    }
+    const auto stats = pool.admissionStats();
+    EXPECT_EQ(stats.decisions, enabled ? 2 : 0); // Not three callback rows.
+    EXPECT_EQ(stats.evaluatedDecisions, enabled ? 2 : 0);
+    EXPECT_EQ(stats.candidateOverLimit, enabled ? 1 : 0);
+    EXPECT_EQ(stats.reasons[size_t(Pool::Reason::NoEligibleTarget)], enabled ? 1 : 0);
+    if (enabled) {
+      EXPECT_DOUBLE_EQ(rows[2].admissionBefore, 0);
+      EXPECT_DOUBLE_EQ(rows[2].admissionAfter, 1 / 1.5);
+    }
+  }
+}
+
+TEST(RequestExecutor, AdmissionChecksLocalEligibilityBeforeRemoteFallback) {
+  struct Scenario { uint64_t localOutstanding; bool remote; size_t chosen; };
+  for (const auto scenario : {Scenario{1, true, 1}, Scenario{2, true, 2}, Scenario{2, false, 0}}) {
+    Records records;
+    auto provider = std::make_shared<PublishedProvider>(3);
+    for (auto& sample : provider->samples) sample.outstandingValid = true;
+    provider->samples[0].outstanding = 8;
+    provider->samples[1].outstanding = scenario.localOutstanding;
+    auto cfg = config(&records, 3);
+    cfg.policy = Pool::Policy::OutstandingSpill;
+    cfg.loadProvider = provider;
+    cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(1);
+    cfg.allowCrossNuma = scenario.remote;
+    for (auto& group : cfg.groups) group.capacity = 2;
+    cfg.groups[2].numaNode = 7;
+    Pool pool(std::move(cfg));
+    ASSERT_TRUE(pool.add(pool.beginRequest(8), [] {}));
+    pool.join();
+    const auto rows = records.take();
+    ASSERT_EQ(rows.size(), 1);
+    EXPECT_EQ(rows[0].chosen, scenario.chosen);
+    EXPECT_EQ(rows[0].candidateOverLimit, scenario.localOutstanding == 2 ? 1 : 0);
+    EXPECT_EQ(rows[0].admissionEvaluated, scenario.chosen != 0);
+    if (scenario.chosen == 1) EXPECT_DOUBLE_EQ(rows[0].admissionAfter, 1);
+    if (scenario.chosen == 2) EXPECT_EQ(rows[0].reason, Pool::Reason::CrossNumaSpill);
+    if (scenario.chosen == 0) EXPECT_EQ(rows[0].reason, Pool::Reason::NoEligibleTarget);
+  }
+}
+
+TEST(RequestExecutor, EnabledAdmissionProtectsReturnHomeWithoutChangingDisabledBehavior) {
+  for (bool enabled : {false, true}) {
+    Records records;
+    Gate submitted;
+    auto provider = std::make_shared<PublishedProvider>();
+    for (auto& sample : provider->samples) sample.outstandingValid = true;
+    provider->samples[0].outstanding = 8;
+    auto cfg = config(&records);
+    cfg.policy = Pool::Policy::OutstandingSpill;
+    cfg.continuationPolicy = Pool::ContinuationPolicy::ReturnHome;
+    cfg.loadProvider = provider;
+    cfg.groups[0].capacity = 0.5; // Empty home + B=1 exceeds limit 1.
+    cfg.groups[1].capacity = 2;
+    if (enabled) cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(1);
+    Pool pool(std::move(cfg));
+    auto release = folly::makeGuard([&] { submitted.open(); });
+    ASSERT_TRUE(pool.add(pool.beginRequest(7), [&] {
+      submitted.wait();
+      provider->samples[0].outstanding = 0;
+      EXPECT_TRUE(pool.add([] {}, {9}));
+    }));
+    submitted.open();
+    pool.join();
+    const auto rows = records.take();
+    const auto row = std::find_if(rows.begin(), rows.end(), [](const auto& item) { return item.tag == 9; });
+    ASSERT_NE(row, rows.end());
+    EXPECT_EQ(row->chosen, enabled ? 1 : 0);
+    EXPECT_EQ(row->returnHomeRejected, enabled);
+    EXPECT_EQ(row->reason, enabled ? Pool::Reason::BelowBusyThreshold : Pool::Reason::ReturnHome);
+    EXPECT_EQ(pool.admissionStats().returnHomeRejected, enabled ? 1 : 0);
+  }
+}
+
+class InvalidAdmission final : public AdmissionPolicy {
+ public:
+  AdmissionDecision evaluate(const LoadSample&, const ScoreContext&, size_t) const noexcept override {
+    return {true, AdmissionFailure::None, 0, std::numeric_limits<double>::quiet_NaN()};
+  }
+  const char* name() const noexcept override { return "test-invalid-admission"; }
+  const char* units() const noexcept override { return "test"; }
+};
+
+TEST(RequestExecutor, InvalidAdmissionIsNotIdleAndDoesNotRejectAcceptedWork) {
+  Records records;
+  auto provider = std::make_shared<PublishedProvider>();
+  for (auto& sample : provider->samples) sample.outstandingValid = true;
+  provider->samples[0].outstanding = 8;
+  auto cfg = config(&records);
+  cfg.policy = Pool::Policy::OutstandingSpill;
+  cfg.loadProvider = provider;
+  cfg.admissionPolicy = std::make_shared<InvalidAdmission>();
+  Pool pool(std::move(cfg));
+  ASSERT_TRUE(pool.add(pool.beginRequest(5), [] {}));
+  pool.join();
+  const auto rows = records.take();
+  ASSERT_EQ(rows.size(), 1);
+  EXPECT_EQ(rows[0].chosen, 0);
+  EXPECT_EQ(rows[0].reason, Pool::Reason::NoEligibleTarget);
+  EXPECT_FALSE(rows[0].admissionEvaluated);
+  EXPECT_EQ(rows[0].candidateInvalid, 1);
+  EXPECT_EQ(rows[0].candidateScoreInvalid, 0);
+  EXPECT_EQ(pool.admissionStats().candidateInvalid, 1);
+  EXPECT_EQ(pool.snapshots()[0].completed, 1);
+}
+
+TEST(RequestExecutor, QueueRankingReadsOutstandingOnlyWhenAdmissionNeedsIt) {
+  for (bool enabled : {false, true}) {
+    auto cfg = config();
+    cfg.policy = Pool::Policy::QueueSpill;
+    if (enabled) cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(1);
+    Pool pool(std::move(cfg));
+    EXPECT_EQ(pool.readLoadSample(0).outstandingValid, enabled);
+    pool.join();
+    EXPECT_EQ(pool.admissionStats().decisions, 0);
+  }
+}
+
+TEST(RequestExecutor, AdmissionLeavesPinHopAndForkOnlyEligibilityIntact) {
+  for (size_t scenario = 0; scenario < 3; ++scenario) {
+    Records records;
+    auto cfg = config(&records);
+    auto provider = std::make_shared<PublishedProvider>();
+    for (auto& sample : provider->samples) sample.outstandingValid = true;
+    provider->samples[0].outstanding = 8;
+    cfg.policy = Pool::Policy::OutstandingSpill;
+    cfg.loadProvider = provider;
+    cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(1);
+    cfg.maxHops = scenario == 1 ? 0 : 4;
+    cfg.balanceOnlyAtFork = scenario == 2;
+    Pool pool(std::move(cfg));
+    Pool::TaskOptions options;
+    options.pinHome = scenario == 0;
+    ASSERT_TRUE(pool.add(pool.beginRequest(2), [] {}, options));
+    pool.join();
+    const auto rows = records.take();
+    ASSERT_EQ(rows.size(), 1);
+    EXPECT_EQ(rows[0].chosen, 0);
+    EXPECT_EQ(rows[0].reason, scenario == 0 ? Pool::Reason::PinnedHome :
+              scenario == 1 ? Pool::Reason::HopBudget : Pool::Reason::NonFork);
+    EXPECT_EQ(pool.admissionStats().decisions, 1);
+    EXPECT_EQ(pool.admissionStats().candidateChecks, 0);
+  }
+}
+
+TEST(RequestExecutor, AdmissionConcurrentProducersDrainAllRootsAndInternalChildren) {
+  auto cfg = config(nullptr, 3);
+  cfg.policy = Pool::Policy::OutstandingSpill;
+  cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(1);
+  for (auto& group : cfg.groups) { group.threads = 2; group.capacity = 2; }
+  Pool pool(std::move(cfg));
+  Gate gate;
+  auto release = folly::makeGuard([&] { gate.open(); });
+  const auto request = pool.beginRequest(1);
+  std::atomic<size_t> accepted{0}, roots{0}, children{0};
+  std::vector<std::thread> producers;
+  for (size_t producer = 0; producer < 4; ++producer)
+    producers.emplace_back([&] {
+      for (size_t i = 0; i < 20; ++i)
+        if (pool.add(request, [&] {
+          gate.wait(); ++roots;
+          EXPECT_TRUE(pool.add([&] { ++children; }));
+        })) ++accepted;
+    });
+  for (auto& producer : producers) producer.join();
+  EXPECT_EQ(accepted.load(), 80);
+  // This is not a hard capacity guarantee: preferred continues accepting work.
+  uint64_t outstanding = 0;
+  for (const auto& snapshot : pool.snapshots()) outstanding += snapshot.outstanding;
+  EXPECT_EQ(outstanding, 80);
+  gate.open();
+  pool.join();
+  EXPECT_EQ(roots.load(), 80);
+  EXPECT_EQ(children.load(), 80);
+  EXPECT_EQ(pool.admissionStats().decisions, 160);
+  for (const auto& snapshot : pool.snapshots()) {
+    EXPECT_EQ(snapshot.outstanding, 0);
+    EXPECT_EQ(snapshot.inflight, 0);
+  }
+}
+
+TEST(RequestExecutor, AdmissionBatchRejectionRollsBackWholeUnsubmittedReservation) {
+  Records records;
+  Gate gate;
+  auto provider = std::make_shared<PublishedProvider>();
+  for (auto& sample : provider->samples) sample.outstandingValid = true;
+  provider->samples[0].outstanding = 8;
+  auto cfg = config(&records);
+  cfg.policy = Pool::Policy::OutstandingSpill;
+  cfg.loadProvider = provider;
+  cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(1);
+  cfg.maxOutstanding = 1;
+  cfg.batchChunk = 3;
+  Pool pool(std::move(cfg));
+  auto release = folly::makeGuard([&] { gate.open(); });
+  std::vector<folly::Func> tasks;
+  for (size_t i = 0; i < 3; ++i) tasks.emplace_back([&] { gate.wait(); });
+  EXPECT_EQ(pool.addBatch(pool.beginRequest(0), std::move(tasks)), 1);
+  gate.open();
+  ASSERT_TRUE(waitUntil([&] { return pool.snapshots()[0].outstanding == 0; }));
+  provider->samples[0].outstanding = 0;
+  provider->samples[1].outstanding = 8;
+  // Second request homes on group 1 and borrows group 0. No stale R from the
+  // rejected suffix may inflate group 0's projected admission pressure.
+  ASSERT_TRUE(pool.add(pool.beginRequest(1), [] {}, {9}));
+  pool.join();
+  const auto rows = records.take();
+  const auto row = std::find_if(rows.begin(), rows.end(), [](const auto& item) { return item.tag == 9; });
+  ASSERT_NE(row, rows.end());
+  EXPECT_EQ(row->chosen, 0);
+  EXPECT_TRUE(row->admissionEvaluated);
+  EXPECT_DOUBLE_EQ(row->admissionBefore, 0);
+  EXPECT_DOUBLE_EQ(row->admissionAfter, 1);
+  EXPECT_EQ(pool.admissionStats().decisions, 2);
+}
+
+TEST(RequestExecutor, AdmissionKeepsContinuationAndExceptionDrainContract) {
+  auto cfg = config();
+  cfg.policy = Pool::Policy::OutstandingSpill;
+  cfg.admissionPolicy = std::make_shared<OutstandingAdmissionPolicy>(0.5);
+  Pool pool(std::move(cfg));
+  std::promise<Pool::Continuation> captured;
+  auto ready = captured.get_future();
+  ASSERT_TRUE(pool.add(pool.beginRequest(7), [&] {
+    captured.set_value(pool.captureContinuation());
+    throw std::runtime_error("expected admission lifecycle test failure");
+  }));
+  ASSERT_EQ(ready.wait_for(3s), std::future_status::ready);
+  auto token = ready.get();
+  std::atomic<size_t> children{0};
+  std::thread joining([&] { pool.join(); });
+  EXPECT_TRUE(waitUntil([&] { return !pool.acceptingRequests(); }));
+  EXPECT_TRUE(token.resume([&] { EXPECT_TRUE(pool.add([&] { ++children; })); }));
+  joining.join();
+  EXPECT_EQ(children.load(), 1);
+  uint64_t completed = 0, failed = 0;
+  for (const auto& snapshot : pool.snapshots()) {
+    completed += snapshot.completed; failed += snapshot.failed;
+    EXPECT_EQ(snapshot.outstanding, 0);
+  }
+  EXPECT_EQ(completed, 3);
+  EXPECT_EQ(failed, 1);
+  EXPECT_EQ(pool.admissionStats().decisions, 3);
+}
+
 } // namespace
 } // namespace executor_demo

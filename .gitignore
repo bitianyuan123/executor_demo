@@ -9,3 +9,7 @@ results/staged/placement/
 results/review/runs/
 results/review/pilot-*/
 results/review/analysis/*-paths.json
+
+# Small local admission validation runs; retain source and compact validation record.
+results/review/destination-admission-dev-*/
+results/review/destination-admission-smoke-*/
